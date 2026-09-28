@@ -27,6 +27,7 @@ import { requestLogger, errorHandler } from './middleware/logger.js'
 import { db, schema } from './db/index.js'
 import { eq } from 'drizzle-orm'
 import { now } from './utils/response.js'
+import { failStaleRunningTasks } from './services/pipeline-tasks.js'
 import { DATA_ROOT } from './utils/paths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -86,7 +87,7 @@ app.use('*', serveStatic({ root: distPath }))
 app.get('*', serveStatic({ root: distPath, path: 'index.html' }))
 
 const port = Number(process.env.PORT || 5679)
-console.log(`🚀 Huobao Drama TS server on http://localhost:${port}`)
+console.log(`🚀 NAKA-AI server on http://localhost:${port}`)
 
 // 进程重启后内存中的轮询线程全部丢失,残留的 processing 任务永远不会完成,
 // 启动时统一标记为 failed,避免前端一直显示"生成中"
@@ -98,5 +99,10 @@ db.update(schema.sysTask)
     if (affected > 0) console.log(`🔁 已清理 ${affected} 个中断的生成任务`)
   })
   .catch(err => console.error('清理中断任务失败:', err?.message))
+
+// 同理：agent pipeline 任务（提取/视频提示词批量）的 running 行
+failStaleRunningTasks()
+  .then(n => { if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 pipeline 任务`) })
+  .catch(err => console.error('清理中断 pipeline 任务失败:', err?.message))
 
 serve({ fetch: app.fetch, port })
