@@ -6,6 +6,18 @@ import { toSnakeCase, toSnakeCaseArray } from '../utils/transform.js'
 
 const app = new Hono()
 
+// dramas.metadata 存 JSON 字符串（创作定位 + 分集设置，参考 Topview Settings 面板）。
+// 对外统一为对象；脏数据（非法 JSON）按 null 处理不抛错
+function parseMetadata(raw: string | null): Record<string, any> | null {
+  if (!raw) return null
+  try {
+    const v = JSON.parse(raw)
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : null
+  } catch {
+    return null
+  }
+}
+
 // GET /dramas - List dramas
 app.get('/', async (c) => {
   const page = Number(c.req.query('page') || 1)
@@ -35,6 +47,7 @@ app.get('/', async (c) => {
     return {
       ...toSnakeCase(drama),
       tags: drama.tags ? JSON.parse(drama.tags) : [],
+      metadata: parseMetadata(drama.metadata),
       total_episodes: eps.length,
       episodes: toSnakeCaseArray(eps),
       characters: toSnakeCaseArray(chars),
@@ -59,7 +72,9 @@ app.post('/', async (c) => {
     style: body.style,
     aspectRatio: body.aspect_ratio || '16:9',
     tags: body.tags ? JSON.stringify(body.tags) : null,
-    metadata: body.metadata,
+    metadata: body.metadata
+      ? (typeof body.metadata === 'object' && body.metadata !== null ? JSON.stringify(body.metadata) : String(body.metadata))
+      : null,
     status: 'draft',
     createdAt: ts,
     updatedAt: ts,
@@ -103,6 +118,7 @@ app.get('/:id', async (c) => {
   return success(c, {
     ...toSnakeCase(drama),
     tags: drama.tags ? JSON.parse(drama.tags) : [],
+    metadata: parseMetadata(drama.metadata),
     episodes: toSnakeCaseArray(eps),
     characters: toSnakeCaseArray(chars),
     scenes: toSnakeCaseArray(scns),
@@ -122,7 +138,12 @@ app.put('/:id', async (c) => {
   if (body.aspect_ratio !== undefined) updates.aspectRatio = body.aspect_ratio
   if (body.status !== undefined) updates.status = body.status
   if (body.tags !== undefined) updates.tags = JSON.stringify(body.tags)
-  if (body.metadata !== undefined) updates.metadata = body.metadata
+  if (body.metadata !== undefined) {
+    // 允许直接传对象；字符串按原文存（由调用方保证可解析）
+    updates.metadata = typeof body.metadata === 'object' && body.metadata !== null
+      ? JSON.stringify(body.metadata)
+      : body.metadata
+  }
   await db.update(schema.dramas).set(updates).where(eq(schema.dramas.id, id))
   return success(c)
 })

@@ -4,6 +4,7 @@
 import { db, schema } from '../db/index.js'
 import { eq } from 'drizzle-orm'
 import { logTaskProgress, logTaskWarn } from '../utils/task-logger.js'
+import { AppError } from '../utils/response.js'
 import { joinProviderUrl } from './adapters/url.js'
 
 export type ServiceType = 'text' | 'image' | 'video'
@@ -97,7 +98,7 @@ export async function getActiveConfig(serviceType: ServiceType): Promise<AIConfi
 
 export async function getTextConfig(): Promise<AIConfig> {
   const config = await getActiveConfig('text')
-  if (!config) throw new Error('未配置文本模型，请先到「设置」页添加并启用 AI 服务')
+  if (!config) throw new AppError('未配置文本模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_TEXT_MODEL')
   return config
 }
 

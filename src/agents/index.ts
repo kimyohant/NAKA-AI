@@ -16,7 +16,7 @@ import { storyboardTools } from './tools/storyboard-tools.js'
 import { imagePromptTools } from './tools/image-prompt-tools.js'
 import { loadAgentSkills, skillWorkspaces } from './skills.js'
 import { loadAgentPromptFile, loadBasePromptFile } from './prompts.js'
-import { buildLanguageDirective } from './language.js'
+import { buildLanguageDirective, buildPacingDirective } from './language.js'
 import { getContentLanguageFromRC } from './context.js'
 
 // Default prompts (used when workspace/prompts/<type>.md 文件缺失时兜底)
@@ -148,6 +148,33 @@ video_prompt 规则（硬约束）：
 - 所有提示词使用本次会话语言指令指定的目标语言输出，单段连贯描述，不要分点，不要混入无关词汇
 - 项目设定的视觉风格描述会由工具在保存图片提示词时自动注入到最终提示词的最前方，不要自行添加风格词
 - 必须实际调用保存工具，不要只在回复中给出提示词`,
+  },
+  hook_suggester: {
+    name: '结尾钩子',
+    instructions: `你是微短剧编剧，擅长设计让观众立刻点开下一集的结尾钩子（cliffhanger）。
+
+用户消息会包含：本集标题、本集剧本（或大纲）、上一集的结尾钩子（若有）。
+
+要求：
+- 只输出钩子文本本身，1-3 句话，不要标题、不要编号、不要解释、不要加引号
+- 钩子必须是本集剧情自然延伸出的悬念/反转/危机/情感抉择，落在情绪最高点或信息揭露的前一刻
+- 与上一集的钩子形成递进而非重复
+- 站在本集结尾的视角写作，让没看过原作的观众也能感到「必须点开下一集」
+- 输出语言遵循语言指令`,
+  },
+  script_reviewer: {
+    name: '剧本审校',
+    instructions: `你是微短剧剧本审校，负责在剧本改写完成后做一遍「审阅与优化」（Auto Review & Optimize）。
+
+工作流程：
+1. 调用 read_episode_script 读取当前剧本
+2. 按以下维度优化：节奏（每一场都推进剧情，删掉无功能的过场）、对白（口语化、有张力、删废话）、冲突密度（每 30 秒至少一次情绪或信息的变化）、开头 3 秒吸引力（第一场直接进入冲突或悬念）、结尾钩子强度（本集结尾必须有让人立刻想看下一集的悬念/反转/危机）
+3. 保持剧情走向、人物关系、场景结构与既有剧本格式（## S编号 | 内景/外景 · 地点 | 时间段）不变，直接产出优化后的完整剧本
+4. 调用 save_script 保存优化后的完整剧本
+
+约束：
+- 不要输出长篇分析——完成后只用一两句话概述改了什么（使用语言指令指定的目标语言）
+- 必须实际调用 save_script，不要只在回复里给出剧本`,
   },
 }
 
@@ -344,6 +371,13 @@ const AGENT_TOOLS: Record<string, Record<string, any>> = {
     readStoryboardContext: storyboardTools.readStoryboardContext,
     updateStoryboard: storyboardTools.updateStoryboard,
   },
+  // 钩子建议只读用户消息中给到的剧本，不需要工具
+  hook_suggester: {},
+  // 审校只读当前剧本并保存优化结果
+  script_reviewer: {
+    readEpisodeScript: scriptTools.readEpisodeScript,
+    saveScript: scriptTools.saveScript,
+  },
 }
 
 /** instructions 按请求解析：prompt 文件（或默认）+ 技能全文拼接 + 目标语言指令块
@@ -355,8 +389,10 @@ function buildInstructions(type: string) {
     const promptFile = await loadAgentPromptFile(type, lang)
     const baseInstructions = promptFile?.instructions || defaults.instructions
     const skillInstructions = await loadAgentSkills(type, lang)
+    // อัตราจังหวะเวลาต่อภาษา: ช่วยแก้กฎจีน (500字/分钟) สำหรับ storyboard/บทยาว — เฉพาะเอเจนต์ที่คำนวณความยาว
+    const pacingDirective = type === 'storyboard_breaker' || type === 'script_rewriter' ? buildPacingDirective(lang) : ''
     const languageDirective = buildLanguageDirective(lang)
-    return [baseInstructions, skillInstructions, languageDirective]
+    return [baseInstructions, skillInstructions, pacingDirective, languageDirective]
       .filter(Boolean)
       .join('\n\n')
   }

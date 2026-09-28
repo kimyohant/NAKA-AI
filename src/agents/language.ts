@@ -9,9 +9,39 @@
  */
 
 const LANGUAGE_NATIVE_NAMES: Record<string, string> = {
+  th: 'ภาษาไทย (Thai)',
   en: 'English',
-  ja: '日本語 (Japanese)',
-  ko: '한국어 (Korean)',
+}
+
+/**
+ * กฎอัตราจังหวะเวลาต่อภาษา（Pacing rates）— แก้ปัญหากฎจีน "500字/分钟 / 4.5字/秒"
+ * ที่ใช้กับทุกภาษาไม่ได้: ภาษาไทย 1 พยางค์ ≈ 3 ตัวอักษรเขียน, อัตราพูด ≈ 4-5 พยางค์/วินาที
+ * คืนค่าว่างสำหรับ zh เพื่อให้กฎเดิมในไฟล์ prompt ทำงานเหมือนเดิม (ไม่มี token overhead)
+ */
+const PACING_RATES: Record<string, { dialogue: string; episode: string }> = {
+  th: {
+    dialogue: 'dialogue/narration ≈ 5 syllables per second — in Thai script this is ≈ 14-16 written Thai characters per second (excluding spaces and punctuation; 1 Thai syllable ≈ 3 written characters)',
+    episode: 'total spoken content budget ≈ 400-450 written Thai characters per minute of episode',
+  },
+  en: {
+    dialogue: 'dialogue/narration ≈ 2.5 spoken words per second (≈ 150 words per minute)',
+    episode: 'total spoken content budget ≈ 130-150 words per minute of episode',
+  },
+}
+
+export function buildPacingDirective(lang?: string | null): string {
+  if (!lang || lang === 'zh') return ''
+  const rates = PACING_RATES[lang]
+  if (!rates) return ''
+  return [
+    '## Duration Pacing Rates for the Output Language (HIGHEST PRIORITY)',
+    '',
+    'When estimating how much spoken content fits into a given duration, do NOT use Chinese character rates. For the output language use these rates:',
+    `- Spoken duration: ${rates.dialogue}.`,
+    `- Episode budget: ${rates.episode}.`,
+    '',
+    'These rates OVERRIDE any per-character pacing rules written for Chinese elsewhere in these instructions (e.g. "500字/分钟" or "4.5字/秒"). Keep the structural rules (segment 8-15s, beat boundaries, +2s acting margin) unchanged.',
+  ].join('\n')
 }
 
 export function buildLanguageDirective(lang?: string | null): string {
