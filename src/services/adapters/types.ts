@@ -40,6 +40,15 @@ export interface ImageProviderAdapter {
    * 仅用于 Gemini 等只返回 base64 的厂商
    */
   extractImageBase64(result: any): { data: string; mimeType: string } | null
+
+  /**
+   * 可选：发起请求前的异步准备（如先把参考图上传到厂商存储）。
+   * 返回的 record 会传给 buildGenerateRequest。
+   */
+  prepareRecord?(config: AIConfig, record: ImageGenerationRecord): Promise<ImageGenerationRecord>
+
+  /** 可选：提交响应是否属于「厂商忙，稍后重试」（如账号并发上限），是则由任务队列等待后重新提交 */
+  isRetryableSubmit?(result: any): boolean
 }
 
 /**
@@ -57,6 +66,12 @@ export interface VideoProviderAdapter {
   parsePollResponse(result: any): VideoPollResponse
 
   extractVideoUrl(result: any): string | null
+
+  /** 可选：发起请求前的异步准备（如上传首尾帧/参考图），返回的 record 会传给 buildGenerateRequest */
+  prepareRecord?(config: AIConfig, record: VideoGenerationRecord): Promise<VideoGenerationRecord>
+
+  /** 可选：提交响应是否属于「厂商忙，稍后重试」，是则由任务队列等待后重新提交 */
+  isRetryableSubmit?(result: any): boolean
 }
 
 // ============ 通用类型 ============

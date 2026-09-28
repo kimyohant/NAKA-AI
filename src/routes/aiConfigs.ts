@@ -4,7 +4,7 @@ import { db, getInsertId, schema } from '../db/index.js'
 import { success, notFound, created, badRequest, now } from '../utils/response.js'
 import { toSnakeCase } from '../utils/transform.js'
 import { joinProviderUrl } from '../services/adapters/url.js'
-import { isOfficialProvider, parseConfigTemperature } from '../services/ai.js'
+import { getTextProviderBaseUrl, isOfficialProvider, parseConfigTemperature } from '../services/ai.js'
 import { redactUrl, logTaskError, logTaskProgress, logTaskSuccess } from '../utils/task-logger.js'
 
 const app = new Hono()
@@ -67,6 +67,16 @@ function buildProbe(serviceType: string, provider: string, baseUrl: string, mode
       url: joinProviderUrl(baseUrl, '/v1', '/models'),
       headers: bearerHeaders(apiKey),
       body: undefined,
+    }
+  }
+
+  if (serviceType === 'text' && ['zai', 'deepseek', 'qwen', 'moonshot', 'xai'].includes(p)) {
+    const endpoint = getTextProviderBaseUrl({ provider: p, baseUrl, apiKey: apiKey || '', model: m })
+    return {
+      method: 'POST',
+      url: joinProviderUrl(endpoint, '', '/chat/completions'),
+      headers: bearerHeaders(apiKey, true),
+      body: { model: m, messages: [{ role: 'user', content: 'Reply OK.' }], stream: false },
     }
   }
 

@@ -9,7 +9,7 @@ import type { RequestContext } from '@mastra/core/request-context'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
 import { getTextConfig, getTextProviderBaseUrl, getConfigById } from '../services/ai.js'
-import { logTaskProgress } from '../utils/task-logger.js'
+import { logTaskProgress, logTaskWarn } from '../utils/task-logger.js'
 import { scriptTools } from './tools/script-tools.js'
 import { extractTools } from './tools/extract-tools.js'
 import { storyboardTools } from './tools/storyboard-tools.js'
@@ -198,7 +198,19 @@ let lastLoggedTextEndpointKey = ''
 const thinkingOffEnabled = (process.env.AI_DISABLE_THINKING ?? 'true').toLowerCase() !== 'false'
 
 function isOfficialTextHost(baseURL: string) {
-  return /api\.openai\.com|generativelanguage\.googleapis\.com/.test(baseURL)
+  try {
+    const host = new URL(baseURL).hostname
+    return host === 'api.openai.com'
+      || host === 'generativelanguage.googleapis.com'
+      || host === 'api.z.ai'
+      || host === 'api.deepseek.com'
+      || host === 'api.moonshot.ai'
+      || host === 'api.x.ai'
+      || host === 'dashscope-us.aliyuncs.com'
+      || host.endsWith('.maas.aliyuncs.com')
+  } catch {
+    return false
+  }
 }
 
 function openaiThinkingOffPatch(): Record<string, any> {
@@ -297,6 +309,67 @@ function isOfficialOpenAIHost(baseURL: string) {
   return /api\.openai\.com/.test(baseURL)
 }
 
+/**
+ * 瞬时错误重试（最外层）：上游 429/500/502/503/504 时指数退避重试，覆盖所有 Agent/提取/提示词链路。
+ * - Gemini 高峰期常见 503 "high demand"、免费档 429 每分钟限流，几秒后即可恢复；此前一次失败整步任务即失败
+ * - 429 优先采用上游给的等待时间（"retry in 36.7s" / retryDelay），超过上限（如按天配额耗尽）则不等待直接返回
+ * - 仅在拿到响应状态码后重试，请求体为字符串可安全重放；中止信号（abort）不重试
+ */
+const RETRY_STATUSES = new Set([429, 500, 502, 503, 504])
+const RETRY_DELAYS_MS = [2_000, 5_000, 12_000, 25_000]
+const MAX_UPSTREAM_WAIT_MS = 65_000
+
+function upstreamRetryDelayMs(text: string): number | null {
+  const m = /retry in ([\d.]+)s/i.exec(text) || /"retryDelay"\s*:\s*"([\d.]+)s"/i.exec(text)
+  return m ? Math.ceil(Number(m[1]) * 1000) + 500 : null
+}
+
+/**
+ * Gemini 备用模型：同一模型持续 503（过载）或 429（该模型配额/限流）时切到下一个模型。
+ * Gemini 的过载与免费档配额都是「按模型」计算的，换模型比原地重试有效得多。
+ * 可用 GEMINI_FALLBACK_MODELS=a,b 覆盖默认列表。
+ */
+const GEMINI_FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS || 'gemini-3.6-flash,gemini-2.5-flash,gemini-3.1-flash-lite')
+  .split(',').map(s => s.trim()).filter(Boolean)
+const GEMINI_MODEL_IN_URL = /\/models\/([^/:?]+)(:[A-Za-z]+)/
+
+function createRetryFetch(providerName: string, inner?: typeof fetch): typeof fetch {
+  const base = inner || fetch
+  return async (input: any, init?: any) => {
+    let url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input?.url
+    const tried = new Set<string>()
+    const currentModel = () => GEMINI_MODEL_IN_URL.exec(url || '')?.[1]
+    for (let attempt = 0; ; attempt++) {
+      const resp = await base(url ?? input, init)
+      if (!RETRY_STATUSES.has(resp.status) || init?.signal?.aborted) return resp
+      const text = await resp.clone().text().catch(() => '')
+      const dailyQuota = resp.status === 429 && (/PerDay|per day/i.test(text) || (upstreamRetryDelayMs(text) ?? 0) > MAX_UPSTREAM_WAIT_MS)
+
+      // Gemini：过载/配额类错误在第 2 次失败后（或按天配额耗尽时立刻）切换备用模型，并重置退避
+      const model = providerName === 'gemini' ? currentModel() : undefined
+      if (model && (resp.status === 503 || resp.status === 429) && (attempt >= 1 || dailyQuota)) {
+        tried.add(model)
+        const next = GEMINI_FALLBACK_MODELS.find(m => !tried.has(m))
+        if (next) {
+          logTaskWarn('AIConfig', 'text-model-fallback', { status: resp.status, from: model, to: next })
+          url = url.replace(GEMINI_MODEL_IN_URL, `/models/${next}$2`)
+          attempt = -1
+          continue
+        }
+      }
+
+      if (attempt >= RETRY_DELAYS_MS.length || dailyQuota) return resp
+      let wait = RETRY_DELAYS_MS[attempt]
+      if (resp.status === 429) {
+        const hinted = upstreamRetryDelayMs(text)
+        if (hinted !== null) wait = Math.max(wait, hinted)
+      }
+      logTaskWarn('AIConfig', 'text-upstream-retry', { status: resp.status, attempt: attempt + 1, waitMs: wait })
+      await new Promise(r => setTimeout(r, wait))
+    }
+  }
+}
+
 function createMaxTokensFetch(providerName: string, inner?: typeof fetch): typeof fetch {
   const base = inner || fetch
   return async (input: any, init?: any) => {
@@ -341,9 +414,9 @@ async function getModel(fileModel: string | undefined, modelOverride?: string, t
   const tempFetch = temperature !== null
     ? createTemperatureFetch(providerName, temperature, thinkingOffFetch)
     : thinkingOffFetch
-  const fetchImpl = isOfficialOpenAIHost(resolvedBaseURL)
+  const fetchImpl = createRetryFetch(providerName, isOfficialOpenAIHost(resolvedBaseURL)
     ? tempFetch
-    : createMaxTokensFetch(providerName, tempFetch)
+    : createMaxTokensFetch(providerName, tempFetch))
 
   if (providerName === 'gemini') {
     const googleProvider = createGoogleGenerativeAI({

@@ -58,7 +58,8 @@ function toRow(r: Row): PipelineTaskRow {
   }
 }
 
-/** 启动任务：同 key 已有 running 行返回 null（调用方据此拒绝重复启动），否则建新行 */
+/** 启动任务：同 key 已有 running 行返回 null（调用方据此拒绝重复启动）；
+ *  有旧行（done/error/cancelled 残留）则原地重置为 running（key 有 UNIQUE 约束，不能重复 INSERT） */
 export async function startTask(params: {
   kind: PipelineTaskKind
   key: string
@@ -66,24 +67,54 @@ export async function startTask(params: {
   episodeId?: number
   total?: number
 }): Promise<PipelineTaskRow | null> {
-  const [existing] = await db.select().from(schema.pipelineTasks)
-    .where(and(eq(schema.pipelineTasks.key, params.key), eq(schema.pipelineTasks.status, 'running')))
-  if (existing) return null
   const ts = now()
-  await db.insert(schema.pipelineTasks).values({
-    kind: params.kind,
-    key: params.key,
-    dramaId: params.dramaId ?? null,
-    episodeId: params.episodeId ?? null,
-    status: 'running',
-    total: params.total ?? 0,
-    cancelRequested: 0,
-    createdAt: ts,
-    updatedAt: ts,
-  })
+  const [existing] = await db.select().from(schema.pipelineTasks)
+    .where(eq(schema.pipelineTasks.key, params.key))
+  if (existing && existing.status === 'running') return null
+
+  if (existing) {
+    await db.update(schema.pipelineTasks).set({
+      kind: params.kind,
+      dramaId: params.dramaId ?? existing.dramaId,
+      episodeId: params.episodeId ?? existing.episodeId,
+      status: 'running',
+      total: params.total ?? 0,
+      completed: 0,
+      failed: 0,
+      currentKey: null,
+      errorMsg: null,
+      cancelRequested: 0,
+      finishedAt: null,
+      updatedAt: ts,
+    }).where(eq(schema.pipelineTasks.id, existing.id))
+    const [row] = await db.select().from(schema.pipelineTasks)
+      .where(eq(schema.pipelineTasks.id, existing.id))
+    return toRow(row)
+  }
+
+  try {
+    await db.insert(schema.pipelineTasks).values({
+      kind: params.kind,
+      key: params.key,
+      dramaId: params.dramaId ?? null,
+      episodeId: params.episodeId ?? null,
+      status: 'running',
+      total: params.total ?? 0,
+      cancelRequested: 0,
+      createdAt: ts,
+      updatedAt: ts,
+    })
+  } catch (err: any) {
+    // 并发竞态：另一请求刚插入了同 key 行 → 若它在 running 就拒绝，否则同样重置
+    if (!String(err?.code || '').includes('SQLITE_CONSTRAINT')) throw err
+    const [race] = await db.select().from(schema.pipelineTasks)
+      .where(eq(schema.pipelineTasks.key, params.key))
+    if (!race || race.status === 'running') return null
+    return startTask(params)
+  }
   const [row] = await db.select().from(schema.pipelineTasks)
     .where(and(eq(schema.pipelineTasks.key, params.key), eq(schema.pipelineTasks.status, 'running')))
-  return toRow(row)
+  return row ? toRow(row) : null
 }
 
 export async function updateTask(key: string, patch: Partial<{
