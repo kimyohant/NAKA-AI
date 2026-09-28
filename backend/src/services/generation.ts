@@ -9,7 +9,7 @@ import { now, AppError } from '../utils/response.js'
 import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readImageAsCompressedDataUrl, saveBase64Image } from '../utils/storage.js'
 import { extractVideoPoster } from '../utils/video-poster.js'
 import { getImageAdapter, getVideoAdapter } from './adapters/registry'
-import type { AIConfig } from './adapters/types'
+import type { AIConfig, ImageGenerationRecord, VideoGenerationRecord } from './adapters/types'
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess, logTaskWarn, redactUrl } from '../utils/task-logger.js'
 
 type TaskType = 'image' | 'video'
@@ -17,6 +17,10 @@ type TaskType = 'image' | 'video'
 const taskLabel = (type: TaskType) => (type === 'image' ? 'ImageTask' : 'VideoTask')
 
 // 轮询节奏：图片 5s×120（上限 10 分钟）；视频 10s×300
+/** 提交被厂商以「忙/稍后再试」拒绝时的排队重试：每 15s 一次，最多约 10 分钟 */
+const SUBMIT_RETRY_DELAY_MS = 15_000
+const SUBMIT_RETRY_MAX = 40
+
 const POLL_PROFILES: Record<TaskType, { attempts: number; intervalMs: number; maxDurationMs: number | null }> = {
   image: { attempts: 120, intervalMs: 5000, maxDurationMs: 600_000 },
   video: { attempts: 300, intervalMs: 10_000, maxDurationMs: null },
@@ -208,14 +212,17 @@ async function processTask(id: number, config: AIConfig) {
     if (type === 'image') {
       const adapter = getImageAdapter(config.provider)
       const resolvedReferenceImages = await normalizeReferenceImages(params.referenceImages)
-      ;({ url, method, headers, body } = adapter.buildGenerateRequest(config, {
+      let imageRecord: ImageGenerationRecord = {
         id: record.id,
         model: record.model,
         prompt: record.prompt,
         size: params.size,
         frameType: params.frameType,
         referenceImages: resolvedReferenceImages.length ? JSON.stringify(resolvedReferenceImages) : null,
-      }))
+      }
+      // 部分厂商（如 Wan Create）需先把参考图上传到自家存储
+      if (adapter.prepareRecord) imageRecord = await adapter.prepareRecord(config, imageRecord)
+      ;({ url, method, headers, body } = adapter.buildGenerateRequest(config, imageRecord))
     } else {
       const adapter = getVideoAdapter(config.provider)
       const resolvedImageUrl = await normalizeVideoReferenceUrl(params.imageUrl)
@@ -226,7 +233,7 @@ async function processTask(id: number, config: AIConfig) {
       const resolvedReferenceVideoUrls = resolvePublicMediaUrls(params.referenceVideoUrls, 'video')
       const resolvedReferenceAudioUrls = resolvePublicMediaUrls(params.referenceAudioUrls, 'audio')
       const resolvedReferenceFileUrl = resolvePublicMediaUrl(params.referenceFileUrl, 'file')
-      ;({ url, method, headers, body } = adapter.buildGenerateRequest(config, {
+      let videoRecord: VideoGenerationRecord = {
         id: record.id,
         model: record.model,
         prompt: record.prompt,
@@ -246,7 +253,9 @@ async function processTask(id: number, config: AIConfig) {
         seed: params.seed,
         promptExtend: params.promptExtend,
         watermark: params.watermark,
-      }))
+      }
+      if (adapter.prepareRecord) videoRecord = await adapter.prepareRecord(config, videoRecord)
+      ;({ url, method, headers, body } = adapter.buildGenerateRequest(config, videoRecord))
     }
 
     logTaskProgress(label, 'request', {
@@ -264,16 +273,23 @@ async function processTask(id: number, config: AIConfig) {
       body: isMultipart ? `[multipart/form-data: ${[...(body as FormData).keys()].join(', ')}]` : body,
     })
 
-    const resp = await fetch(url, {
-      method,
-      headers,
-      body: isMultipart ? (body as FormData) : JSON.stringify(body),
-      signal: AbortSignal.timeout(600_000),
-    })
-
-    if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`)
-    const result = await resp.json() as any
-    logTaskPayload(label, 'response payload', { id, provider: config.provider, result })
+    // 提交：厂商返回「稍后再试」类拒绝（如 Wan 账号并发上限 blocked）时排队重试，而不是直接判任务失败
+    const submitAdapter = type === 'image' ? getImageAdapter(config.provider) : getVideoAdapter(config.provider)
+    let result: any
+    for (let attempt = 0; ; attempt++) {
+      const resp = await fetch(url, {
+        method,
+        headers,
+        body: isMultipart ? (body as FormData) : JSON.stringify(body),
+        signal: AbortSignal.timeout(600_000),
+      })
+      if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`)
+      result = await resp.json() as any
+      logTaskPayload(label, 'response payload', { id, provider: config.provider, result })
+      if (!submitAdapter.isRetryableSubmit?.(result) || attempt >= SUBMIT_RETRY_MAX) break
+      logTaskWarn(label, 'submit-busy-retry', { id, provider: config.provider, attempt: attempt + 1, waitMs: SUBMIT_RETRY_DELAY_MS })
+      await new Promise(r => setTimeout(r, SUBMIT_RETRY_DELAY_MS))
+    }
 
     if (type === 'image') {
       const adapter = getImageAdapter(config.provider)
@@ -347,7 +363,7 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
     }
     await new Promise(r => setTimeout(r, profile.intervalMs))
     try {
-      const { url, method, headers } = adapter.buildPollRequest(config, taskId)
+      const { url, method, headers, body: pollBody } = adapter.buildPollRequest(config, taskId)
       logTaskProgress(label, 'poll-request', {
         id: record.id,
         taskId,
@@ -362,6 +378,8 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
       const resp = await fetch(url, {
         method,
         headers,
+        // 多数厂商用 GET 轮询；Wan Create 需要 POST { taskId }
+        body: pollBody === undefined || pollBody === null ? undefined : JSON.stringify(pollBody),
         signal: AbortSignal.timeout(remainingMs),
       })
       if (!resp.ok) continue

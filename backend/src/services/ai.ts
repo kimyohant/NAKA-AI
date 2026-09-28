@@ -30,9 +30,9 @@ export function parseConfigTemperature(settingsRaw: string | null | undefined): 
 }
 
 export const officialProviders: Record<ServiceType, readonly string[]> = {
-  text: ['openai', 'gemini', 'volcengine'],
-  image: ['openai', 'gemini', 'volcengine', 'qwencloud'],
-  video: ['volcengine', 'minimax', 'aliyun'],
+  text: ['openai', 'gemini', 'volcengine', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai'],
+  image: ['openai', 'gemini', 'volcengine', 'qwencloud', 'wancreate'],
+  video: ['volcengine', 'minimax', 'aliyun', 'wancreate'],
 }
 
 export function isOfficialProvider(serviceType?: string | null, provider?: string | null): boolean {
@@ -53,6 +53,18 @@ export function getTextProviderBaseUrl(config: AIConfig) {
 
   if (provider === 'volcengine') {
     return joinProviderUrl(config.baseUrl, '/api/v3', '')
+  }
+
+  if (provider === 'zai') {
+    return joinProviderUrl(config.baseUrl, '/api/paas/v4', '')
+  }
+
+  if (provider === 'qwen') {
+    return joinProviderUrl(config.baseUrl, '/compatible-mode/v1', '')
+  }
+
+  if (provider === 'moonshot' || provider === 'xai') {
+    return joinProviderUrl(config.baseUrl, '/v1', '')
   }
 
   return config.baseUrl

@@ -455,6 +455,8 @@
               :key="`${cfgForm.service_type}-${preset.provider}`"
               type="button"
               class="preset-pill"
+              :class="{ active: cfgForm.provider === preset.provider }"
+              :aria-pressed="cfgForm.provider === preset.provider"
               @click="applyProviderPreset(cfgForm.service_type, preset.provider)"
             >
               {{ preset.label }}
@@ -465,7 +467,7 @@
             <input v-model="cfgForm.name" class="input" :placeholder="t('settings.cfg.namePlaceholder')" />
           </label>
           <label class="field"><span class="field-label">{{ t('settings.cfg.provider') }}</span>
-            <BaseSelect v-model="cfgForm.provider" :options="providerSelectOptions" :placeholder="t('settings.cfg.providerPlaceholder')" searchable />
+            <BaseSelect v-model="cfgForm.provider" :options="providerSelectOptions" :placeholder="t('settings.cfg.providerPlaceholder')" searchable @update:model-value="applyProviderPreset(cfgForm.service_type, $event)" />
           </label>
           <label class="field">
             <span class="field-label">{{ t('settings.cfg.priority') }}</span>
@@ -502,9 +504,9 @@
             <input v-model="cfgForm.temperature" class="input" type="number" step="0.1" min="0" max="2" :placeholder="t('settings.cfg.tempPlaceholder')" />
             <span class="field-hint">{{ t('settings.cfg.tempNote') }}</span>
           </label>
-          <div v-if="cfgTestResult" class="test-result" :class="{ ok: cfgTestResult.reachable, bad: !cfgTestResult.reachable }">
+          <div v-if="cfgTestResult" class="test-result" :class="{ ok: cfgTestResult.ok, bad: !cfgTestResult.ok }">
             <div class="test-result-head">
-              <span class="tag" :class="cfgTestResult.reachable ? 'tag-success' : 'tag-error'">{{ cfgTestResult.status || 'ERROR' }}</span>
+              <span class="tag" :class="cfgTestResult.ok ? 'tag-success' : 'tag-error'">{{ cfgTestResult.status || 'ERROR' }}</span>
               <span>{{ cfgTestResult.message }}</span>
             </div>
             <div class="mono test-result-url">{{ cfgTestResult.method }} {{ cfgTestResult.url }}</div>
@@ -704,8 +706,15 @@ const serviceTypes = computed(() => [
   { type: 'image', label: t('common.serviceType.image') },
   { type: 'video', label: t('common.serviceType.video') },
 ])
-const providers = ['gemini', 'openai', 'volcengine', 'minimax', 'aliyun']
-const providerSelectOptions = computed(() => providers.map(p => ({ label: p, value: p })))
+const providersByType = {
+  text: ['gemini', 'openai', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'volcengine'],
+  image: ['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate'],
+  video: ['volcengine', 'minimax', 'aliyun', 'wancreate'],
+}
+const providerSelectOptions = computed(() => (providersByType[cfgForm.service_type] || []).map(p => ({
+  label: providerPresets[cfgForm.service_type]?.[p]?.label || p,
+  value: p,
+})))
 const serviceMeta = computed(() => ({
   text: { label: t('common.serviceType.text'), desc: t('settings.ai.meta.text') },
   image: { label: t('common.serviceType.image'), desc: t('settings.ai.meta.image') },
@@ -714,16 +723,25 @@ const serviceMeta = computed(() => ({
 const providerPresets = {
   text: {
     gemini: { label: 'Gemini Official', baseUrl: 'https://generativelanguage.googleapis.com', models: ['gemini-3.8-flash', 'gemini-3.1-pro-preview', 'gemini-3-flash-preview'] },
-    openai: { label: 'OpenAI Official', baseUrl: 'https://api.openai.com', models: ['deepseek-v4-pro', 'gpt-5.6-terra'] },
+    openai: { label: 'OpenAI Official', baseUrl: 'https://api.openai.com', models: ['gpt-5.6-terra'] },
+    zai: { label: 'Z.AI (GLM)', baseUrl: 'https://api.z.ai', models: ['glm-5.3', 'glm-5.3-flash', 'glm-5.2'] },
+    deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-flash', 'deepseek-v4-pro'] },
+    qwen: { label: 'Qwen (Singapore workspace)', baseUrl: 'https://{WorkspaceId}.ap-southeast-1.maas.aliyuncs.com', models: ['qwen3.8-max', 'qwen3.7-plus'] },
+    moonshot: { label: 'Kimi (Moonshot)', baseUrl: 'https://api.moonshot.ai', models: ['kimi-k3', 'kimi-k2.6'] },
+    xai: { label: 'xAI (Grok)', baseUrl: 'https://api.x.ai', models: ['grok-4.7'] },
+    volcengine: { label: 'Volcengine Ark', baseUrl: 'https://ark.cn-beijing.volces.com', models: [] },
   },
   image: {
     gemini: { label: 'Gemini Official', baseUrl: 'https://generativelanguage.googleapis.com', models: ['gemini-3-pro-image', 'gemini-3.1-flash-image'] },
     openai: { label: 'OpenAI Official', baseUrl: 'https://api.openai.com', models: ['gpt-image-2'] },
+    // Wan Create：create.wan.video 账号的 AccessKey（wan-sk.…），扣 Wan 积分；国内账号 Base URL 改为 https://wanx.biz.aliyun.com
+    wancreate: { label: 'Wan Create (create.wan.video)', baseUrl: 'https://create.wan.video', models: ['wan2.7-flash', 'wan2.7', 'wan3.0'] },
   },
   video: {
     aliyun: { label: 'Alibaba Cloud Bailian Wan 3.0', baseUrl: 'https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com', models: ['wan3.0-video', 'wan3.0-video-prime'] },
     volcengine: { label: 'Seedance 2.0 Official', baseUrl: 'https://ark.cn-beijing.volces.com', models: ['doubao-seedance-2-0-mini-260615', 'doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128'] },
     minimax: { label: 'MiniMax H3 Official', baseUrl: 'https://api.minimaxi.com', models: ['MiniMax-H3'] },
+    wancreate: { label: 'Wan Create (create.wan.video)', baseUrl: 'https://create.wan.video', models: ['wan3.0', 'wan2.7'] },
   },
 }
 
@@ -807,7 +825,7 @@ async function testCfgPayload(payload) {
   cfgTesting.value = true
   try {
     cfgTestResult.value = await aiConfigAPI.test(payload)
-    if (cfgTestResult.value.reachable) toast.success(t('settings.cfg.reachable'))
+    if (cfgTestResult.value.ok) toast.success(t('settings.cfg.reachable'))
     else toast.warning(t('settings.cfg.unreachable'))
   } catch (e) {
     toastError(e)
@@ -1634,6 +1652,7 @@ onBeforeUnmount(stopUsagePoll)
   transition: all 0.16s var(--ease-out);
 }
 .preset-pill:hover { background: var(--button-bg-hover); color: var(--text-0); }
+.preset-pill.active { background: var(--accent-bg); color: var(--accent-text); }
 .preset-pill:focus-visible { outline: none; box-shadow: 0 0 0 3.5px var(--button-focus); }
 .test-result {
   display: flex;

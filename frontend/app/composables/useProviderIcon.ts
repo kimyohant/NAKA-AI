@@ -11,10 +11,12 @@ const FILENAMES: Record<string, string> = {
   minimax: 'minimax-color.png',
   claude: 'claude-color.png',
   deepseek: 'deepseek-color.png',
+  zai: 'zhipu-color.png',
   doubao: 'doubao-color.png',
   moonshot: 'kimi-color.png',
   qwen: 'qwen-color.png',
-  aliyun: 'qwen-color.png',  // 阿里云 Wan 系列与 Qwen 同属阿里，共用图标
+  aliyun: 'qwen-color.png',
+  wancreate: 'qwen-color.png',  // Wan Create（create.wan.video）同属阿里 Wan  // 阿里云 Wan 系列与 Qwen 同属阿里，共用图标
   zhipu: 'zhipu-color.png',
   xai: 'grok.png',
   xiaomi: 'xiaomi-color.png',
