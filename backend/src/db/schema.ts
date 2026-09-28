@@ -33,6 +33,7 @@ export const episodes = sqliteTable('episodes', {
   description: text('description'),
   duration: integer('duration').default(0),
   status: text('status').default('draft'),
+  hook: text('hook'),
   videoUrl: text('video_url'),
   thumbnail: text('thumbnail'),
   imageConfigId: integer('image_config_id'),
@@ -41,6 +42,24 @@ export const episodes = sqliteTable('episodes', {
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   deletedAt: text('deleted_at'),
+})
+
+export const pipelineTasks = sqliteTable('pipeline_tasks', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  kind: text('kind').notNull(),
+  key: text('key').notNull().unique(),
+  dramaId: integer('drama_id'),
+  episodeId: integer('episode_id'),
+  status: text('status').notNull().default('running'),
+  total: integer('total').default(0),
+  completed: integer('completed').default(0),
+  failed: integer('failed').default(0),
+  currentKey: text('current_key'),
+  errorMsg: text('error_msg'),
+  cancelRequested: integer('cancel_requested').default(0),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  finishedAt: text('finished_at'),
 })
 
 export const characters = sqliteTable('characters', {

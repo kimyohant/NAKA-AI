@@ -14,7 +14,8 @@ async function req<T = any>(method: string, path: string, body?: any): Promise<T
 
     if (!resp.ok || (json.code && json.code >= 400)) {
       console.log(`%c[API] %c${method} ${path} %c${resp.status} %c${ms}ms`, 'color:#888', 'color:#ef5350', 'color:#ef5350;font-weight:bold', 'color:#888', json.message || '')
-      throw new Error(json.message || `${resp.status}`)
+      // errorCode: รหัสเสถียรจาก backend (เช่น E_NO_TEXT_MODEL) → toastError แปลเป็นภาษา UI
+      throw Object.assign(new Error(json.message || `${resp.status}`), { errorCode: json.errorCode || undefined, status: resp.status })
     }
 
     console.log(`%c[API] %c${method} ${path} %c${resp.status} %c${ms}ms`, 'color:#888', 'color:#66bb6a', 'color:#66bb6a;font-weight:bold', 'color:#888')
@@ -56,6 +57,10 @@ export const episodeAPI = {
   extractStatus: (id: number) => api.get(`/episodes/${id}/extract-status`),
   generateVideoPrompts: (id: number, model?: string, configId?: number, storyboardIds?: number[]) => api.post(`/episodes/${id}/generate-video-prompts`, { model: model || undefined, config_id: configId || undefined, storyboard_ids: storyboardIds?.length ? storyboardIds : undefined }),
   videoPromptsStatus: (id: number) => api.get(`/episodes/${id}/video-prompts-status`),
+  suggestHook: (id: number) => api.post(`/episodes/${id}/suggest-hook`, {}),
+  reviewScript: (id: number, model?: string, configId?: number) => api.post(`/episodes/${id}/review-script`, { model: model || undefined, config_id: configId || undefined }),
+  cancelExtract: (id: number, target: string) => api.post(`/episodes/${id}/extract/${target}/cancel`, {}),
+  cancelVideoPrompts: (id: number) => api.post(`/episodes/${id}/generate-video-prompts/cancel`, {}),
 }
 
 export const storyboardAPI = {

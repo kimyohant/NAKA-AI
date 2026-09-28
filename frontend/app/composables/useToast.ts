@@ -41,6 +41,12 @@ export function mapError(err: unknown, opts?: { fallback?: string }): string {
   const msg = messageOf(err).trim()
   if (!msg) return opts?.fallback ? t(opts.fallback) : t('errors.unknown')
 
+  // รหัสข้อผิดพลาดเสถียรจาก backend (err.errorCode เช่น E_NO_TEXT_MODEL) → แปลตามภาษา UI ก่อนเสมอ
+  const errorCode = (err as { errorCode?: unknown } | null)?.errorCode
+  if (typeof errorCode === 'string' && errorCode && i18n.global.te(`errors.codes.${errorCode}`)) {
+    return t(`errors.codes.${errorCode}`)
+  }
+
   if (err instanceof TypeError && NETWORK_RE.test(msg)) return t('errors.network')
   if (err instanceof SyntaxError || NONJSON_RE.test(msg)) return t('errors.server')
   if (MODERATION_RE.test(msg)) return t('errors.moderation')

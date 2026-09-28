@@ -5,7 +5,7 @@
 import { db, getInsertId, schema } from '../db/index.js'
 import { eq } from 'drizzle-orm'
 import { getActiveConfig, getConfigById } from './ai.js'
-import { now } from '../utils/response.js'
+import { now, AppError } from '../utils/response.js'
 import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readImageAsCompressedDataUrl, saveBase64Image } from '../utils/storage.js'
 import { extractVideoPoster } from '../utils/video-poster.js'
 import { getImageAdapter, getVideoAdapter } from './adapters/registry'
@@ -65,7 +65,7 @@ export async function generateImage(params: GenerateImageParams): Promise<number
   const config = params.configId
     ? (await getConfigById(params.configId)) ?? await getActiveConfig('image')
     : await getActiveConfig('image')
-  if (!config) throw new Error('未配置图片模型，请先到「设置」页添加并启用 AI 服务')
+  if (!config) throw new AppError('未配置图片模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_IMAGE_MODEL')
 
   const id = await createTask('image', config, {
     storyboardId: params.storyboardId,
@@ -103,7 +103,7 @@ export async function generateVideo(params: GenerateVideoParams): Promise<number
   const config = params.configId
     ? (await getConfigById(params.configId)) ?? await getActiveConfig('video')
     : await getActiveConfig('video')
-  if (!config) throw new Error('未配置视频模型，请先到「设置」页添加并启用 AI 服务')
+  if (!config) throw new AppError('未配置视频模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_VIDEO_MODEL')
 
   const id = await createTask('video', config, {
     storyboardId: params.storyboardId,

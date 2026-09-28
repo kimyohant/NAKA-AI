@@ -6,6 +6,10 @@ import { toSnakeCaseArray, toSnakeCase } from '../utils/transform.js'
 import { getActiveConfigId } from '../services/ai.js'
 import { EXTRACT_TARGETS, getExtractionStatus, startExtraction, type ExtractTarget } from '../services/extraction.js'
 import { getVideoPromptBatchStatus, startVideoPromptBatch } from '../services/video-prompts.js'
+import { buildAgentRequestContext } from '../agents/context.js'
+import { buildDramaCreativeContext } from '../services/drama-context.js'
+import { mastra } from '../mastra/index.js'
+import { extractKey, cancelTask, videoPromptsKey } from '../services/pipeline-tasks.js'
 
 const app = new Hono()
 
@@ -17,8 +21,8 @@ app.post('/', async (c) => {
   // 图片/视频配置：显式传入优先，缺省时自动锁定当前启用的最高优先级官方配置
   const imageConfigId = body.image_config_id ?? await getActiveConfigId('image')
   const videoConfigId = body.video_config_id ?? await getActiveConfigId('video')
-  if (!imageConfigId) return badRequest(c, '未找到启用的图片生成配置，请先在设置中心添加')
-  if (!videoConfigId) return badRequest(c, '未找到启用的视频生成配置，请先在设置中心添加')
+  if (!imageConfigId) return badRequest(c, '未找到启用的图片生成配置，请先在设置中心添加', 'E_NO_IMAGE_CONFIG')
+  if (!videoConfigId) return badRequest(c, '未找到启用的视频生成配置，请先在设置中心添加', 'E_NO_VIDEO_CONFIG')
   const ts = now()
 
   // Get next episode number（忽略已软删的集，删除中间集后新集号可复用空位之后的最大值）
@@ -56,7 +60,7 @@ app.put('/:id', async (c) => {
   const id = Number(c.req.param('id'))
   const body = await c.req.json()
 
-  const allowed = ['content', 'script_content', 'title', 'description', 'status', 'resolution']
+  const allowed = ['content', 'script_content', 'title', 'description', 'status', 'resolution', 'hook']
   const updates: Record<string, any> = {}
   for (const key of allowed) {
     if (key in body) updates[key] = body[key]
@@ -74,6 +78,7 @@ app.put('/:id', async (c) => {
   if ('description' in updates) drizzleUpdates.description = updates.description
   if ('status' in updates) drizzleUpdates.status = updates.status
   if ('resolution' in updates) drizzleUpdates.resolution = updates.resolution
+  if ('hook' in updates) drizzleUpdates.hook = updates.hook
 
   await db.update(schema.episodes).set(drizzleUpdates).where(eq(schema.episodes.id, id))
   return success(c)
@@ -133,14 +138,14 @@ app.post('/:id/extract', async (c) => {
   if (!EXTRACT_TARGETS.includes(target)) return badRequest(c, 'target 必须是 characters / scenes / props')
   const [ep] = await db.select().from(schema.episodes).where(eq(schema.episodes.id, id))
   if (!ep) return notFound(c, '剧集不存在')
-  const started = startExtraction(ep.id, ep.dramaId, target, { model: body.model || undefined, configId: body.config_id ?? undefined })
+  const started = await startExtraction(ep.id, ep.dramaId, target, { model: body.model || undefined, configId: body.config_id ?? undefined })
   return success(c, { target, status: 'running', already_running: !started })
 })
 
 // GET /episodes/:id/extract-status — 查询三类资产提取任务状态
 app.get('/:id/extract-status', async (c) => {
   const id = Number(c.req.param('id'))
-  return success(c, getExtractionStatus(id))
+  return success(c, await getExtractionStatus(id))
 })
 
 // POST /episodes/:id/generate-video-prompts — 异步批量为缺少视频提示词的分镜生成（立即返回，前端轮询状态）
@@ -161,7 +166,7 @@ app.post('/:id/generate-video-prompts', async (c) => {
 // GET /episodes/:id/video-prompts-status — 查询批量视频提示词任务状态
 app.get('/:id/video-prompts-status', async (c) => {
   const id = Number(c.req.param('id'))
-  return success(c, getVideoPromptBatchStatus(id))
+  return success(c, await getVideoPromptBatchStatus(id))
 })
 
 // GET /episodes/:episode_id/storyboards
@@ -288,6 +293,81 @@ app.get('/:id/pipeline-status', async (c) => {
       merge_episode: { status: latestMerge?.status === 'completed' ? 'done' : (latestMerge ? latestMerge.status : 'pending'), merged_url: latestMerge?.mergedUrl },
     },
   })
+})
+
+// POST /episodes/:id/suggest-hook — AI เสนอฮุคท้ายตอน（Hook Chain）
+app.post('/:id/suggest-hook', async (c) => {
+  const id = Number(c.req.param('id'))
+  const [ep] = await db.select().from(schema.episodes).where(eq(schema.episodes.id, id))
+  if (!ep) return notFound(c, '集不存在')
+  const script = ep.scriptContent || ep.content
+  if (!script) return badRequest(c, '该集还没有剧本或大纲，无法生成钩子', 'E_EPISODE_NO_SCRIPT')
+  const agent = mastra.getAgent('hook_suggester')
+  if (!agent) return badRequest(c, '钩子建议 Agent 不可用', 'E_AGENT_UNAVAILABLE')
+
+  const requestContext = buildAgentRequestContext({ episodeId: id, dramaId: ep.dramaId })
+  const [prev] = await db.select().from(schema.episodes)
+    .where(and(eq(schema.episodes.dramaId, ep.dramaId), eq(schema.episodes.episodeNumber, (ep.episodeNumber || 1) - 1)))
+  const creativeContext = await buildDramaCreativeContext(ep.dramaId)
+  const message = [
+    creativeContext,
+    `【本集标题】EP${ep.episodeNumber} ${ep.title}`,
+    prev?.hook ? `【上一集结尾钩子（需递进，不要重复）】\n${prev.hook}` : '【上一集结尾钩子】无（这是第一集）',
+    `【本集剧本】\n${script}`,
+    '请给出本集结尾钩子（只输出钩子文本本身，1-3 句话）。',
+  ].filter(Boolean).join('\n\n')
+
+  try {
+    const result = await agent.generate([{ role: 'user', content: message }], { maxSteps: 2, requestContext })
+    const suggestion = (result.text || '').trim().replace(/^["「『]|["」』]$/g, '')
+    if (!suggestion) return badRequest(c, 'Agent 未返回钩子建议', 'E_AGENT_EMPTY_RESULT')
+    return success(c, { suggestion })
+  } catch (err: any) {
+    return badRequest(c, err?.message || '钩子建议生成失败', err?.errorCode)
+  }
+})
+
+// POST /episodes/:id/review-script — Auto Review & Optimize：审校并保存优化后的剧本
+app.post('/:id/review-script', async (c) => {
+  const id = Number(c.req.param('id'))
+  const body = await c.req.json().catch(() => ({}))
+  const [ep] = await db.select().from(schema.episodes).where(eq(schema.episodes.id, id))
+  if (!ep) return notFound(c, '集不存在')
+  if (!ep.scriptContent) return badRequest(c, '该集还没有改写后的剧本，无法审校', 'E_EPISODE_NO_SCRIPT')
+  const agent = mastra.getAgent('script_reviewer')
+  if (!agent) return badRequest(c, '剧本审校 Agent 不可用', 'E_AGENT_UNAVAILABLE')
+
+  const requestContext = buildAgentRequestContext({
+    episodeId: id,
+    dramaId: ep.dramaId,
+    modelOverride: body.model || undefined,
+    textConfigId: body.config_id || undefined,
+  })
+  const creativeContext = await buildDramaCreativeContext(ep.dramaId, id)
+  const message = `${creativeContext ? creativeContext + '\n\n' : ''}请审阅并优化当前集剧本：先调用 read_episode_script 读取，再按你的审校规范优化，最后调用 save_script 保存完整剧本。`
+
+  try {
+    const result = await agent.generate([{ role: 'user', content: message }], { maxSteps: 12, requestContext })
+    return success(c, { summary: result.text || '' })
+  } catch (err: any) {
+    return badRequest(c, err?.message || '剧本审校失败', err?.errorCode)
+  }
+})
+
+// POST /episodes/:id/extract/:target/cancel — ขอยกเลิกงานแยกองค์ประกอบ（协作式：หยุดก่อนเริ่ม / ลูปถัดไป）
+app.post('/:id/extract/:target/cancel', async (c) => {
+  const id = Number(c.req.param('id'))
+  const target = c.req.param('target') as ExtractTarget
+  if (!EXTRACT_TARGETS.includes(target)) return badRequest(c, `无效的提取类型：${target}`)
+  const cancelled = await cancelTask(extractKey(id, target))
+  return success(c, { cancelled })
+})
+
+// POST /episodes/:id/generate-video-prompts/cancel — ขอยกเลิกงานสร้าง video prompt ทั้งชุด
+app.post('/:id/generate-video-prompts/cancel', async (c) => {
+  const id = Number(c.req.param('id'))
+  const cancelled = await cancelTask(videoPromptsKey(id))
+  return success(c, { cancelled })
 })
 
 export default app

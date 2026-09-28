@@ -4,6 +4,7 @@
 import { Hono } from 'hono'
 import { validAgentTypes } from '../agents/index.js'
 import { buildAgentRequestContext } from '../agents/context.js'
+import { buildDramaCreativeContext } from '../services/drama-context.js'
 import { mastra } from '../mastra/index.js'
 import { success, badRequest } from '../utils/response.js'
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
@@ -66,8 +67,10 @@ app.post('/:type/chat', async (c) => {
   const startTime = performance.now()
 
   try {
+    // 项目创作定位（类型/套路/时长目标等）注入用户消息，供全部 Agent 链路共享
+    const creativeContext = await buildDramaCreativeContext(Number(drama_id), Number(episode_id))
     const result = await agent.generate(
-      [{ role: 'user', content: message }],
+      [{ role: 'user', content: creativeContext ? `${creativeContext}\n\n${message}` : message }],
       { maxSteps: 20, requestContext },
     )
 
@@ -103,7 +106,7 @@ app.post('/:type/chat', async (c) => {
     const elapsed = ((performance.now() - startTime) / 1000).toFixed(1)
     logTaskError('Agent', agentType, { elapsedSeconds: elapsed, error: err.message })
     console.error(err.stack || err)
-    return badRequest(c, err.message || 'Agent 执行失败')
+    return badRequest(c, err.message || 'Agent 执行失败', err?.errorCode)
   }
 })
 

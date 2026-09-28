@@ -35,6 +35,7 @@ export const sqliteSchemaStatements = [
     description TEXT,
     duration INTEGER DEFAULT 0,
     status TEXT DEFAULT 'draft',
+    hook TEXT,
     video_url TEXT,
     thumbnail TEXT,
     image_config_id INTEGER,
@@ -294,6 +295,27 @@ export const sqliteSchemaStatements = [
     value TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`,
+
+  // Agent pipeline 任务状态（提取/视频提示词批量）— DB 为唯一事实来源：
+  // 进程重启后状态可恢复显示，boot 时把 running 行标记为失败（见 services/pipeline-tasks.ts）
+  `CREATE TABLE IF NOT EXISTS pipeline_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    key TEXT NOT NULL UNIQUE,
+    drama_id INTEGER,
+    episode_id INTEGER,
+    status TEXT NOT NULL DEFAULT 'running',
+    total INTEGER DEFAULT 0,
+    completed INTEGER DEFAULT 0,
+    failed INTEGER DEFAULT 0,
+    current_key TEXT,
+    error_msg TEXT,
+    cancel_requested INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    finished_at TEXT
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_pipeline_tasks_episode_id ON pipeline_tasks (episode_id)`,
 ]
 
 /**
@@ -374,9 +396,24 @@ const UPGRADE_SQL = 'UPDATE style_presets SET "name" = ?, "prompt" = ?, "descrip
 // 内容寻址下架：命中下架种子原文才删除
 const REMOVE_SQL = 'DELETE FROM style_presets WHERE "value" = ? AND "prompt" = ?'
 
+/**
+ * 老库补列迁移：CREATE TABLE IF NOT EXISTS 不会给已存在的表加列，
+ * 这里按 PRAGMA table_info 幂等补齐（列名 → DDL 片段）
+ */
+const ENSURE_COLUMNS: Array<{ table: string; column: string; ddl: string }> = [
+  { table: 'episodes', column: 'hook', ddl: 'ALTER TABLE episodes ADD COLUMN hook TEXT' },
+]
+
 export function initSqliteSchema(sqlite: Database.Database) {
   for (const statement of sqliteSchemaStatements) {
     sqlite.exec(statement)
+  }
+  for (const { table, column, ddl } of ENSURE_COLUMNS) {
+    const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
+    if (!cols.some(col => col.name === column)) {
+      sqlite.exec(ddl)
+      console.log(`🧩 已为 ${table} 表补列 ${column}`)
+    }
   }
   const insertSeed = sqlite.prepare(SEED_SQL)
   const upgradeSeed = sqlite.prepare(UPGRADE_SQL)

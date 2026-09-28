@@ -286,6 +286,7 @@
             <div v-if="extractingTargets.length && !chars.length && !scenes.length && !propItems.length" class="step-loading">
               <Loader2 :size="24" class="animate-spin" style="color:var(--accent)" />
               <div class="loading-text">{{ t('episode.prod.extractingTypes', { types: extractingLabels }) }}</div>
+              <button class="btn btn-sm" @click="cancelAllExtracts">{{ t('common.cancel') }}</button>
             </div>
             <div v-else-if="!chars.length && !scenes.length && !propItems.length" class="step-empty asset-empty-state">
               <div class="empty-visual">
@@ -497,6 +498,9 @@
                   <Loader2 v-if="videoPromptBatch.running" :size="11" class="animate-spin" />
                   <svg v-else width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                   {{ videoPromptBatch.running ? t('episode.sb.promptProgress', { done: videoPromptBatch.completed, total: videoPromptBatch.total }) : (videoSelectMode && selectedVideoSbIds.length ? t('episode.sb.promptSelected', { n: selectedVideoSbIds.length }) : t('episode.sb.batchPrompts')) }}
+                </button>
+                <button v-if="videoPromptBatch.running" class="btn btn-sm" @click="cancelVideoPromptBatch">
+                  {{ t('common.cancel') }}
                 </button>
                 <button v-if="videoTaskFailedCount" class="btn btn-sm video-retry-failed" @click="retryFailedVideos">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -1461,7 +1465,10 @@ const storedPanel = (() => {
 })()
 // 首个 refresh 时若已恢复面板位置，跳过按内容自动重置 scriptStep
 let panelRestored = !!storedPanel
-const panel = ref(['production', 'export'].includes(storedPanel?.panel) ? storedPanel.panel : 'script')
+// 项目页卡片可直达指定步骤：?panel=production&tab=videos（优先于本地记忆）
+const queryPanel = ['script', 'production', 'export'].includes(String(route.query.panel)) ? String(route.query.panel) : null
+const queryProdTab = ['assets', 'videos'].includes(String(route.query.tab)) ? String(route.query.tab) : null
+const panel = ref(queryPanel || (['production', 'export'].includes(storedPanel?.panel) ? storedPanel.panel : 'script'))
 const { running: rn, runningType: rt, run: runAgent } = useAgent()
 
 const localRaw = ref(''), localScript = ref('')
@@ -1508,7 +1515,7 @@ async function loadExportMerges() {
 const scriptStep = ref(storedPanel ? (storedPanel.scriptStep === 0 ? 0 : 1) : 0)
 // 旧版本地存储的 'storyboard' 子步骤已并入 'videos'（视频制作）
 const storedProdTab = storedPanel?.prodTab === 'storyboard' ? 'videos' : storedPanel?.prodTab
-const prodTab = ref(['assets', 'videos'].includes(storedProdTab) ? storedProdTab : 'assets')
+const prodTab = ref(queryProdTab || (['assets', 'videos'].includes(storedProdTab) ? storedProdTab : 'assets'))
 // 面板位置变化即持久化
 watch([panel, scriptStep, prodTab], ([p, s, pt]) => {
   try { localStorage.setItem(PANEL_STORE_KEY, JSON.stringify({ panel: p, scriptStep: s, prodTab: pt })) } catch { /* 静默 */ }
@@ -2024,7 +2031,7 @@ function onVideoTaskRowClick(sb) {
 // 旁白角色识别：按内容语言的关键词匹配（提取产物中的旁白角色不参与画面生成）
 function isNarratorCharacter(char) {
   const text = `${char?.name || ''} ${char?.role || ''}`.toLowerCase()
-  return ['旁白', '画外音', 'narrator', 'ナレーター', 'ナレーション', '내레이션', '해설'].some(k => text.includes(k))
+  return ['旁白', '画外音', 'narrator', 'ผู้บรรยาย', 'เสียงบรรยาย', 'ナレーター', 'ナレーション', '내레이션', '해설'].some(k => text.includes(k))
 }
 
 const visualChars = computed(() => chars.value.filter(c => !isNarratorCharacter(c)))
@@ -2642,7 +2649,25 @@ function saveRaw() { episodeAPI.update(epId.value, { content: localRaw.value });
 function saveScr() { episodeAPI.update(epId.value, { script_content: localScript.value }); episode.value.script_content = localScript.value }
 // 发给 Agent 的 message 是功能性提示词而非 UI 文案：产出语言由后端全局「内容语言」指令控制，
 // 这里保持中文不随界面语言变化
-function doRewrite() { saveRaw(); runAgent('script_rewriter', '请读取剧本并改写为格式化剧本，然后保存', dramaId, epId.value, refresh, chatModelOverride(), chatConfigId()) }
+async function doRewrite() {
+  saveRaw()
+  await runAgent('script_rewriter', '请读取剧本并改写为格式化剧本，然后保存', dramaId, epId.value, refresh, chatModelOverride(), chatConfigId())
+  // Auto Review & Optimize（项目设置开启时）：改写完成立即跑一遍审校优化
+  if (drama.value?.metadata?.auto_review) {
+    try {
+      const res = await episodeAPI.reviewScript(epId.value)
+      toast.info(t('episode.script.reviewDone', { summary: String(res?.summary || '').slice(0, 160) }))
+    } catch (e) {
+      toastError(e)
+    }
+    refresh()
+  }
+  // ผลิตต่ออัตโนมัติ（auto_pipeline）：แต่งบท/ตรวจทานจบ → เริ่มแยกตัวละคร/ฉาก/พร็อพทันที
+  if (drama.value?.metadata?.auto_pipeline) {
+    if (!extractingTargets.value.length) doExtractAll()
+    toast.info(t('episode.script.pipelineContinued'))
+  }
+}
 function skipRewrite() {
   const raw = (localRaw.value || rawContent.value || '').trim()
   if (!raw) {
@@ -2679,6 +2704,19 @@ function doExtract(target) {
 }
 function doExtractAll() { EXTRACT_TARGETS.value.forEach(x => doExtract(x.key)) }
 
+// ยกเลิกงานแยกองค์ประกอบ（协作式 cancel）：สถานะ cancelled จะหลุดจาก polling เอง
+async function cancelExtract(target) {
+  try { await episodeAPI.cancelExtract(epId.value, target) } catch (e) { toastError(e) }
+}
+function cancelAllExtracts() { extractingTargets.value.forEach(t => cancelExtract(t)) }
+
+async function cancelVideoPromptBatch() {
+  try {
+    await episodeAPI.cancelVideoPrompts(epId.value)
+    toast.info(t('episode.sb.batchCancelling'))
+  } catch (e) { toastError(e) }
+}
+
 function pollExtractStatus(target, attempts = 150) {
   const label = EXTRACT_TARGETS.value.find(x => x.key === target)?.label || target
   const tick = async (left) => {
@@ -2690,6 +2728,8 @@ function pollExtractStatus(target, attempts = 150) {
         if (task.status === 'done') {
           toast.success(t('episode.extract.done', { type: label }))
           await refresh()
+        } else if (task.status === 'cancelled') {
+          toast.info(t('episode.extract.cancelled', { type: label }))
         } else {
           toastError(task.error, { fallback: 'episode.extract.failed' })
         }
@@ -2766,6 +2806,8 @@ function pollVideoPromptBatch(attempts = 240) {
         await refresh()
         if (st.status === 'done') {
           toast.success(st.failed ? t('episode.sb.batchDoneFailed', { n: st.failed }) : t('episode.sb.batchDone'))
+        } else if (st.status === 'cancelled') {
+          toast.info(t('episode.sb.batchCancelled', { done: st.completed, total: st.total }))
         } else {
           toastError(st.error, { fallback: 'episode.sb.batchFailed' })
         }
