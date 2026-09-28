@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Huobao Shorts",
+    "title": "NAKA-AI",
     "updateAvailable": "New version v{version} is available. Upgrade in Settings → About."
   },
   "common": {
@@ -34,7 +34,11 @@
   "layout": {
     "nav": {
       "projects": "Projects",
-      "settings": "Settings"
+      "settings": "Settings",
+      "home": "Drama Studio",
+      "setup": "Setup",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
     },
     "banner": {
       "missing": "{types} model not configured yet. AI features are unavailable.",
@@ -140,7 +144,8 @@
       "aspectRatio": "Aspect ratio",
       "aspectRatioPlaceholder": "Select aspect ratio",
       "aspectRatioHint": "Fixed after creation; all videos will use this ratio",
-      "submit": "Create project"
+      "submit": "Create project",
+      "genreOptional": "Genre (optional — multi-select)"
     },
     "deleteDialog": {
       "title": "Delete project",
@@ -151,6 +156,51 @@
       "minutesAgo": "{n} min ago",
       "hoursAgo": "{n} h ago",
       "daysAgo": "{n} d ago"
+    },
+    "studio": {
+      "titleLine1": "Create AI microdrama series",
+      "titleLine2": "with agents",
+      "placeholder": "Paste a script or novel, or type your story idea. The agents will shape the script, break it into shots and create the videos. Best for stories with many scenes.",
+      "upload": "Upload Script / Novel",
+      "style": "Style",
+      "portrait": "Portrait",
+      "landscape": "Landscape",
+      "submit": "Start from this story",
+      "creating": "Creating project…",
+      "created": "Project created — start with the script step",
+      "storyRequired": "Type or upload a story first",
+      "untitled": "New story",
+      "needConfig": "Configure image and video services before creating an episode",
+      "fileTooBig": "File is too large (max 2 MB)",
+      "fileRead": "Could not read the file. .txt and .md are supported",
+      "charCount": "{n} chars",
+      "stylesTitle": "Pick a visual style",
+      "stylesSub": "Click to use it for the story you create",
+      "selected": "Selected",
+      "scrollNext": "Scroll for more",
+      "myProjects": "My Projects",
+      "createNew": "Create New Project",
+      "sort": "Sort"
+    },
+    "styleNames": {
+      "3d": "3D Animation",
+      "anime": "Anime",
+      "ghibli": "Ghibli Hand-drawn",
+      "watercolor": "Watercolor",
+      "comic": "American Comic",
+      "guofeng": "Chinese Fantasy 2.5D",
+      "webtoon": "Korean Webtoon",
+      "noir": "Noir Ink"
+    },
+    "styleDescs": {
+      "3d": "Game-engine grade 3D render with semi-realistic characters — the current short-drama favorite",
+      "anime": "Japanese cel-shaded animation",
+      "ghibli": "Warm, gentle hand-drawn Ghibli look",
+      "watercolor": "Storybook watercolor illustration",
+      "comic": "Bold lines and punchy color, American comic style",
+      "guofeng": "Chinese period / xianxia drama, 2.5D semi-realistic",
+      "webtoon": "Polished Korean webtoon coloring",
+      "noir": "High-contrast black-and-white ink, noir mood"
     }
   },
   "detail": {
@@ -225,6 +275,75 @@
       "needEpisodeForImage": "Create at least one episode in “Episodes” before generating asset images",
       "needEpisodeForPrompt": "Create at least one episode in “Episodes” before generating the final prompt",
       "locationRequired": "Please enter a location"
+    },
+    "ws": {
+      "tabsAria": "Project sections",
+      "tabSettings": "Settings",
+      "tabOutline": "Outline & Script",
+      "tabCharacters": "Characters",
+      "tabScenes": "Environments",
+      "tabProps": "Props",
+      "prep": "Prep {done}/{total}",
+      "prepMissing": "still need: {list}",
+      "settingsTitle": "Project Settings",
+      "logline": "Logline",
+      "loglinePlaceholder": "First paragraph is the logline; the next is the story's big question",
+      "genre": "Genre",
+      "genrePlaceholder": "e.g. Family drama / revenge",
+      "outline": "Outline",
+      "overview": "Project Overview",
+      "grandExpectation": "Grand Expectation",
+      "noLogline": "No logline yet",
+      "addLogline": "Add in Settings",
+      "envCount": "{n} environments",
+      "propCount": "{n} props",
+      "statusPrefix": "Status: ",
+      "noSummary": "No summary for this episode yet",
+      "scriptDone": "Script done",
+      "scriptTodo": "Script incomplete",
+      "noVideo": "No video yet",
+      "viewScript": "View/Edit Script",
+      "editScript": "Edit Script",
+      "enterVideo": "Enter Video Production",
+      "basicSettings": "Basic Settings",
+      "episodeMode": "Episode Mode",
+      "episodeSingle": "Single Episode",
+      "episodeMulti": "Multi-Episode",
+      "firstEpDuration": "First Episode Duration (s)",
+      "laterEpDuration": "Later Episode Duration (s)",
+      "suggestiveness": "Suggestiveness",
+      "suggAll": "All Ages",
+      "suggTeen": "13+",
+      "suggSixteen": "16+",
+      "suggAdult": "18+",
+      "creativePositioning": "Creative Positioning",
+      "positioningHint": "Pick genres, backgrounds and popular tropes — agents use them as creative direction across every step (rewriting, extraction, storyboards, images).",
+      "genreTags": "Genre (multi-select)",
+      "backgroundTags": "Background / Setting",
+      "tropeTags": "Tropes",
+      "addCustom": "Custom",
+      "customPlaceholder": "Type and press Enter",
+      "viewToggleAria": "Outline view",
+      "viewList": "Episode List",
+      "viewHook": "Hook Chain",
+      "hookLabel": "Episode-ending hook (keeps viewers watching)",
+      "hookPlaceholder": "e.g. When the storage room door opens, what Mali sees forces her to choose between love and the truth…",
+      "hookHint": "A hook is the cliffhanger that makes viewers click the next episode immediately — episodes link into a chain.",
+      "hookSaved": "Hook saved",
+      "noEpisodesHook": "No episodes yet — add the first episode to start the hook chain",
+      "systemSettings": "System Settings",
+      "autoReview": "Auto Review & Optimize",
+      "autoReviewHint": "After each rewrite, AI reviews and improves pacing, dialogue and conflict density automatically — slower, but sharper scripts.",
+      "suggestHook": "AI suggest hook",
+      "hookThinking": "Thinking...",
+      "openBoard": "Project Board",
+      "autoPipeline": "Continue production automatically",
+      "autoPipelineHint": "When rewriting (and review, if enabled) finishes, character/scene/prop extraction starts automatically.",
+      "batchRewrite": "Auto-write all scripts",
+      "batchRewriteHint": "Rewrites every episode without a script in order — continues with Auto Review / auto pipeline if enabled",
+      "batchRunning": "Writing {done}/{total} — {current}",
+      "batchDone": "Scripts written for {n} episodes",
+      "batchNone": "All episodes already have scripts (or no source content)"
     }
   },
   "settings": {
@@ -259,20 +378,14 @@
       "appearanceDark": "Dark",
       "appearanceSystem": "System",
       "languageSavedWith": "AI content language switched to {lang} — future generations (script/assets/storyboard/prompts) will use it",
-      "langNameZh": "Chinese",
+      "langNameTh": "Thai",
       "langNameEn": "English",
-      "langNameJa": "Japanese",
-      "langNameKo": "Korean",
       "unifiedSwitchWarning": "Switched to {lang} — UI and AI content language update together. Refreshing…"
     },
     "ai": {
       "title": "AI Service Configs",
       "desc": "Start with a recommended template, then fine-tune per service type. The workbench locks the chosen image and video capabilities when creating an episode.",
-      "quickTitle": "Huobao Quick Config",
       "recommended": "Recommended",
-      "quickDesc": "Enter a Huobao API Key to write three recommended configs (text, image, video) at once.",
-      "getKey": "Get a key at api.firemux.com",
-      "applyQuick": "Apply Huobao Config",
       "manualTitle": "Manual Templates",
       "manualDesc": "Pick a service type, then fill the recommended `provider / base URL / model` from a template.",
       "activeCount": "{n} active",
@@ -282,8 +395,6 @@
       "setDefault": "Set as default model for this type",
       "noBaseUrl": "Base URL not set",
       "test": "Test",
-      "apiKeyRequired": "Please enter a Huobao API Key",
-      "quickApplied": "Huobao quick config written",
       "defaultModelSwitched": "Default {type} model switched to {model}",
       "meta": {
         "text": "Text capabilities: script rewriting, asset extraction, storyboard breaking",
@@ -349,7 +460,8 @@
       "serverApplyStarted": "Update triggered: Watchtower will pull the new image and recreate the container. Refresh in a few minutes.",
       "serverApplyFailed": "Failed to trigger update",
       "serverManualHint": "Server deployment: run this in the deploy directory:",
-      "serverNote": "Note: with Watchtower configured, Docker deployments can update in one click (pulls the new image and recreates the container); otherwise run the command shown above manually."
+      "serverNote": "Note: with Watchtower configured, Docker deployments can update in one click (pulls the new image and recreates the container); otherwise run the command shown above manually.",
+      "credit": "NAKA-AI is built on the open-source Huobao Drama project by chatfire-AI, licensed under CC BY-NC-SA 4.0 (no commercial use without permission from the original author)."
     },
     "agents": {
       "promptHint": "saved as {file}",
@@ -361,7 +473,7 @@
       "extractor": "Asset Extractor",
       "storyboardBreaker": "Storyboard Breaker",
       "promptGenerator": "Prompt Generator",
-      "langFallback": "Falls back to Chinese",
+      "langFallback": "Falls back to English",
       "followContentLang": "Editing language: {lang} (switch in General → AI Content Language)"
     },
     "skills": {
@@ -387,7 +499,7 @@
       "addTitle": "Add {type} Service",
       "sub": "Pick a template first — a sensible `Base URL` and default models will be filled in automatically.",
       "name": "Config name",
-      "namePlaceholder": "e.g. Huobao default image service",
+      "namePlaceholder": "e.g. NAKA-AI main image service",
       "provider": "Provider",
       "providerPlaceholder": "Select a provider",
       "priority": "Priority",
@@ -501,7 +613,9 @@
       "rewriting": "Rewriting the script...",
       "scriptPlaceholder": "Formatted script content...",
       "rawRequired": "Please fill in the raw content first",
-      "skipDone": "AI rewrite skipped; the raw content will be used directly"
+      "skipDone": "AI rewrite skipped; the raw content will be used directly",
+      "reviewDone": "Auto review done: {summary}",
+      "pipelineContinued": "Script done — character/scene/prop extraction started automatically"
     },
     "prod": {
       "assets": "Asset Production",
@@ -689,7 +803,9 @@
       "batchDone": "Batch video prompt generation complete",
       "batchDoneFailed": "Batch video prompt generation complete, {n} failed",
       "batchFailed": "Batch video prompt generation failed",
-      "promptGenerated": "Video prompt for shot #{n} generated"
+      "promptGenerated": "Video prompt for shot #{n} generated",
+      "batchCancelling": "Cancelling — will stop after the current shot",
+      "batchCancelled": "Cancelled ({done}/{total} shots done)"
     },
     "ref": {
       "title": "Reference Assets",
@@ -830,7 +946,8 @@
     },
     "extract": {
       "done": "{type} extraction complete",
-      "failed": "{type} extraction failed"
+      "failed": "{type} extraction failed",
+      "cancelled": "{type} extraction cancelled"
     },
     "upload": {
       "assetDone": "{type} uploaded",
@@ -868,7 +985,17 @@
     "timeout": "Generation timed out. Please try again.",
     "moderation": "Content was blocked by moderation. Adjust the prompt or switch models and retry.",
     "requestFailed": "Request failed ({status})",
-    "unknown": "Operation failed. Please try again."
+    "unknown": "Operation failed. Please try again.",
+    "codes": {
+      "E_NO_TEXT_MODEL": "No text model configured — go to Settings → AI Services",
+      "E_NO_IMAGE_MODEL": "No image model configured — go to Settings → AI Services",
+      "E_NO_VIDEO_MODEL": "No video model configured — go to Settings → AI Services",
+      "E_NO_IMAGE_CONFIG": "No active image service — add one in Settings → AI Services first",
+      "E_NO_VIDEO_CONFIG": "No active video service — add one in Settings → AI Services first",
+      "E_EPISODE_NO_SCRIPT": "This episode has no script yet — write or paste one before the next step",
+      "E_AGENT_UNAVAILABLE": "This agent is not available yet",
+      "E_AGENT_EMPTY_RESULT": "AI returned an empty result — try again"
+    }
   },
   "tour": {
     "next": "Next",
@@ -877,7 +1004,7 @@
     "helpTitle": "Guide",
     "index": {
       "welcome": {
-        "title": "👋 Welcome to Huobao Drama",
+        "title": "👋 Welcome to NAKA-AI",
         "desc": "Novel → script → assets → storyboard → video → final cut, all in one place. Configure AI services first, then create your first project."
       },
       "create": {
@@ -886,17 +1013,13 @@
       },
       "settings": {
         "title": "Step 1 · Configure AI services",
-        "desc": "Every AI feature needs this first. Open Settings and paste a Huobao API Key to set up text/image/video in one click."
+        "desc": "Every AI feature needs this first. Open Settings and add text/image/video services from the providers you use (e.g. Gemini, OpenAI)."
       }
     },
     "settings": {
-      "quick": {
-        "title": "Fastest setup: Quick Setup",
-        "desc": "Paste a Huobao API Key to write the three recommended configs (text/image/video) at once, with connectivity testing."
-      },
       "nav": {
         "title": "Everything lives here",
-        "desc": "Switch sections on the left: AI services, general (UI & content language), style presets, agent prompts & skills, storage, about."
+        "desc": "Switch sections in the left sidebar: AI services, style presets, agents, general, storage, about."
       }
     },
     "episode": {
@@ -921,5 +1044,19 @@
         "desc": "Click this \"?\" button to replay this page's guide. Happy creating!"
       }
     }
+  },
+  "board": {
+    "title": "Project Board",
+    "filterAria": "Filter assets",
+    "videos": "Videos",
+    "noAssets": "No assets yet — create an episode from the outline tab to start building",
+    "noVideos": "No videos yet — enter video production of each episode to generate",
+    "generate": "Generate image",
+    "generating": "Generating...",
+    "generatingStarted": "Started generating {name}",
+    "genTimeout": "{name} image not finished within the wait window — refresh later",
+    "needEpisode": "At least one episode is required before generating images (configs are locked per episode)",
+    "mergedEpisode": "Merged episode video",
+    "noVideoYet": "No video for this shot yet"
   }
 }

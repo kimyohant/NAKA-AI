@@ -37,9 +37,10 @@ test('settings page exposes official provider templates only', () => {
   assert.doesNotMatch(settingsPage, /https:\/\/dashscope\.aliyuncs\.com/)
   assert.doesNotMatch(settingsPage, /https:\/\/api\.vidu\.com/)
   assert.doesNotMatch(settingsPage, /\['ali'|'ali',|, 'ali'\]/)
-  assert.match(settingsPage, /火宝快捷配置/)
-  assert.match(settingsPage, /https:\/\/api\.firemux\.com/)
-  assert.match(settingsPage, /applyHuobaoQuickConfig/)
+  // NAKA-AI 版本移除了火宝快捷配置（firemux 密钥），只保留官方厂商模板
+  assert.doesNotMatch(settingsPage, /火宝快捷配置/)
+  assert.doesNotMatch(settingsPage, /https:\/\/api\.firemux\.com/)
+  assert.doesNotMatch(settingsPage, /applyHuobaoQuickConfig/)
   assert.doesNotMatch(settingsPage, /https:\/\/api\.minimax\.io/)
 })
 

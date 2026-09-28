@@ -1,9 +1,9 @@
 {
   "name": "huobao-drama-desktop",
-  "productName": "HuobaoDrama",
+  "productName": "NAKA-AI",
   "version": "4.0.5",
   "private": true,
-  "description": "火宝短剧桌面版（Electron 壳）",
+  "description": "NAKA-AI desktop (Electron shell)",
   "author": "Huobao",
   "main": "dist/main.js",
   "scripts": {

@@ -92,8 +92,8 @@
   --radius-xl: 20px;
   --radius-pill: 980px;
 
-  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-display: 'Kanit', 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, 'Fira Code', Consolas, monospace;
 
   --sp-1: 4px;
@@ -146,52 +146,52 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* gateway 石板蓝灰暗色（区别于纯黑，带 slate 蓝调） */
-  --surface-base: #0b0f16;
-  --surface-raised: #131a24;
-  --surface-muted: #131a24;
-  --surface-soft: #0e141d;
-  --surface-input: #131a24;
-  --surface-outline: rgba(148,163,184,0.14);
-  --surface-outline-strong: rgba(148,163,184,0.28);
+  /* 近黑中性色 + 紫色强调（参考 Topview Drama Studio 暗色风格） */
+  --surface-base: #141414;
+  --surface-raised: #1c1c1e;
+  --surface-muted: #1c1c1e;
+  --surface-soft: #181818;
+  --surface-input: #1f1f22;
+  --surface-outline: rgba(255,255,255,0.08);
+  --surface-outline-strong: rgba(255,255,255,0.16);
 
-  --bg-0: #0e141d;
-  --bg-1: #131a24;
-  --bg-2: #182230;
-  --bg-3: #1f2a38;
-  --bg-hover: rgba(148,163,184,0.08);
-  --bg-active: rgba(148,163,184,0.14);
+  --bg-0: #181818;
+  --bg-1: #1c1c1e;
+  --bg-2: #242427;
+  --bg-3: #2c2c30;
+  --bg-hover: rgba(255,255,255,0.06);
+  --bg-active: rgba(255,255,255,0.10);
 
-  --border: rgba(148,163,184,0.14);
-  --border-strong: rgba(148,163,184,0.28);
-  --border-focus: #ffb076;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.16);
+  --border-focus: #a78bfa;
 
-  --text-0: #f1f5f9;
-  --text-1: #dbe2ea;
-  --text-2: rgba(226,232,240,0.65);
-  --text-3: #8b94a3;
+  --text-0: #f5f5f7;
+  --text-1: #e4e4e7;
+  --text-2: rgba(245,245,247,0.68);
+  --text-3: #9a9aa3;
 
   /* 蜜桃橙（dark 下品牌色提亮，platform 同款） */
-  --accent: #ffb076;
-  --accent-dark: #f5934e;
-  --accent-bg: rgba(255,176,118,0.14);
-  --accent-text: #ffb076;
-  --accent-glow: rgba(255,176,118,0.30);
-  --accent-gradient: linear-gradient(135deg, #ffb076 0%, #ff9a5c 100%);
+  --accent: #a78bfa;
+  --accent-dark: #8b5cf6;
+  --accent-bg: rgba(139,92,246,0.16);
+  --accent-text: #c4b5fd;
+  --accent-glow: rgba(139,92,246,0.35);
+  --accent-gradient: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
 
-  --action-primary: #ffb076;
-  --action-primary-hover: #ffc194;
-  --action-primary-press: #f5934e;
-  --action-secondary: #1f2a38;
-  --action-secondary-hover: #28364a;
+  --action-primary: #7c3aed;
+  --action-primary-hover: #8b5cf6;
+  --action-primary-press: #6d28d9;
+  --action-secondary: #242427;
+  --action-secondary-hover: #2c2c30;
   --action-danger: #f87171;
   --action-danger-bg: rgba(248,113,113,0.14);
   --action-danger-solid-hover: #fca5a5;
 
-  --button-bg: #1f2a38;
-  --button-bg-hover: #28364a;
-  --button-bg-active: #31435c;
-  --button-focus: rgba(255,176,118,0.30);
+  --button-bg: #242427;
+  --button-bg-hover: #2c2c30;
+  --button-bg-active: #35353a;
+  --button-focus: rgba(167,139,250,0.35);
   --button-shadow: 0 1px 2px rgba(0,0,0,0.3);
   --button-shadow-hover: 0 1px 2px rgba(0,0,0,0.3);
 
@@ -215,17 +215,17 @@
   --shadow-lift: 0 4px 14px rgba(0,0,0,0.35), 0 16px 40px rgba(0,0,0,0.5);
   --shadow-elevated: 0 8px 20px rgba(0,0,0,0.45), 0 24px 56px rgba(0,0,0,0.55);
 
-  --overlay-track: rgba(148,163,184,0.10);
-  --seg-active-bg: #28364a;
-  --on-accent: #2a1503;
+  --overlay-track: rgba(255,255,255,0.06);
+  --seg-active-bg: #35353a;
+  --on-accent: #ffffff;
   --scrim: rgba(0,0,0,0.60);
-  --header-bg: rgba(11,15,22,0.75);
-  --inverse-surface: #f1f5f9;
-  --on-inverse: #17181a;
-  --scrollbar-thumb: rgba(148,163,184,0.25);
-  --scrollbar-thumb-hover: rgba(148,163,184,0.40);
-  --border-hover: rgba(148,163,184,0.40);
-  --switch-bg: #1f2a38;
+  --header-bg: rgba(20,20,20,0.8);
+  --inverse-surface: #f5f5f7;
+  --on-inverse: #141414;
+  --scrollbar-thumb: rgba(255,255,255,0.16);
+  --scrollbar-thumb-hover: rgba(255,255,255,0.28);
+  --border-hover: rgba(255,255,255,0.24);
+  --switch-bg: #2c2c30;
   --action-danger-bg-hover: rgba(248,113,113,0.22);
   --warn-text: #fbbf24;
   --warn-bg: rgba(251,191,36,0.12);

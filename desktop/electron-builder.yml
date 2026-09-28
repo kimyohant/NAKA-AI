@@ -1,5 +1,5 @@
 appId: com.huobao.drama
-productName: HuobaoDrama
+productName: NAKA-AI
 directories:
   output: release
   buildResources: build

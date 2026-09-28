@@ -69,7 +69,9 @@ export function loadBasePromptFile(agentType: string): Promise<AgentPromptFile |
 export async function loadAgentPromptFile(agentType: string, lang?: string | null): Promise<AgentPromptFile | null> {
   const base = await loadBasePromptFile(agentType)
   if (!lang || lang === 'zh') return base
+  // th 没有独立变体时优先用英文版（比中文基础版更贴近目标语言），再回退基础版
   const localized = await readPromptFile(promptFilePath(agentType, lang))
+    ?? (lang === 'th' ? await readPromptFile(promptFilePath(agentType, 'en')) : null)
   if (!localized) return base
   return { ...localized, model: base?.model || '' }
 }
