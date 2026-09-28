@@ -1,0 +1,27 @@
+{
+  "name": "naka-ai",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test tests/*.test.cjs",
+    "typecheck": "tsc -p .",
+    "world:postprocess": "node creative/postprocess-world.cjs",
+    "db:local": "wrangler d1 execute naka-ai-db --local --file=schema.sql",
+    "db:remote": "wrangler d1 execute naka-ai-db --remote --file=schema.sql"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260924.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.137.0"
+  },
+  "private": true
+}

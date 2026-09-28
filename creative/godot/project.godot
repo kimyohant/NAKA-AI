@@ -1,0 +1,24 @@
+config_version=5
+
+[application]
+config/name="Naka Living Shop"
+run/main_scene="res://world.tscn"
+
+[display]
+window/size/viewport_width=1100
+window/size/viewport_height=1000
+window/size/transparent=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/per_pixel_transparency/allowed=true
+
+[rendering]
+viewport/transparent_background=true
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+environment/defaults/default_clear_color=Color(0,0,0,0)
+anti_aliasing/quality/msaa_3d=1
+
+[audio]
+driver/enable_input=false

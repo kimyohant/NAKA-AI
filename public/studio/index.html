@@ -1,0 +1,87 @@
+﻿<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F7F9FD">
+  <meta name="description" content="สตูดิโอ 4 แนวทาง: คลิปขายสินค้า ละครสั้น AI บอตคอมเมนต์และแชต และ AI Live ขายของ">
+  <meta name="robots" content="noindex,follow">
+  <title>สตูดิโอคู่ร้าน · naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" sizes="180x180">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/studio/studio.css">
+  <link rel="stylesheet" href="/glass-nav.css">
+  <script src="/workflows.js" defer></script>
+  <script src="/studio/studio.js" defer></script>
+  <script src="/glass-nav.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">ข้ามไปที่พื้นที่ทำงาน</a>
+  <header class="topbar glass-nav">
+    <a class="brand" href="/" aria-label="naka-ai หน้าหลัก"><img src="/logo.svg?v=4" width="36" height="36" alt=""><span>naka<span class="brand-accent">-ai</span></span></a>
+    <span class="header-divider" aria-hidden="true"></span>
+    <span class="studio-label">สตูดิโอคู่ร้าน</span>
+    <nav aria-label="เมนูหลัก"><a href="/">หน้าหลัก</a><a href="/create/">เริ่มงานกับทีม <span aria-hidden="true">↗</span></a></nav>
+  </header>
+
+  <main id="main" class="workspace">
+    <div class="page-heading">
+      <div><p class="eyebrow">พื้นที่สำหรับไอเดียของร้านคุณ</p><h1>วันนี้ มาเสกงานขายกัน</h1><p class="intro">เล่าเรื่องสินค้าให้นาคาฟัง แล้วต่อยอดเป็นคอนเทนต์ในสไตล์คุณ</p></div>
+      <button id="open-brand" class="button secondary memory-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M16 3h5v5M10 14 21 3M7 7h3M7 17h10"/></svg><span id="brand-button-label">ความจำประจำร้าน</span></button>
+    </div>
+
+    <nav class="workflow-nav" aria-label="เลือกประเภทงาน"><a href="/studio/?workflow=sales" data-workflow="sales"><span>01</span>คลิปขายของ</a><a href="/studio/?workflow=drama" data-workflow="drama"><span>02</span>ละครสั้น AI</a><a href="/studio/?workflow=bot" data-workflow="bot"><span>03</span>บอตช่วยขาย</a><a href="/studio/?workflow=live" data-workflow="live"><span>04</span>AI Live</a></nav>
+    <aside class="workflow-status"><p id="workflow-note"></p></aside>
+    <div class="mode-bar">
+      <span class="mode-label" id="mode-label"><span class="status-dot" aria-hidden="true"></span>โหมดทดลอง · สร้างจากแม่แบบ</span>
+      <span id="mode-description">ทดลองได้ทันที ข้อความชุดนี้ยังไม่ได้สร้างด้วย AI</span>
+      <button class="text-button" id="switch-mode" type="button" hidden>ใช้โหมดทดลอง</button>
+    </div>
+
+    <div class="studio-layout">
+      <section class="brief-panel" aria-labelledby="brief-heading">
+        <div class="section-heading"><h2 id="brief-heading"><span class="step-number">1</span>เล่าเรื่องสินค้าของคุณ</h2><button id="fill-example" type="button" class="text-button">ลองตัวอย่าง</button></div>
+        <form id="product-form">
+          <fieldset id="product-fields">
+            <div class="field"><label for="product-name"><span id="name-label">ชื่อสินค้า</span> <span class="required-text">จำเป็น</span></label><input id="product-name" name="productName" type="text" maxlength="160" placeholder="เช่น สบู่กลิ่นมะลิ ในกล่องของขวัญ" required autocomplete="off"></div>
+            <div class="field"><label for="product-details"><span id="details-label">จุดเด่นสินค้าและกลุ่มลูกค้า</span> <span class="required-text">จำเป็น</span></label><textarea id="product-details" name="details" rows="4" maxlength="3000" placeholder="จุดเด่น ขนาด กลุ่มลูกค้า หรือสิ่งที่อยากสื่อสาร…" required aria-describedby="details-help"></textarea><p class="field-help" id="details-help">ใส่ข้อเท็จจริงของสินค้า เพื่อให้ข้อความตรงกับร้านคุณ</p></div>
+            <div class="field"><label for="product-price">ราคา <span class="optional-text">ไม่บังคับ</span></label><input id="product-price" name="price" type="text" maxlength="80" placeholder="เช่น 129 บาท / ชิ้น" autocomplete="off"></div>
+            <fieldset class="tone-field"><legend>อยากให้น้ำเสียงเป็นแบบไหน?</legend><div class="tone-options"><label><input name="tone" type="radio" value="friendly" checked><span>เป็นกันเอง</span></label><label><input name="tone" type="radio" value="premium"><span>เรียบหรู</span></label><label><input name="tone" type="radio" value="playful"><span>สนุก สดใส</span></label></div></fieldset>
+            <div class="field"><label for="product-channel">เตรียมลงช่องทางไหน?</label><select id="product-channel" name="channel"><option value="shopee">Shopee</option><option value="facebook">Facebook</option><option value="tiktok">TikTok</option><option value="instagram">Instagram</option></select></div>
+            <details class="image-reference"><summary>แนบภาพไว้ดูประกอบ <span class="optional-text">ไม่บังคับ</span></summary><div class="image-reference-content"><label class="upload-control" for="product-image"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg><span>เลือกภาพสินค้า</span><small>JPG, PNG, WebP · ไม่เกิน 10 MB</small></label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp" class="visually-hidden"><div id="image-preview-wrap" hidden><img id="image-preview" alt="ภาพสินค้าที่แนบไว้ดูประกอบ"><button id="remove-image" class="text-button" type="button">นำภาพออก</button></div><p class="field-help">ภาพอยู่เฉพาะหน้านี้ ไม่ถูกส่งไปวิเคราะห์หรือสร้างภาพใหม่</p><p id="image-error" class="field-error" role="alert" hidden></p></div></details>
+          </fieldset>
+          <div class="submit-area"><button class="button primary generate-button" id="generate-button" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 6.3L21 12l-6.3 2.7L12 21l-2.7-6.3L3 12l6.3-2.7L12 3ZM5 3v4M3 5h4"/></svg><span id="generate-label">เสกชุดคอนเทนต์ทดลอง</span><span aria-hidden="true">↗</span></button><p id="draft-status" class="draft-status" role="status">บันทึกแบบร่างในเบราว์เซอร์นี้</p></div>
+        </form>
+      </section>
+
+      <section class="results-panel" aria-labelledby="results-heading" aria-busy="false">
+        <div class="results-header"><div><h2 id="results-heading"><span class="step-number">2</span>จากสินค้า สู่คอนเทนต์</h2><p id="results-description">พร้อมให้คุณปรับเป็นสไตล์ของร้าน</p></div><button id="download-all" class="button secondary compact" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span>ดาวน์โหลด</span></button></div>
+        <div class="result-tabs" role="tablist" aria-label="ประเภทคอนเทนต์"><button id="tab-captions" role="tab" aria-selected="true" aria-controls="panel-captions" tabindex="0" data-tab="captions">แคปชัน</button><button id="tab-script" role="tab" aria-selected="false" aria-controls="panel-script" tabindex="-1" data-tab="script">สคริปต์คลิป</button><button id="tab-plan" role="tab" aria-selected="false" aria-controls="panel-plan" tabindex="-1" data-tab="plan">แผนคอนเทนต์</button><button id="tab-imagePrompt" role="tab" aria-selected="false" aria-controls="panel-imagePrompt" tabindex="-1" data-tab="imagePrompt">บรีฟภาพ</button></div>
+        <p id="tool-note" class="tool-note" hidden></p>
+        <div id="generation-error" class="generation-error" role="alert" hidden><strong>ยังสร้างคอนเทนต์ไม่สำเร็จ</strong><p id="error-message"></p><button id="error-demo" class="text-button" type="button" hidden>เปลี่ยนไปใช้แม่แบบทดลอง</button></div>
+        <div id="empty-state" class="empty-state"><div class="empty-mark"><img src="/logo.svg?v=4" width="68" height="68" alt=""></div><h3>สินค้าของคุณ มีเรื่องให้เล่า</h3><p>เริ่มจากชื่อสินค้าและจุดเด่นสักนิด<br>นาคาจะช่วยเรียบเรียงเรื่องราวให้พร้อมต่อยอด</p><div class="output-preview"><span>3 แคปชัน</span><span>1 สคริปต์คลิป</span><span>แผน + บรีฟภาพ</span></div><button id="empty-example" class="text-button" type="button">ยังไม่มีไอเดีย? ลองใช้สินค้าตัวอย่าง <span aria-hidden="true">↗</span></button></div>
+        <div id="loading-state" class="loading-state" hidden><span class="loading-ring" aria-hidden="true"></span><h3>นาคากำลังเตรียมคอนเทนต์</h3><p id="loading-message">กำลังเรียบเรียงจากข้อมูลสินค้าของคุณ…</p></div>
+        <div id="result-content" hidden>
+          <div class="result-context"><span id="result-product"></span><span id="result-mode"></span></div>
+          <div id="panel-captions" class="tab-panel" role="tabpanel" aria-labelledby="tab-captions" tabindex="0"></div>
+          <div id="panel-script" class="tab-panel" role="tabpanel" aria-labelledby="tab-script" tabindex="0" hidden></div>
+          <div id="panel-plan" class="tab-panel" role="tabpanel" aria-labelledby="tab-plan" tabindex="0" hidden></div>
+          <div id="panel-imagePrompt" class="tab-panel" role="tabpanel" aria-labelledby="tab-imagePrompt" tabindex="0" hidden></div>
+          <div class="result-footer"><p>แก้ข้อความในช่องได้เลย แล้วตรวจข้อมูลก่อนนำไปเผยแพร่</p><span id="edit-status" role="status">ผลงานยังไม่ถูกเผยแพร่</span></div>
+        </div>
+        <div class="notebook-footer"><span class="tiny-mark" aria-hidden="true">n.</span><span>ไอเดียเริ่มที่คุณ นาคาช่วยต่อยอด</span></div>
+      </section>
+    </div>
+    <p class="workspace-note">แบบร่างและความจำร้านเก็บเฉพาะในเบราว์เซอร์นี้ · ดาวน์โหลดผลงานที่ต้องการเก็บไว้ก่อนปิดหน้า</p>
+  </main>
+
+  <dialog id="brand-dialog" aria-labelledby="brand-heading" aria-describedby="brand-description"><form id="brand-form"><div class="dialog-heading"><span class="eyebrow">ให้ทุกงานเป็นร้านของคุณ</span><button id="close-brand" class="icon-button" type="button" aria-label="ปิดความจำประจำร้าน">×</button></div><h2 id="brand-heading">ความจำประจำร้าน</h2><p id="brand-description">บันทึกชื่อและน้ำเสียงของร้านไว้ใช้ในงานครั้งต่อไป</p><div class="field"><label for="brand-name">ชื่อร้านหรือแบรนด์</label><input id="brand-name" name="brandName" type="text" maxlength="160" placeholder="ชื่อที่อยากให้ลูกค้าจดจำ" autocomplete="organization"></div><div class="field"><label for="brand-voice">น้ำเสียงและสิ่งที่อยากให้นาคาจำ</label><textarea id="brand-voice" name="brandVoice" rows="4" maxlength="1000" placeholder="เช่น สุภาพ เป็นกันเอง ใช้คำว่า 'ค่ะ' ไม่ใช้คำโฆษณาเกินจริง"></textarea></div><p class="field-help">โหมด AI จะใช้ข้อมูลนี้ช่วยเขียน ส่วนโหมดทดลองจะใส่ชื่อร้านและแสดงบันทึกน้ำเสียงให้คุณปรับตาม</p><p class="field-help">เก็บไว้ในเบราว์เซอร์นี้ หลีกเลี่ยงข้อมูลส่วนตัวของลูกค้า</p><p id="brand-error" class="field-error" role="alert" hidden></p><div class="dialog-actions"><button id="cancel-brand" type="button" class="button secondary">ยกเลิก</button><button type="submit" class="button primary">บันทึกความจำร้าน</button></div></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
+  <noscript><p class="noscript">กรุณาเปิด JavaScript เพื่อใช้สตูดิโอสร้างคอนเทนต์</p></noscript>
+</body>
+</html>

@@ -1,0 +1,54 @@
+/* Shared glass navigation used by every public page.
+   A header opts in with class="glass-nav"; the frost tint adapts to the
+   page theme (dark navy on / and /create, white frost on the light /studio).
+   The bar is translucent over the page, frosted with backdrop blur, and
+   settles into a denser tint once the page scrolls (class toggled by
+   glass-nav.js) so content never bleeds through while reading. */
+
+.glass-nav{
+  --glass-rgb: 9, 23, 54;
+  --glass-line: 255, 255, 255;
+  --glass-shadow: 0 10px 30px rgba(2, 10, 26, .28);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(var(--glass-rgb), .52);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  border-bottom: 1px solid rgba(var(--glass-line), .14);
+  transition: background-color .28s ease, border-color .28s ease, box-shadow .28s ease;
+}
+
+.glass-nav.is-dense{
+  background: rgba(var(--glass-rgb), .82);
+  border-bottom-color: rgba(var(--glass-line), .18);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Light-theme studio topbar: white frost over the page canvas. */
+.topbar.glass-nav{
+  --glass-rgb: 255, 255, 255;
+  --glass-line: 21, 38, 74;
+  --glass-shadow: 0 8px 24px rgba(21, 38, 74, .10);
+}
+
+/* The home page drop-down menu shares the same frost. */
+.glass-nav .mobile-nav:not([hidden]){
+  background: rgba(12, 29, 64, .92);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+/* Solid fallback where backdrop blur is unavailable or unwanted. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .glass-nav,
+  .glass-nav.is-dense{ background: rgb(var(--glass-rgb)); }
+}
+@media (prefers-reduced-transparency: reduce){
+  .glass-nav,
+  .glass-nav.is-dense{
+    background: rgb(var(--glass-rgb));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
