@@ -132,6 +132,8 @@ export async function loadAgentSkills(agentType: string, lang?: string | null): 
   for (const relPath of relPaths) {
     let body: string | null | undefined
     if (useLocalized) body = await readLocalizedSkill(relPath, lang!)
+    // th 缺失时先回退英文变体，再回退中文基础版
+    if (!body && lang === 'th') body = await readLocalizedSkill(relPath, 'en')
     if (!body) {
       const skill = await workspace.skills?.get(`skills/${relPath}`)
       body = skill?.instructions?.trim()

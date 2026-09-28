@@ -8,7 +8,7 @@ import { refreshSkillWorkspaces, skillsManagerWorkspace } from '../agents/skills
 
 const app = new Hono()
 const fsm = () => skillsManagerWorkspace.filesystem!
-const LANGS = ['zh', 'en', 'ja', 'ko']
+const LANGS = ['zh', 'en', 'th']
 const normalizeLang = (v?: string) => (v && LANGS.includes(v) ? v : 'zh')
 /** 技能文件路径；lang 非 zh 时为语言变体 SKILL.<lang>.md */
 const skillFile = (id: string, lang?: string) => `skills/${id}/SKILL${lang && lang !== 'zh' ? `.${lang}` : ''}.md`
@@ -44,7 +44,9 @@ app.get('/*', async (c) => {
   const lang = normalizeLang(c.req.query('lang'))
   if (!await fsm().exists(skillFile(id))) return badRequest(c, '技能不存在')
   const variantExists = lang !== 'zh' && await fsm().exists(skillFile(id, lang))
-  const content = await fsm().readFile(skillFile(id, variantExists ? lang : undefined), { encoding: 'utf-8' })
+  // th 无独立变体时编辑器展示英文版（与 Agent 实际加载的回退顺序一致）
+  const fallbackLang = !variantExists && lang === 'th' && await fsm().exists(skillFile(id, 'en')) ? 'en' : undefined
+  const content = await fsm().readFile(skillFile(id, variantExists ? lang : fallbackLang), { encoding: 'utf-8' })
   return success(c, { id, lang, content, is_default: lang !== 'zh' && !variantExists })
 })
 
