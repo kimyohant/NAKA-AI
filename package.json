@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "wrangler dev -c wrangler.dev.jsonc --ip 127.0.0.1 --port 8788",
     "deploy": "wrangler deploy",
-    "test": "node --test tests/*.test.cjs src/auth/tests/*.test.cjs src/social/tests/*.test.cjs",
+    "test": "node --test tests/*.test.cjs src/auth/tests/*.test.cjs src/social/tests/*.test.cjs src/inbox/tests/*.test.cjs",
     "test:auth": "node --test src/auth/tests/*.test.cjs",
     "auth:setup": "node src/auth/setup-local.cjs",
     "dev:auth": "wrangler dev --ip 127.0.0.1 --port 8788",
