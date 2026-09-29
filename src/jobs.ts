@@ -146,32 +146,45 @@ export async function recoverExpiredLeases(db: D1Database): Promise<number> {
   return results.length;
 }
 
-/** Run up to maxJobs queued jobs with the handler registered for each job's kind. */
+/**
+ * Run up to maxJobs queued jobs with the handler registered for each job's kind,
+ * `concurrency` at a time. Claiming is atomic, so parallel runners never share a job.
+ */
 export async function runQueue(
   db: D1Database,
   handlers: Record<string, JobHandler>,
-  { maxJobs = 5, leaseSeconds = 300 } = {},
+  { maxJobs = 5, leaseSeconds = 300, concurrency = 1 } = {},
 ): Promise<{ ran: number; recovered: number }> {
   const recovered = await recoverExpiredLeases(db);
   let ran = 0;
-  while (ran < maxJobs) {
-    const job = await claimNextJob(db, leaseSeconds);
-    if (!job) break;
-    ran++;
-    const handler = Object.hasOwn(handlers, job.kind) ? handlers[job.kind] : undefined;
-    if (!handler) {
-      await failJob(db, job.id, `no handler for kind '${job.kind}'`, false);
-      continue;
+  const runner = async () => {
+    while (ran < maxJobs) {
+      ran++; // reserve a slot before the await so parallel runners stay under maxJobs
+      const job = await claimNextJob(db, leaseSeconds);
+      if (!job) {
+        ran--;
+        return;
+      }
+      await runJob(db, handlers, job);
     }
-    try {
-      const { output, providerCostUsd } = await handler(job);
-      await completeJob(db, job.id, output, providerCostUsd);
-    } catch (err) {
-      console.error("job failed", job.id, job.kind, err);
-      await failJob(db, job.id, err instanceof Error ? err.message : String(err), !(err instanceof PermanentJobError));
-    }
-  }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, concurrency) }, runner));
   return { ran, recovered };
+}
+
+async function runJob(db: D1Database, handlers: Record<string, JobHandler>, job: Job): Promise<void> {
+  const handler = Object.hasOwn(handlers, job.kind) ? handlers[job.kind] : undefined;
+  if (!handler) {
+    await failJob(db, job.id, `no handler for kind '${job.kind}'`, false);
+    return;
+  }
+  try {
+    const { output, providerCostUsd } = await handler(job);
+    await completeJob(db, job.id, output, providerCostUsd);
+  } catch (err) {
+    console.error("job failed", job.id, job.kind, err);
+    await failJob(db, job.id, err instanceof Error ? err.message : String(err), !(err instanceof PermanentJobError));
+  }
 }
 
 /** A user's own job plus how many runnable jobs are ahead of it. Null if it is not theirs. */

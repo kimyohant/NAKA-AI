@@ -1,6 +1,6 @@
-import { AFFILIATE_JOB_KIND, makeAffiliateHandler } from "./affiliate";
+import { AFFILIATE_JOB_KIND, handleAffiliateApi, makeAffiliateHandler } from "./affiliate";
 import { runSalesAgent } from "./agent";
-import { handleAuth } from "./auth";
+import { handleAuth, requireUser } from "./auth";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
 import { runQueue, type JobHandler } from "./jobs";
@@ -25,6 +25,12 @@ export default {
     const authResponse = await handleAuth(request, env, url);
     if (authResponse) return authResponse;
 
+    if (url.pathname.startsWith("/api/affiliate/")) {
+      if (request.method !== "GET" && request.headers.get("Origin") !== url.origin) return json({ error: "คำขอไม่ถูกต้อง" }, 403);
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleAffiliateApi(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);
     if (url.pathname === "/api/health") return json({ ok: true });
     if (url.pathname === "/world/index.wasm" && (request.method === "GET" || request.method === "HEAD")) {
@@ -52,9 +58,9 @@ export default {
     return env.ASSETS.fetch(request);
   },
 
-  // Cron (wrangler.jsonc): drain the AI job queue once a minute.
+  // Cron (wrangler.jsonc): drain the AI job queue once a minute, a few jobs at a time.
   async scheduled(_controller, env, ctx): Promise<void> {
-    ctx.waitUntil(runQueue(env.DB, jobHandlers(env)).then(
+    ctx.waitUntil(runQueue(env.DB, jobHandlers(env), { maxJobs: 30, concurrency: 5 }).then(
       (result) => { if (result.ran || result.recovered) console.log("queue", result); },
       (err) => console.error("queue run failed", err),
     ));
