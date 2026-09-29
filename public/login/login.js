@@ -23,6 +23,47 @@
   var resendButton = document.getElementById("resend-button");
   var resendNote = document.getElementById("resend-note");
 
+  // Bot check before an SMS is sent (docs/auth-integration-status.md). Each token is
+  // single-use, so the widget is reset after every request, successful or not.
+  var bot = { siteKey: null, token: null, widgetId: null };
+  function updateRequestButtons() {
+    var blocked = !!bot.siteKey && !bot.token;
+    if (requestButton.textContent === "ขอรหัส OTP") requestButton.disabled = blocked;
+  }
+  function resetBotCheck() {
+    bot.token = null;
+    if (bot.widgetId !== null && window.turnstile) window.turnstile.reset(bot.widgetId);
+    updateRequestButtons();
+  }
+  function setupBotCheck() {
+    if (auth.mockMode()) return;
+    fetch("/api/auth/config", { credentials: "same-origin" })
+      .then(function (res) { return res.ok ? res.json() : {}; })
+      .then(function (config) {
+        if (!config || !config.turnstileSiteKey) return;
+        bot.siteKey = config.turnstileSiteKey;
+        updateRequestButtons();
+        var box = document.getElementById("turnstile-box");
+        box.hidden = false;
+        var script = document.createElement("script");
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        script.onload = function () {
+          bot.widgetId = window.turnstile.render(box, {
+            sitekey: bot.siteKey,
+            action: "otp_request",
+            language: "th",
+            callback: function (token) { bot.token = token; updateRequestButtons(); },
+            "expired-callback": function () { bot.token = null; updateRequestButtons(); },
+            "error-callback": function () { bot.token = null; updateRequestButtons(); },
+          });
+        };
+        script.onerror = function () { showError("โหลดระบบยืนยันว่าไม่ใช่บอทไม่สำเร็จ ลองรีเฟรชหน้านี้"); };
+        document.head.appendChild(script);
+      })
+      .catch(function () { /* config unavailable: the server still decides whether a token is required */ });
+  }
+
   function showError(message) {
     errorEl.textContent = message;
   }
@@ -80,13 +121,19 @@
       phoneInput.focus();
       return;
     }
+    if (bot.siteKey && !bot.token) {
+      showError("กรุณายืนยันว่าไม่ใช่บอทก่อนขอรหัส");
+      return;
+    }
     setBusy(requestButton, true, "กำลังส่งรหัส…");
     if (!stepPhone.hidden) setBusy(resendButton, true, "กำลังส่งรหัส…");
     try {
+      var payload = { phone: phoneValue };
+      if (bot.token) payload.turnstileToken = bot.token;
       var res = await fetch("/api/auth/otp/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phoneValue }),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         var data = await res.json().catch(function () { return {}; });
@@ -101,7 +148,8 @@
         return;
       }
       if (res.status === 400) {
-        showError("เบอร์โทรไม่ถูกต้อง ลองตรวจอีกครั้ง เช่น 0812345678");
+        // 400 covers both a bad number and a failed bot check; the API says which.
+        showError((body && body.error) || "เบอร์โทรไม่ถูกต้อง ลองตรวจอีกครั้ง เช่น 0812345678");
         return;
       }
       // 502/503 and other server errors carry a Thai message — show it.
@@ -111,6 +159,7 @@
     } finally {
       setBusy(requestButton, false, "ขอรหัส OTP");
       if (!stepPhone.hidden) setBusy(resendButton, false, "ขอรหัสใหม่");
+      resetBotCheck();
     }
   }
 
@@ -194,6 +243,7 @@
   if (params.get("error") === "google") {
     showError("เข้าสู่ระบบด้วย Google ไม่สำเร็จ ลองอีกครั้งหรือใช้เบอร์โทรแทนได้เลย");
   }
+  setupBotCheck();
   auth.me().then(function (state) {
     if (state.status === "signed-in") location.replace(nextTarget);
   });

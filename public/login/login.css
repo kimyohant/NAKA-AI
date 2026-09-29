@@ -177,3 +177,5 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
   .auth-card { padding: 26px 22px 22px; }
   .code-row { grid-template-columns: 1fr; }
 }
+
+.turnstile-box { margin: 0 0 14px; min-height: 65px; }

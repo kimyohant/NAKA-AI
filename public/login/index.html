@@ -41,6 +41,8 @@
       <div class="divider" aria-hidden="true"><span>หรือ</span></div>
 
       <form id="otp-form" novalidate>
+        <!-- Cloudflare Turnstile renders here when /api/auth/config returns a site key -->
+        <div class="turnstile-box" id="turnstile-box" hidden></div>
         <div class="field" id="step-phone">
           <label for="phone">เบอร์โทรของร้าน</label>
           <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0812345678" required>
