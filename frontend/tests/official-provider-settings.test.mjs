@@ -20,13 +20,13 @@ test('settings page exposes official provider templates only', () => {
   assert.doesNotMatch(settingsPage, /provider:\s*'chatfire'/i)
   assert.doesNotMatch(settingsPage, /openrouter/i)
   assert.doesNotMatch(settingsPage, /huobaoPreset/i)
-  assert.doesNotMatch(settingsPage, /applyHuobaoPreset/i)
-  assert.doesNotMatch(settingsPage, /\/huobao-preset/)
+  assert.doesNotMatch(settingsPage, /applyNAKAPreset/i)
+  assert.doesNotMatch(settingsPage, /\/naka-preset/)
   assert.doesNotMatch(useApi, /api\.firemux\.com/i)
-  assert.doesNotMatch(useApi, /applyHuobaoPreset/i)
+  assert.doesNotMatch(useApi, /applyNAKAPreset/i)
   assert.doesNotMatch(useApi, /openrouter/i)
   assert.doesNotMatch(useApi, /huobaoPreset/i)
-  assert.doesNotMatch(useApi, /\/huobao-preset/)
+  assert.doesNotMatch(useApi, /\/naka-preset/)
 
   assert.match(settingsPage, /text:\s*\['gemini', 'openai', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'volcengine'\]/)
   assert.match(settingsPage, /image:\s*\['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate'\]/)
@@ -42,7 +42,7 @@ test('settings page exposes official provider templates only', () => {
   // NAKA-AI 版本移除了火宝快捷配置（firemux 密钥），只保留官方厂商模板
   assert.doesNotMatch(settingsPage, /火宝快捷配置/)
   assert.doesNotMatch(settingsPage, /https:\/\/api\.firemux\.com/)
-  assert.doesNotMatch(settingsPage, /applyHuobaoQuickConfig/)
+  assert.doesNotMatch(settingsPage, /applyNAKAQuickConfig/)
   assert.doesNotMatch(settingsPage, /https:\/\/api\.minimax\.io/)
 })
 
