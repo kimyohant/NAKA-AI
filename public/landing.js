@@ -99,3 +99,22 @@
     chats.forEach(function (card) { chatObserver.observe(card); });
   }
 })();
+
+// ---- social showcase: filter the wall by platform ----
+(function () {
+  'use strict';
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('.platform-filter button'));
+  var posts = Array.prototype.slice.call(document.querySelectorAll('.social-grid .post'));
+  buttons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      var filter = button.dataset.filter;
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b === button)); });
+      posts.forEach(function (post) {
+        var show = filter === 'all' || post.dataset.platform === filter;
+        post.hidden = !show;
+        var video = post.querySelector('video');
+        if (video && !show) video.pause();
+      });
+    });
+  });
+})();

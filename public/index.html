@@ -214,28 +214,71 @@
       <p class="shell sample-note">คลิปละครสร้างจากระบบของนาคา · บทสนทนาและร้านค้าเป็นตัวอย่างสาธิต</p>
     </section>
 
-    <!-- How it works -->
-    <section class="section how" id="how" aria-labelledby="how-title">
+    <!-- Social showcase: the same clips as they would appear on each platform (Buzzy's community wall) -->
+    <section class="section social" id="social" aria-labelledby="social-title">
       <div class="shell">
-        <div class="section-head"><div><p class="kicker">วิธีทำงาน</p><h2 id="how-title">3 ขั้นจากรูปสินค้า ถึงคลิปที่โพสต์ได้</h2></div></div>
-        <ol class="steps">
-          <li><span class="step-no">01</span><h3>ใส่รูปและจุดเด่น</h3><p>รูปสินค้า 1–6 รูป กับข้อมูลจริงของสินค้า ราคา และลิงก์ affiliate ถ้ามี</p></li>
-          <li><span class="step-no">02</span><h3>นาคาเขียนบทและพากย์</h3><p>ได้บทรีวิว 20–35 วินาที ข้อความบนจอ และเสียงพากย์ไทย ไม่แต่งสรรพคุณเพิ่ม</p></li>
-          <li><span class="step-no">03</span><h3>ตรวจแล้วโพสต์</h3><p>ดูคลิปบนเครื่องคุณ ดาวน์โหลด แล้วคัดลอกแคปชันพร้อมลิงก์ไปโพสต์</p></li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- Why NAKA -->
-    <section class="section why" id="why" aria-labelledby="why-title">
-      <div class="shell">
-        <div class="section-head"><div><p class="kicker">ทำไมร้านไทยเลือกนาคา</p><h2 id="why-title">เร็วขึ้น โดยคุณยังคุมร้านเอง</h2></div></div>
-        <div class="why-grid">
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></span><h3>ตรวจก่อนโพสต์ทุกครั้ง</h3><p>เห็นบท ภาพ และเสียงก่อนปล่อยงาน ปรับข้อมูลสินค้าหรือน้ำเสียงได้</p></article>
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/></svg></span><h3>บอตตอบ คนในร้านรับต่อ</h3><p>คำถามที่ต้องตัดสินใจ เช่น คืนเงินหรือร้องเรียน ส่งต่อให้คุณได้</p></article>
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></span><h3>ไม่แต่งเรื่องเกินจริง</h3><p>นาคาใช้เฉพาะข้อมูลที่คุณให้ ไม่ใส่สรรพคุณ รีวิวปลอม หรือส่วนลดที่ไม่มี</p></article>
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><h3>ใช้ได้ทุกช่องทาง</h3><p>คลิปแนวตั้งและแคปชันพร้อมใช้บน TikTok, Facebook, Instagram และ Shopee</p></article>
+        <div class="section-head">
+          <div><p class="kicker">คลิปเดียว ใช้ได้ทุกช่องทาง</p><h2 id="social-title">ตัวอย่างบนโซเชียล</h2><p class="row-sub">คลิปแนวตั้งจากนาคาพร้อมลงทุกแพลตฟอร์ม ดูว่าหน้าตาจะออกมาเป็นอย่างไรบนฟีดของลูกค้า</p></div>
         </div>
+        <div class="platform-filter" role="group" aria-label="กรองตามแพลตฟอร์ม">
+          <button type="button" data-filter="all" aria-pressed="true">ทั้งหมด</button>
+          <button type="button" data-filter="tiktok" aria-pressed="false">TikTok</button>
+          <button type="button" data-filter="facebook" aria-pressed="false">Facebook</button>
+          <button type="button" data-filter="instagram" aria-pressed="false">Instagram</button>
+          <button type="button" data-filter="youtube" aria-pressed="false">YouTube</button>
+          <button type="button" data-filter="shopee" aria-pressed="false">Shopee</button>
+        </div>
+        <div class="social-grid">
+          <article class="post" data-platform="tiktok">
+            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-01.jpg" aria-hidden="true"><source src="/showcase/drama/drama-01.mp4" type="video/mp4"></video></div>
+            <span class="plat plat-tiktok">TikTok</span>
+            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
+            <div class="post-bottom"><b>@ช่องละครของคุณ</b><p>ทายาทเจ้าของบ้านกลับมาแล้ว ตอนต่อไปพรุ่งนี้ #ละครสั้น</p></div>
+          </article>
+          <article class="post" data-platform="instagram">
+            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/soap-640.jpg" aria-hidden="true"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video></div>
+            <span class="plat plat-instagram">Instagram Reels</span>
+            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
+            <div class="post-bottom"><b>@ร้านของคุณ</b><p>สบู่มะลิ 100 กรัม หอมทั้งวัน ลิงก์อยู่ในไบโอ #ของดีบอกต่อ</p></div>
+          </article>
+          <article class="post" data-platform="youtube">
+            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-ep1.webp" aria-hidden="true"><source src="/showcase/drama/drama-ep1.mp4" type="video/mp4"></video></div>
+            <span class="plat plat-youtube">YouTube Shorts</span>
+            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
+            <div class="post-bottom"><b>@ช่องละครของคุณ</b><p>EP1 เต็มตอน ดูจบในนาทีเดียว #ละครไทย</p></div>
+          </article>
+          <article class="post" data-platform="facebook">
+            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-05.jpg" aria-hidden="true"><source src="/showcase/drama/drama-05.mp4" type="video/mp4"></video></div>
+            <span class="plat plat-facebook">Facebook Reels</span>
+            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
+            <div class="post-bottom"><b>เพจละครของคุณ</b><p>สาวใช้คนใหม่ วันแรกในคฤหาสน์ ติดตามตอนต่อไปได้ที่เพจ</p></div>
+          </article>
+          <article class="post" data-platform="shopee">
+            <div class="post-media"><img class="kenburns" src="/assets/soap-640.jpg" width="640" height="640" loading="lazy" alt=""></div>
+            <span class="plat plat-shopee">Shopee Video</span>
+            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
+            <div class="post-bottom"><b>@ร้านของคุณ</b><p>รีวิวสบู่สมุนไพร จุดเด่น 3 ข้อ</p><span class="shop-bar"><span>สบู่สมุนไพรกลิ่นมะลิ</span><em>฿129</em></span></div>
+          </article>
+          <article class="post" data-platform="tiktok">
+            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-04.jpg" aria-hidden="true"><source src="/showcase/drama/drama-04.mp4" type="video/mp4"></video></div>
+            <span class="plat plat-tiktok">TikTok</span>
+            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
+            <div class="post-bottom"><b>@ช่องละครของคุณ</b><p>จดหมายฉบับนี้เปลี่ยนทุกอย่าง #หักมุม</p></div>
+          </article>
+          <article class="post" data-platform="instagram">
+            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-03.jpg" aria-hidden="true"><source src="/showcase/drama/drama-03.mp4" type="video/mp4"></video></div>
+            <span class="plat plat-instagram">Instagram Reels</span>
+            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
+            <div class="post-bottom"><b>@ช่องละครของคุณ</b><p>อย่าเปิดประตูห้องหมายเลข 4 #ลึกลับ</p></div>
+          </article>
+          <article class="post" data-platform="facebook">
+            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-02.jpg" aria-hidden="true"><source src="/showcase/drama/drama-02.mp4" type="video/mp4"></video></div>
+            <span class="plat plat-facebook">Facebook Reels</span>
+            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
+            <div class="post-bottom"><b>เพจละครของคุณ</b><p>งานหนักที่ไม่มีใครเห็น แต่เธอยังสู้ต่อ</p></div>
+          </article>
+        </div>
+        <p class="sample-note">ภาพจำลองการแสดงผลบนแต่ละแพลตฟอร์ม ชื่อบัญชีและแคปชันเป็นตัวอย่าง ยังไม่ได้เผยแพร่จริง</p>
       </div>
     </section>
 
@@ -285,7 +328,7 @@
   <footer class="site-footer">
     <div class="shell footer-row">
       <a class="brand" href="/"><img src="/logo.svg?v=4" alt="" width="30" height="30"><span>naka<span>-ai</span><b>.</b></span></a>
-      <nav aria-label="ลิงก์ท้ายหน้า"><a href="#p-review">รีวิว Affiliate</a><a href="#p-drama">ละครสั้น AI</a><a href="#p-live">AI Live</a><a href="#p-bot">แชทบอท</a><a href="#how">วิธีทำงาน</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a><a href="tel:+66892788587">0892788587</a></nav>
+      <nav aria-label="ลิงก์ท้ายหน้า"><a href="#p-review">รีวิว Affiliate</a><a href="#p-drama">ละครสั้น AI</a><a href="#p-live">AI Live</a><a href="#p-bot">แชทบอท</a><a href="#social">ตัวอย่างบนโซเชียล</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a><a href="tel:+66892788587">0892788587</a></nav>
       <span class="footer-copy">© <span id="year">2026</span> naka-ai · NAKA-AI Tech</span>
     </div>
   </footer>
