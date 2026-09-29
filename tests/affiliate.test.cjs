@@ -46,7 +46,7 @@ const job = (input) => ({ id: "j1", kind: affiliate.AFFILIATE_JOB_KIND, input: J
 let sqlite;
 let db;
 beforeEach(() => {
-  ({ sqlite, db } = migratedDb("0002_credits_jobs.sql"));
+  ({ sqlite, db } = migratedDb("0002_credits_jobs.sql", "0006_jobs_limit.sql"));
   fetchMock.mock.resetCalls();
 });
 
@@ -140,7 +140,7 @@ test("the API enqueues, reports queue position, and hides failures and other use
 });
 
 test("the worker mounts /api/affiliate behind the session cookie", async () => {
-  const { sqlite: s, db: authDb } = migratedDb("0001_auth.sql", "0002_credits_jobs.sql");
+  const { sqlite: s, db: authDb } = migratedDb("0001_auth.sql", "0002_credits_jobs.sql", "0006_jobs_limit.sql");
   const worker = require(path.join(buildDir, "index.js")).default;
   const { sha256 } = require(path.join(buildDir, "auth", "common.js"));
   const token = "A".repeat(43);
