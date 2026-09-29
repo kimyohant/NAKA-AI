@@ -4,7 +4,12 @@ import { keyBytes } from './crypto';
 
 // Meta's official SDK and Postman contracts, checked 2026-09-29; see integration doc.
 export const GRAPH_VERSION = 'v26.0';
-export const SCOPES = ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'instagram_basic', 'instagram_content_publish'];
+export const SCOPES = ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'instagram_basic', 'instagram_content_publish',
+  // AI inbox (src/inbox): page webhook subscription, replying to comments and messages.
+  // Confirm the current names in Meta's permission reference before App Review.
+  'pages_manage_metadata', 'pages_manage_engagement', 'pages_messaging', 'instagram_manage_comments', 'instagram_manage_messages'];
+/** Page webhook fields the AI inbox listens to (src/inbox/events.ts). */
+export const PAGE_WEBHOOK_FIELDS = 'feed,messages';
 export function metaConfig(env: Env): { id: string; secret: string } {
   keyBytes(env);
   if (!env.META_APP_ID || !/^\d+$/.test(env.META_APP_ID) || !env.META_APP_SECRET?.trim())

@@ -1,7 +1,7 @@
 import type { Env } from '../types';
 import { appOrigin, constantTimeEqual, cookie, cookieValue, externalId, now, randomToken, sha256, SocialError, type Platform } from './common';
 import { encryptToken, tokenContext } from './crypto';
-import { graph, GRAPH_VERSION, metaConfig, SCOPES } from './meta';
+import { graph, GRAPH_VERSION, metaConfig, PAGE_WEBHOOK_FIELDS, SCOPES } from './meta';
 
 const STATE_COOKIE = 'naka_meta_state';
 const callbackUri = (env: Env) => `${appOrigin(env).origin}/api/social/meta/callback`;
@@ -41,6 +41,7 @@ export async function metaCallback(request: Request, env: Env, url: URL, userId:
     const statements: D1PreparedStatement[] = [];
     let after: string | undefined;
     const seen = new Set<string>();
+    const pagesToSubscribe: { id: string; token: string }[] = [];
     for (let page = 0; page < 20; page++) {
       const result = await graph('me/accounts', long.access_token, { fields: 'id,name,access_token,tasks,instagram_business_account', limit: '100', ...(after ? { after } : {}) });
       if (!Array.isArray(result.data)) throw new Error();
@@ -58,6 +59,7 @@ export async function metaCallback(request: Request, env: Env, url: URL, userId:
             .bind(crypto.randomUUID(), userId, platform, id, name.slice(0, 200), encrypted, expiry, now()));
         };
         await save('facebook', item.id, item.name);
+        pagesToSubscribe.push({ id: item.id, token: item.access_token });
         if (item.instagram_business_account) {
           const id = item.instagram_business_account.id;
           if (!externalId(id)) throw new Error();
@@ -75,6 +77,12 @@ export async function metaCallback(request: Request, env: Env, url: URL, userId:
     if (!statements.length) throw new Error();
     await env.DB.batch(statements);
     success = true;
+    // Ask Meta to send this page's comments and messages to /webhook/meta (AI inbox).
+    // Best effort: posting still works without it, and reconnecting retries it.
+    for (const page of pagesToSubscribe) {
+      try { await graph(`${page.id}/subscribed_apps`, page.token, { subscribed_fields: PAGE_WEBHOOK_FIELDS }, 'POST'); }
+      catch { /* no provider details in logs */ }
+    }
   } catch { /* No codes, credentials, provider response bodies, or exception objects in logs. */ }
   return new Response(null, { status: 302, headers: { Location: `${appOrigin(env).origin}/app/?${success ? 'connected=meta' : 'error=meta'}`,
     'Set-Cookie': cookieValue(env, STATE_COOKIE, '', 0) } });
