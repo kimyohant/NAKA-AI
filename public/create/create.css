@@ -19,3 +19,6 @@
 .workflow-switch a:hover{border-color:#83a9e0;background:#edf4ff}
 .workflow-switch a[aria-current=page]{border-color:#2459b2;background:#2459b2;color:#fff}
 @media(max-width:540px){.workflow-switch{margin-bottom:9px}.workflow-switch a{font-size:12px;padding:7px 11px}}
+
+/* Header: back link + account menu (public/account-menu.js) */
+.header-actions { display: inline-flex; align-items: center; gap: 18px; }

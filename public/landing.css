@@ -395,3 +395,18 @@ h1, h2, h3 { font-family: "IBM Plex Sans Thai", sans-serif; margin: 0; }
   .guarantee-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 600px) { .guarantee-grid { grid-template-columns: 1fr; } .stat-band dd { font-size: 36px; } }
+
+/* ---------- account menu on the light nav (public/account-menu.js) ---------- */
+.nav-account { display: inline-flex; }
+.nav-account:empty { display: none; }
+.landing-nav .acct-login { min-height: 40px; padding: 0 16px; border-color: var(--line); background: #fff; color: var(--ink); font-size: 14px; }
+.landing-nav .acct-login:hover { background: var(--bg); border-color: #b9c8e4; }
+.landing-nav .acct-trigger { color: var(--ink); }
+.landing-nav .acct-trigger:hover, .landing-nav .acct-trigger[aria-expanded="true"] { background: rgba(13, 27, 51, .05); border-color: var(--line); }
+.landing-nav .acct-chevron { color: var(--ink-3); }
+/* Signed in: the account entry replaces the "try free" pill. */
+body.acct-signed-in .landing-nav .nav-cta { display: none; }
+@media (max-width: 900px) {
+  .nav-account { margin-left: auto; }
+  .nav-account + .nav-cta + .menu-button, .nav-account ~ .menu-button { margin-left: 8px; }
+}
