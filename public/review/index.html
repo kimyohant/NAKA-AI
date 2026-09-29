@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#091736">
+  <title>คลิปรีวิวสินค้า affiliate · naka-ai</title>
+  <meta name="description" content="ใส่รูปและจุดเด่นสินค้า นาคาเขียนบท พากย์เสียงไทย แล้วทำคลิปรีวิวแนวตั้งพร้อมแคปชันและลิงก์ affiliate">
+  <link rel="canonical" href="https://naka-ai.com/review/">
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/create/create.css">
+  <link rel="stylesheet" href="/review/review.css">
+  <link rel="stylesheet" href="/glass-nav.css">
+  <script src="/review/review-render.js" defer></script>
+  <script src="/review/review.js" defer></script>
+  <script src="/glass-nav.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">ข้ามไปเนื้อหา</a>
+  <header class="glass-nav"><div class="shell header-row"><a class="brand" href="/"><img src="/logo.svg?v=4" alt="" width="39" height="39"><span>naka-ai.</span></a><a class="back-link" href="/">← กลับหน้าแรก</a></div></header>
+  <main id="main" class="shell main-grid">
+    <div class="intro">
+      <p class="eyebrow">คลิปรีวิวสำหรับนักขาย affiliate</p>
+      <h1>รูปสินค้า 1–6 รูป<br><em>ได้คลิปรีวิวพร้อมโพสต์</em></h1>
+      <p>นาคาเขียนบท พากย์เสียงไทย และทำคลิปแนวตั้งพร้อมแคปชันที่แนบลิงก์ของคุณ รูปสินค้าอยู่บนเครื่องคุณ ไม่ถูกอัปโหลด</p>
+      <ol class="mini-steps review-steps"><li>01 ใส่รูปและจุดเด่น</li><li>02 นาคาเขียนบทและพากย์</li><li>03 ตรวจคลิปแล้วโพสต์</li></ol>
+      <p class="demo-note" id="demo-note" hidden>โหมดทดลอง: ใช้บทตัวอย่างและเสียงสัญญาณแทนเสียงพากย์ ไม่ใช้เครดิต</p>
+    </div>
+
+    <section class="brief-card" aria-labelledby="review-title">
+      <div class="card-header"><p>คลิปรีวิว 20–35 วินาที · ใช้ 1 เครดิต</p><h2 id="review-title">สินค้าที่อยากรีวิว</h2></div>
+
+      <form id="review-form" novalidate>
+        <label class="upload review-upload" for="review-images"><span><b>＋</b><strong>เลือกรูปสินค้า 1–6 รูป</strong><small>JPG, PNG หรือ WebP · อยู่บนเครื่องนี้เท่านั้น</small></span></label>
+        <input id="review-images" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+        <ul class="thumbs" id="thumbs" aria-label="รูปที่เลือก"></ul>
+        <div class="field"><label for="review-name">ชื่อสินค้า</label><input id="review-name" name="productName" required maxlength="160" placeholder="เช่น สบู่สมุนไพรกลิ่นมะลิ"></div>
+        <div class="field"><label for="review-details">จุดเด่นจริงของสินค้า</label><textarea id="review-details" name="details" required maxlength="3000" rows="4" placeholder="ขนาด วัสดุ กลิ่น วิธีใช้ ใส่เฉพาะข้อมูลจริง นาคาจะไม่แต่งสรรพคุณเพิ่ม"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label for="review-price">ราคา (ไม่บังคับ)</label><input id="review-price" name="price" maxlength="80" placeholder="เช่น 129 บาท"></div>
+          <div class="field"><label for="review-channel">โพสต์ที่</label><select id="review-channel" name="channel"><option value="tiktok">TikTok</option><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="shopee">Shopee</option></select></div>
+        </div>
+        <div class="field"><label for="review-link">ลิงก์ affiliate (ไม่บังคับ)</label><input id="review-link" name="affiliateUrl" type="url" inputmode="url" maxlength="500" placeholder="https://s.shopee.co.th/…"></div>
+        <div class="field"><label for="review-tone">น้ำเสียง</label><select id="review-tone" name="tone"><option value="friendly">อบอุ่นเป็นกันเอง</option><option value="premium">สุภาพประณีต</option><option value="playful">สนุกพอดี</option></select></div>
+        <button class="copy-button" type="submit" id="review-submit"><span>ให้นาคาเขียนบทและพากย์</span><span aria-hidden="true">↗</span></button>
+      </form>
+
+      <div class="review-panel" id="review-panel" hidden>
+        <p class="panel-status" id="panel-status" role="status" aria-live="polite"></p>
+        <div class="progress" id="progress" hidden><span id="progress-bar"></span></div>
+        <div class="render-preview" id="render-preview" aria-label="ตัวอย่างวิดีโอระหว่างสร้าง" hidden></div>
+        <ol class="scene-list" id="scene-list" hidden></ol>
+        <button class="copy-button" type="button" id="render-button" hidden><span>สร้างวิดีโอ</span><span aria-hidden="true">▶</span></button>
+        <p class="render-hint" id="render-hint" hidden>สร้างบนเครื่องคุณ ใช้เวลาเท่าความยาวคลิป อย่าปิดแท็บนี้จนกว่าจะเสร็จ</p>
+        <figure class="result" id="result" hidden>
+          <video id="result-video" controls playsinline></video>
+          <figcaption><a class="copy-button" id="download-link" download><span>ดาวน์โหลดคลิป</span><span aria-hidden="true">↓</span></a></figcaption>
+        </figure>
+        <div class="field" id="caption-field" hidden><label for="caption-text">แคปชันพร้อมลิงก์</label><textarea id="caption-text" rows="6"></textarea><button type="button" class="text-button" id="copy-caption">คัดลอกแคปชัน</button></div>
+        <button type="button" class="text-button" id="start-over" hidden>← ทำคลิปใหม่</button>
+      </div>
+      <p class="form-error" id="form-error" role="alert"></p>
+    </section>
+  </main>
+  <footer class="shell">© <span id="year">2026</span> naka-ai · NAKA-AI Tech</footer>
+</body>
+</html>
