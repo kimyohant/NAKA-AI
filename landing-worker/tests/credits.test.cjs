@@ -1,8 +1,8 @@
 const assert = require("node:assert/strict");
 const { after, beforeEach, test } = require("node:test");
 const { execFileSync } = require("node:child_process");
-const { readFileSync, rmSync } = require("node:fs");
-const { DatabaseSync } = require("node:sqlite");
+const { rmSync } = require("node:fs");
+const { migratedDb } = require("./helpers/d1.cjs");
 const path = require("node:path");
 
 // Compile src with the project's compiler, then run the real SQL against SQLite.
@@ -22,40 +22,10 @@ after(() => {
   rmSync(buildDir, { recursive: true, force: true });
 });
 
-// Minimal D1Database over node:sqlite: prepare/bind/first/all/run and a transactional batch.
-function d1(sqlite) {
-  const statement = (sql, params = []) => ({
-    bind: (...next) => statement(sql, next),
-    first: async () => sqlite.prepare(sql).get(...params) ?? null,
-    all: async () => ({ results: sqlite.prepare(sql).all(...params) }),
-    run: async () => {
-      const r = sqlite.prepare(sql).run(...params);
-      return { meta: { changes: Number(r.changes), last_row_id: Number(r.lastInsertRowid) } };
-    },
-  });
-  return {
-    prepare: (sql) => statement(sql),
-    batch: async (statements) => {
-      sqlite.exec("BEGIN");
-      try {
-        const results = [];
-        for (const s of statements) results.push(await s.run());
-        sqlite.exec("COMMIT");
-        return results;
-      } catch (err) {
-        sqlite.exec("ROLLBACK");
-        throw err;
-      }
-    },
-  };
-}
-
 let sqlite;
 let db;
 beforeEach(() => {
-  sqlite = new DatabaseSync(":memory:");
-  sqlite.exec(readFileSync(path.join(root, "migrations/0002_credits_jobs.sql"), "utf8"));
-  db = d1(sqlite);
+  ({ sqlite, db } = migratedDb("0002_credits_jobs.sql"));
 });
 
 const row = (sql, ...params) => sqlite.prepare(sql).get(...params);

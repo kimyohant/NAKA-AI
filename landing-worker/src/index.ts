@@ -1,6 +1,8 @@
+import { AFFILIATE_JOB_KIND, makeAffiliateHandler } from "./affiliate";
 import { runSalesAgent } from "./agent";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
+import { runQueue, type JobHandler } from "./jobs";
 import { getDisplayName, pushText, replyOrPush, startLoading, verifySignature } from "./line";
 import { handleStudio } from "./studio";
 import type { Env } from "./types";
@@ -45,7 +47,19 @@ export default {
     }
     return env.ASSETS.fetch(request);
   },
+
+  // Cron (wrangler.jsonc): drain the AI job queue once a minute.
+  async scheduled(_controller, env, ctx): Promise<void> {
+    ctx.waitUntil(runQueue(env.DB, jobHandlers(env)).then(
+      (result) => { if (result.ran || result.recovered) console.log("queue", result); },
+      (err) => console.error("queue run failed", err),
+    ));
+  },
 } satisfies ExportedHandler<Env>;
+
+function jobHandlers(env: Env): Record<string, JobHandler> {
+  return { [AFFILIATE_JOB_KIND]: makeAffiliateHandler(env) };
+}
 
 async function handleLineWebhook(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const body = await request.text();
