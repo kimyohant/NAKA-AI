@@ -39,13 +39,13 @@ const notes = argOf('--notes') || ''
 const skipGh = argv.includes('--skip-gh')
 
 // 与 make-update-feed 相同的产物清单。注意 electron-builder 的 NSIS 本地产物带空格
-// （HuobaoDrama Setup X.Y.Z.exe），GitHub 服务端会规范化为点号；COS key/URL 需自行归一化
+// （NAKA-AI Setup X.Y.Z.exe），GitHub 服务端会规范化为点号；COS key/URL 需自行归一化
 const assets = [
-  `HuobaoDrama-${version}-arm64.dmg`,
-  `HuobaoDrama-${version}.dmg`,
-  `HuobaoDrama-${version}-arm64-mac.zip`,
-  `HuobaoDrama-${version}-mac.zip`,
-  `HuobaoDrama Setup ${version}.exe`,
+  `NAKA-AI-${version}-arm64.dmg`,
+  `NAKA-AI-${version}.dmg`,
+  `NAKA-AI-${version}-arm64-mac.zip`,
+  `NAKA-AI-${version}-mac.zip`,
+  `NAKA-AI Setup ${version}.exe`,
 ]
 // URL/COS key 使用的规范化文件名（空格 → 点号，与 GitHub 服务端一致）
 const dotName = (f) => f.replace(/ /g, '.')

@@ -1,5 +1,6 @@
 appId: com.nakaai.tech
 productName: NAKA-AI
+artifactName: ${productName}-${version}-${arch}-${ext}
 directories:
   output: release
   buildResources: build
@@ -57,4 +58,4 @@ nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: always
-  shortcutName: HuobaoDrama
+  shortcutName: NAKA-AI
