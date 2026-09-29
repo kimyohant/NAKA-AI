@@ -47,9 +47,9 @@ export function cookie(request: Request, name: string): string | null {
 export function cookieValue(env: Env, name: string, value: string, age: number): string {
   return `${name}=${value}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${age}${appOrigin(env).protocol === 'https:' ? '; Secure' : ''}`;
 }
-export async function readJson(request: Request): Promise<Record<string, unknown>> {
+export async function readJson(request: Request, maxBytes = 2048): Promise<Record<string, unknown>> {
   if (request.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== 'application/json') throw new AuthError(400, 'กรุณาส่งข้อมูลในรูปแบบ JSON');
-  if (Number(request.headers.get('Content-Length')) > 2048) throw new AuthError(413, 'ข้อมูลมีขนาดใหญ่เกินไป');
+  if (Number(request.headers.get('Content-Length')) > maxBytes) throw new AuthError(413, 'ข้อมูลมีขนาดใหญ่เกินไป');
   const reader = request.body?.getReader();
   if (!reader) throw new AuthError(400, 'ข้อมูลไม่ถูกต้อง');
   const chunks: Uint8Array[] = [];
@@ -59,7 +59,7 @@ export async function readJson(request: Request): Promise<Record<string, unknown
       const { done, value } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > 2048) { await reader.cancel(); throw new AuthError(413, 'ข้อมูลมีขนาดใหญ่เกินไป'); }
+      if (size > maxBytes) { await reader.cancel(); throw new AuthError(413, 'ข้อมูลมีขนาดใหญ่เกินไป'); }
       chunks.push(value);
     }
   } finally { reader.releaseLock(); }

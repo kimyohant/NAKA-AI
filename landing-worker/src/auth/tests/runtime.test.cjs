@@ -17,9 +17,16 @@ test('Cloudflare workerd + D1: migration, OTP quota/claim, Google, session and l
   const options = {
     modules: true, script: bundled.outputFiles[0].text, compatibilityDate: '2026-09-01', d1Databases: ['DB'], cf: false,
     bindings: { APP_ORIGIN: 'https://naka.test', SESSION_SECRET: 'test-only-secret-at-least-32-characters',
+      TURNSTILE_SECRET_KEY: 'test-turnstile-secret',
       SMS_PROVIDER: 'thaibulksms', SMS_API_KEY: 'test-key', SMS_API_SECRET: 'test-secret', SMS_SENDER: 'NAKA-AI',
       GOOGLE_CLIENT_ID: 'test-client', GOOGLE_CLIENT_SECRET: 'test-client-secret' },
     outboundService: async request => {
+      if (request.url === 'https://challenges.cloudflare.com/turnstile/v0/siteverify') {
+        const params = new URLSearchParams(await request.text());
+        assert.equal(params.get('secret'), 'test-turnstile-secret');
+        assert.equal(params.get('response'), 'test-turnstile-token');
+        return RuntimeResponse.json({ success: true, hostname: 'naka.test', action: 'otp_request' });
+      }
       if (request.url === 'https://oauth2.googleapis.com/token') {
         const params = new URLSearchParams(await request.text());
         assert.equal(params.get('code_verifier').length, 43);
@@ -46,7 +53,7 @@ test('Cloudflare workerd + D1: migration, OTP quota/claim, Google, session and l
       headers: { Origin: 'https://naka.test', 'Content-Type': 'application/json', 'CF-Connecting-IP': '192.0.2.1', ...(cookie ? { Cookie: cookie } : {}) },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
-    const results = await Promise.all(Array.from({ length: 4 }, () => call('otp/request', { phone: '0812345678' })));
+    const results = await Promise.all(Array.from({ length: 4 }, () => call('otp/request', { phone: '0812345678', turnstileToken: 'test-turnstile-token' })));
     assert.equal(results.filter(response => response.status === 200).length, 1,
       JSON.stringify(await Promise.all(results.map(async response => ({ status: response.status, body: await response.clone().text() })))));
     assert.equal(results.filter(response => response.status === 429).length, 3);

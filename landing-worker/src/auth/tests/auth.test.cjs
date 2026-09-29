@@ -52,11 +52,18 @@ function setup(t, overrides = {}) {
   const DB = new D1();
   t.after(() => DB.sql.close());
   const env = { DB, APP_ORIGIN: 'https://naka.test', SESSION_SECRET: 'test-secret-at-least-32-characters-long',
+    TURNSTILE_SECRET_KEY: 'test-turnstile-secret',
     SMS_PROVIDER: 'thaibulksms', SMS_API_KEY: 'test-key', SMS_API_SECRET: 'test-secret', SMS_SENDER: 'NAKA-AI',
     GOOGLE_CLIENT_ID: 'test-google-client', GOOGLE_CLIENT_SECRET: 'test-google-secret', ...overrides };
   const messages = [];
   http.mock.resetCalls();
   http.mock.mockImplementation(async (url, init) => {
+    if (url === 'https://challenges.cloudflare.com/turnstile/v0/siteverify') {
+      const body = new URLSearchParams(init.body);
+      assert.equal(body.get('secret'), 'test-turnstile-secret');
+      assert.equal(body.get('response'), 'test-turnstile-token');
+      return Response.json({ success: true, hostname: new URL(env.APP_ORIGIN).hostname, action: 'otp_request' });
+    }
     assert.equal(url, 'https://api-v2.thaibulksms.com/sms');
     assert.equal(init.method, 'POST');
     assert.equal(init.redirect, 'manual');
@@ -75,7 +82,7 @@ function setup(t, overrides = {}) {
     headers: { Origin: env.APP_ORIGIN, 'Content-Type': 'application/json', 'CF-Connecting-IP': '192.0.2.1', ...options.headers },
   });
   const call = async (route, data, options) => { const request = req(route, data, options); return handleAuth(request, env, new URL(request.url)); };
-  const send = (phone = '0812345678', options) => call('otp/request', { phone }, options);
+  const send = (phone = '0812345678', options) => call('otp/request', { phone, turnstileToken: 'test-turnstile-token' }, options);
   const verify = (code = messages.at(-1).code, phone = '0812345678', options) => call('otp/verify', { phone, code }, options);
   return { env, db: DB.sql, messages, req, call, send, verify };
 }
@@ -104,7 +111,7 @@ test('POST requires same-origin JSON and enforces streamed body size', async t =
   assert.equal((await f.send(undefined, { headers: { 'Sec-Fetch-Site': 'cross-site' } })).status, 403);
   assert.equal((await f.send(undefined, { headers: { 'Content-Type': 'text/plain' } })).status, 400);
   for (const body of ['{oops', '[]', 'null']) assert.equal((await f.send(undefined, { body })).status, 400);
-  assert.equal((await f.send(undefined, { body: JSON.stringify({ phone: 'ก'.repeat(800) }) })).status, 413);
+  assert.equal((await f.send(undefined, { body: JSON.stringify({ phone: 'ก'.repeat(1600) }) })).status, 413);
   assert.equal((await f.send(undefined, { headers: { 'Content-Length': '9999' } })).status, 413);
   assert.equal(http.mock.callCount(), 0);
 });
@@ -139,6 +146,68 @@ test('OTP is HMAC protected and cools down for exactly 60 seconds', async t => {
   assert.equal(f.messages.length, 2);
 });
 
+test('Turnstile requires production secret and skips only unconfigured loopback HTTP', async t => {
+  const f = setup(t, { TURNSTILE_SECRET_KEY: undefined });
+  assert.equal((await f.send()).status, 503);
+  assert.equal(http.mock.callCount(), 0);
+  assert.equal(scalar(f.db, 'SELECT COUNT(*) FROM auth_otp_requests'), 0);
+  f.env.APP_ORIGIN = 'http://127.0.0.1:8789';
+  assert.equal((await f.call('otp/request', { phone: '0812345678' })).status, 200);
+  assert.equal(f.messages.length, 1);
+});
+
+test('Turnstile rejects malformed tokens before HTTP, quota, or SMS', async t => {
+  const f = setup(t);
+  for (const turnstileToken of [undefined, null, 12, '', ' ', 'x'.repeat(2049)]) {
+    const response = await f.call('otp/request', { phone: '0812345678', turnstileToken });
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).error, 'ยืนยันว่าไม่ใช่บอตไม่สำเร็จ กรุณาลองใหม่');
+  }
+  assert.equal(http.mock.callCount(), 0);
+  assert.equal(scalar(f.db, 'SELECT COUNT(*) FROM auth_otp_requests'), 0);
+});
+
+test('Turnstile fails closed for invalid, replayed, wrong-host/action and unavailable responses', async t => {
+  const f = setup(t);
+  const replies = [
+    () => Response.json({ success: false, 'error-codes': ['timeout-or-duplicate'] }),
+    () => Response.json({ success: true, hostname: 'evil.test', action: 'otp_request' }),
+    () => Response.json({ success: true, hostname: 'naka.test', action: 'other' }),
+    () => Response.json({ success: 'true', hostname: 'naka.test', action: 'otp_request' }),
+    () => new Response('private provider body', { status: 503 }),
+    () => new Response('invalid-json'), () => { throw new Error('private timeout'); },
+  ];
+  for (const reply of replies) {
+    http.mock.mockImplementation(async (url, init) => {
+      assert.equal(url, 'https://challenges.cloudflare.com/turnstile/v0/siteverify');
+      assert.equal(new URLSearchParams(init.body).get('remoteip'), '192.0.2.1');
+      assert.equal(init.redirect, 'manual');
+      return reply();
+    });
+    const result = await f.send();
+    assert.equal(result.status, 400);
+    assert.equal((await result.json()).error, 'ยืนยันว่าไม่ใช่บอตไม่สำเร็จ กรุณาลองใหม่');
+  }
+  assert.equal(scalar(f.db, 'SELECT COUNT(*) FROM auth_otp_requests'), 0);
+  assert.equal(scalar(f.db, 'SELECT COUNT(*) FROM otp_codes'), 0);
+});
+
+test('maximum Turnstile token fits the request limit and permits SMS only after verification', async t => {
+  const f = setup(t);
+  let validated = false;
+  http.mock.mockImplementation(async (url, init) => {
+    if (url.includes('siteverify')) {
+      assert.equal(new URLSearchParams(init.body).get('response').length, 2048);
+      validated = true;
+      return Response.json({ success: true, hostname: 'naka.test', action: 'otp_request' });
+    }
+    assert.ok(validated);
+    return Response.json({ phone_number_list: [{ number: '66812345678', message_id: 'ok' }] });
+  });
+  assert.equal((await f.call('otp/request', { phone: '0812345678', turnstileToken: 'x'.repeat(2048) })).status, 200);
+  assert.equal(http.mock.callCount(), 2);
+});
+
 test('parallel OTP sends admit only one request', async t => {
   const f = setup(t);
   const results = await Promise.all(Array.from({ length: 8 }, () => f.send()));
@@ -158,9 +227,9 @@ test('rolling hourly phone quota survives successful verification and resets at 
   assert.equal(scalar(f.db, 'SELECT COUNT(*) FROM users'), 1);
 });
 
-test('per-IP quota blocks sending to more than 20 distinct phone numbers per hour', async t => {
+test('per-IP quota allows 60 verified requests per hour without changing phone quota', async t => {
   const f = setup(t);
-  for (let i = 0; i < 20; i++) assert.equal((await f.send(`081234${String(i).padStart(4, '0')}`)).status, 200);
+  for (let i = 0; i < 60; i++) assert.equal((await f.send(`081234${String(i).padStart(4, '0')}`)).status, 200);
   const response = await f.send('0899999999');
   assert.equal(response.status, 429);
   assert.equal((await response.json()).retryAfter, 3600);
@@ -276,7 +345,7 @@ test('disabled phone user cannot obtain a replacement session', async t => {
 });
 
 test('provider failures never activate an OTP and retain throttling without leaking response', async t => {
-  const f = setup(t);
+  const f = setup(t, { APP_ORIGIN: 'http://127.0.0.1:8789', TURNSTILE_SECRET_KEY: undefined });
   http.mock.mockImplementation(async () => new Response('private provider details and secret', { status: 500 }));
   const result = await f.send();
   assert.equal(result.status, 502);
@@ -286,7 +355,7 @@ test('provider failures never activate an OTP and retain throttling without leak
 });
 
 test('provider partial success, malformed payload and timeout are rejected', async t => {
-  const f = setup(t);
+  const f = setup(t, { APP_ORIGIN: 'http://127.0.0.1:8789', TURNSTILE_SECRET_KEY: undefined });
   const replies = [() => Response.json({ phone_number_list: [], bad_phone_number_list: [{}] }),
     () => Response.json({ phone_number_list: [{ number: '66899999999', message_id: 'wrong' }] }),
     () => new Response('not-json'), () => { throw new Error('timeout'); }];
@@ -298,7 +367,7 @@ test('provider partial success, malformed payload and timeout are rejected', asy
 });
 
 test('mock SMS is restricted to loopback HTTP, and real sender configuration is required', async t => {
-  const f = setup(t, { SMS_PROVIDER: 'mock' });
+  const f = setup(t, { SMS_PROVIDER: 'mock', TURNSTILE_SECRET_KEY: undefined });
   assert.equal((await f.send()).status, 503);
   f.env.APP_ORIGIN = 'http://example.test';
   assert.equal((await f.send()).status, 503);
