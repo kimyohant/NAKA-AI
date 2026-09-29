@@ -282,24 +282,79 @@
       </div>
     </section>
 
-    <!-- Pricing -->
+    <!-- Pricing: four monthly/yearly packages (mirrors migrations/0004_plans.sql) -->
     <section class="section pricing" id="pricing" aria-labelledby="pricing-title">
       <div class="shell">
-        <div class="section-head"><div><p class="kicker">ราคา</p><h2 id="pricing-title">ลองก่อน แล้วค่อยตัดสินใจ</h2></div></div>
-        <div class="price-grid">
-          <article class="price-card">
-            <p class="price-name">ทดลองใช้</p>
-            <p class="price-value">ฟรี</p>
-            <ul><li>ลองสร้างคลิปด้วยบทตัวอย่าง</li><li>ไม่ต้องสมัคร ไม่ใช้เครดิต</li><li>สร้างวิดีโอบนเครื่องคุณ</li></ul>
-            <a class="btn btn-ghost" href="/review/?demo=1">ลองสร้างคลิปฟรี <span aria-hidden="true">↗</span></a>
+        <div class="pricing-head">
+          <p class="kicker">แพ็กเกจราคา</p>
+          <h2 id="pricing-title">เลือกแพ็กเกจที่เหมาะกับร้านคุณ</h2>
+          <p class="row-sub">1 เครดิต = คลิปรีวิว affiliate 1 คลิป · เครดิตรีเซ็ตทุกรอบบิล · ลองฟรีได้ก่อนโดยไม่ต้องสมัคร</p>
+          <div class="billing-toggle" role="group" aria-label="รอบการชำระเงิน">
+            <button type="button" data-billing="monthly" aria-pressed="true">รายเดือน</button>
+            <button type="button" data-billing="yearly" aria-pressed="false">รายปี <span>ฟรี 2 เดือน</span></button>
+          </div>
+        </div>
+
+        <div class="plan-grid">
+          <article class="plan">
+            <h3>เริ่มต้น</h3>
+            <p class="plan-for">สำหรับนักขาย affiliate มือใหม่</p>
+            <p class="plan-price"><span class="amount" data-monthly="399" data-yearly="333">399</span><span class="unit">บาท/เดือน</span></p>
+            <p class="plan-bill" data-monthly="ชำระรายเดือน" data-yearly="ชำระ ฿3,990 ต่อปี">ชำระรายเดือน</p>
+            <a class="btn btn-ghost plan-cta" href="tel:+66892788587">สมัครแพ็กเกจนี้</a>
+            <ul>
+              <li><b>30 เครดิต</b>ต่อเดือน</li>
+              <li>คลิปรีวิว affiliate + เสียงพากย์ไทย</li>
+              <li>แคปชันพร้อมลิงก์ affiliate</li>
+              <li>สร้างได้ครั้งละ 1 งาน</li>
+            </ul>
           </article>
-          <article class="price-card price-card-main">
-            <p class="price-name">ใช้งานจริง</p>
-            <p class="price-value">สอบถามราคา</p>
-            <ul><li>บทและเสียงพากย์จาก AI จริง</li><li>คลิปรีวิว affiliate และคลิปขาย</li><li>ทีมงานแจ้งราคาก่อนเริ่มงาน</li></ul>
-            <a class="btn btn-primary" href="tel:+66892788587">โทร 089-278-8587 <span aria-hidden="true">↗</span></a>
+
+          <article class="plan plan-featured">
+            <span class="plan-badge">ยอดนิยม</span>
+            <h3>โปร</h3>
+            <p class="plan-for">ทำคอนเทนต์ทุกวัน + ละครสั้น</p>
+            <p class="plan-price"><span class="amount" data-monthly="790" data-yearly="658">790</span><span class="unit">บาท/เดือน</span></p>
+            <p class="plan-bill" data-monthly="ชำระรายเดือน" data-yearly="ชำระ ฿7,900 ต่อปี">ชำระรายเดือน</p>
+            <a class="btn btn-primary plan-cta" href="tel:+66892788587">สมัครแพ็กเกจนี้</a>
+            <ul>
+              <li><b>80 เครดิต</b>ต่อเดือน</li>
+              <li>ทุกอย่างในแพ็กเกจเริ่มต้น</li>
+              <li>ละครสั้น AI</li>
+              <li>สร้างได้ครั้งละ 2 งาน</li>
+            </ul>
+          </article>
+
+          <article class="plan">
+            <h3>ธุรกิจ</h3>
+            <p class="plan-for">ร้านที่มีลูกค้าทักทุกวัน</p>
+            <p class="plan-price"><span class="amount" data-monthly="1,290" data-yearly="1,075">1,290</span><span class="unit">บาท/เดือน</span></p>
+            <p class="plan-bill" data-monthly="ชำระรายเดือน" data-yearly="ชำระ ฿12,900 ต่อปี">ชำระรายเดือน</p>
+            <a class="btn btn-ghost plan-cta" href="tel:+66892788587">สมัครแพ็กเกจนี้</a>
+            <ul>
+              <li><b>160 เครดิต</b>ต่อเดือน</li>
+              <li>ทุกอย่างในแพ็กเกจโปร</li>
+              <li>AI ตอบแชทและคอมเมนต์อัตโนมัติ</li>
+              <li>สร้างได้ครั้งละ 4 งาน</li>
+            </ul>
+          </article>
+
+          <article class="plan">
+            <h3>สูงสุด</h3>
+            <p class="plan-for">ทีมขายเต็มรูปแบบ</p>
+            <p class="plan-price"><span class="amount" data-monthly="1,990" data-yearly="1,658">1,990</span><span class="unit">บาท/เดือน</span></p>
+            <p class="plan-bill" data-monthly="ชำระรายเดือน" data-yearly="ชำระ ฿19,900 ต่อปี">ชำระรายเดือน</p>
+            <a class="btn btn-ghost plan-cta" href="tel:+66892788587">สมัครแพ็กเกจนี้</a>
+            <ul>
+              <li><b>300 เครดิต</b>ต่อเดือน</li>
+              <li>ทุกอย่างในแพ็กเกจธุรกิจ</li>
+              <li>AI Live ขายสินค้า</li>
+              <li>สร้างได้ครั้งละ 8 งาน · คิวด่วน</li>
+            </ul>
           </article>
         </div>
+
+        <p class="pricing-note">ตอนนี้สมัครผ่านทีมงานที่ <a href="tel:+66892788587">089-278-8587</a> ระบบชำระเงินออนไลน์กำลังจะเปิด · <a href="/review/?demo=1">ลองสร้างคลิปฟรีก่อน ↗</a></p>
       </div>
     </section>
 

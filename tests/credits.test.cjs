@@ -179,3 +179,13 @@ test("runQueue runs jobs in parallel up to the concurrency limit and never runs 
   assert.ok(peak <= 3 && peak > 1, `peak concurrency was ${peak}`);
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM jobs WHERE status = 'queued'").get().n, 2);
 });
+
+test("paid packages match the pricing section and set each user's parallel limit", async () => {
+  const { sqlite: s, db: planDb } = migratedDb("0002_credits_jobs.sql", "0004_plans.sql");
+  const plans = s.prepare("SELECT id, monthly_credits, max_parallel_jobs, price_thb FROM plans ORDER BY price_thb").all();
+  assert.deepEqual(plans.map((p) => [p.id, p.monthly_credits, p.max_parallel_jobs, p.price_thb]), [
+    ["free", 0, 1, 0], ["starter", 30, 1, 399], ["pro", 80, 2, 790], ["business", 160, 4, 1290], ["max", 300, 8, 1990],
+  ]);
+  s.exec("INSERT INTO subscriptions (user_id, plan_id) VALUES ('u1', 'business')");
+  assert.equal((await credits.getPlan(planDb, "u1")).max_parallel_jobs, 4);
+});

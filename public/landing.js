@@ -118,3 +118,16 @@
     });
   });
 })();
+
+// ---- pricing: switch monthly / yearly figures ----
+(function () {
+  'use strict';
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('.billing-toggle button'));
+  buttons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      var mode = button.dataset.billing;
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b === button)); });
+      document.querySelectorAll('.plan [data-monthly]').forEach(function (el) { el.textContent = el.dataset[mode]; });
+    });
+  });
+})();
