@@ -12,7 +12,9 @@ export function smsProvider(env: Env): SmsProvider {
   }
   return {
     async send(phone, text) {
-      // https://developer.thaibulksms.com/ — SMS POST /sms, Basic auth.
+      // Verified 2026-09-29: https://developer.thaibulksms.com/ (SMS API).
+      // POST /sms uses Basic auth and form fields sender, msisdn, message.
+      // This sends our locally generated OTP; it is not the provider's OTP API.
       try {
         const response = await fetch('https://api-v2.thaibulksms.com/sms', {
           method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(10000),
