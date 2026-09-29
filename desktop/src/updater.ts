@@ -74,7 +74,7 @@ function platformKey(): string {
 
 /** 已安装 app 的 .app 路径（仅 macOS、打包态有效） */
 function installedAppBundle(): string {
-  // process.execPath = .../HuobaoDrama.app/Contents/MacOS/HuobaoDrama
+  // process.execPath = .../NAKA-AI.app/Contents/MacOS/NAKA-AI
   return path.resolve(path.dirname(process.execPath), '..', '..')
 }
 
@@ -179,10 +179,10 @@ async function doDownload(): Promise<UpdateState> {
 function describeApplyError(err: unknown): string {
   const e = err as NodeJS.ErrnoException
   if (e?.code === 'EPERM' || e?.code === 'EACCES') {
-    return `系统权限不足（${e.code}）：请在 系统设置 → 隐私与安全性 → App 管理 中允许 HuobaoDrama 后重试；或下载最新 dmg 覆盖安装（数据不受影响）`
+    return `系统权限不足（${e.code}）：请在 系统设置 → 隐私与安全性 → App 管理 中允许 NAKA-AI 后重试；或下载最新 dmg 覆盖安装（数据不受影响）`
   }
   if (e?.code === 'EROFS') {
-    return '应用正运行在只读位置（可能直接在 dmg 挂载卷里），请先把 HuobaoDrama 拖入「应用程序」再更新'
+    return '应用正运行在只读位置（可能直接在 dmg 挂载卷里），请先把 NAKA-AI 拖入「应用程序」再更新'
   }
   return e?.message || String(err)
 }
@@ -201,8 +201,8 @@ async function doApply(): Promise<void> {
       await new Promise<void>((resolve, reject) => {
         execFile('unzip', ['-q', '-o', downloaded, '-d', tmpExtract], err => (err ? reject(err) : resolve()))
       })
-      const newApp = path.join(tmpExtract, 'HuobaoDrama.app')
-      if (!fs.existsSync(newApp)) throw new Error('更新包内容异常（未找到 HuobaoDrama.app）')
+      const newApp = path.join(tmpExtract, 'NAKA-AI.app')
+      if (!fs.existsSync(newApp)) throw new Error('更新包内容异常（未找到 NAKA-AI.app）')
 
       const oldBundle = `${bundle}.old`
       fs.rmSync(oldBundle, { recursive: true, force: true })

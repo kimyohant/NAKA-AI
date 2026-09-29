@@ -40,7 +40,7 @@ let currentDataDir = ''
 // 不依赖 package.json 命名（打包后与 dev 同名会导致单实例锁误杀）
 app.setPath('userData', path.join(
   app.getPath('appData'),
-  app.isPackaged ? 'HuobaoDrama' : 'HuobaoDrama-Dev',
+  app.isPackaged ? 'NAKA-AI' : 'NAKA-AI-Dev',
 ))
 
 // 从终端启动时若父进程管道关闭（如 `| head` 退出/终端关闭），转发后端日志会写出
