@@ -1,5 +1,6 @@
 import { AFFILIATE_JOB_KIND, makeAffiliateHandler } from "./affiliate";
 import { runSalesAgent } from "./agent";
+import { handleAuth } from "./auth";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
 import { runQueue, type JobHandler } from "./jobs";
@@ -20,6 +21,9 @@ const json = (data: unknown, status = 200) =>
 export default {
   async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
+
+    const authResponse = await handleAuth(request, env, url);
+    if (authResponse) return authResponse;
 
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);
     if (url.pathname === "/api/health") return json({ ok: true });
