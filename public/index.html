@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#091736">
+  <meta name="theme-color" content="#f7f8fb">
   <title>naka-ai — ใส่รูปสินค้า ได้คลิปขายพร้อมโพสต์</title>
-  <meta name="description" content="naka-ai ทำคลิปขายพร้อมเสียงพากย์ ละครสั้น ไลฟ์ด้วยอวตาร AI และตอบลูกค้าอัตโนมัติสำหรับร้านไทย บน Shopee, Facebook, TikTok และ Instagram">
+  <meta name="description" content="naka-ai ทำคลิปขายและคลิปรีวิว affiliate พร้อมเสียงพากย์ไทย ละครสั้น ไลฟ์ด้วยอวตาร AI และตอบลูกค้าอัตโนมัติสำหรับร้านไทย บน Shopee, Facebook, TikTok และ Instagram">
   <meta property="og:title" content="naka-ai — ใส่รูปสินค้า ได้คลิปขายพร้อมโพสต์">
-  <meta property="og:description" content="ใส่รูปสินค้า ได้คลิปขายพร้อมโพสต์ แล้วให้นาคาช่วยทำละครสั้น ไลฟ์ด้วยอวตาร และตอบลูกค้าบน Shopee, Facebook, TikTok และ Instagram">
+  <meta property="og:description" content="ใส่รูปสินค้า นาคาเขียนบท พากย์เสียงไทย และทำคลิปแนวตั้งพร้อมโพสต์บน Shopee, Facebook, TikTok และ Instagram">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="th_TH">
   <meta property="og:url" content="https://naka-ai.com/">
@@ -24,91 +24,191 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/home.css">
-  <link rel="stylesheet" href="/home-refine.css">
+  <link rel="preload" as="image" href="/assets/soap-640.jpg">
   <link rel="stylesheet" href="/glass-nav.css">
-  <script src="/home.js" defer></script>
+  <link rel="stylesheet" href="/landing.css">
+  <script src="/landing.js" defer></script>
   <script src="/glass-nav.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">ข้ามไปเนื้อหา</a>
-  <header class="site-header glass-nav">
-    <div class="shell nav">
-      <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" alt="" width="42" height="42"><span>naka<span>-ai</span><b>.</b></span></a>
-      <nav class="desktop-nav" aria-label="เมนูหลัก"><a href="#team">4 บริการ</a><a href="#result">ตัวอย่างคลิป</a><a href="#steps">วิธีเริ่ม</a><a href="#benefits">ทำไมเลือกนาคา</a><a href="#pricing">ราคา</a></nav>
-      <a class="nav-cta" href="/create/">เริ่มคลิปแรก <span aria-hidden="true">↗</span></a>
+
+  <header class="landing-nav glass-nav">
+    <div class="shell nav-row">
+      <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" alt="" width="36" height="36"><span>naka<span>-ai</span><b>.</b></span></a>
+      <nav class="nav-links" aria-label="เมนูหลัก"><a href="#templates">เทมเพลต</a><a href="#how">วิธีทำงาน</a><a href="#why">ทำไมนาคา</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a></nav>
+      <a class="btn btn-primary btn-sm nav-cta" href="/review/?demo=1">ลองฟรี <span aria-hidden="true">↗</span></a>
       <button class="menu-button" type="button" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
     </div>
-    <nav class="mobile-nav shell" id="mobile-nav" aria-label="เมนูมือถือ" hidden><a href="#team">4 บริการ</a><a href="#result">ตัวอย่างคลิป</a><a href="#steps">วิธีเริ่ม</a><a href="#benefits">ทำไมเลือกนาคา</a><a href="#pricing">ราคา</a><a href="#faq">คำถามที่พบบ่อย</a><a href="/create/">เริ่มคลิปแรก ↗</a></nav>
+    <nav class="mobile-nav shell" id="mobile-nav" aria-label="เมนูมือถือ" hidden><a href="#templates">เทมเพลต</a><a href="#how">วิธีทำงาน</a><a href="#why">ทำไมนาคา</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a><a href="/review/?demo=1">ลองสร้างคลิปฟรี ↗</a></nav>
   </header>
 
   <main id="main">
+    <!-- Hero: the product → script + voice → clip flow, drawn as connected nodes -->
     <section class="hero" aria-labelledby="hero-title">
-      <div class="shell hero-layout">
+      <div class="shell hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow"><span class="eyebrow-line"></span> AI ช่วยขายของออนไลน์สำหรับร้านไทย</p>
-          <h1 id="hero-title">ใส่รูปสินค้า<br><em>ได้คลิปขาย</em><br>พร้อมโพสต์</h1>
-          <p class="hero-lead">ไม่ต้องถ่ายหรือพูดหน้ากล้อง นาคาทำคลิปพร้อมเสียงพากย์จากสินค้าของคุณ ให้ตรวจดูก่อนโพสต์</p>
-          <form class="hero-quickstart" action="/create/" method="get"><input type="hidden" name="workflow" value="sales"><label class="quickstart-label" for="quick-product">สินค้าที่อยากขายคืออะไร?</label><div class="quickstart-row"><input id="quick-product" name="name" type="text" maxlength="120" autocomplete="off" placeholder="เช่น สบู่สมุนไพรกลิ่นมะลิ" required><button class="button primary" type="submit">เริ่มคลิปแรก <span aria-hidden="true">↗</span></button></div></form>
-          <div class="hero-actions"><a class="text-link light" href="#team">ดู 4 บริการ <span aria-hidden="true">↓</span></a></div>
-          <div class="platforms" aria-label="ช่องทางขาย Shopee Facebook TikTok และ Instagram"><span>ขายได้บน</span><div><span>Shopee</span><span>Facebook</span><span>TikTok</span><span>Instagram</span></div></div>
+          <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>เครื่องมือทำคลิปขายด้วย AI สำหรับร้านไทย</p>
+          <h1 id="hero-title">ใส่รูปสินค้า<br><span class="grad">ได้คลิปขาย</span><br>พร้อมโพสต์</h1>
+          <p class="lead">นาคาเขียนบท พากย์เสียงไทย และตัดต่อเป็นคลิปแนวตั้ง ให้คุณตรวจก่อนโพสต์ ไม่ต้องถ่ายหรือพูดหน้ากล้อง</p>
+          <form class="quickstart" action="/review/" method="get">
+            <input type="hidden" name="demo" value="1">
+            <label for="quick-product">สินค้าที่อยากขายคืออะไร?</label>
+            <div class="quickstart-row">
+              <input id="quick-product" name="name" type="text" maxlength="160" autocomplete="off" placeholder="เช่น สบู่สมุนไพรกลิ่นมะลิ" required>
+              <button class="btn btn-primary" type="submit">ลองสร้างคลิปฟรี <span aria-hidden="true">↗</span></button>
+            </div>
+          </form>
+          <ul class="trial-notes" aria-label="การทดลองใช้">
+            <li>ไม่ต้องสมัคร</li><li>ลองด้วยบทตัวอย่าง</li><li>รูปอยู่บนเครื่องคุณ</li>
+          </ul>
         </div>
-        <div class="hero-showcase">
-          <div class="phone" aria-label="ตัวอย่างคลิปขายสินค้าแนวตั้ง">
-            <div class="phone-top"><span class="phone-camera"></span><span>naka-ai</span><span>ตัวอย่างคลิป</span></div>
-            <video class="sample-video" autoplay muted loop playsinline preload="metadata" poster="/assets/soap-campaign.png" aria-label="คลิปสาธิตขายสบู่สมุนไพร"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video>
-            <div class="phone-bottom"><span><i></i> คลิปแนวตั้งพร้อมขาย</span><button type="button" class="video-toggle" aria-label="พักวิดีโอตัวอย่าง">Ⅱ</button></div>
+
+        <div class="flow-board" aria-label="ขั้นตอน: รูปสินค้าและบทพากย์ กลายเป็นคลิปพร้อมโพสต์">
+          <div class="flow-inputs">
+            <article class="node node-photo">
+              <header><span class="node-tag">01</span>รูปสินค้า</header>
+              <div class="node-photo-frame"><img src="/assets/soap-640.jpg" width="640" height="640" alt="รูปสินค้าตัวอย่าง สบู่สมุนไพร" fetchpriority="high"></div>
+            </article>
+            <article class="node node-script">
+              <header><span class="node-tag">02</span>บท + เสียงพากย์ไทย</header>
+              <p class="script-line"><b>ฮุก</b> ใครชอบกลิ่นมะลิต้องดู</p>
+              <p class="script-line"><b>ฉาก 2</b> สบู่ก้อน 100 กรัม หอมทั้งวัน</p>
+              <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </article>
           </div>
-          <img class="hero-mascot" src="/assets/naka-plush-sales.png" width="230" height="230" alt="มาสคอตพญานาคนาคาถือการ์ดคลิปขาย">
+          <svg class="flow-wires" viewBox="0 0 72 460" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 118 C 44 118, 28 230, 72 230"/>
+            <path d="M0 342 C 44 342, 28 230, 72 230"/>
+          </svg>
+          <article class="node node-clip">
+            <header><span class="node-tag node-tag-live">03</span>คลิปพร้อมโพสต์</header>
+            <div class="clip-phone">
+              <video class="sample-video" autoplay muted loop playsinline preload="metadata" poster="/assets/soap-640.jpg" aria-label="คลิปสาธิตขายสบู่สมุนไพร"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video>
+              <span class="clip-badge">9:16 · พร้อมโพสต์</span>
+            </div>
+          </article>
+          <img class="flow-mascot" src="/assets/naka-plush-320.png" width="320" height="320" alt="" aria-hidden="true">
         </div>
+      </div>
+
+      <div class="shell platforms" aria-label="ช่องทางขาย">
+        <span>ขายได้บน</span><b>TikTok</b><b>Facebook</b><b>Instagram</b><b>Shopee</b>
       </div>
     </section>
 
-    <section class="team section" id="team" aria-labelledby="team-title"><div class="shell"><div class="section-intro team-intro"><div><p class="kicker">เลือกทีมที่อยากเริ่ม</p><h2 id="team-title">4 งานขาย<br><span>ให้นาคาช่วยคุณ</span></h2></div><p>เริ่มจากคลิปขายหนึ่งชิ้น แล้วเลือกให้ AI ช่วยเล่าเรื่อง ไลฟ์ หรือตอบลูกค้าเพิ่มตามจังหวะของร้าน</p></div>
-      <div class="service-rail-heading"><p id="service-rail-hint">เลือกบริการเพื่อดูว่าจะได้อะไร</p><div class="service-rail-controls" aria-label="เลื่อนดูบริการ"><button class="service-rail-arrow" type="button" data-direction="previous" aria-label="บริการก่อนหน้า">←</button><button class="service-rail-arrow" type="button" data-direction="next" aria-label="บริการถัดไป">→</button></div></div>
-      <div class="team-grid" role="group" aria-label="บริการหลักของ naka-ai" aria-describedby="service-rail-hint">
-        <article class="team-card sales-card is-selected" id="service-sales" data-service="sales"><div class="team-art art-sales"><video class="sample-video" autoplay muted loop playsinline preload="metadata" poster="/assets/soap-campaign.png" aria-hidden="true"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video><span class="art-pill">ตัวอย่างคลิปขาย</span></div><div class="card-body"><span class="card-number">01 / เริ่มง่ายที่สุด</span><h3>คลิปขายสินค้า</h3><p>รูปสินค้า 1 รูป กลายเป็นคลิปแนวตั้งพร้อมเสียงพากย์</p><div class="service-card-actions"><button class="service-select" type="button" data-select="sales" aria-pressed="true" aria-controls="service-detail">กำลังดูอยู่</button><a href="/create/?workflow=sales">เริ่มทำคลิป <span aria-hidden="true">↗</span></a></div></div></article>
-        <article class="team-card drama-card" id="service-drama" data-service="drama"><div class="team-art art-drama has-cover"><img class="art-cover" src="/assets/card-drama.jpg" width="1600" height="900" loading="lazy" alt="ภาพประกอบไนคาในบทผู้กำกับละคร AI บนเวทีฉากโรงละครไทย"></div><div class="card-body"><span class="card-number">02 / สร้างเรื่องให้ติดตาม</span><h3>ละครสั้น AI</h3><p>พล็อต ตัวละคร และเสียงพากย์ เป็นวิดีโอสั้นของร้าน</p><div class="service-card-actions"><button class="service-select" type="button" data-select="drama" aria-pressed="false" aria-controls="service-detail">ดูรายละเอียด</button><a href="/create/?workflow=drama">เริ่มทำละคร <span aria-hidden="true">↗</span></a></div></div></article>
-        <article class="team-card live-card" id="service-live" data-service="live"><div class="team-art art-live has-cover"><img class="art-cover" src="/assets/card-live.jpg" width="1600" height="900" loading="lazy" alt="ภาพประกอบไนคาพิธีกรไลฟ์ขายสินค้าในตลาดไทย"><span class="art-pill art-pill-live">● LIVE</span></div><div class="card-body"><span class="card-number">03 / มีพิธีกรให้ร้าน</span><h3>AI Live</h3><p>อวตาร AI ช่วยแนะนำสินค้าและคุยกับคนดูระหว่างไลฟ์</p><div class="service-card-actions"><button class="service-select" type="button" data-select="live" aria-pressed="false" aria-controls="service-detail">ดูรายละเอียด</button><a href="/create/?workflow=live">เริ่มไลฟ์ <span aria-hidden="true">↗</span></a></div></div></article>
-        <article class="team-card bot-card" id="service-bot" data-service="bot"><div class="team-art art-bot has-cover"><img class="art-cover" src="/assets/card-bot.jpg" width="1600" height="900" loading="lazy" alt="ภาพประกอบไนคาผู้ช่วยแชทตอบลูกค้าในร้านค้าไทย"></div><div class="card-body"><span class="card-number">04 / ไม่พลาดคำถาม</span><h3>ตอบลูกค้าอัตโนมัติ</h3><p>ตอบคอมเมนต์และแชตด้วยข้อมูลและน้ำเสียงของร้าน</p><div class="service-card-actions"><button class="service-select" type="button" data-select="bot" aria-pressed="false" aria-controls="service-detail">ดูรายละเอียด</button><a href="/create/?workflow=bot">เริ่มตั้งค่าบอท <span aria-hidden="true">↗</span></a></div></div></article>
-      </div>
-      <div class="service-detail" id="service-detail" aria-live="polite" aria-atomic="true"><div class="service-detail-copy"><span class="service-detail-eyebrow" id="service-detail-eyebrow">01 / คลิปขายสินค้า</span><h3 id="service-detail-title">เริ่มจากรูปสินค้า แล้วได้คลิปพร้อมขาย</h3><p id="service-detail-description">นาคาช่วยเรียบเรียงจุดเด่นสินค้า ทำภาพเคลื่อนไหวและเสียงพากย์เป็นคลิปแนวตั้ง คุณตรวจงานก่อนนำไปโพสต์ได้</p><a class="service-detail-cta" id="service-detail-cta" href="/create/?workflow=sales">ลองสร้างคลิปขาย <span aria-hidden="true">↗</span></a></div><div class="service-detail-flow"><span class="service-detail-label">จากสิ่งที่คุณมี → ผลลัพธ์ที่ได้</span><ol id="service-detail-steps"><li>รูปและข้อมูลสินค้า</li><li>คลิปแนวตั้งพร้อมเสียงพากย์</li><li>ตรวจและโพสต์บนช่องทางของร้าน</li></ol></div></div>
-    </div></section>
-
-    <section class="result section" id="result" aria-labelledby="result-title">
+    <!-- Template gallery: each card opens its flow, ready to try -->
+    <section class="section templates" id="templates" aria-labelledby="templates-title">
       <div class="shell">
-        <div class="section-intro"><p class="kicker">จากภาพเดียว สู่คลิปขาย</p><h2 id="result-title">รูปสินค้า 1 รูป<br><span>กลายเป็นคลิปที่พร้อมเล่าเรื่อง</span></h2><p>เห็นภาพต้นทางและคลิปสาธิตคู่กัน ก่อนเริ่มทำคลิปสำหรับร้านของคุณ</p></div>
-        <div class="transformation">
-          <figure class="before-frame"><div class="frame-tag">01 / รูปสินค้าต้นทาง</div><img src="/assets/soap-campaign.png" width="1254" height="1254" loading="lazy" alt="ภาพสินค้าสบู่สมุนไพรที่ใช้เป็นต้นทางของตัวอย่าง"><figcaption>เริ่มจากภาพสินค้า</figcaption></figure>
-          <div class="transform-arrow" aria-hidden="true"><span>✦</span><b>→</b></div>
-          <figure class="after-frame"><div class="frame-tag">02 / คลิปขายแนวตั้ง</div><video class="sample-video" autoplay muted loop playsinline preload="metadata" poster="/assets/soap-campaign.png" aria-label="คลิปสาธิตสินค้าสบู่สมุนไพร"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video><figcaption>ได้คลิปที่คนหยุดดู</figcaption></figure>
+        <div class="section-head">
+          <div><p class="kicker">เริ่มจากเทมเพลต</p><h2 id="templates-title">เลือกแบบคลิป แล้วลองได้ทันที</h2></div>
+          <div class="rail-controls" aria-label="เลื่อนดูเทมเพลต"><button type="button" class="rail-arrow" data-direction="-1" aria-label="เทมเพลตก่อนหน้า">←</button><button type="button" class="rail-arrow" data-direction="1" aria-label="เทมเพลตถัดไป">→</button></div>
         </div>
-        <p class="sample-note">ภาพและคลิปนี้เป็นตัวอย่างสาธิตแนวทางงานขาย</p>
+      </div>
+      <div class="rail" tabindex="0" aria-label="เทมเพลตคลิป">
+        <a class="tpl" href="/review/?demo=1">
+          <div class="tpl-media"><video autoplay muted loop playsinline preload="metadata" poster="/assets/soap-640.jpg" aria-hidden="true"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video></div>
+          <span class="tpl-chip tpl-chip-new">ใหม่ · ลองฟรี</span>
+          <div class="tpl-body"><h3>รีวิวสินค้า affiliate</h3><p>รูป 1–6 รูป ได้คลิปรีวิวพร้อมแคปชันและลิงก์ของคุณ</p><span class="tpl-try">ลองเลย ↗</span></div>
+        </a>
+        <a class="tpl" href="/create/?workflow=sales">
+          <div class="tpl-media"><img class="kenburns" src="/assets/soap-640.jpg" width="640" height="640" loading="lazy" alt=""></div>
+          <span class="tpl-chip">คลิปขาย</span>
+          <div class="tpl-body"><h3>คลิปขายสินค้า</h3><p>รูปสินค้า 1 รูป กลายเป็นคลิปแนวตั้งพร้อมเสียงพากย์</p><span class="tpl-try">เริ่มทำ ↗</span></div>
+        </a>
+        <a class="tpl" href="/create/?workflow=drama">
+          <div class="tpl-media"><img src="/assets/card-drama.jpg" width="1600" height="900" loading="lazy" alt=""></div>
+          <span class="tpl-chip">ละครสั้น</span>
+          <div class="tpl-body"><h3>ละครสั้น AI</h3><p>พล็อต ตัวละคร และเสียงพากย์ เป็นเรื่องสั้นชวนติดตาม</p><span class="tpl-try">เริ่มทำ ↗</span></div>
+        </a>
+        <a class="tpl" href="/create/?workflow=live">
+          <div class="tpl-media"><img src="/assets/card-live.jpg" width="1600" height="900" loading="lazy" alt=""></div>
+          <span class="tpl-chip tpl-chip-live">● LIVE</span>
+          <div class="tpl-body"><h3>AI Live</h3><p>อวตาร AI แนะนำสินค้าและคุยกับคนดูระหว่างไลฟ์</p><span class="tpl-try">เริ่มทำ ↗</span></div>
+        </a>
+        <a class="tpl" href="/create/?workflow=bot">
+          <div class="tpl-media"><img src="/assets/card-bot.jpg" width="1600" height="900" loading="lazy" alt=""></div>
+          <span class="tpl-chip">ตอบลูกค้า</span>
+          <div class="tpl-body"><h3>ตอบลูกค้าอัตโนมัติ</h3><p>ตอบคอมเมนต์และแชตด้วยข้อมูลและน้ำเสียงของร้าน</p><span class="tpl-try">เริ่มตั้งค่า ↗</span></div>
+        </a>
+      </div>
+      <p class="shell sample-note">ภาพและคลิปในเทมเพลตเป็นตัวอย่างสาธิต</p>
+    </section>
+
+    <!-- How it works -->
+    <section class="section how" id="how" aria-labelledby="how-title">
+      <div class="shell">
+        <div class="section-head"><div><p class="kicker">วิธีทำงาน</p><h2 id="how-title">3 ขั้นจากรูปสินค้า ถึงคลิปที่โพสต์ได้</h2></div></div>
+        <ol class="steps">
+          <li><span class="step-no">01</span><h3>ใส่รูปและจุดเด่น</h3><p>รูปสินค้า 1–6 รูป กับข้อมูลจริงของสินค้า ราคา และลิงก์ affiliate ถ้ามี</p></li>
+          <li><span class="step-no">02</span><h3>นาคาเขียนบทและพากย์</h3><p>ได้บทรีวิว 20–35 วินาที ข้อความบนจอ และเสียงพากย์ไทย ไม่แต่งสรรพคุณเพิ่ม</p></li>
+          <li><span class="step-no">03</span><h3>ตรวจแล้วโพสต์</h3><p>ดูคลิปบนเครื่องคุณ ดาวน์โหลด แล้วคัดลอกแคปชันพร้อมลิงก์ไปโพสต์</p></li>
+        </ol>
       </div>
     </section>
 
-    <section class="seller-flow section" id="steps" aria-labelledby="steps-title"><div class="shell">
-      <div class="flow-heading"><p class="kicker">จากงานที่ทำไม่ทัน สู่ทีมขายที่ช่วยได้</p><h2 id="steps-title">ขายของได้ทุกวัน<br><span>ไม่ต้องทำทุกอย่างเอง</span></h2><p>คุณรู้จักสินค้าดีที่สุด ส่วนนาคาช่วยเปลี่ยนข้อมูลร้านให้เป็นงานขายที่พร้อมใช้</p></div>
-      <div class="flow-layout"><div class="flow-copy">
-        <div class="flow-pain"><p class="flow-label">เรื่องที่ร้านเล็กเจอทุกวัน</p><ul><li><span>01</span><div><strong>ไม่มีเวลาทำคลิป</strong><small>คิดบท ถ่าย ตัด และโพสต์ กินเวลาทุกวัน</small></div></li><li><span>02</span><div><strong>ไม่อยากพูดหน้ากล้อง</strong><small>มีสินค้าดี แต่ไม่สะดวกถ่ายหรือพากย์เอง</small></div></li><li><span>03</span><div><strong>ตอบลูกค้าไม่ทัน</strong><small>คำถามเข้าหลายช่องทางในเวลาเดียวกัน</small></div></li></ul></div>
-        <div class="flow-process"><p class="flow-label">เริ่มง่ายใน 3 ขั้นตอน</p><div class="flow-step-list" role="group" aria-label="เลือกดูขั้นตอนการเริ่มใช้"><button class="flow-step is-active" type="button" data-phase="0" aria-pressed="true"><span>01</span><span><strong>บอกตัวตนร้าน</strong><small>เลือกช่องทางและน้ำเสียงที่อยากใช้</small></span></button><button class="flow-step" type="button" data-phase="1" aria-pressed="false"><span>02</span><span><strong>ใส่รูปสินค้า</strong><small>เพิ่มราคาและจุดเด่นที่อยากให้จำ</small></span></button><button class="flow-step" type="button" data-phase="2" aria-pressed="false"><span>03</span><span><strong>ให้นาคาช่วยขาย</strong><small>ตรวจคลิป แล้วต่อยอดสู่ไลฟ์และการตอบลูกค้า</small></span></button></div><a class="flow-start" href="/create/?workflow=sales">เริ่มจากคลิปแรก <span aria-hidden="true">↗</span></a></div>
-      </div><div class="flow-media"><div class="flow-stage" data-phase="0"><div class="flow-fallback" aria-hidden="true"><div class="flow-fallback-product"><img src="/assets/soap-campaign.png" width="1254" height="1254" loading="lazy" alt=""></div><img class="flow-fallback-naka" src="/assets/naka-plush-sales.png" width="1254" height="1254" loading="lazy" alt=""><div class="flow-fallback-output"><span>CLIP</span><span>LIVE</span><span>REPLY</span></div></div><iframe id="flow-frame" class="flow-frame" title="ฉากนาคาช่วยเปลี่ยนรูปสินค้าเป็นงานขาย" aria-hidden="true" tabindex="-1" hidden></iframe><span class="flow-stage-badge">จากสินค้า 1 ชิ้น → งานขายหลายแบบ</span></div><div class="flow-media-footer"><p id="flow-caption" aria-live="polite">นาคาจำชื่อร้าน ช่องทางขาย และน้ำเสียงที่คุณเลือก</p><button class="flow-motion-toggle" type="button" aria-pressed="false">พักภาพเคลื่อนไหว</button></div></div></div>
-    </div></section>
+    <!-- Why NAKA -->
+    <section class="section why" id="why" aria-labelledby="why-title">
+      <div class="shell">
+        <div class="section-head"><div><p class="kicker">ทำไมร้านไทยเลือกนาคา</p><h2 id="why-title">เร็วขึ้น โดยคุณยังคุมร้านเอง</h2></div></div>
+        <div class="why-grid">
+          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></span><h3>ตรวจก่อนโพสต์ทุกครั้ง</h3><p>เห็นบท ภาพ และเสียงก่อนปล่อยงาน ปรับข้อมูลสินค้าหรือน้ำเสียงได้</p></article>
+          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/></svg></span><h3>บอตตอบ คนในร้านรับต่อ</h3><p>คำถามที่ต้องตัดสินใจ เช่น คืนเงินหรือร้องเรียน ส่งต่อให้คุณได้</p></article>
+          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></span><h3>ไม่แต่งเรื่องเกินจริง</h3><p>นาคาใช้เฉพาะข้อมูลที่คุณให้ ไม่ใส่สรรพคุณ รีวิวปลอม หรือส่วนลดที่ไม่มี</p></article>
+          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><h3>ใช้ได้ทุกช่องทาง</h3><p>คลิปแนวตั้งและแคปชันพร้อมใช้บน TikTok, Facebook, Instagram และ Shopee</p></article>
+        </div>
+      </div>
+    </section>
 
-    <section class="assurance section" id="benefits" aria-labelledby="assurance-title"><div class="shell"><div class="section-intro benefit-intro"><div><p class="kicker">ทำงานเร็ว โดยคุณยังคุมร้าน</p><h2 id="assurance-title">ทำไมร้านไทย<br><span>เลือกให้นาคาช่วย</span></h2></div><p>เครื่องมือขายที่ช่วยประหยัดแรง พร้อมให้เจ้าของร้านตรวจและตัดสินใจในจุดสำคัญ</p></div><div class="benefit-rail-heading"><span>แตะ + เพื่ออ่านรายละเอียด</span><div class="benefit-rail-controls" aria-label="เลื่อนดูจุดเด่น"><button class="benefit-rail-arrow" type="button" data-direction="previous" aria-label="จุดเด่นก่อนหน้า">←</button><button class="benefit-rail-arrow" type="button" data-direction="next" aria-label="จุดเด่นถัดไป">→</button></div></div><div class="assurance-grid">
-      <details class="benefit-card"><summary><span class="benefit-number">01 / คุมงานก่อนเผยแพร่</span><h3>คลิปพร้อมขาย<br>คุณตรวจก่อนโพสต์</h3><p>ดูภาพ เสียง และข้อความให้ตรงกับร้านก่อนปล่อยงาน</p><span class="benefit-art benefit-review" aria-hidden="true"><span class="benefit-phone"><img src="/assets/soap-campaign.png" loading="lazy" alt=""><i></i></span><span class="benefit-stamp">พร้อมตรวจ</span></span><span class="benefit-plus" aria-hidden="true">+</span></summary><div class="benefit-detail">คุณเห็นผลลัพธ์ก่อนเผยแพร่ และปรับข้อมูลสินค้าหรือน้ำเสียงให้ตรงกับแบรนด์ได้</div></details>
-      <details class="benefit-card"><summary><span class="benefit-number">02 / ไม่พลาดคำถาม</span><h3>บอตช่วยตอบ<br>คนในร้านช่วยต่อ</h3><p>เมื่อลูกค้าถามเรื่องที่ต้องตัดสินใจ ส่งต่อให้คุณได้</p><span class="benefit-art benefit-handoff" aria-hidden="true"><span class="handoff-question">สินค้ามีสีอื่นไหมคะ?</span><span class="handoff-answer">มีค่ะ ดูสีที่พร้อมขายได้เลย</span><span class="handoff-human">ส่งต่อให้ร้านเมื่อไม่แน่ใจ</span></span><span class="benefit-plus" aria-hidden="true">+</span></summary><div class="benefit-detail">กำหนดข้อมูลที่บอตใช้ตอบและเงื่อนไขส่งต่อ เพื่อให้คำถามสำคัญกลับถึงคนในร้าน</div></details>
-      <details class="benefit-card"><summary><span class="benefit-number">03 / เป็นเสียงของแบรนด์คุณ</span><h3>จำร้านได้<br>ไม่ต้องบรีฟซ้ำ</h3><p>ชื่อร้าน จุดเด่น และน้ำเสียงใช้ต่อได้ในทุกงาน</p><span class="benefit-art benefit-memory" aria-hidden="true"><span class="memory-mark"><img src="/logo.svg?v=4" width="46" height="46" alt=""></span><span class="memory-line">ชื่อร้านของคุณ</span><span class="memory-chip">คลิปขาย</span><span class="memory-chip">ไลฟ์</span><span class="memory-chip">ตอบลูกค้า</span></span><span class="benefit-plus" aria-hidden="true">+</span></summary><div class="benefit-detail">ตั้งข้อมูลร้านเพียงครั้งแรก แล้วนาคาใช้บริบทเดียวกันกับคลิป ละครสั้น ไลฟ์ และการตอบลูกค้า</div></details>
-      <details class="benefit-card"><summary><span class="benefit-number">04 / ตามลูกค้าไปทุกช่องทาง</span><h3>ขายต่อเนื่อง<br>บนช่องทางที่ใช้</h3><p>ทำคอนเทนต์และดูแลงานขายบนแพลตฟอร์มหลัก</p><span class="benefit-art benefit-platforms" aria-hidden="true"><span>Shopee</span><span>Facebook</span><span>TikTok</span><span>Instagram</span></span><span class="benefit-plus" aria-hidden="true">+</span></summary><div class="benefit-detail">เตรียมคอนเทนต์ โพสต์ และตอบลูกค้าโดยใช้ข้อมูลร้านชุดเดียวกันบน Shopee, Facebook, TikTok และ Instagram</div></details>
-    </div></div></section>
+    <!-- Pricing -->
+    <section class="section pricing" id="pricing" aria-labelledby="pricing-title">
+      <div class="shell">
+        <div class="section-head"><div><p class="kicker">ราคา</p><h2 id="pricing-title">ลองก่อน แล้วค่อยตัดสินใจ</h2></div></div>
+        <div class="price-grid">
+          <article class="price-card">
+            <p class="price-name">ทดลองใช้</p>
+            <p class="price-value">ฟรี</p>
+            <ul><li>ลองสร้างคลิปด้วยบทตัวอย่าง</li><li>ไม่ต้องสมัคร ไม่ใช้เครดิต</li><li>สร้างวิดีโอบนเครื่องคุณ</li></ul>
+            <a class="btn btn-ghost" href="/review/?demo=1">ลองสร้างคลิปฟรี <span aria-hidden="true">↗</span></a>
+          </article>
+          <article class="price-card price-card-main">
+            <p class="price-name">ใช้งานจริง</p>
+            <p class="price-value">สอบถามราคา</p>
+            <ul><li>บทและเสียงพากย์จาก AI จริง</li><li>คลิปรีวิว affiliate และคลิปขาย</li><li>ทีมงานแจ้งราคาก่อนเริ่มงาน</li></ul>
+            <a class="btn btn-primary" href="tel:+66892788587">โทร 089-278-8587 <span aria-hidden="true">↗</span></a>
+          </article>
+        </div>
+      </div>
+    </section>
 
-    <section class="pricing section" id="pricing" aria-labelledby="pricing-title"><div class="shell pricing-layout"><div class="section-intro"><p class="kicker">ราคาและเครดิต</p><h2 id="pricing-title">รู้ราคาก่อน<br><span>เริ่มงาน</span></h2><p>โทรถามราคาและเครดิตสำหรับคลิปขาย 1 ชิ้นหรือ AI Live 1 ชั่วโมงได้โดยตรงกับทีมงาน</p></div><div class="pricing-card"><div><span>คลิปขายสินค้า 1 คลิป</span><strong>สอบถามราคา</strong></div><div><span>AI Live 1 ชั่วโมง</span><strong>สอบถามราคา</strong></div><a class="price-call" href="tel:+66892788587">โทรสอบถามราคา · 0892788587 <span aria-hidden="true">↗</span></a><p>ทีม NAKA-AI Tech แจ้งรายละเอียดก่อนเริ่มงาน</p></div></div></section>
+    <!-- FAQ -->
+    <section class="section faq" id="faq" aria-labelledby="faq-title">
+      <div class="shell faq-grid">
+        <div class="section-head"><div><p class="kicker">คำถามที่ร้านมักถาม</p><h2 id="faq-title">เริ่มได้แบบสบายใจ</h2></div></div>
+        <div class="faq-list">
+          <details open><summary>ต้องเก่งคอมไหม?</summary><p>ไม่ต้องครับ เริ่มจากรูปสินค้าและจุดเด่นสั้น ๆ แล้วตรวจงานก่อนใช้</p></details>
+          <details><summary>รูปสินค้าถูกอัปโหลดไปไหม?</summary><p>คลิปรีวิวสร้างบนเครื่องของคุณ รูปไม่ถูกส่งขึ้นเซิร์ฟเวอร์ ส่งไปเฉพาะข้อความที่ใช้เขียนบท</p></details>
+          <details><summary>ควรถ่ายรูปสินค้าแบบไหน?</summary><p>ภาพที่เห็นสินค้าชัด แสงพอ และไม่มีข้อความบังสินค้า ช่วยให้คลิปเล่าเรื่องได้ง่ายขึ้น</p></details>
+          <details><summary>บอตตอบผิดทำอย่างไร?</summary><p>ตรวจและปรับข้อมูลร้านที่บอตใช้ตอบได้ และส่งคำถามที่ไม่แน่ใจให้คนในร้านรับช่วงต่อ</p></details>
+          <details><summary>ต่างจากใช้ ChatGPT หรือ CapCut เองอย่างไร?</summary><p>นาคาทำตั้งแต่บท เสียงพากย์ จนเป็นคลิปแนวตั้งในที่เดียว ไม่ต้องสลับหลายแอป และเขียนบทจากข้อมูลจริงที่คุณให้เท่านั้น</p></details>
+        </div>
+      </div>
+    </section>
 
-    <section class="faq section" id="faq" aria-labelledby="faq-title"><div class="shell faq-layout"><div class="section-intro compact"><p class="kicker">คำถามที่ร้านมักถาม</p><h2 id="faq-title">เริ่มได้<br><span>แบบสบายใจ</span></h2></div><div class="faq-list"><details open><summary>ต้องเก่งคอมไหม?<span>＋</span></summary><p>ไม่ต้องครับ เริ่มจากรูปสินค้าและจุดเด่นสั้น ๆ เลือกผลลัพธ์ที่ต้องการ แล้วตรวจงานก่อนใช้งาน</p></details><details><summary>ควรถ่ายรูปสินค้าแบบไหน?<span>＋</span></summary><p>ภาพที่เห็นสินค้าชัด แสงพอ และไม่มีข้อความบังสินค้า ช่วยให้คลิปเล่าเรื่องสินค้าได้ง่ายขึ้น</p></details><details><summary>บอตตอบผิดทำอย่างไร?<span>＋</span></summary><p>ตรวจและปรับข้อมูลร้านที่บอตใช้ตอบได้ รวมถึงส่งคำถามที่ไม่แน่ใจให้คนในร้านรับช่วงต่อ</p></details><details><summary>ยกเลิกได้ไหม?<span>＋</span></summary><p>สอบถามเงื่อนไขการยกเลิกและเครดิตคงเหลือกับ NAKA-AI Tech ก่อนเลือกแพ็กเกจได้ที่ 0892788587</p></details><details><summary>ต่างจากใช้ ChatGPT หรือ CapCut เองอย่างไร?<span>＋</span></summary><p>นาคาจำข้อมูลร้านและเชื่อมงานต่อกัน ตั้งแต่คลิป พิธีกร ไปจนถึงการตอบลูกค้า จึงไม่ต้องเริ่มบรีฟใหม่ทุกขั้น</p></details></div></div></section>
-
-    <section class="closing"><div class="shell closing-layout"><div><p class="kicker">เริ่มจากสินค้าชิ้นเดียว</p><h2>ให้ร้านคุณมีทีมขาย<br>ที่พร้อมลุยทุกวัน</h2><p>เตรียมรูปและจุดเด่นสินค้า แล้วคุยกับทีมเพื่อเริ่มคลิปแรกของร้าน</p></div><div class="closing-actions"><a class="button primary" href="/create/">เริ่มคลิปแรก <span aria-hidden="true">↗</span></a><a class="contact-link" data-contact href="tel:+66892788587">คุยกับทีมงานคนจริง <span aria-hidden="true">↗</span></a></div></div></section>
+    <section class="closing">
+      <div class="shell closing-card">
+        <div><h2>สินค้าชิ้นแรกของคุณ<br>พร้อมเป็นคลิปแล้ว</h2><p>ลองสร้างคลิปฟรีด้วยบทตัวอย่าง ใช้เวลาไม่ถึงนาที</p></div>
+        <div class="closing-actions"><a class="btn btn-light" href="/review/?demo=1">ลองสร้างคลิปฟรี <span aria-hidden="true">↗</span></a><a class="closing-call" href="tel:+66892788587">คุยกับทีมงานคนจริง ↗</a></div>
+      </div>
+    </section>
   </main>
 
-  <footer id="contact"><div class="shell footer-top"><a class="brand" href="/"><img src="/logo.svg?v=4" alt="" width="36" height="36"><span>naka<span>-ai</span><b>.</b></span></a><p>NAKA-AI Tech · <a href="tel:+66892788587">0892788587</a></p><nav aria-label="ลิงก์ท้ายหน้า"><a href="#team">4 บริการ</a><a href="#result">ดูตัวอย่าง</a><a href="#benefits">ทำไมเลือกนาคา</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a></nav></div><div class="shell footer-bottom"><span>© <span id="year">2026</span> naka-ai</span><span>Shopee · Facebook · TikTok · Instagram</span></div></footer>
+  <footer class="site-footer">
+    <div class="shell footer-row">
+      <a class="brand" href="/"><img src="/logo.svg?v=4" alt="" width="30" height="30"><span>naka<span>-ai</span><b>.</b></span></a>
+      <nav aria-label="ลิงก์ท้ายหน้า"><a href="#templates">เทมเพลต</a><a href="#how">วิธีทำงาน</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a><a href="tel:+66892788587">0892788587</a></nav>
+      <span class="footer-copy">© <span id="year">2026</span> naka-ai · NAKA-AI Tech</span>
+    </div>
+  </footer>
 </body>
 </html>

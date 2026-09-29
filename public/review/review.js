@@ -22,6 +22,8 @@
 
   $('year').textContent = new Date().getFullYear();
   if (demo) $('demo-note').hidden = false;
+  const prefilledName = new URLSearchParams(location.search).get('name');
+  if (prefilledName) $('review-name').value = prefilledName.slice(0, 160);
 
   function show(el, visible) { el.hidden = !visible; }
   function setError(message) { errorBox.textContent = message || ''; }
