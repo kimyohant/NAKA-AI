@@ -1,0 +1,200 @@
+// Login page — OTP by phone and Google, per the Phase 1 auth contract
+// (docs/phase1-tasks.md). With ?mock=1 every /api/auth/* call is stubbed
+// locally so the flow can be tried before the auth backend lands.
+(function () {
+  var auth = window.NakaAuth;
+
+  var params = new URLSearchParams(location.search);
+  var nextTarget = auth.safeNext(params.get("next"), "/app/");
+  var phoneValue = "";
+  var resendTimer = null;
+  var resendEndTime = 0;
+
+  var errorEl = document.getElementById("form-error");
+  var mockNote = document.getElementById("mock-note");
+  var googleButton = document.getElementById("google-button");
+  var stepPhone = document.getElementById("step-phone");
+  var stepCode = document.getElementById("step-code");
+  var phoneInput = document.getElementById("phone");
+  var phoneEcho = document.getElementById("phone-echo");
+  var codeInput = document.getElementById("code");
+  var requestButton = document.getElementById("request-button");
+  var verifyButton = document.getElementById("verify-button");
+  var resendButton = document.getElementById("resend-button");
+  var resendNote = document.getElementById("resend-note");
+
+  function showError(message) {
+    errorEl.textContent = message;
+  }
+  function clearError() {
+    errorEl.textContent = "";
+  }
+  function setBusy(button, busy, label) {
+    button.disabled = busy;
+    if (label) button.textContent = label;
+  }
+
+  function normalizePhone(raw) {
+    return String(raw || "").replace(/[\s\-()]/g, "");
+  }
+  function validPhone(phone) {
+    return /^0\d{8,9}$/.test(phone) || /^\+66\d{8,9}$/.test(phone);
+  }
+
+  // The resend countdown runs from the real end time (now + retryAfter), so
+  // the remaining seconds never drift when the tab is throttled in the
+  // background. It always reflects the retryAfter the API returns — never a
+  // made-up urgency timer.
+  function startResendCountdown(seconds) {
+    clearInterval(resendTimer);
+    resendEndTime = Date.now() + Math.max(0, Number(seconds) || 0) * 1000;
+    tickResend();
+    if (resendEndTime > Date.now()) resendTimer = setInterval(tickResend, 1000);
+  }
+  function tickResend() {
+    var remaining = Math.ceil((resendEndTime - Date.now()) / 1000);
+    if (remaining > 0) {
+      resendButton.disabled = true;
+      resendNote.textContent = "ได้ในอีก " + remaining + " วินาที";
+    } else {
+      clearInterval(resendTimer);
+      resendTimer = null;
+      resendButton.disabled = false;
+      resendNote.textContent = "";
+    }
+  }
+
+  function showCodeStep() {
+    stepPhone.hidden = true;
+    stepCode.hidden = false;
+    phoneEcho.textContent = phoneValue;
+    codeInput.value = "";
+    codeInput.focus();
+  }
+
+  async function requestOtp() {
+    clearError();
+    phoneValue = normalizePhone(phoneInput.value);
+    if (!validPhone(phoneValue)) {
+      showError("เบอร์โทรไม่ถูกต้อง ลองตรวจอีกครั้ง เช่น 0812345678");
+      phoneInput.focus();
+      return;
+    }
+    setBusy(requestButton, true, "กำลังส่งรหัส…");
+    if (!stepPhone.hidden) setBusy(resendButton, true, "กำลังส่งรหัส…");
+    try {
+      var res = await fetch("/api/auth/otp/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneValue }),
+      });
+      if (res.ok) {
+        var data = await res.json().catch(function () { return {}; });
+        showCodeStep();
+        startResendCountdown(data.retryAfter || 60);
+        return;
+      }
+      var body = await res.json().catch(function () { return null; });
+      if (res.status === 429) {
+        startResendCountdown((body && body.retryAfter) || 60);
+        showError((body && body.error) || "ขอรหัสบ่อยเกินไป รอสักครู่แล้วลองใหม่ได้เลย");
+        return;
+      }
+      if (res.status === 400) {
+        showError("เบอร์โทรไม่ถูกต้อง ลองตรวจอีกครั้ง เช่น 0812345678");
+        return;
+      }
+      // 502/503 and other server errors carry a Thai message — show it.
+      showError((body && body.error) || "ขอรหัสไม่สำเร็จ ลองอีกครั้งในภายหลัง");
+    } catch (err) {
+      showError("ขอรหัสไม่สำเร็จ ลองอีกครั้งในภายหลัง");
+    } finally {
+      setBusy(requestButton, false, "ขอรหัส OTP");
+      if (!stepPhone.hidden) setBusy(resendButton, false, "ขอรหัสใหม่");
+    }
+  }
+
+  async function verifyOtp() {
+    clearError();
+    var code = codeInput.value.replace(/\D/g, "");
+    if (code.length !== 6) {
+      showError("กรอกรหัสตัวเลข 6 หลักให้ครบก่อนนะคะ");
+      codeInput.focus();
+      return;
+    }
+    setBusy(verifyButton, true, "กำลังตรวจรหัส…");
+    try {
+      var res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneValue, code: code }),
+      });
+      if (res.ok) {
+        var data = await res.json().catch(function () { return {}; });
+        if (data.user) {
+          // Real login: the session lives in the HttpOnly cookie the server
+          // just set. Only the mock flow writes the local mock session.
+          if (auth.mockMode()) auth.signIn(data.user, { provider: "phone" });
+          location.assign(nextTarget);
+        }
+        return;
+      }
+      var body = await res.json().catch(function () { return null; });
+      if (res.status === 429) {
+        showError((body && body.error) || "ลองกรอกรหัสผิดหลายครั้งเกินไป รอสักครู่แล้วลองใหม่อีกครั้ง");
+        return;
+      }
+      if (res.status === 400) {
+        showError((body && body.error) || "รหัสไม่ถูกต้องหรือหมดอายุแล้ว ลองตรวจอีกครั้ง");
+        codeInput.select();
+        return;
+      }
+      // 502/503 and other server errors carry a Thai message — show it.
+      showError((body && body.error) || "ยืนยันรหัสไม่สำเร็จ ลองอีกครั้งในภายหลัง");
+    } catch (err) {
+      showError("ยืนยันรหัสไม่สำเร็จ ลองอีกครั้งในภายหลัง");
+    } finally {
+      setBusy(verifyButton, false, "ยืนยันและเข้าสู่ระบบ");
+    }
+  }
+
+  document.getElementById("otp-form").addEventListener("submit", function (event) {
+    event.preventDefault();
+    if (stepPhone.hidden) verifyOtp();
+    else requestOtp();
+  });
+  document.getElementById("change-phone").addEventListener("click", function () {
+    clearError();
+    clearInterval(resendTimer);
+    resendEndTime = 0;
+    resendButton.disabled = false;
+    resendNote.textContent = "";
+    stepCode.hidden = true;
+    stepPhone.hidden = false;
+    phoneInput.focus();
+  });
+  resendButton.addEventListener("click", requestOtp);
+  codeInput.addEventListener("input", function () {
+    codeInput.value = codeInput.value.replace(/\D/g, "").slice(0, 6);
+  });
+
+  // Google: real flow navigates to /api/auth/google/start; mock signs in locally.
+  googleButton.addEventListener("click", function (event) {
+    if (!auth.mockMode()) return;
+    event.preventDefault();
+    auth.signIn(auth.MOCK_GOOGLE_USER, { provider: "google" });
+    location.assign(nextTarget);
+  });
+
+  // Boot: mock setup, ?error=google message, then skip the page if already signed in.
+  if (auth.mockMode()) {
+    auth.installMockFetch();
+    mockNote.hidden = false;
+  }
+  if (params.get("error") === "google") {
+    showError("เข้าสู่ระบบด้วย Google ไม่สำเร็จ ลองอีกครั้งหรือใช้เบอร์โทรแทนได้เลย");
+  }
+  auth.me().then(function (state) {
+    if (state.status === "signed-in") location.replace(nextTarget);
+  });
+})();
