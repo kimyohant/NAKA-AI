@@ -12,6 +12,7 @@ export interface Env {
   SMS_PROVIDER: "mock" | "thaibulksms";
   SMS_API_KEY?: string;
   SMS_API_SECRET?: string;
+  SMS_SENDER?: string;
   APP_ORIGIN: string;
   // Affiliate review voiceover (Google Cloud Text-to-Speech)
   GOOGLE_TTS_API_KEY: string;
