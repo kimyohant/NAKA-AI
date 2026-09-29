@@ -1,0 +1,77 @@
+/* /app/inbox/ — AI inbox, on the navy glass theme of /app/app.css */
+.inbox-main { padding-bottom: 64px; }
+.inbox-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin: 30px 0 22px; }
+.inbox-head h1 { margin: 0 0 8px; font-family: "IBM Plex Sans Thai", sans-serif; font-size: clamp(28px, 4vw, 38px); letter-spacing: -.04em; }
+.inbox-head p { margin: 0; max-width: 620px; color: #c4d7ec; font-size: 15px; line-height: 1.7; }
+.bot-state { flex: none; margin: 0; padding: 8px 14px; border-radius: 999px; border: 1px solid #ffffff2a; background: #ffffff0d; font-size: 13px; color: #d6e5f8; }
+.bot-state[data-mode="auto"] { border-color: #5fd3a066; color: #9ff0c8; }
+.bot-state[data-mode="draft"] { border-color: #87d9fa66; color: #bfeaff; }
+
+.tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid #ffffff1f; }
+.tabs button { padding: 12px 16px; border: 0; border-bottom: 2px solid transparent; background: none; color: #a9bddb; font-size: 14px; font-weight: 700; }
+.tabs button[aria-selected="true"] { color: #fff; border-bottom-color: #87d9fa; }
+
+.inbox-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 16px; min-height: 480px; }
+.thread-pane, .thread-view, .card-form { border: 1px solid #ffffff1f; border-radius: 20px; background: #ffffff0b; }
+.thread-pane { padding: 12px; }
+.filter { display: flex; gap: 6px; margin-bottom: 10px; }
+.filter button { padding: 7px 12px; border: 1px solid #ffffff26; border-radius: 999px; background: none; color: #c8d8ef; font-size: 12.5px; font-weight: 600; }
+.filter button[aria-pressed="true"] { background: #eaf3ff; color: #102655; border-color: #eaf3ff; }
+.thread-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.thread-item { display: grid; gap: 4px; width: 100%; padding: 12px; border: 1px solid transparent; border-radius: 14px; background: none; color: inherit; text-align: left; }
+.thread-item:hover { background: #ffffff0f; }
+.thread-item[aria-current="true"] { border-color: #87d9fa66; background: #87d9fa14; }
+.thread-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.thread-item small { color: #9fb4d6; font-size: 12px; }
+.badge { flex: none; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge-needs_human { background: #f4b86026; color: #ffd08a; }
+.badge-open { background: #5fd3a022; color: #9ff0c8; }
+.badge-closed { background: #ffffff1a; color: #b9cdec; }
+
+.thread-view { display: flex; flex-direction: column; gap: 12px; padding: 18px; }
+.view-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.view-head h2 { margin: 0; font-size: 20px; }
+.message-log { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.bubble { max-width: 78%; padding: 10px 14px; border-radius: 16px; }
+.bubble p { margin: 0; font-size: 14.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble small { display: block; margin-top: 4px; font-size: 11px; opacity: .7; }
+.bubble-in { align-self: flex-start; background: #ffffff14; border-bottom-left-radius: 4px; }
+.bubble-out { align-self: flex-end; background: #2f67d0; border-bottom-right-radius: 4px; }
+.reply-box { display: grid; gap: 10px; margin-top: auto; padding-top: 14px; border-top: 1px solid #ffffff1f; }
+.reason { margin: 0; padding: 8px 12px; border-radius: 10px; background: #f4b8601f; color: #ffd08a; font-size: 13px; }
+
+.panel-intro { margin: 0 0 14px; color: #c4d7ec; font-size: 14.5px; line-height: 1.7; }
+.card-form { display: grid; gap: 14px; margin-bottom: 16px; padding: 22px; }
+.card-form h2 { margin: 0; font-size: 18px; }
+.mode-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; }
+.mode-options legend { margin-bottom: 8px; font-weight: 700; }
+.mode-options label { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid #ffffff1f; border-radius: 14px; cursor: pointer; }
+.mode-options label:has(input:checked) { border-color: #87d9fa; background: #87d9fa14; }
+.mode-options input { margin-top: 4px; accent-color: #87d9fa; }
+.mode-options span { display: grid; gap: 2px; }
+.mode-options small { color: #a9bddb; font-size: 12.5px; }
+.field { display: grid; gap: 7px; font-size: 13.5px; font-weight: 700; }
+.field small { font-weight: 500; color: #9fb4d6; }
+.field input, .field textarea { width: 100%; padding: 12px 14px; border: 1px solid #ffffff2e; border-radius: 12px; background: #06112c; color: #fff; font: inherit; font-weight: 500; }
+.field input:focus, .field textarea:focus { outline: 2px solid #87d9fa; outline-offset: 1px; }
+.primary-button, .secondary-button { justify-self: start; min-height: 44px; padding: 0 20px; border-radius: 999px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; }
+.primary-button { border: 0; background: #eaf3ff; color: #102655; }
+.primary-button:disabled { opacity: .6; }
+.secondary-button { border: 1px solid #ffffff3d; background: none; color: #eaf3ff; }
+.text-button { border: 0; background: none; color: #9fdcff; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.form-status { min-height: 20px; margin: 0; font-size: 13px; color: #b9cdec; }
+.form-status.is-error { color: #ffb4b4; }
+.hint { margin: 0; color: #9fb4d6; font-size: 12.5px; line-height: 1.6; }
+.empty { margin: 16px 4px; color: #9fb4d6; font-size: 14px; line-height: 1.7; }
+.account-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.account-list li { display: flex; align-items: center; gap: 8px; }
+.account-list .badge { margin-left: auto; }
+.kb-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.kb-item { display: flex; justify-content: space-between; gap: 16px; padding: 16px 18px; border: 1px solid #ffffff1f; border-radius: 16px; background: #ffffff08; }
+.kb-item p { margin: 6px 0 0; color: #c4d7ec; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media (max-width: 860px) {
+  .inbox-head { flex-direction: column; align-items: flex-start; }
+  .inbox-layout { grid-template-columns: 1fr; }
+  .bubble { max-width: 90%; }
+}

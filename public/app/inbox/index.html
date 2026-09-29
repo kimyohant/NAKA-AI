@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#091736">
+  <title>กล่องข้อความ — naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/glass-nav.css">
+  <link rel="stylesheet" href="/account-menu.css">
+  <link rel="stylesheet" href="/app/app.css">
+  <link rel="stylesheet" href="/app/inbox/inbox.css">
+  <script src="/account-menu.js" defer></script>
+  <script src="/app/inbox/inbox.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">ข้ามไปที่เนื้อหา</a>
+  <header class="app-topbar glass-nav">
+    <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" width="36" height="36" alt=""><span>naka<span class="brand-accent">-ai</span><b>.</b></span></a>
+    <span class="header-divider" aria-hidden="true"></span>
+    <span class="topbar-label">กล่องข้อความ</span>
+    <nav class="topbar-nav" aria-label="เมนูหลัก">
+      <a href="/app/">พื้นที่ของร้าน</a>
+      <a href="/app/inbox/" aria-current="page">กล่องข้อความ</a>
+    </nav>
+    <div data-account-menu></div>
+  </header>
+
+  <main id="main" class="shell inbox-main">
+    <p id="page-loading" class="app-loading" role="status">กำลังโหลด…</p>
+    <div id="page-error" class="app-error" hidden><p>โหลดข้อมูลไม่สำเร็จ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ชั่วขณะ</p><button class="signout-button" type="button" id="retry">ลองอีกครั้ง</button></div>
+
+    <div id="page" hidden>
+      <div class="inbox-head">
+        <div><h1>กล่องข้อความ AI</h1><p>นาคาร่างคำตอบคอมเมนต์และแชทจากข้อมูลร้าน เรื่องที่ต้องใช้คนตัดสินใจจะรอคุณเสมอ</p></div>
+        <p class="bot-state" id="bot-state" role="status"></p>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="ส่วนของกล่องข้อความ">
+        <button role="tab" id="tab-threads" aria-controls="panel-threads" aria-selected="true">ข้อความ</button>
+        <button role="tab" id="tab-settings" aria-controls="panel-settings" aria-selected="false" tabindex="-1">ตั้งค่าบอท</button>
+        <button role="tab" id="tab-kb" aria-controls="panel-kb" aria-selected="false" tabindex="-1">ข้อมูลร้าน</button>
+      </div>
+
+      <!-- Threads -->
+      <section class="panel" id="panel-threads" role="tabpanel" aria-labelledby="tab-threads">
+        <div class="inbox-layout">
+          <aside class="thread-pane" aria-label="รายการบทสนทนา">
+            <div class="filter" role="group" aria-label="กรองตามสถานะ">
+              <button type="button" data-status="" aria-pressed="true">ทั้งหมด</button>
+              <button type="button" data-status="needs_human" aria-pressed="false">รอคนตอบ</button>
+              <button type="button" data-status="open" aria-pressed="false">บอทดูแล</button>
+            </div>
+            <ul class="thread-list" id="thread-list"></ul>
+            <p class="empty" id="thread-empty" hidden>ยังไม่มีข้อความ เมื่อลูกค้าคอมเมนต์หรือทักแชทเพจที่เชื่อมไว้ ข้อความจะขึ้นที่นี่</p>
+          </aside>
+          <section class="thread-view" id="thread-view" aria-live="polite">
+            <p class="empty">เลือกบทสนทนาทางซ้ายเพื่อดูข้อความและคำตอบที่นาคาร่างไว้</p>
+          </section>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="panel" id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+        <form id="settings-form" class="card-form">
+          <fieldset class="mode-options">
+            <legend>บอทตอบลูกค้าแบบไหน</legend>
+            <label><input type="radio" name="mode" value="off"><span><b>ปิด</b><small>เก็บข้อความไว้ แต่ยังไม่ร่างคำตอบ</small></span></label>
+            <label><input type="radio" name="mode" value="draft"><span><b>ร่างรออนุมัติ</b><small>นาคาร่างคำตอบ คุณกดส่งเองทุกครั้ง (แนะนำตอนเริ่มใช้)</small></span></label>
+            <label><input type="radio" name="mode" value="auto"><span><b>ตอบอัตโนมัติ</b><small>ส่งเองเฉพาะคำตอบที่มั่นใจและมีข้อมูลร้านรองรับ นอกนั้นรอคุณ</small></span></label>
+          </fieldset>
+          <label class="field">น้ำเสียงของร้าน<input name="tone" maxlength="200" required placeholder="เช่น สุภาพ เป็นกันเอง ใช้คำว่า ค่ะ"></label>
+          <label class="field">คำที่ต้องส่งต่อคนในร้านเสมอ<input name="keywords" maxlength="1000" placeholder="คั่นด้วยจุลภาค เช่น ส่วนลดพิเศษ, ขายส่ง"><small>คืนเงิน ร้องเรียน ของเสีย แพ้ ฟ้อง ส่งต่อคนอยู่แล้วโดยไม่ต้องใส่</small></label>
+          <button class="primary-button" type="submit">บันทึกการตั้งค่า</button>
+          <p class="form-status" id="settings-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <div class="card-form accounts">
+          <h2>บัญชีที่เชื่อมต่อ</h2>
+          <ul id="account-list" class="account-list"></ul>
+          <a class="secondary-button" href="/api/social/meta/start">เชื่อมต่อเพจ Facebook / Instagram</a>
+          <p class="hint">ต้องเป็นผู้ดูแลเพจ และ Instagram ต้องเป็นบัญชี Business หรือ Creator ที่ผูกกับเพจ</p>
+        </div>
+      </section>
+
+      <!-- Knowledge base -->
+      <section class="panel" id="panel-kb" role="tabpanel" aria-labelledby="tab-kb" hidden>
+        <p class="panel-intro">นาคาตอบลูกค้าจากข้อมูลในหน้านี้เท่านั้น ใส่ราคา ค่าส่ง วิธีสั่งซื้อ และนโยบายของร้านให้ครบ ตัวเลขที่ไม่มีในนี้บอทจะไม่ตอบเอง</p>
+        <form id="kb-form" class="card-form">
+          <label class="field">หัวข้อ<input name="title" maxlength="160" required placeholder="เช่น ราคาและโปรโมชัน"></label>
+          <label class="field">รายละเอียด<textarea name="content" maxlength="4000" rows="5" required placeholder="เช่น สบู่มะลิ ก้อนละ 129 บาท ซื้อ 3 ก้อน 350 บาท ส่งทั่วประเทศ ค่าส่ง 40 บาท"></textarea></label>
+          <button class="primary-button" type="submit">เพิ่มข้อมูล</button>
+          <p class="form-status" id="kb-status" role="status" aria-live="polite"></p>
+        </form>
+        <ul class="kb-list" id="kb-list"></ul>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
