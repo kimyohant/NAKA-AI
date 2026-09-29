@@ -25,7 +25,7 @@ after(() => {
 let sqlite;
 let db;
 beforeEach(() => {
-  ({ sqlite, db } = migratedDb("0002_credits_jobs.sql"));
+  ({ sqlite, db } = migratedDb("0002_credits_jobs.sql", "0006_jobs_limit.sql"));
 });
 
 const row = (sql, ...params) => sqlite.prepare(sql).get(...params);
@@ -178,4 +178,14 @@ test("runQueue runs jobs in parallel up to the concurrency limit and never runs 
   assert.equal(new Set(seen).size, 5);
   assert.ok(peak <= 3 && peak > 1, `peak concurrency was ${peak}`);
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM jobs WHERE status = 'queued'").get().n, 2);
+});
+
+test("background jobs that do not count toward the limit never block video work", async () => {
+  await credits.grantCredits(db, "u1", 10, "grant");
+  for (let i = 0; i < 3; i++) {
+    const r = await jobs.enqueueJob(db, { userId: "u1", kind: "inbox_reply", input: { i }, costCredits: 0, countsTowardLimit: false });
+    assert.equal(r.ok, true, "inbox replies are not capped by the plan's parallel slots");
+  }
+  assert.equal((await jobs.enqueueJob(db, { userId: "u1", kind: "video", input: {}, costCredits: 1 })).ok, true, "free plan still has its one video slot");
+  assert.deepEqual(await jobs.enqueueJob(db, { userId: "u1", kind: "video", input: {}, costCredits: 1 }), { ok: false, reason: "too_many_jobs" });
 });
