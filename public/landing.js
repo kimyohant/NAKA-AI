@@ -128,6 +128,8 @@
       var mode = button.dataset.billing;
       buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b === button)); });
       document.querySelectorAll('.plan [data-monthly]').forEach(function (el) { el.textContent = el.dataset[mode]; });
+      // Carry the chosen billing period to the checkout page.
+      document.querySelectorAll('.plan-cta[data-plan]').forEach(function (a) { a.href = '/app/billing/?plan=' + a.dataset.plan + '&period=' + mode; });
     });
   });
 })();

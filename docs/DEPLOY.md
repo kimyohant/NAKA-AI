@@ -33,6 +33,12 @@
 - [ ] สมัครบัญชี เติมเครดิต และ**จดทะเบียนชื่อผู้ส่ง (sender name)** รออนุมัติ
 - ได้ค่า: `SMS_API_KEY` 🔑, `SMS_API_SECRET` 🔑, `SMS_SENDER` (ชื่อที่อนุมัติแล้ว ตรงตัวพิมพ์เล็ก/ใหญ่)
 
+### Omise (Opn Payments) — รับเงินค่าแพ็กเกจ
+- [ ] สมัครบัญชีร้านค้าที่ omise.co ยืนยันตัวตน/ธุรกิจ และเปิดใช้ **PromptPay** กับ**บัตร** (รอ Omise อนุมัติ)
+- [ ] ทดสอบด้วย test keys ก่อน (`pkey_test_…` / `skey_test_…`) แล้วค่อยเปลี่ยนเป็น live keys
+- [ ] Webhooks: เพิ่ม endpoint `https://naka-ai.com/webhook/omise` แล้วคัดลอก **webhook secret** (ใช้ตรวจลายเซ็น `Omise-Signature`)
+- ได้ค่า: `OMISE_PUBLIC_KEY` (สาธารณะ), `OMISE_SECRET_KEY` 🔑, `OMISE_WEBHOOK_SECRET` 🔑
+
 ### Cloudflare
 - [ ] Turnstile: สร้าง widget, hostname = `naka-ai.com` → ได้ `TURNSTILE_SITE_KEY` (สาธารณะ) และ `TURNSTILE_SECRET_KEY` 🔑
 - [ ] R2: `npx wrangler r2 bucket create naka-ai-media` (ห้ามเปิด public access)
@@ -54,7 +60,8 @@ openssl rand -hex 24      # META_WEBHOOK_VERIFY_TOKEN
 "vars": {
   "APP_ORIGIN": "https://naka-ai.com",
   "SMS_PROVIDER": "thaibulksms",
-  "TURNSTILE_SITE_KEY": "<site key>"
+  "TURNSTILE_SITE_KEY": "<site key>",
+  "OMISE_PUBLIC_KEY": "<pkey_…>"
 }
 ```
 
@@ -73,6 +80,8 @@ npx wrangler secret put META_APP_ID
 npx wrangler secret put META_APP_SECRET
 npx wrangler secret put META_WEBHOOK_VERIFY_TOKEN
 npx wrangler secret put SOCIAL_TOKEN_KEY
+npx wrangler secret put OMISE_SECRET_KEY
+npx wrangler secret put OMISE_WEBHOOK_SECRET
 ```
 
 ค่าเดิมที่ควรมีอยู่แล้ว: `ANTHROPIC_API_KEY`, `ADMIN_TOKEN`, `LINE_CHANNEL_SECRET`, `LINE_CHANNEL_ACCESS_TOKEN`
@@ -95,11 +104,14 @@ npx wrangler deploy
 - [ ] `/review/` สร้างคลิปรีวิวจริง 1 คลิป (ใช้ 1 เครดิต) → ได้บท + เสียงไทย → สร้างวิดีโอ → ดาวน์โหลด
 - [ ] `/app/inbox/` → เชื่อมเพจ Facebook → คอมเมนต์ใต้โพสต์เพจด้วยอีกบัญชี → ข้อความขึ้นใน inbox ภายใน 1–2 นาที
 - [ ] ตั้งบอทเป็น "ร่างรออนุมัติ" → ได้ draft → กดส่ง → คำตอบขึ้นบน Facebook
+- [ ] `/app/billing/` (test keys) → เลือกแพ็กเกจเริ่มต้น → PromptPay ได้ QR → ใน Omise dashboard กด mark as paid → หน้าแจ้งสำเร็จ แพ็กเกจเปิด เครดิตขึ้น 30
+- [ ] จ่ายด้วยบัตรทดสอบของ Omise (รวมบัตรที่ต้องผ่าน 3-D Secure) → กลับมาที่ `/app/billing/?payment=…` แล้วสำเร็จ
 - [ ] ดู log: `npx wrangler tail`
 
-## 6. แพ็กเกจลูกค้า (ยังไม่มีระบบชำระเงินออนไลน์)
+## 6. แพ็กเกจลูกค้า
 
-หลังลูกค้าโอนเงิน แอดมินตั้งแพ็กเกจและเติมเครดิตด้วย SQL:
+ลูกค้าซื้อเองได้ที่ `/app/billing/` (PromptPay/บัตร ผ่าน Omise) ระบบเปิดแพ็กเกจ เติมเครดิตรายเดือน และหมดอายุให้อัตโนมัติ
+ถ้าลูกค้าโอนเงินนอกระบบ แอดมินตั้งแพ็กเกจด้วยมือได้ด้วย SQL:
 
 ```sh
 # หา user id จากเบอร์ (เก็บเป็น +66…) หรือ Google (ใช้อีเมล)
@@ -112,7 +124,7 @@ npx wrangler d1 execute naka-ai-db --remote --command "INSERT OR REPLACE INTO su
 
 ## สิ่งที่ยังไม่มี (ไม่ขวางการเปิดใช้)
 
-- ชำระเงินออนไลน์และเติมเครดิตรายเดือนอัตโนมัติ
+- ใบกำกับภาษี/ใบเสร็จอัตโนมัติ (ตอนนี้ออกด้วยมือ)
 - เครดิตฟรีตอนสมัคร
 - ราคาเครดิตของละคร/AI Live (ขึ้นกับต้นทุน Wan)
 - TikTok (รอ audit), Shopee (ไม่มี API วิดีโอ)

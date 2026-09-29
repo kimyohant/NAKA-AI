@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#091736">
+  <title>แพ็กเกจและการชำระเงิน — naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/glass-nav.css">
+  <link rel="stylesheet" href="/account-menu.css">
+  <link rel="stylesheet" href="/app/app.css">
+  <link rel="stylesheet" href="/app/inbox/inbox.css">
+  <link rel="stylesheet" href="/app/billing/billing.css">
+  <script src="/account-menu.js" defer></script>
+  <script src="/app/billing/billing.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">ข้ามไปที่เนื้อหา</a>
+  <header class="app-topbar glass-nav">
+    <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" width="36" height="36" alt=""><span>naka<span class="brand-accent">-ai</span><b>.</b></span></a>
+    <span class="header-divider" aria-hidden="true"></span>
+    <span class="topbar-label">แพ็กเกจ</span>
+    <nav class="topbar-nav" aria-label="เมนูหลัก">
+      <a href="/app/">พื้นที่ของร้าน</a>
+      <a href="/app/inbox/">กล่องข้อความ</a>
+      <a href="/app/billing/" aria-current="page">แพ็กเกจ</a>
+    </nav>
+    <div data-account-menu></div>
+  </header>
+
+  <main id="main" class="shell inbox-main">
+    <p id="page-loading" class="app-loading" role="status">กำลังโหลด…</p>
+    <div id="page-error" class="app-error" hidden><p>โหลดข้อมูลไม่สำเร็จ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ชั่วขณะ</p><button class="signout-button" type="button" id="retry">ลองอีกครั้ง</button></div>
+
+    <div id="page" hidden>
+      <div class="inbox-head">
+        <div><h1>แพ็กเกจและการชำระเงิน</h1><p>จ่ายล่วงหน้ารายเดือนหรือรายปีด้วย PromptPay หรือบัตร ไม่มีการตัดเงินอัตโนมัติ ครบรอบแล้วต่ออายุเองได้</p></div>
+      </div>
+
+      <section class="current" aria-labelledby="current-title">
+        <p class="panel-label" id="current-title">แพ็กเกจปัจจุบัน</p>
+        <p class="current-name" id="current-name"></p>
+        <p class="current-meta" id="current-meta"></p>
+      </section>
+
+      <div class="billing-toggle" role="group" aria-label="รอบการชำระเงิน">
+        <button type="button" data-period="monthly" aria-pressed="true">รายเดือน</button>
+        <button type="button" data-period="yearly" aria-pressed="false">รายปี <span>ฟรี 2 เดือน</span></button>
+      </div>
+      <div class="plan-list" id="plan-list" role="radiogroup" aria-label="เลือกแพ็กเกจ"></div>
+
+      <section class="pay" id="pay" aria-labelledby="pay-title">
+        <h2 id="pay-title">ชำระเงิน</h2>
+        <p class="pay-summary" id="pay-summary">เลือกแพ็กเกจด้านบนก่อน</p>
+        <div class="pay-buttons">
+          <button class="primary-button" type="button" id="pay-promptpay" disabled>จ่ายด้วย PromptPay (สแกน QR)</button>
+          <button class="secondary-button" type="button" id="pay-card" disabled>จ่ายด้วยบัตรเครดิต/เดบิต</button>
+        </div>
+        <div class="qr-box" id="qr-box" hidden>
+          <img id="qr-image" alt="QR PromptPay สำหรับชำระเงิน" width="260" height="260">
+          <p class="qr-amount" id="qr-amount"></p>
+          <p class="hint" id="qr-countdown"></p>
+          <p class="hint">สแกนด้วยแอปธนาคารใดก็ได้ หน้านี้จะอัปเดตเองเมื่อชำระเสร็จ</p>
+        </div>
+        <p class="form-status" id="pay-status" role="status" aria-live="polite"></p>
+        <p class="hint">ชำระเงินผ่าน Omise (Opn Payments) ระบบไม่ได้เก็บข้อมูลบัตรของคุณ · ต้องการใบกำกับภาษีหรือมีคำถาม โทร <a href="tel:+66892788587">089-278-8587</a></p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
