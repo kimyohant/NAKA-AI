@@ -89,6 +89,7 @@ export interface ProviderRequest {
 }
 
 export interface AIConfig {
+  id?: number
   provider: string
   baseUrl: string
   apiKey: string

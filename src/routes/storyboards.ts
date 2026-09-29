@@ -1,11 +1,68 @@
 import { Hono } from 'hono'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { db, getInsertId, schema } from '../db/index.js'
 import { success, created, now, badRequest } from '../utils/response.js'
 import { toSnakeCase } from '../utils/transform.js'
 import { logTaskPayload, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { storyboardReadiness, taskMediaSlot, type MediaSlot } from '../services/storyboard-readiness.js'
 
 const app = new Hono()
+
+app.get('/:id/readiness', async (c) => {
+  const id = Number(c.req.param('id'))
+  if (!Number.isInteger(id) || id < 1) return badRequest(c, 'Invalid storyboard ID')
+  const readiness = await storyboardReadiness(id)
+  return readiness ? success(c, readiness) : badRequest(c, '镜头不存在')
+})
+
+app.post('/:id/select-media', async (c) => {
+  const storyboardId = Number(c.req.param('id'))
+  const body = await c.req.json().catch(() => ({}))
+  const taskId = Number(body.task_id)
+  const slot = body.slot as MediaSlot
+  if (!Number.isInteger(storyboardId) || !Number.isInteger(taskId) || !['composed', 'first_frame', 'last_frame', 'video'].includes(slot)) {
+    return badRequest(c, 'Invalid media selection')
+  }
+  const [shot] = await db.select().from(schema.storyboards).where(eq(schema.storyboards.id, storyboardId))
+  const [task] = await db.select().from(schema.sysTask).where(eq(schema.sysTask.id, taskId))
+  if (!shot || !task || task.storyboardId !== storyboardId || task.status !== 'completed' || !task.localPath || taskMediaSlot(task) !== slot) {
+    return badRequest(c, 'Completed media task for this shot and slot is required')
+  }
+  const column = { composed: 'composedImage', first_frame: 'firstFrameImage', last_frame: 'lastFrameImage', video: 'videoUrl' }[slot]
+  db.transaction((tx) => {
+    tx.insert(schema.storyboardMediaSelections).values({ storyboardId, slot, taskId, selectedAt: now() })
+      .onConflictDoUpdate({
+        target: [schema.storyboardMediaSelections.storyboardId, schema.storyboardMediaSelections.slot],
+        set: { taskId, selectedAt: now() },
+      }).run()
+    tx.update(schema.storyboards).set({ [column]: task.localPath, updatedAt: now() })
+      .where(eq(schema.storyboards.id, storyboardId)).run()
+  })
+  return success(c, { storyboard_id: storyboardId, slot, task_id: taskId, path: task.localPath })
+})
+
+app.put('/:id/character-looks/:characterId', async (c) => {
+  const storyboardId = Number(c.req.param('id'))
+  const characterId = Number(c.req.param('characterId'))
+  const body = await c.req.json().catch(() => ({}))
+  const [binding] = await db.select().from(schema.storyboardCharacters)
+    .where(and(eq(schema.storyboardCharacters.storyboardId, storyboardId), eq(schema.storyboardCharacters.characterId, characterId)))
+  if (!binding) return badRequest(c, 'Character is not bound to this shot')
+  if (body.look_id == null) {
+    await db.delete(schema.storyboardCharacterLooks)
+      .where(and(eq(schema.storyboardCharacterLooks.storyboardId, storyboardId), eq(schema.storyboardCharacterLooks.characterId, characterId)))
+    return success(c)
+  }
+  const lookId = Number(body.look_id)
+  const [look] = await db.select().from(schema.characterLooks).where(eq(schema.characterLooks.id, lookId))
+  if (!look || look.characterId !== characterId) return badRequest(c, 'Look does not belong to this character')
+  await db.insert(schema.storyboardCharacterLooks).values({ storyboardId, characterId, lookId })
+    .onConflictDoUpdate({
+      target: [schema.storyboardCharacterLooks.storyboardId, schema.storyboardCharacterLooks.characterId],
+      set: { lookId },
+    })
+  return success(c, { storyboard_id: storyboardId, character_id: characterId, look_id: lookId })
+})
 
 async function syncStoryboardCharacters(storyboardId: number, characterIds: number[]) {
   await db.delete(schema.storyboardCharacters)
@@ -13,6 +70,14 @@ async function syncStoryboardCharacters(storyboardId: number, characterIds: numb
 
 
   const uniqueIds = [...new Set((characterIds || []).filter(Boolean))]
+  const assigned = await db.select().from(schema.storyboardCharacterLooks)
+    .where(eq(schema.storyboardCharacterLooks.storyboardId, storyboardId))
+  for (const row of assigned) {
+    if (!uniqueIds.includes(row.characterId)) {
+      await db.delete(schema.storyboardCharacterLooks)
+        .where(and(eq(schema.storyboardCharacterLooks.storyboardId, storyboardId), eq(schema.storyboardCharacterLooks.characterId, row.characterId)))
+    }
+  }
   if (!uniqueIds.length) return
 
   for (const characterId of uniqueIds) {
@@ -167,6 +232,8 @@ app.delete('/:id', async (c) => {
   logTaskStart('StoryboardAPI', 'delete', { storyboardId: id })
   await db.delete(schema.storyboardCharacters).where(eq(schema.storyboardCharacters.storyboardId, id))
   await db.delete(schema.storyboardProps).where(eq(schema.storyboardProps.storyboardId, id))
+  await db.delete(schema.storyboardMediaSelections).where(eq(schema.storyboardMediaSelections.storyboardId, id))
+  await db.delete(schema.storyboardCharacterLooks).where(eq(schema.storyboardCharacterLooks.storyboardId, id))
   await db.delete(schema.storyboards).where(eq(schema.storyboards.id, id))
   logTaskSuccess('StoryboardAPI', 'delete', { storyboardId: id })
   return success(c)

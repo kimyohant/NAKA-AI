@@ -10,6 +10,7 @@ import { joinProviderUrl } from './adapters/url.js'
 export type ServiceType = 'text' | 'image' | 'video'
 
 export interface AIConfig {
+  id?: number
   provider: string
   baseUrl: string
   apiKey: string
@@ -100,6 +101,7 @@ export async function getActiveConfig(serviceType: ServiceType): Promise<AIConfi
     })
   }
   return {
+    id: active.id,
     provider: active.provider || '',
     baseUrl: active.baseUrl,
     apiKey: active.apiKey,
@@ -153,6 +155,23 @@ export async function getConfigById(id: number): Promise<AIConfig | null> {
     })
   }
   return {
+    id: row.id,
+    provider: row.provider || '',
+    baseUrl: row.baseUrl,
+    apiKey: row.apiKey,
+    model: models[0] || '',
+    temperature: parseConfigTemperature(row.settings),
+  }
+}
+
+/** Polling an already accepted task must use its original credentials, even if disabled later. */
+export async function getConfigForRecovery(id: number): Promise<AIConfig | null> {
+  const [row] = await db.select().from(schema.aiServiceConfigs)
+    .where(eq(schema.aiServiceConfigs.id, id))
+  if (!row) return null
+  const models = row.model ? JSON.parse(row.model) : []
+  return {
+    id: row.id,
     provider: row.provider || '',
     baseUrl: row.baseUrl,
     apiKey: row.apiKey,

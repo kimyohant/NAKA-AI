@@ -53,9 +53,9 @@ export function mysqlUrlFromEnv(): string | null {
   if (!process.env.MYSQL_HOST) return null
   const host = process.env.MYSQL_HOST
   const port = process.env.MYSQL_PORT || '3306'
-  const user = encodeURIComponent(process.env.MYSQL_USER || 'huobao')
-  const password = encodeURIComponent(process.env.MYSQL_PASSWORD || 'huobao')
-  const database = process.env.MYSQL_DATABASE || 'huobao_drama'
+  const user = encodeURIComponent(process.env.MYSQL_USER || 'naka')
+  const password = encodeURIComponent(process.env.MYSQL_PASSWORD || 'naka')
+  const database = process.env.MYSQL_DATABASE || 'naka_ai'
   return `mysql://${user}:${password}@${host}:${port}/${database}`
 }
 

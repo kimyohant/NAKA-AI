@@ -5,8 +5,17 @@ import { success, badRequest } from '../utils/response.js'
 import { mergeEpisodeVideos } from '../services/ffmpeg-merge.js'
 import { toSnakeCase } from '../utils/transform.js'
 import { logTaskError, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { episodeExportHealth } from '../services/export-health.js'
 
 const app = new Hono()
+
+app.get('/episodes/:id/health', async (c) => {
+  const episodeId = Number(c.req.param('id'))
+  const [ep] = await db.select().from(schema.episodes).where(eq(schema.episodes.id, episodeId))
+  if (!ep) return badRequest(c, 'Episode not found')
+  const ids = c.req.query('storyboard_ids')?.split(',').map(Number).filter(Number.isInteger)
+  return success(c, await episodeExportHealth(episodeId, ids))
+})
 
 // POST /episodes/:id/merge — 拼接镜头视频(body.storyboard_ids 可选,只拼所选)
 app.post('/episodes/:id/merge', async (c) => {
