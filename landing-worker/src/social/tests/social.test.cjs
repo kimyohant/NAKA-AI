@@ -169,6 +169,11 @@ function oauthMock({ pages, failProfile = false } = {}) {
     }
     if (url.pathname.endsWith('/me/accounts')) return Response.json(pages || { data: [{ id: '100', name: 'My Page', access_token: 'private-page-token', tasks: ['CREATE_CONTENT'], instagram_business_account: { id: '200' } }] });
     if (url.pathname.endsWith('/200')) return failProfile ? new Response('secret', { status: 500 }) : Response.json({ id: '200', username: 'my_instagram' });
+    if (url.pathname.endsWith('/subscribed_apps')) {
+      assert.equal(init.method, 'POST');
+      assert.equal(new URLSearchParams(String(init.body)).get('subscribed_fields'), 'feed,messages');
+      return Response.json({ success: true });
+    }
     throw new Error('Unexpected provider request');
   });
 }
@@ -201,7 +206,9 @@ test('parallel OAuth callbacks exchange once; reconnect retains local account ID
   const f = setup(t); const flow = await start(f); oauthMock();
   const results = await Promise.all([callback(f, flow), callback(f, flow)]);
   assert.equal(results.filter(r => r.headers.get('Location').endsWith('connected=meta')).length, 1);
-  assert.equal(http.mock.callCount(), 4);
+  // token exchange x2, pages, Instagram profile, and one page webhook subscription for the AI inbox
+  assert.equal(http.mock.callCount(), 5);
+  assert.equal(http.mock.calls.filter(c => String(c.arguments[0]).endsWith('/100/subscribed_apps')).length, 1);
   const old = f.db.prepare('SELECT id FROM social_accounts ORDER BY id').all();
   await callback(f, await start(f)); assert.deepEqual(f.db.prepare('SELECT id FROM social_accounts ORDER BY id').all(), old);
 });

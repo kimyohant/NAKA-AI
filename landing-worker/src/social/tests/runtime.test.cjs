@@ -29,6 +29,7 @@ test('workerd + D1 + R2: OAuth, real session, upload, signed URL, concurrent cro
       assert.ok(['graph.facebook.com', 'graph-video.facebook.com'].includes(url.hostname));
       if (url.pathname.endsWith('/oauth/access_token')) return RuntimeResponse.json({ access_token: 'mock-user-token', expires_in: 5184000 });
       if (url.pathname.endsWith('/me/accounts')) return RuntimeResponse.json({ data: [{ id: '100', name: 'Mock Page', access_token: 'mock-page-token', tasks: ['CREATE_CONTENT'] }] });
+      if (url.pathname.endsWith('/100/subscribed_apps')) return RuntimeResponse.json({ success: true });
       assert.ok(url.pathname.endsWith('/100/videos'));
       assert.equal(request.headers.get('Authorization'), 'Bearer mock-page-token');
       const body = new URLSearchParams(await request.text()); mediaUrl = body.get('file_url'); publications++;
@@ -71,6 +72,6 @@ test('workerd + D1 + R2: OAuth, real session, upload, signed URL, concurrent cro
     assert.equal((await call(`/api/social/accounts/${account.id}`, { method: 'DELETE' })).status, 204);
     assert.equal((await db.prepare('SELECT token_enc FROM social_accounts').first()).token_enc, '');
     const posts = (await (await call('/api/social/posts')).json()).posts; assert.equal(posts[0].externalPostId, '300');
-    assert.equal(outbound, 4);
+    assert.equal(outbound, 5); // + the page webhook subscription for the AI inbox
   } finally { await mf.dispose(); }
 });
