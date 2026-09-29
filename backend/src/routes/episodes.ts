@@ -219,6 +219,21 @@ app.get('/:episode_id/storyboards', async (c) => {
 
 // GET /episodes/:id/pipeline-status — 流水线进度
 // GET /episodes/:id/generation-tasks — 按集聚合 sys_task + video_merges
+app.get('/:id/character-looks', async (c) => {
+  const episodeId = Number(c.req.param('id'))
+  const storyboards = await db.select().from(schema.storyboards).where(eq(schema.storyboards.episodeId, episodeId))
+  const ids = new Set(storyboards.map(row => row.id))
+  const assignments = await db.select().from(schema.storyboardCharacterLooks)
+  const looks = await db.select().from(schema.characterLooks)
+  return success(c, assignments.filter(row => ids.has(row.storyboardId)).map(row => ({
+    storyboard_id: row.storyboardId,
+    character_id: row.characterId,
+    look_id: row.lookId,
+    look_name: looks.find(look => look.id === row.lookId)?.name || '',
+    image_url: looks.find(look => look.id === row.lookId)?.imageUrl || '',
+  })))
+})
+
 // sys_task 无 episode_id,通过 storyboard/scene/character/prop 关联键归属到当前集
 app.get('/:id/generation-tasks', async (c) => {
   const episodeId = Number(c.req.param('id'))

@@ -1,4 +1,4 @@
-# 🎬 Huobao Drama - AI Short Drama Generation Platform
+# 🎬 NAKA-AI TECH - AI Short Drama Generation Platform
 
 <div align="center">
 
@@ -7,19 +7,19 @@
 [![Node Version](https://img.shields.io/badge/Node.js-20+-339933?style=flat&logo=node.js)](https://nodejs.org)
 [![Vue Version](https://img.shields.io/badge/Vue-3.x-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-[![Download](https://img.shields.io/github/v/release/chatfire-AI/huobao-drama?style=flat&logo=github&label=Download)](https://github.com/chatfire-AI/huobao-drama/releases/latest)
+[![Download](https://img.shields.io/github/v/release/chatfire-AI/naka-ai?style=flat&logo=github&label=Download)](https://github.com/chatfire-AI/naka-ai/releases/latest)
 
 **English** | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Walkthrough](#-visual-walkthrough) • [Desktop App](#-desktop-app-recommended) • [Deployment](#-deployment)
 
-<h2>🔑 <a href="https://api.firemux.com">Get a Huobao API Key 👉 Get started</a></h2>
+<h2>🔑 <a href="https://api.firemux.com">Get a NAKA-AI TECH API Key 👉 Get started</a></h2>
 
 **Text, image, and video AI capabilities — one key unlocks everything**
 
-After deploying, paste the key in "Settings → Huobao Quick Setup" to write three recommended configs in one click
+After deploying, paste the key in "Settings → NAKA-AI TECH Quick Setup" to write three recommended configs in one click
 
-<h3>📥 <a href="https://github.com/chatfire-AI/huobao-drama/releases/latest">Download Desktop App (macOS / Windows)</a></h3>
+<h3>📥 <a href="https://github.com/chatfire-AI/naka-ai/releases/latest">Download Desktop App (macOS / Windows)</a></h3>
 <h3>🌐 <a href="https://www.chatfire.site">Official Website</a></h3>
 
 </div>
@@ -28,7 +28,7 @@ After deploying, paste the key in "Settings → Huobao Quick Setup" to write thr
 
 ## 📖 Overview
 
-Huobao Drama is an AI-powered short-drama production platform that automates the entire pipeline: script generation, character design, storyboard breakdown, and video compositing.
+NAKA-AI TECH is an AI-powered short-drama production platform that automates the entire pipeline: script generation, character design, storyboard breakdown, and video compositing.
 
 ### 🎯 Core Value
 
@@ -118,10 +118,10 @@ No config files — everything is set via environment variables (all have defaul
 
 | Variable | Default | Description |
 |---|---|---|
-| `SQLITE_PATH` | `<repo>/data/huobao.sqlite3` | SQLite database file location |
+| `SQLITE_PATH` | `<repo>/data/NAKA-AI.sqlite3` | SQLite database file location |
 | `PORT` | `5679` | Backend service port |
 | `STORAGE_PATH` | `<repo>/data/static` | Generated-file storage directory |
-| `HUOBAO_DATA_DIR` | — | Injected by the Electron main process (userData data root) |
+| `NAKA-AI_DATA_DIR` | — | Injected by the Electron main process (userData data root) |
 | `WORKSPACE_PATH` | `backend/workspace` | Agent skills/prompts directory (desktop: writable copy under userData) |
 | `FRONTEND_DIST` | `frontend/dist` | Frontend static build directory |
 | `FFMPEG_BIN` / `FFPROBE_BIN` | bundled npm binaries | Custom ffmpeg/ffprobe executable paths |
@@ -133,8 +133,8 @@ No config files — everything is set via environment variables (all have defaul
 
 ```bash
 # Clone the repository
-git clone https://github.com/chatfire-AI/huobao-drama.git
-cd huobao-drama
+git clone https://github.com/chatfire-AI/naka-ai.git
+cd naka-ai
 
 # Install backend dependencies
 cd backend && npm install
@@ -183,7 +183,7 @@ Visit: `http://localhost:5679`
 
 ### 🗄️ Database
 
-Bundled SQLite (`better-sqlite3` + WAL mode). Tables are created automatically on first launch (idempotent DDL replay + seed data). Default file: `data/huobao.sqlite3`, overridable via `SQLITE_PATH`. The desktop app stores data in the user-data directory (`~/Library/Application Support/HuobaoDrama/data/`).
+Bundled SQLite (`better-sqlite3` + WAL mode). Tables are created automatically on first launch (idempotent DDL replay + seed data). Default file: `data/NAKA-AI.sqlite3`, overridable via `SQLITE_PATH`. The desktop app stores data in the user-data directory (`~/Library/Application Support/NAKA-AI TECHDrama/data/`).
 
 Migrating data from a legacy MySQL deployment:
 
@@ -201,7 +201,7 @@ cd backend && npx tsx scripts/import-mysql-to-sqlite.ts
 All AI features (text/image/video) require model services to be configured first — a banner at the top of the page guides you until then:
 
 1. Open the "Settings" page
-2. Paste your Huobao API key in "Huobao Quick Setup" ([get one at api.firemux.com](https://api.firemux.com)) to write three recommended configs (text, image, video) in one click
+2. Paste your NAKA-AI TECH API key in "NAKA-AI TECH Quick Setup" ([get one at api.firemux.com](https://api.firemux.com)) to write three recommended configs (text, image, video) in one click
 3. Or add providers one by one via "Manual Templates", with connectivity testing
 
 Once configured, the banner disappears and you can start producing episodes.
@@ -226,7 +226,7 @@ On the home page click "New Project", pick a **aspect ratio** (16:9 landscape / 
 
 ### Step 2 · Configure AI Services (first run)
 
-Paste an API key in Settings → "Huobao Quick Setup" to write the three recommended configs at once, or add providers manually. The current model can be switched any time from the top bar (see Step 5).
+Paste an API key in Settings → "NAKA-AI TECH Quick Setup" to write the three recommended configs at once, or add providers manually. The current model can be switched any time from the top bar (see Step 5).
 
 <p align="center">
   <img src="docs/screenshots/03-settings-quick.png" alt="AI service setup" width="800">
@@ -256,6 +256,10 @@ On the "Video Production" page, first run **storyboard breakdown** (AI splits sh
 - Review and tweak each shot's prompt on the right (`@character` references map to reference images automatically)
 - Click "Batch Generate Videos"; failed tasks can be retried in one click
 
+For production cost control, set an estimated image price or video price per second on each AI configuration in **Settings**, then set a project budget in the project's **Settings** tab. The batch confirmation shows the estimated total and remaining budget. A configured budget blocks new image/video tasks without a price or beyond the remaining estimate. These figures are estimates, not provider billing records; already recorded tasks remain allocated until removed.
+
+The export panel checks each clip's readable video stream, duration, dimensions, audio presence, and source freshness. Changes to the script, project style, shot, bound assets, or selected reference images flag an existing generated clip for review. Older clips without a source snapshot are marked as untracked. Invalid media blocks merging; freshness and audio warnings remain visible for review.
+
 <p align="center">
   <img src="docs/screenshots/07-storyboard.png" alt="Storyboard breakdown" width="800">
 </p>
@@ -284,23 +288,23 @@ The episode list shows the production status of every episode — click "Enter S
 
 ### 🖥️ Desktop App (recommended)
 
-**⬇️ Prebuilt installers: [GitHub Releases](https://github.com/chatfire-AI/huobao-drama/releases/latest) · [Mirror for China (Tencent COS)](https://installer.chatfire.site/huobao-drama/v4.0.5/)**
+**⬇️ Prebuilt installers: [GitHub Releases](https://github.com/chatfire-AI/naka-ai/releases/latest) · [Mirror for China (Tencent COS)](https://installer.chatfire.site/naka-ai/v4.0.5/)**
 
 | Platform | File to download |
 |---|---|
-| macOS (Apple Silicon, M-series) | `HuobaoDrama-4.0.5-arm64.dmg` |
-| macOS (Intel) | `HuobaoDrama-4.0.5.dmg` |
-| Windows | `HuobaoDrama.Setup.4.0.5.exe` |
+| macOS (Apple Silicon, M-series) | `NAKA-AI TECHDrama-4.0.5-arm64.dmg` |
+| macOS (Intel) | `NAKA-AI TECHDrama-4.0.5.dmg` |
+| Windows | `NAKA-AI TECHDrama.Setup.4.0.5.exe` |
 
 > China users: use the COS mirror above (GitHub is slow/unreachable in mainland China). The in-app updater also checks the COS mirror first, then falls back to GitHub.
 
 **Command-line install (recommended, no Gatekeeper fix needed)**: downloading via curl never sets macOS's quarantine attribute, so the app opens cleanly with no "damaged" prompt (use the `-arm64.dmg` for Apple Silicon, the plain dmg for Intel):
 
 ```bash
-curl -L -o /tmp/HuobaoDrama.dmg https://installer.chatfire.site/huobao-drama/v4.0.5/HuobaoDrama-4.0.5-arm64.dmg \
-  && hdiutil attach -nobrowse /tmp/HuobaoDrama.dmg \
-  && cp -R /Volumes/HuobaoDrama*/HuobaoDrama.app /Applications/ \
-  && hdiutil detach /Volumes/HuobaoDrama*
+curl -L -o /tmp/NAKA-AI TECHDrama.dmg https://installer.chatfire.site/naka-ai/v4.0.5/NAKA-AI TECHDrama-4.0.5-arm64.dmg \
+  && hdiutil attach -nobrowse /tmp/NAKA-AI TECHDrama.dmg \
+  && cp -R /Volumes/NAKA-AI TECHDrama*/NAKA-AI TECHDrama.app /Applications/ \
+  && hdiutil detach /Volumes/NAKA-AI TECHDrama*
 ```
 
 No build required — download the dmg/exe and install. Installed clients auto-update via the built-in updater. (To package from source instead, see the commands below.)
@@ -313,20 +317,20 @@ npm run dist        # macOS dmg (arm64 + Intel)
 npm run dist:win    # Windows NSIS installer (win-x64, cross-buildable on macOS)
 
 # Artifacts
-# desktop/release/HuobaoDrama-<version>-arm64.dmg     (Apple Silicon)
-# desktop/release/HuobaoDrama-<version>.dmg           (Intel)
-# desktop/release/HuobaoDrama Setup <version>.exe     (Windows)
+# desktop/release/NAKA-AI TECHDrama-<version>-arm64.dmg     (Apple Silicon)
+# desktop/release/NAKA-AI TECHDrama-<version>.dmg           (Intel)
+# desktop/release/NAKA-AI TECHDrama Setup <version>.exe     (Windows)
 ```
 
 Installation notes:
 
 - The macOS build is unsigned — on first launch you may see "App is damaged and can't be opened" (common on Apple Silicon). This is Gatekeeper's quarantine attribute, not actual file damage. Two ways to fix it:
   1. **The dmg bundles a fix script**: after dragging the app into Applications, double-click the "如提示已损坏请双击我.command" script at the bottom of the dmg window — it removes the quarantine attribute automatically;
-  2. Or run `sudo xattr -cr /Applications/HuobaoDrama.app` in Terminal.
+  2. Or run `sudo xattr -cr /Applications/NAKA-AI TECHDrama.app` in Terminal.
 
   The fix is one-time only — the app then launches normally, and in-app auto-updates are not affected.
 - The Windows build is unsigned — SmartScreen will prompt "More info → Run anyway"
-- User-data directory: `~/Library/Application Support/HuobaoDrama/` (database, generated media, writable copies of online-edited skills)
+- User-data directory: `~/Library/Application Support/NAKA-AI TECHDrama/` (database, generated media, writable copies of online-edited skills)
 - FFmpeg/FFprobe binaries are bundled — no system install needed
 - Electron is pinned to 37.x: better-sqlite3's win32 prebuilds max out at that ABI (the key to compilation-free cross-packaging)
 - External links open in the system browser (e.g. "Get a key at api.firemux.com")
@@ -346,7 +350,7 @@ cd desktop && npm run feed
 # 3. Publish: upload latest.json + installers + zips to a GitHub Release (tag like v1.0.1)
 ```
 
-Installed clients check the manifest automatically after launch (manual check available in "Settings → About & Updates") and prompt to download and install when a new version is found. Override the manifest URL with the `HUOBAO_UPDATE_FEED` environment variable.
+Installed clients check the manifest automatically after launch (manual check available in "Settings → About & Updates") and prompt to download and install when a new version is found. Override the manifest URL with the `NAKA-AI_UPDATE_FEED` environment variable.
 
 Desktop development:
 
@@ -396,7 +400,7 @@ server {
     # sendfile zero-copy + long-lived caching
     # (files are uuid-named and immutable, so immutable caching is safe)
     location /static/ {
-        alias /path/to/huobao-drama/data/static/;
+        alias /path/to/naka-ai/data/static/;
         sendfile on;
         tcp_nopush on;
         expires 1y;
@@ -419,32 +423,44 @@ server {
 **Option A — prebuilt image (no clone, no build):** multi-arch (`linux/amd64` + `linux/arm64`), x86 servers and ARM devices match automatically
 
 ```bash
-docker pull huobao/huobao-drama:4.0.5
+docker pull NAKA-AI/naka-ai:4.0.5
 
 docker run -d \
-  --name huobao-drama \
-  -p 5679:5679 \
-  -v huobao-data:/app/data \
+  --name naka-ai \
+  -p 127.0.0.1:5679:5679 \
+  -e NAKA-AI_HOST=0.0.0.0 \
+  -e NAKA-AI_AUTH_PASSWORD='set-a-unique-password' \
+  -v NAKA-AI-data:/app/data \
   --restart unless-stopped \
-  huobao/huobao-drama:4.0.5
+  NAKA-AI/naka-ai:4.0.5
 ```
 
 **Option B — docker compose (source build + Watchtower in-app updates):** the repo root provides an all-in-one `Dockerfile` (three stages: frontend generate + backend dependencies + runtime; the backend runs via tsx just like server deployment) and `docker-compose.yml` (app + Watchtower):
 
 ```bash
-# 1. Configure the environment (Watchtower token — must match on the app and watchtower sides)
-cp .env.example .env   # edit WATCHTOWER_TOKEN
+# 1. Configure the environment
+cp .env.example .env   # set NAKA-AI_AUTH_PASSWORD and WATCHTOWER_TOKEN
 
 # 2. Build and start (inject a version at publish time for "About & Updates" comparison)
-HUOBAO_VERSION=4.0.5 docker compose up -d --build
+NAKA-AI_VERSION=4.0.5 docker compose up -d --build
 
 # 3. Visit http://localhost:5679
 ```
 
-- **Data persistence**: the named volume `huobao-data` mounts `/app/data` (SQLite + generated images/videos + workspace/skills) — image updates don't lose data
+The development server binds to `127.0.0.1` by default. Docker binds its published port to the host's loopback address and requires `NAKA-AI_AUTH_PASSWORD`; the browser prompts for the configured Basic auth credentials. For access from another machine, put an HTTPS reverse proxy in front of this loopback port. Do not expose Basic auth over plain HTTP.
+
+SQLite changes use numbered, transactional migrations. Before an upgrade, create a verified snapshot (including committed WAL data) from `backend/`:
+
+```bash
+npm run db:snapshot -- backup ../data/NAKA-AI.sqlite3 ../data/backups/NAKA-AI-before-upgrade.sqlite3
+```
+
+To verify a backup can be restored, create a **new** database file with `npm run db:snapshot -- restore <backup.sqlite3> <new-file.sqlite3>`. The command refuses to overwrite a destination. Stop the app before replacing its active database with a verified restored copy.
+
+- **Data persistence**: the named volume `NAKA-AI-data` mounts `/app/data` (SQLite + generated images/videos + workspace/skills) — image updates don't lose data
 - **In-app updates**: the compose file ships a [Watchtower](https://containrrr.dev/watchtower/) sidecar (`--label-enable` only updates labeled containers, `--cleanup` removes old images, daily self-check). "Settings → About & Updates" can check for new versions and "Update Now" — the backend triggers it via the Watchtower HTTP API, which pulls the new image and rebuilds the container; refresh the page after a few minutes
-- **Manual mode**: remove the app's two `HUOBAO_WATCHTOWER_*` env vars (or the whole watchtower service) from `docker-compose.yml` — "About & Updates" then degrades to a new-version notice + manual `docker compose pull && docker compose up -d`
-- **Publishing images**: `docker buildx build --platform linux/amd64,linux/arm64 --build-arg HUOBAO_VERSION=x.y.z -t huobao/huobao-drama:x.y.z -t huobao/huobao-drama:latest --push .` — the version manifest is shared with the desktop app via `latest.json` on GitHub Releases (overridable with `HUOBAO_UPDATE_FEED`)
+- **Manual mode**: remove the app's two `NAKA-AI_WATCHTOWER_*` env vars (or the whole watchtower service) from `docker-compose.yml` — "About & Updates" then degrades to a new-version notice + manual `docker compose pull && docker compose up -d`
+- **Publishing images**: `docker buildx build --platform linux/amd64,linux/arm64 --build-arg NAKA-AI_VERSION=x.y.z -t NAKA-AI/naka-ai:x.y.z -t NAKA-AI/naka-ai:latest --push .` — the version manifest is shared with the desktop app via `latest.json` on GitHub Releases (overridable with `NAKA-AI_UPDATE_FEED`)
 
 ---
 
@@ -479,7 +495,7 @@ HUOBAO_VERSION=4.0.5 docker compose up -d --build
 
 ### Q: Where does the desktop app store data?
 
-A: `~/Library/Application Support/HuobaoDrama/data/` (SQLite database + generated images/videos); writable copies of online-edited skills live in the sibling `workspace/` directory. In development mode the repo's `data/` directory is used instead.
+A: `~/Library/Application Support/NAKA-AI TECHDrama/data/` (SQLite database + generated images/videos); writable copies of online-edited skills live in the sibling `workspace/` directory. In development mode the repo's `data/` directory is used instead.
 
 ### Q: How do I migrate legacy MySQL data to SQLite?
 
@@ -491,7 +507,7 @@ A: No install needed. The project bundles `ffmpeg-static` / `ffprobe-static` bin
 
 ### Q: The top of the page says "No model configured"?
 
-A: That's the normal first-deploy guidance. Go to "Settings" and use "Huobao Quick Setup" to paste an API key and write configs in one click, or add providers via "Manual Templates". The banner disappears once text, image, and video all have an enabled config.
+A: That's the normal first-deploy guidance. Go to "Settings" and use "NAKA-AI TECH Quick Setup" to paste an API key and write configs in one click, or add providers via "Manual Templates". The banner disappears once text, image, and video all have an enabled config.
 
 ### Q: The frontend can't reach the backend API?
 
@@ -541,7 +557,7 @@ A: The backend creates all tables automatically on first launch — check the lo
   - New `docker/init.sql` and export scripts (DBA review / pre-created tables)
 - First-use guidance
   - Site-wide banner guiding to Settings when no AI service is configured
-  - New "Huobao Quick Setup" in Settings: one key writes three recommended configs (text/image/video)
+  - New "NAKA-AI TECH Quick Setup" in Settings: one key writes three recommended configs (text/image/video)
   - Unconfigured-model errors localized with pointers to Settings
 - Default video model changed to Seedance 2.0 Fast
 - Provider consolidation: OpenAI / Gemini / Volcano Engine only
@@ -650,4 +666,4 @@ This project has been recognized with a link from the [LINUX DO](https://linux.d
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/chart?repos=chatfire-ai/huobao-drama&type=date&legend=top-left)](https://www.star-history.com/?repos=chatfire-ai%2Fhuobao-drama&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/chart?repos=chatfire-ai/naka-ai&type=date&legend=top-left)](https://www.star-history.com/?repos=chatfire-ai%2Fnaka-ai&type=date&legend=top-left)

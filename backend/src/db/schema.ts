@@ -3,7 +3,7 @@
  * 自 MySQL 迁移：varchar(x)→text（SQLite 不校验长度）、int→integer、
  * boolean→integer boolean mode、时间戳仍为 text 存 ISO 字符串，表/列名不变。
  */
-import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real, primaryKey } from 'drizzle-orm/sqlite-core'
 
 export const dramas = sqliteTable('dramas', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -18,6 +18,7 @@ export const dramas = sqliteTable('dramas', {
   thumbnail: text('thumbnail'),
   tags: text('tags'),
   metadata: text('metadata'),
+  budgetThb: real('budget_thb'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   deletedAt: text('deleted_at'),
@@ -189,6 +190,34 @@ export const aiServiceConfigs = sqliteTable('ai_service_configs', {
   // 注意: 此表无 deleted_at
 })
 
+export const characterLooks = sqliteTable('character_looks', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  characterId: integer('character_id').notNull(),
+  name: text('name').notNull(),
+  notes: text('notes'),
+  imageUrl: text('image_url'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+export const storyboardCharacterLooks = sqliteTable('storyboard_character_looks', {
+  storyboardId: integer('storyboard_id').notNull(),
+  characterId: integer('character_id').notNull(),
+  lookId: integer('look_id').notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.storyboardId, table.characterId] }),
+])
+
+// Explicitly selected generated media for each shot. History remains in sys_task.
+export const storyboardMediaSelections = sqliteTable('storyboard_media_selections', {
+  storyboardId: integer('storyboard_id').notNull(),
+  slot: text('slot').notNull(),
+  taskId: integer('task_id').notNull(),
+  selectedAt: text('selected_at').notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.storyboardId, table.slot] }),
+])
+
 export const aiServiceProviders = sqliteTable('ai_service_providers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
@@ -226,6 +255,7 @@ export const sysTask = sqliteTable('sys_task', {
   characterId: integer('character_id'),
   propId: integer('prop_id'),
   provider: text('provider'),
+  configId: integer('config_id'),
   prompt: text('prompt'),
   model: text('model'),
   // image: {size, frameType, referenceImages[]}
@@ -236,6 +266,9 @@ export const sysTask = sqliteTable('sys_task', {
   localPath: text('local_path'),
   status: text('status').default('processing'),
   errorMsg: text('error_msg'),
+  errorCode: text('error_code'),
+  estimatedCostThb: real('estimated_cost_thb'),
+  sourceSnapshot: text('source_snapshot'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   completedAt: text('completed_at'),

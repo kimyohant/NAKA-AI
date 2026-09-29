@@ -5,6 +5,7 @@
 import { Hono } from 'hono'
 import { success, badRequest } from '../utils/response.js'
 import { refreshSkillWorkspaces, skillsManagerWorkspace } from '../agents/skills.js'
+import { renderLibrarySkill, skillLibrary } from '../agents/skill-library.js'
 
 const app = new Hono()
 const fsm = () => skillsManagerWorkspace.filesystem!
@@ -35,6 +36,31 @@ app.get('/', async (c) => {
     out.push({ id, name, description })
   }
   return success(c, out)
+})
+
+// Optional production skills. Listing does not inject them into any agent.
+app.get('/library', async (c) => {
+  const lang = normalizeLang(c.req.query('lang'))
+  const out = await Promise.all(skillLibrary.map(async entry => ({
+    id: entry.id,
+    agent: entry.agent,
+    category: entry.category,
+    title: lang === 'th' ? entry.titleTh : entry.title,
+    description: lang === 'th' ? entry.descriptionTh : entry.description,
+    rules: entry.rules,
+    installed: await fsm().exists(skillFile(entry.id)),
+  })))
+  return success(c, out)
+})
+
+app.post('/library/*', async (c) => {
+  const id = c.req.path.slice('/api/v1/skills/library/'.length)
+  const entry = skillLibrary.find(item => item.id === id)
+  if (!entry) return badRequest(c, 'Library skill not found')
+  if (await fsm().exists(skillFile(id))) return badRequest(c, 'Skill is already installed')
+  await fsm().writeFile(skillFile(id), renderLibrarySkill(entry), { recursive: true, overwrite: false })
+  await refreshSkillWorkspaces()
+  return success(c, { id })
 })
 
 // GET /skills/:id?lang= — Get skill content (raw, 含 frontmatter 供编辑)

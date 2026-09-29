@@ -1,0 +1,125 @@
+{
+  "startedAt": "2026-09-28T15:48:12.885Z",
+  "textModel": "gemini-3.1-flash-lite",
+  "budget": 120,
+  "steps": [
+    {
+      "name": "0. Preflight",
+      "status": "pass",
+      "seconds": 1,
+      "result": {
+        "health": "ok",
+        "wanCredits": 299,
+        "contentLanguage": "th",
+        "textConfig": "#8 gemini",
+        "textModelOverride": "gemini-3.1-flash-lite"
+      }
+    },
+    {
+      "name": "5. Extract characters / scenes / props",
+      "status": "pass",
+      "seconds": 0,
+      "result": {
+        "reused": true,
+        "characters": [
+          "น้ำ",
+          "ภาคิน"
+        ],
+        "scenes": [
+          "ร้านกาแฟริมถนนสุขุมวิท",
+          "ป้ายรถเมล์หน้าร้าน"
+        ]
+      }
+    },
+    {
+      "name": "6. Generate asset images (Wan, with agent final prompts)",
+      "status": "pass",
+      "seconds": 71,
+      "result": {
+        "images": 3,
+        "credits": 3,
+        "items": [
+          {
+            "kind": "scenes",
+            "name": "ร้านกาแฟริมถนนสุขุมวิท",
+            "localPath": "static/images/83ad5b48-b3aa-45ce-84bc-5ca56c16be29.png"
+          },
+          {
+            "kind": "scenes",
+            "name": "ป้ายรถเมล์หน้าร้าน",
+            "localPath": "static/images/090cdbc1-b172-43ff-8879-ee90b2c303d1.png"
+          },
+          {
+            "kind": "props",
+            "name": "กระเป๋าสตางค์หนังสีน้ำตาล",
+            "localPath": "static/images/6a0c24a6-e20f-44c7-a9da-14c22dae767c.png"
+          }
+        ]
+      }
+    },
+    {
+      "name": "7. Storyboard breakdown (storyboard_breaker agent)",
+      "status": "pass",
+      "seconds": 0,
+      "result": {
+        "shots": 3,
+        "totalSeconds": 26,
+        "withPrompt": 3,
+        "withScene": 3,
+        "withChars": 3
+      }
+    },
+    {
+      "name": "8. Generate shot videos (Wan 3.0 Omni, budget-guarded)",
+      "status": "fail",
+      "seconds": 5,
+      "error": "shot 5 task #16 failed: Wan 提交失败：9006"
+    }
+  ],
+  "ids": {
+    "drama": 5,
+    "episode": 22,
+    "resumed": true
+  },
+  "findings": [
+    "step 6: 3/6 assets already had images (reused)"
+  ],
+  "storyboardSampleKeys": [
+    "id",
+    "episode_id",
+    "scene_id",
+    "storyboard_number",
+    "title",
+    "location",
+    "time",
+    "shot_type",
+    "angle",
+    "movement",
+    "result",
+    "atmosphere",
+    "image_prompt",
+    "video_prompt",
+    "bgm_prompt",
+    "sound_effect",
+    "description",
+    "duration",
+    "composed_image",
+    "first_frame_image",
+    "last_frame_image",
+    "reference_images",
+    "video_url",
+    "subtitle_url",
+    "composed_video_url",
+    "status",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+    "character_ids",
+    "prop_ids",
+    "characters",
+    "props"
+  ],
+  "aborted": "shot 5 task #16 failed: Wan 提交失败：9006",
+  "finishedAt": "2026-09-28T15:49:30.702Z",
+  "wanCreditsUsed": 3
+}

@@ -20,6 +20,7 @@ export const sqliteSchemaStatements = [
     thumbnail TEXT,
     tags TEXT,
     metadata TEXT,
+    budget_thb REAL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     deleted_at TEXT
@@ -157,6 +158,7 @@ export const sqliteSchemaStatements = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_storyboard_props_prop_id ON storyboard_props (prop_id)`,
 
+
   `CREATE TABLE IF NOT EXISTS ai_service_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     service_type TEXT NOT NULL,
@@ -211,6 +213,7 @@ export const sqliteSchemaStatements = [
     character_id INTEGER,
     prop_id INTEGER,
     provider TEXT,
+    config_id INTEGER,
     prompt TEXT,
     model TEXT,
     params TEXT,
@@ -219,6 +222,9 @@ export const sqliteSchemaStatements = [
     local_path TEXT,
     status TEXT DEFAULT 'processing',
     error_msg TEXT,
+    error_code TEXT,
+    estimated_cost_thb REAL,
+    source_snapshot TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     completed_at TEXT
@@ -396,25 +402,68 @@ const UPGRADE_SQL = 'UPDATE style_presets SET "name" = ?, "prompt" = ?, "descrip
 // 内容寻址下架：命中下架种子原文才删除
 const REMOVE_SQL = 'DELETE FROM style_presets WHERE "value" = ? AND "prompt" = ?'
 
-/**
- * 老库补列迁移：CREATE TABLE IF NOT EXISTS 不会给已存在的表加列，
- * 这里按 PRAGMA table_info 幂等补齐（列名 → DDL 片段）
- */
-const ENSURE_COLUMNS: Array<{ table: string; column: string; ddl: string }> = [
-  { table: 'episodes', column: 'hook', ddl: 'ALTER TABLE episodes ADD COLUMN hook TEXT' },
+const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; column: string; ddl: string }>; statements?: string[] }> = [
+  { version: 1, columns: [{ table: 'episodes', column: 'hook', ddl: 'ALTER TABLE episodes ADD COLUMN hook TEXT' }] },
+  { version: 2, columns: [
+    { table: 'sys_task', column: 'config_id', ddl: 'ALTER TABLE sys_task ADD COLUMN config_id INTEGER' },
+    { table: 'sys_task', column: 'error_code', ddl: 'ALTER TABLE sys_task ADD COLUMN error_code TEXT' },
+  ] },
+  { version: 3, columns: [], statements: [
+    `CREATE TABLE IF NOT EXISTS storyboard_media_selections (
+      storyboard_id INTEGER NOT NULL,
+      slot TEXT NOT NULL,
+      task_id INTEGER NOT NULL,
+      selected_at TEXT NOT NULL,
+      PRIMARY KEY (storyboard_id, slot)
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_storyboard_media_selections_task ON storyboard_media_selections (task_id)',
+  ] },
+  { version: 4, columns: [], statements: [
+    `CREATE TABLE IF NOT EXISTS character_looks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      character_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      notes TEXT,
+      image_url TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_character_looks_character ON character_looks (character_id)',
+    `CREATE TABLE IF NOT EXISTS storyboard_character_looks (
+      storyboard_id INTEGER NOT NULL,
+      character_id INTEGER NOT NULL,
+      look_id INTEGER NOT NULL,
+      PRIMARY KEY (storyboard_id, character_id)
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_storyboard_character_looks_look ON storyboard_character_looks (look_id)',
+  ] },
+  { version: 5, columns: [
+    { table: 'dramas', column: 'budget_thb', ddl: 'ALTER TABLE dramas ADD COLUMN budget_thb REAL' },
+    { table: 'sys_task', column: 'estimated_cost_thb', ddl: 'ALTER TABLE sys_task ADD COLUMN estimated_cost_thb REAL' },
+    { table: 'sys_task', column: 'source_snapshot', ddl: 'ALTER TABLE sys_task ADD COLUMN source_snapshot TEXT' },
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {
   for (const statement of sqliteSchemaStatements) {
     sqlite.exec(statement)
   }
-  for (const { table, column, ddl } of ENSURE_COLUMNS) {
-    const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
-    if (!cols.some(col => col.name === column)) {
-      sqlite.exec(ddl)
-      console.log(`🧩 已为 ${table} 表补列 ${column}`)
+  sqlite.exec('CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)')
+  const migrate = sqlite.transaction(() => {
+    for (const migration of MIGRATIONS) {
+      const applied = sqlite.prepare('SELECT 1 FROM schema_migrations WHERE version = ?').get(migration.version)
+      if (applied) continue
+      for (const { table, column, ddl } of migration.columns) {
+        const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
+        if (!cols.some(col => col.name === column)) sqlite.exec(ddl)
+      }
+      for (const statement of migration.statements || []) sqlite.exec(statement)
+      sqlite.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)')
+        .run(migration.version, new Date().toISOString())
+      console.log(`🧩 SQLite migration ${migration.version} applied`)
     }
-  }
+  })
+  migrate()
   const insertSeed = sqlite.prepare(SEED_SQL)
   const upgradeSeed = sqlite.prepare(UPGRADE_SQL)
   const removeSeed = sqlite.prepare(REMOVE_SQL)

@@ -41,6 +41,7 @@ export const dramaAPI = {
   get: (id: number) => api.get(`/dramas/${id}`),
   create: (data: any) => api.post('/dramas', data),
   update: (id: number, data: any) => api.put(`/dramas/${id}`, data),
+  budget: (id: number) => api.get(`/dramas/${id}/budget`),
   del: (id: number) => api.del(`/dramas/${id}`),
 }
 
@@ -52,6 +53,7 @@ export const episodeAPI = {
   scenes: (id: number) => api.get(`/episodes/${id}/scenes`),
   props: (id: number) => api.get(`/episodes/${id}/props`),
   storyboards: (id: number) => api.get(`/episodes/${id}/storyboards`),
+  characterLooks: (id: number) => api.get(`/episodes/${id}/character-looks`),
   pipelineStatus: (id: number) => api.get(`/episodes/${id}/pipeline-status`),
   extract: (id: number, target: string, model?: string, configId?: number) => api.post(`/episodes/${id}/extract`, { target, model: model || undefined, config_id: configId || undefined }),
   extractStatus: (id: number) => api.get(`/episodes/${id}/extract-status`),
@@ -67,12 +69,18 @@ export const storyboardAPI = {
   create: (data: any) => api.post('/storyboards', data),
   update: (id: number, data: any) => api.put(`/storyboards/${id}`, data),
   del: (id: number) => api.del(`/storyboards/${id}`),
+  readiness: (id: number) => api.get(`/storyboards/${id}/readiness`),
+  selectMedia: (id: number, taskId: number, slot: string) => api.post(`/storyboards/${id}/select-media`, { task_id: taskId, slot }),
+  assignLook: (id: number, characterId: number, lookId: number | null) => api.put(`/storyboards/${id}/character-looks/${characterId}`, { look_id: lookId }),
 }
 
 export const characterAPI = {
   create: (data: any) => api.post('/characters', data),
   update: (id: number, data: any) => api.put(`/characters/${id}`, data),
   del: (id: number) => api.del(`/characters/${id}`),
+  looks: (dramaId: number) => api.get(`/characters/looks?drama_id=${dramaId}`),
+  createLook: (id: number, data: { name: string; image_url?: string }) => api.post(`/characters/${id}/looks`, data),
+  deleteLook: (id: number, lookId: number) => api.del(`/characters/${id}/looks/${lookId}`),
   generatePrompt: (id: number, episodeId: number, force = false, textModel?: string, textConfigId?: number) => api.post(`/characters/${id}/generate-prompt`, { episode_id: episodeId, force, text_model: textModel || undefined, text_config_id: textConfigId || undefined }),
   generateImage: (id: number, episodeId: number, model?: string, configId?: number, textModel?: string, textConfigId?: number) => api.post(`/characters/${id}/generate-image`, { episode_id: episodeId, model: model || undefined, config_id: configId || undefined, text_model: textModel || undefined, text_config_id: textConfigId || undefined }),
   batchImages: (ids: number[], episodeId: number, model?: string, configId?: number, textModel?: string, textConfigId?: number) => api.post('/characters/batch-generate-images', { character_ids: ids, episode_id: episodeId, model: model || undefined, config_id: configId || undefined, text_model: textModel || undefined, text_config_id: textConfigId || undefined }),
@@ -97,7 +105,9 @@ export const propAPI = {
 // 统一生成任务（图片/视频）：POST 带 type 字段，列表按 type 过滤
 export const taskAPI = {
   generate: (d: any) => api.post('/tasks', d),
+  preflight: (d: any) => api.post('/tasks/preflight', d),
   get: (id: number) => api.get(`/tasks/${id}`),
+  recover: (id: number) => api.post(`/tasks/${id}/recover`, {}),
   del: (id: number) => api.del(`/tasks/${id}`),
   list: (params?: { type?: 'image' | 'video'; drama_id?: number; storyboard_id?: number }) => {
     const query = new URLSearchParams()
@@ -129,6 +139,7 @@ export const uploadAPI = {
   audio: (f: File) => uploadReq<{ url: string; path: string }>('/upload/audio', f),
 }
 export const mergeAPI = {
+  health: (epId: number, storyboardIds?: number[]) => api.get(`/merge/episodes/${epId}/health${storyboardIds?.length ? `?storyboard_ids=${storyboardIds.join(',')}` : ''}`),
   merge: (epId: number, storyboardIds?: number[]) => api.post(`/merge/episodes/${epId}/merge`, storyboardIds?.length ? { storyboard_ids: storyboardIds } : {}),
   status: (epId: number) => api.get(`/merge/episodes/${epId}/merge`),
   list: (epId: number) => api.get<any[]>(`/merge/episodes/${epId}/merges`),
@@ -153,6 +164,8 @@ export const promptAPI = {
 
 export const skillsAPI = {
   list: (lang?: string) => api.get(`/skills${langQ(lang)}`),
+  library: (lang?: string) => api.get(`/skills/library${langQ(lang)}`),
+  install: (id: string) => api.post(`/skills/library/${id}`, {}),
   get: (id: string, lang?: string) => api.get(`/skills/${id}${langQ(lang)}`),
   create: (data: { id: string; name: string; description?: string }) => api.post('/skills', data),
   update: (id: string, content: string, lang?: string) => api.put(`/skills/${id}${langQ(lang)}`, { content }),

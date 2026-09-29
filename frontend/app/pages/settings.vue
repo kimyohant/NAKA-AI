@@ -115,7 +115,7 @@
                 <div class="config-main">
                   <div class="config-line">
                     <span class="config-name">{{ c.name || `${c.provider}-${c.service_type}` }}</span>
-                    <span :class="['tag', c.api_key ? 'tag-success' : 'tag-error']">{{ c.api_key ? t('settings.ai.hasKey') : t('settings.ai.noKey') }}</span>
+                    <span :class="['tag', c.has_api_key ? 'tag-success' : 'tag-error']">{{ c.has_api_key ? t('settings.ai.hasKey') : t('settings.ai.noKey') }}</span>
                     <span v-if="!c.is_active" class="tag">{{ t('settings.common.disabled') }}</span>
                   </div>
                   <div class="config-models">
@@ -345,6 +345,7 @@
                   <button :class="['agent-pane-tab', { active: agentPane === 'skills' }]" @click="agentPane = 'skills'">
                     Skills<template v-if="agentSkillCount(selectedAgent) > 0"> ({{ agentSkillCount(selectedAgent) }})</template>
                   </button>
+                  <button :class="['agent-pane-tab', { active: agentPane === 'library' }]" @click="openSkillLibrary">{{ t('settings.skills.library') }}</button>
                 </div>
                 <span class="agent-lang-follow dim">
                   {{ t('settings.agents.followContentLang', { lang: contentLangLabel }) }}
@@ -371,7 +372,7 @@
             </div>
 
             <!-- Skills 面板（子 tab 同为卡片头） -->
-            <template v-else>
+            <template v-else-if="agentPane === 'skills'">
               <div class="agent-pane-tabs-wrap card">
                 <div class="agent-pane-tabs">
                   <div class="agent-pane-tabs-nav">
@@ -379,6 +380,7 @@
                     <button :class="['agent-pane-tab', { active: agentPane === 'skills' }]" @click="agentPane = 'skills'">
                       Skills<template v-if="agentSkillCount(selectedAgent) > 0"> ({{ agentSkillCount(selectedAgent) }})</template>
                     </button>
+                    <button :class="['agent-pane-tab', { active: agentPane === 'library' }]" @click="openSkillLibrary">{{ t('settings.skills.library') }}</button>
                   </div>
                   <span class="agent-lang-follow dim">
                     {{ t('settings.agents.followContentLang', { lang: contentLangLabel }) }}
@@ -433,6 +435,66 @@
                 </div>
               </div>
             </template>
+            <div v-else class="skills-library-pane">
+              <div class="agent-pane-tabs-wrap card">
+                <div class="agent-pane-tabs">
+                  <div class="agent-pane-tabs-nav">
+                    <button :class="['agent-pane-tab', { active: agentPane === 'prompt' }]" @click="agentPane = 'prompt'">System Prompt</button>
+                    <button :class="['agent-pane-tab', { active: agentPane === 'skills' }]" @click="agentPane = 'skills'">Skills ({{ agentSkillCount(selectedAgent) }})</button>
+                    <button :class="['agent-pane-tab', { active: agentPane === 'library' }]" @click="openSkillLibrary">{{ t('settings.skills.library') }}</button>
+                  </div>
+                  <span class="agent-lang-follow dim">{{ t('settings.skills.libraryCount', { n: skillLibrary.length }) }}</span>
+                </div>
+              </div>
+              <p class="settings-desc">{{ t('settings.skills.libraryDesc') }}</p>
+              <div class="skills-library-toolbar">
+                <input v-model="librarySearch" type="search" class="input" :placeholder="t('settings.skills.searchLibrary')" :aria-label="t('settings.skills.searchLibrary')" />
+                <div class="skills-library-filters" :aria-label="t('settings.skills.agentFilter')">
+                  <button type="button" :class="['skills-library-filter', { active: libraryAgent === 'all' }]"
+                    :aria-pressed="libraryAgent === 'all'" @click="libraryAgent = 'all'; libraryCategory = 'all'">
+                    {{ t('settings.skills.allAgents') }}
+                  </button>
+                  <button v-for="agent in agentDefs" :key="agent.type" type="button"
+                    :class="['skills-library-filter', { active: libraryAgent === agent.type }]"
+                    :aria-pressed="libraryAgent === agent.type" @click="libraryAgent = agent.type; libraryCategory = 'all'">
+                    {{ agent.label }}
+                  </button>
+                </div>
+                <div class="skills-library-filters" :aria-label="t('settings.skills.category')">
+                  <button v-for="category in libraryCategories" :key="category" type="button"
+                    :class="['skills-library-filter', { active: libraryCategory === category }]"
+                    :aria-pressed="libraryCategory === category" @click="libraryCategory = category">
+                    {{ t(`settings.skills.categories.${category}`) }}
+                  </button>
+                </div>
+              </div>
+              <p v-if="libraryLoading" class="dim">{{ t('settings.skills.loadingLibrary') }}</p>
+              <div v-else-if="!filteredLibrary.length" class="card skills-empty">
+                <div class="skills-empty-title">{{ t('settings.skills.libraryEmpty') }}</div>
+              </div>
+              <div v-else class="skills-library-grid">
+                <article v-for="item in filteredLibrary" :key="item.id" class="card skills-library-card">
+                  <div class="skills-library-card-head">
+                    <span class="skills-library-category">{{ t(`settings.skills.categories.${item.category}`) }}</span>
+                    <span v-if="item.installed" class="tag tag-success">{{ t('settings.skills.installed') }}</span>
+                  </div>
+                  <h3>{{ item.title }}</h3>
+                  <span class="skills-library-agent">{{ agentDefs.find(agent => agent.type === item.agent)?.label }}</span>
+                  <p>{{ item.description }}</p>
+                  <details class="skills-library-details">
+                    <summary>{{ t('settings.skills.previewRules') }}</summary>
+                    <ul><li v-for="rule in item.rules" :key="rule">{{ rule }}</li></ul>
+                  </details>
+                  <button type="button" class="btn btn-sm" :class="item.installed ? '' : 'btn-primary'"
+                    :disabled="item.installed || installingSkill === item.id" @click="installLibrarySkill(item)">
+                    <Loader2 v-if="installingSkill === item.id" :size="12" class="animate-spin" />
+                    <Plus v-else-if="!item.installed" :size="12" />
+                    <Check v-else :size="12" />
+                    {{ item.installed ? t('settings.skills.installed') : t('settings.skills.install') }}
+                  </button>
+                </article>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -474,7 +536,7 @@
             <input v-model.number="cfgForm.priority" class="input" type="number" min="0" max="999" />
             <span class="field-hint">{{ t('settings.cfg.priorityHint') }}</span>
           </label>
-          <label class="field"><span class="field-label">API Key</span><input v-model="cfgForm.api_key" class="input" type="password" placeholder="sk-..." /></label>
+          <label class="field"><span class="field-label">API Key</span><input v-model="cfgForm.api_key" class="input" type="password" :placeholder="cfgEditId ? t('settings.cfg.keepKeyHint') : 'sk-...'" autocomplete="new-password" /></label>
           <label class="field"><span class="field-label">Base URL</span><input v-model="cfgForm.base_url" class="input" placeholder="https://..." /></label>
           <div class="field">
             <span class="field-label">{{ t('settings.cfg.models') }}</span>
@@ -503,6 +565,11 @@
             <span class="field-label">Temperature <span class="dim">({{ t('settings.cfg.tempHint') }})</span></span>
             <input v-model="cfgForm.temperature" class="input" type="number" step="0.1" min="0" max="2" :placeholder="t('settings.cfg.tempPlaceholder')" />
             <span class="field-hint">{{ t('settings.cfg.tempNote') }}</span>
+          </label>
+          <label v-if="cfgForm.service_type === 'image' || cfgForm.service_type === 'video'" class="field">
+            <span class="field-label">{{ cfgForm.service_type === 'image' ? t('productionGuard.imagePrice') : t('productionGuard.videoPrice') }}</span>
+            <input v-model="cfgForm.unitPrice" class="input" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" :placeholder="t('productionGuard.pricePlaceholder')" />
+            <span class="field-hint">{{ t('productionGuard.priceHint') }}</span>
           </label>
           <div v-if="cfgTestResult" class="test-result" :class="{ ok: cfgTestResult.ok, bad: !cfgTestResult.ok }">
             <div class="test-result-head">
@@ -678,7 +745,7 @@ const cfgDialog = ref(false)
 const cfgEditId = ref(null)
 const cfgTesting = ref(false)
 const cfgTestResult = ref(null)
-const cfgForm = reactive({ name: '', provider: '', api_key: '', base_url: '', models: [], service_type: 'text', priority: 0, temperature: '' })
+const cfgForm = reactive({ name: '', provider: '', api_key: '', base_url: '', models: [], service_type: 'text', priority: 0, temperature: '', unitPrice: '' })
 // 模型标签编辑器：首位即默认模型；输入框支持回车添加、逗号/换行批量粘贴
 const modelInput = ref('')
 function addModel() {
@@ -801,7 +868,7 @@ async function delCfg(id) { await aiConfigAPI.del(id); toast.success(t('index.de
 function startAddCfg(t) {
   cfgEditId.value = null
   cfgTestResult.value = null
-  Object.assign(cfgForm, { name: '', provider: '', api_key: '', base_url: '', models: [], service_type: t, priority: 0, temperature: '' })
+  Object.assign(cfgForm, { name: '', provider: '', api_key: '', base_url: '', models: [], service_type: t, priority: 0, temperature: '', unitPrice: '' })
   const firstPreset = presetsByType(t)[0]
   if (firstPreset) applyProviderPreset(t, firstPreset.provider)
   cfgDialog.value = true
@@ -812,12 +879,13 @@ function startEditCfg(c) {
   Object.assign(cfgForm, {
     name: c.name || '',
     provider: c.provider,
-    api_key: c.api_key || '',
+    api_key: '',
     base_url: c.base_url || '',
     models: Array.isArray(c.model) ? [...c.model] : String(c.model || '').split(',').map(s => s.trim()).filter(Boolean),
     service_type: c.service_type,
     priority: c.priority ?? 0,
     temperature: c.temperature ?? '',
+    unitPrice: c.service_type === 'image' ? (c.price_thb_per_image ?? '') : c.service_type === 'video' ? (c.price_thb_per_video_second ?? '') : '',
   })
   cfgDialog.value = true
 }
@@ -835,6 +903,7 @@ async function testCfgPayload(payload) {
 }
 async function testDraftCfg() {
   await testCfgPayload({
+    config_id: cfgEditId.value,
     service_type: cfgForm.service_type,
     provider: cfgForm.provider,
     api_key: cfgForm.api_key,
@@ -845,9 +914,10 @@ async function testDraftCfg() {
 async function testExistingCfg(c) {
   startEditCfg(c)
   await testCfgPayload({
+    config_id: c.id,
     service_type: c.service_type,
     provider: c.provider,
-    api_key: c.api_key || '',
+    api_key: '',
     base_url: c.base_url || '',
     model: Array.isArray(c.model) ? c.model : [],
   })
@@ -859,9 +929,15 @@ async function saveCfg() {
   if (temperature !== null && (!Number.isFinite(temperature) || temperature < 0 || temperature > 2)) {
     toast.warning(t('settings.cfg.tempInvalid')); return
   }
+  const unitPrice = cfgForm.unitPrice === '' || cfgForm.unitPrice === null ? null : Number(cfgForm.unitPrice)
+  if (unitPrice !== null && (!Number.isFinite(unitPrice) || unitPrice < 0 || unitPrice > 1000000)) {
+    toast.warning(t('productionGuard.priceInvalid')); return
+  }
+  const pricing = cfgForm.service_type === 'image' ? { price_thb_per_image: unitPrice }
+    : cfgForm.service_type === 'video' ? { price_thb_per_video_second: unitPrice } : {}
   try {
-    if (cfgEditId.value) await aiConfigAPI.update(cfgEditId.value, { name: cfgForm.name, provider: cfgForm.provider, api_key: cfgForm.api_key, base_url: cfgForm.base_url, model: models, priority: cfgForm.priority, temperature })
-    else await aiConfigAPI.create({ service_type: cfgForm.service_type, provider: cfgForm.provider, name: cfgForm.name || `${cfgForm.provider}-${cfgForm.service_type}`, api_key: cfgForm.api_key, base_url: cfgForm.base_url, model: models, priority: cfgForm.priority, temperature })
+    if (cfgEditId.value) await aiConfigAPI.update(cfgEditId.value, { name: cfgForm.name, provider: cfgForm.provider, ...(cfgForm.api_key.trim() ? { api_key: cfgForm.api_key.trim() } : {}), base_url: cfgForm.base_url, model: models, priority: cfgForm.priority, temperature, ...pricing })
+    else await aiConfigAPI.create({ service_type: cfgForm.service_type, provider: cfgForm.provider, name: cfgForm.name || `${cfgForm.provider}-${cfgForm.service_type}`, api_key: cfgForm.api_key, base_url: cfgForm.base_url, model: models, priority: cfgForm.priority, temperature, ...pricing })
     cfgDialog.value = false; toast.success(t('common.saved')); loadCfgs()
   } catch (e) { toastError(e) }
 }
@@ -935,6 +1011,12 @@ async function saveAgentCfg(type) {
 // ===== Skills =====
 const selectedAgent = ref('script_rewriter')
 const allSkills = ref([])   // { id, name, description }[]
+const skillLibrary = ref([])
+const librarySearch = ref('')
+const libraryCategory = ref('all')
+const libraryAgent = ref('all')
+const libraryLoading = ref(false)
+const installingSkill = ref('')
 const editingSkill = ref(null)
 const skillContent = ref('')
 const skillSaving = ref(false)
@@ -1001,16 +1083,56 @@ function agentSkillCount(type) {
 const currentSkills = computed(() =>
   allSkills.value.filter(s => skillBelongsTo(s.id, selectedAgent.value))
 )
+const libraryForAgent = computed(() => skillLibrary.value.filter(item => libraryAgent.value === 'all' || item.agent === libraryAgent.value))
+const libraryCategories = computed(() => ['all', ...new Set(libraryForAgent.value.map(item => item.category))])
+const filteredLibrary = computed(() => {
+  const query = librarySearch.value.trim().toLocaleLowerCase()
+  return libraryForAgent.value.filter(item =>
+    (libraryCategory.value === 'all' || item.category === libraryCategory.value)
+    && (!query || `${item.title} ${item.description} ${item.id}`.toLocaleLowerCase().includes(query)))
+})
 
 async function loadAllSkills() {
-  try { allSkills.value = await skillsAPI.list(editLang.value) }
+  try {
+    allSkills.value = await skillsAPI.list(editLang.value)
+    const installed = new Set(allSkills.value.map(item => item.id))
+    skillLibrary.value = skillLibrary.value.map(item => ({ ...item, installed: installed.has(item.id) }))
+  }
   catch (e) { toastError(e) }
+}
+
+async function loadSkillLibrary() {
+  libraryLoading.value = true
+  try { skillLibrary.value = await skillsAPI.library(editLang.value) }
+  catch (e) { toastError(e) }
+  finally { libraryLoading.value = false }
+}
+
+function openSkillLibrary() {
+  agentPane.value = 'library'
+  libraryAgent.value = 'all'
+  libraryCategory.value = 'all'
+  if (!skillLibrary.value.length) loadSkillLibrary()
+}
+
+async function installLibrarySkill(item) {
+  if (item.installed || installingSkill.value) return
+  installingSkill.value = item.id
+  try {
+    await skillsAPI.install(item.id)
+    item.installed = true
+    await loadAllSkills()
+    toast.success(t('settings.skills.installedToast', { name: item.title }))
+  } catch (e) { toastError(e) }
+  finally { installingSkill.value = '' }
 }
 
 async function selectAgent(type) {
   if (selectedAgent.value !== type) {
     selectedAgent.value = type
     editingSkill.value = null
+    libraryCategory.value = 'all'
+    if (agentPane.value === 'library') libraryAgent.value = type
   }
   await loadAgentPrompt(type)
 }
@@ -1622,6 +1744,33 @@ onBeforeUnmount(stopUsagePoll)
 .skill-card-head:hover { background: var(--bg-hover); }
 .skill-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); }
 .skill-card-foot { display: flex; align-items: center; gap: 8px; }
+.skills-library-pane { display: flex; flex-direction: column; gap: 14px; }
+.skills-library-pane > .settings-desc { margin: 0; }
+.skills-library-toolbar { display: flex; flex-direction: column; gap: 10px; }
+.skills-library-toolbar .input { width: 100%; max-width: 420px; }
+.skills-library-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.skills-library-filter {
+  min-height: 32px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-pill);
+  background: var(--bg-surface); color: var(--text-2); font-size: 12px; cursor: pointer;
+}
+.skills-library-filter:hover { border-color: var(--border-strong); color: var(--text-0); }
+.skills-library-filter.active { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-text); font-weight: 650; }
+.skills-library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 12px; }
+.skills-library-card { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding: 16px; min-height: 205px; }
+.skills-library-card-head { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.skills-library-category { color: var(--text-3); font-size: 11px; font-weight: 650; }
+.skills-library-card h3 { margin: 0; color: var(--text-0); font-size: 14px; line-height: 1.35; }
+.skills-library-agent { color: var(--text-3); font-size: 11px; }
+.skills-library-card p { margin: 0; color: var(--text-2); font-size: 12px; line-height: 1.5; }
+.skills-library-card > .btn { margin-top: auto; }
+.skills-library-details { width: 100%; color: var(--text-2); font-size: 12px; line-height: 1.5; }
+.skills-library-details summary { color: var(--accent-text); cursor: pointer; }
+.skills-library-details ul { padding-left: 18px; margin: 8px 0 0; }
+.skills-library-details li + li { margin-top: 5px; }
+@media (max-width: 720px) {
+  .skills-library-card { min-height: 0; }
+  .skills-library-filter { min-height: 40px; }
+}
 
 /* Shared */
 .field { display: flex; flex-direction: column; gap: 5px; }

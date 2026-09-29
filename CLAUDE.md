@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-火宝短剧（Huobao Drama）— AI 短剧/漫剧一站式制作工具。全 TypeScript 栈：小说 → 剧本改写 → 资产提取 → 生图 → 分镜拆解 → 生视频 → FFmpeg 拼接导出。支持 Electron 桌面版（macOS dmg）与服务器部署。
+NAKA-AI TECH— AI 短剧/漫剧一站式制作工具。全 TypeScript 栈：小说 → 剧本改写 → 资产提取 → 生图 → 分镜拆解 → 生视频 → FFmpeg 拼接导出。支持 Electron 桌面版（macOS dmg）与服务器部署。
 
 ## Structure
 
@@ -12,7 +12,7 @@ backend/workspace/ — Agent 工作目录（Mastra Workspace jail 根）
 backend/workspace/skills/ — Agent SKILL.md definitions（设置页可在线编辑）
 frontend/  — Nuxt 3 + Vue 3 + TypeScript，ssr:false（纯 CSS，无 UI 框架）
 desktop/   — Electron 桌面版：主进程 + esbuild 打包脚本 + electron-builder 配置
-data/      — SQLite 数据库（huobao.sqlite3）+ 生成的静态文件（static/）
+data/      — SQLite 数据库（naka.sqlite3）+ 生成的静态文件（static/）
 configs/   — 遗留死配置，代码零引用
 ```
 
@@ -53,11 +53,11 @@ configs/   — 遗留死配置，代码零引用
 
 ### Desktop
 - 主进程 `desktop/src/main.ts`：单实例锁 → 空闲端口 → userData 准备（workspace 模板 copy-once + `.template-version` 版本标记）→ `utilityProcess.fork` 后端 → 轮询 health → BrowserWindow
-- userData：打包版 `~/Library/Application Support/HuobaoDrama/`，dev 版 `HuobaoDrama-Dev/`（互不干扰）
+- userData：打包版 `~/Library/Application Support/NakaAi/`，dev 版 `NakaAi-Dev/`（互不干扰）
 - 后端 bundle 在 asar 内（externals 经 asar node_modules 解析，.node 自动重定向 unpacked）
 
 ## Database
-SQLite 单文件（默认 `data/huobao.sqlite3`，桌面版在 userData）。启动时 `initSqliteSchema` 幂等建表 + 风格预设种子。MySQL→SQLite 一次性迁移：`cd backend && npx tsx scripts/import-mysql-to-sqlite.ts [--force]`（逐表行数校验、写前备份）。
+SQLite 单文件（默认 `data/naka.sqlite3`，桌面版在 userData）。启动时 `initSqliteSchema` 幂等建表 + 风格预设种子。MySQL→SQLite 一次性迁移：`cd backend && npx tsx scripts/import-mysql-to-sqlite.ts [--force]`（逐表行数校验、写前备份）。
 
 ## Key Config
 - AI 服务配置存 DB（`ai_service_configs` 表），设置页维护，不在配置文件

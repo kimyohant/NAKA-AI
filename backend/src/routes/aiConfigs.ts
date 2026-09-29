@@ -6,6 +6,7 @@ import { toSnakeCase } from '../utils/transform.js'
 import { joinProviderUrl } from '../services/adapters/url.js'
 import { getTextProviderBaseUrl, isOfficialProvider, parseConfigTemperature } from '../services/ai.js'
 import { redactUrl, logTaskError, logTaskProgress, logTaskSuccess } from '../utils/task-logger.js'
+import { parseUnitPrice } from '../services/generation-cost.js'
 
 const app = new Hono()
 
@@ -19,10 +20,16 @@ function normalizeTemperature(v: any): number | null {
 
 /** 把 settings JSON 中的 temperature 透出为顶层字段，便于前端直接读写 */
 function withParsedFields(r: any) {
+  const { api_key: _apiKey, ...publicFields } = toSnakeCase(r)
+  let settings: Record<string, any> = {}
+  try { settings = r.settings ? JSON.parse(r.settings) : {} } catch { /* legacy settings */ }
   return {
-    ...toSnakeCase(r),
+    ...publicFields,
+    has_api_key: Boolean(r.apiKey),
     model: r.model ? JSON.parse(r.model) : [],
     temperature: parseConfigTemperature(r.settings),
+    price_thb_per_image: settings.price_thb_per_image ?? null,
+    price_thb_per_video_second: settings.price_thb_per_video_second ?? null,
   }
 }
 
@@ -157,6 +164,14 @@ app.post('/', async (c) => {
     }
   }
 
+  let price: number | null
+  try { price = parseUnitPrice(body.service_type === 'image' ? body.price_thb_per_image : body.price_thb_per_video_second) }
+  catch (err: any) { return badRequest(c, err.message) }
+  const configSettings: Record<string, number> = {}
+  if (temperature !== null) configSettings.temperature = temperature
+  if (price !== null && body.service_type === 'image') configSettings.price_thb_per_image = price
+  if (price !== null && body.service_type === 'video') configSettings.price_thb_per_video_second = price
+
   const res = await db.insert(schema.aiServiceConfigs).values({
     serviceType: body.service_type,
     provider: body.provider,
@@ -166,7 +181,7 @@ app.post('/', async (c) => {
     model: JSON.stringify(body.model || []),
     priority: body.priority || 0,
     isActive: true,
-    settings: temperature !== null ? JSON.stringify({ temperature }) : null,
+    settings: Object.keys(configSettings).length ? JSON.stringify(configSettings) : null,
     createdAt: ts,
     updatedAt: ts,
   })
@@ -180,6 +195,15 @@ app.post('/', async (c) => {
 // POST /ai-configs/test
 app.post('/test', async (c) => {
   const body = await c.req.json()
+  if (body.config_id && !body.api_key) {
+    const [saved] = await db.select().from(schema.aiServiceConfigs)
+      .where(eq(schema.aiServiceConfigs.id, Number(body.config_id)))
+    if (!saved) return notFound(c)
+    if (saved.serviceType !== body.service_type || saved.provider !== body.provider || saved.baseUrl !== body.base_url) {
+      return badRequest(c, 'การตั้งค่าที่ทดสอบไม่ตรงกับรายการที่บันทึก')
+    }
+    body.api_key = saved.apiKey
+  }
   if (!body.service_type || !body.provider || !body.base_url) {
     return badRequest(c, '需要 service_type、provider 与 base_url')
   }
@@ -216,7 +240,7 @@ app.post('/test', async (c) => {
       message: reachable
         ? (resp.ok ? '端点可访问，认证与路径基本正常' : '端点已响应，请根据状态码判断认证或路径是否正确')
         : '端点未按预期响应，请检查 Base URL 和代理前缀',
-      response_preview: text.slice(0, 240),
+      response_preview: (body.api_key ? text.replaceAll(String(body.api_key), '[redacted]') : text).slice(0, 240),
     }
     if (reachable) {
       logTaskSuccess('AIConfig', 'probe-done', {
@@ -243,7 +267,7 @@ app.post('/test', async (c) => {
       reachable: false,
       method: probe.method,
       url: probeUrl,
-      message: error.message || '请求失败',
+      message: (body.api_key ? String(error.message || '请求失败').replaceAll(String(body.api_key), '[redacted]') : error.message || '请求失败'),
       response_preview: '',
     })
   }
@@ -276,7 +300,7 @@ app.put('/:id', async (c) => {
   if ('provider' in body) updates.provider = body.provider
   if ('name' in body) updates.name = body.name
   if ('base_url' in body) updates.baseUrl = body.base_url
-  if ('api_key' in body) updates.apiKey = body.api_key
+  if (typeof body.api_key === 'string' && body.api_key.trim()) updates.apiKey = body.api_key.trim()
   if ('model' in body) updates.model = JSON.stringify(body.model)
   if ('priority' in body) updates.priority = body.priority
   if ('is_active' in body) updates.isActive = body.is_active
@@ -292,6 +316,20 @@ app.put('/:id', async (c) => {
     try { settings = existing.settings ? JSON.parse(existing.settings) : {} } catch { settings = {} }
     if (temperature === null) delete settings.temperature
     else settings.temperature = temperature
+    updates.settings = Object.keys(settings).length ? JSON.stringify(settings) : null
+  }
+
+  if ('price_thb_per_image' in body || 'price_thb_per_video_second' in body) {
+    let settings: Record<string, any> = {}
+    try { settings = (updates.settings ?? existing.settings) ? JSON.parse(updates.settings ?? existing.settings) : {} } catch { settings = {} }
+    for (const key of ['price_thb_per_image', 'price_thb_per_video_second'] as const) {
+      if (!(key in body)) continue
+      try {
+        const price = parseUnitPrice(body[key])
+        if (price === null) delete settings[key]
+        else settings[key] = price
+      } catch (err: any) { return badRequest(c, err.message) }
+    }
     updates.settings = Object.keys(settings).length ? JSON.stringify(settings) : null
   }
 

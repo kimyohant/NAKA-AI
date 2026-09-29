@@ -68,6 +68,16 @@
               <span class="field-hint">{{ t('index.createDialog.aspectRatioHint') }}</span>
             </label>
           </div>
+          <label class="field">
+            <span class="field-label">{{ t('productionGuard.projectBudget') }}</span>
+            <input v-model="settingsForm.budget_thb" class="input" type="number" min="0" max="100000000" step="0.01" inputmode="decimal" :placeholder="t('productionGuard.noBudget')" />
+            <span class="field-hint">{{ t('productionGuard.budgetHint') }}</span>
+          </label>
+          <div v-if="budgetSummary" class="field-hint" role="status">
+            {{ t('productionGuard.allocatedCost') }}: {{ formatBudget(budgetSummary.estimated_total_thb) }}
+            <template v-if="budgetSummary.remaining_thb != null"> · {{ t('productionGuard.remainingBudget') }}: {{ formatBudget(budgetSummary.remaining_thb) }}</template>
+            <template v-if="budgetSummary.unpriced_tasks"> · {{ t('productionGuard.unpricedTasks', { n: budgetSummary.unpriced_tasks }) }}</template>
+          </div>
         </div>
 
         <!-- ตั้งค่าพื้นฐาน（参考 Topview Basic Settings） -->
@@ -740,6 +750,8 @@ const { t, te, locale } = useI18n()
 
 const route = useRoute()
 const drama = ref(null)
+const budgetSummary = ref(null)
+function formatBudget(value) { return `฿${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
 const dramaId = Number(route.params.id)
 const addDialog = ref(false)
 const creatingEpisode = ref(false)
@@ -810,6 +822,7 @@ async function setEpisodeStatus(ep, status) {
 async function load() {
   try {
     drama.value = await dramaAPI.get(dramaId)
+    budgetSummary.value = await dramaAPI.budget(dramaId)
   } catch (e) {
     toastError(e)
   }
@@ -921,7 +934,7 @@ function styleName(key) {
 const styleOptions = computed(() => stylePresets.value.map(p => ({ label: styleName(p.value), value: p.value })))
 
 // 项目设置表单（aspect_ratio 现可编辑，随表单保存）
-const settingsForm = reactive({ title: '', description: '', genre: '', style: '', aspect_ratio: '16:9' })
+const settingsForm = reactive({ title: '', description: '', genre: '', style: '', aspect_ratio: '16:9', budget_thb: '' })
 const settingsSaving = ref(false)
 const SETTINGS_KEYS = ['title', 'description', 'genre', 'style', 'aspect_ratio']
 const ratioOptions = [
@@ -1009,20 +1022,26 @@ function fillSettings() {
   const d = drama.value
   if (!d) return
   for (const k of SETTINGS_KEYS) settingsForm[k] = d[k] || ''
+  settingsForm.budget_thb = d.budget_thb ?? ''
   if (!d.aspect_ratio && !d.aspectRatio) settingsForm.aspect_ratio = '16:9'
   fillPositioning()
 }
 const positioningDirty = computed(() => JSON.stringify(metadataFromForm()) !== positioningSnapshot.value)
 const settingsDirty = computed(() =>
-  !!drama.value && (SETTINGS_KEYS.some(k => (settingsForm[k] || '') !== (drama.value[k] || '')) || positioningDirty.value),
+  !!drama.value && (SETTINGS_KEYS.some(k => (settingsForm[k] || '') !== (drama.value[k] || '')) || String(settingsForm.budget_thb ?? '') !== String(drama.value.budget_thb ?? '') || positioningDirty.value),
 )
 async function saveSettings() {
   if (!settingsForm.title.trim()) { toast.error(t('episode.create.nameRequired')); return }
+  const budget = settingsForm.budget_thb === '' ? null : Number(settingsForm.budget_thb)
+  if (budget !== null && (!Number.isFinite(budget) || budget < 0 || budget > 100000000)) {
+    toast.warning(t('productionGuard.budgetInvalid')); return
+  }
   settingsSaving.value = true
   try {
     // merge ทับ metadata เดิม (เช่น topview_settings / source จาก import) ด้วยค่าที่ตั้งเอง
     await dramaAPI.update(dramaId, {
       ...settingsForm,
+      budget_thb: budget,
       title: settingsForm.title.trim(),
       metadata: { ...(drama.value?.metadata || {}), ...metadataFromForm() },
     })

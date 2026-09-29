@@ -11,6 +11,59 @@ import { logTaskError, logTaskStart, logTaskSuccess } from '../utils/task-logger
 const app = new Hono()
 const CHARACTER_IMAGE_SIZE = '1920x1080'
 
+app.get('/looks', async (c) => {
+  const dramaId = Number(c.req.query('drama_id'))
+  if (!Number.isInteger(dramaId) || dramaId < 1) return badRequest(c, 'drama_id is required')
+  const characters = await db.select().from(schema.characters).where(eq(schema.characters.dramaId, dramaId))
+  const ids = new Set(characters.map(row => row.id))
+  const looks = await db.select().from(schema.characterLooks)
+  return success(c, looks.filter(row => ids.has(row.characterId)).map(toSnakeCase))
+})
+
+app.post('/:id/looks', async (c) => {
+  const characterId = Number(c.req.param('id'))
+  const body = await c.req.json().catch(() => ({}))
+  const name = String(body.name || '').trim()
+  if (!name) return badRequest(c, 'Look name is required')
+  const [character] = await db.select().from(schema.characters).where(eq(schema.characters.id, characterId))
+  if (!character) return badRequest(c, 'Character not found')
+  const ts = now()
+  const result = await db.insert(schema.characterLooks).values({
+    characterId, name, notes: String(body.notes || ''), imageUrl: body.image_url || null, createdAt: ts, updatedAt: ts,
+  })
+  const [look] = await db.select().from(schema.characterLooks).where(eq(schema.characterLooks.id, getInsertId(result)))
+  return created(c, toSnakeCase(look))
+})
+
+app.put('/:id/looks/:lookId', async (c) => {
+  const characterId = Number(c.req.param('id'))
+  const lookId = Number(c.req.param('lookId'))
+  const body = await c.req.json().catch(() => ({}))
+  const [look] = await db.select().from(schema.characterLooks).where(and(eq(schema.characterLooks.id, lookId), eq(schema.characterLooks.characterId, characterId)))
+  if (!look) return badRequest(c, 'Look not found')
+  const updates: Record<string, unknown> = { updatedAt: now() }
+  if ('name' in body) {
+    const name = String(body.name || '').trim()
+    if (!name) return badRequest(c, 'Look name is required')
+    updates.name = name
+  }
+  if ('notes' in body) updates.notes = String(body.notes || '')
+  if ('image_url' in body) updates.imageUrl = body.image_url || null
+  await db.update(schema.characterLooks).set(updates).where(eq(schema.characterLooks.id, lookId))
+  return success(c)
+})
+
+app.delete('/:id/looks/:lookId', async (c) => {
+  const characterId = Number(c.req.param('id'))
+  const lookId = Number(c.req.param('lookId'))
+  const [look] = await db.select().from(schema.characterLooks).where(and(eq(schema.characterLooks.id, lookId), eq(schema.characterLooks.characterId, characterId)))
+  if (!look) return badRequest(c, 'Look not found')
+  const assigned = await db.select().from(schema.storyboardCharacterLooks).where(eq(schema.storyboardCharacterLooks.lookId, lookId))
+  if (assigned.length) return badRequest(c, 'Unassign this look from shots before deleting it')
+  await db.delete(schema.characterLooks).where(eq(schema.characterLooks.id, lookId))
+  return success(c)
+})
+
 // POST /characters — 手动新增角色（传入 episode_id 时关联到该集）
 app.post('/', async (c) => {
   const body = await c.req.json()

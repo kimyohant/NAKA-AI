@@ -4,6 +4,7 @@ import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import path from 'path'
+import { timingSafeEqual } from 'node:crypto'
 import { fileURLToPath } from 'url'
 
 import dramas from './routes/dramas.js'
@@ -24,18 +25,48 @@ import settings from './routes/settings.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
-import { db, schema } from './db/index.js'
-import { eq } from 'drizzle-orm'
-import { now } from './utils/response.js'
 import { failStaleRunningTasks } from './services/pipeline-tasks.js'
+import { recoverGenerationTasks } from './services/generation.js'
 import { DATA_ROOT } from './utils/paths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const projectRoot = path.resolve(__dirname, '../..')
 
 const app = new Hono()
+const hostname = process.env.NAKA_HOST || '127.0.0.1'
+const authUser = process.env.NAKA_AUTH_USER || 'admin'
+const authPassword = process.env.NAKA_AUTH_PASSWORD || ''
+const isLoopback = ['127.0.0.1', 'localhost', '::1'].includes(hostname)
+if (!isLoopback && !authPassword) {
+  throw new Error('NAKA_AUTH_PASSWORD is required when NAKA_HOST is not loopback')
+}
+
+function matchesCredential(actual: string, expected: string): boolean {
+  const a = Buffer.from(actual)
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
 
 // Middleware
+app.use('*', async (c, next) => {
+  if (!authPassword || c.req.path === '/api/v1/health' || c.req.method === 'OPTIONS') return next()
+  const header = c.req.header('Authorization') || ''
+  let username = ''
+  let password = ''
+  if (header.startsWith('Basic ')) {
+    const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8')
+    const separator = decoded.indexOf(':')
+    if (separator >= 0) {
+      username = decoded.slice(0, separator)
+      password = decoded.slice(separator + 1)
+    }
+  }
+  if (!matchesCredential(username, authUser) || !matchesCredential(password, authPassword)) {
+    c.header('WWW-Authenticate', 'Basic realm="NAKA-AI"')
+    return c.text('Authentication required', 401)
+  }
+  return next()
+})
 app.use('*', cors({
   origin: ['http://localhost:3013', 'http://localhost:5679'],
   credentials: true,
@@ -46,7 +77,7 @@ app.use('*', errorHandler)
 // Health check（version 供部署巡检/更新检查核对当前运行版本）
 app.get('/api/v1/health', (c) => c.json({
   status: 'ok',
-  version: process.env.HUOBAO_VERSION || undefined,
+  version: process.env.NAKA_VERSION || undefined,
   timestamp: new Date().toISOString(),
 }))
 
@@ -87,22 +118,21 @@ app.use('*', serveStatic({ root: distPath }))
 app.get('*', serveStatic({ root: distPath, path: 'index.html' }))
 
 const port = Number(process.env.PORT || 5679)
-console.log(`🚀 NAKA-AI server on http://localhost:${port}`)
+console.log(`🚀 NAKA-AI server on http://${hostname}:${port}`)
 
-// 进程重启后内存中的轮询线程全部丢失,残留的 processing 任务永远不会完成,
-// 启动时统一标记为 failed,避免前端一直显示"生成中"
-db.update(schema.sysTask)
-  .set({ status: 'failed', errorMsg: '服务重启，生成任务中断，请重试', updatedAt: now() })
-  .where(eq(schema.sysTask.status, 'processing'))
-  .then(res => {
-    const affected = res?.changes ?? 0
-    if (affected > 0) console.log(`🔁 已清理 ${affected} 个中断的生成任务`)
-  })
-  .catch(err => console.error('清理中断任务失败:', err?.message))
+try {
+  const counts = await recoverGenerationTasks()
+  console.log('🔁 Generation task recovery:', counts)
+} catch (err: any) {
+  console.error('Generation task recovery failed:', err?.message)
+}
 
 // 同理：agent pipeline 任务（提取/视频提示词批量）的 running 行
-failStaleRunningTasks()
-  .then(n => { if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 pipeline 任务`) })
-  .catch(err => console.error('清理中断 pipeline 任务失败:', err?.message))
+try {
+  const n = await failStaleRunningTasks()
+  if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 pipeline 任务`)
+} catch (err: any) {
+  console.error('清理中断 pipeline 任务失败:', err?.message)
+}
 
-serve({ fetch: app.fetch, port })
+serve({ fetch: app.fetch, port, hostname })

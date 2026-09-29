@@ -11,6 +11,7 @@ import { logTaskError, logTaskStart, logTaskSuccess } from '../utils/task-logger
 import { extractVideoPoster } from '../utils/video-poster.js'
 import { ffmpeg, checkFfmpegSuite } from '../utils/ffmpeg.js'
 import { DATA_ROOT, STORAGE_ROOT } from '../utils/paths.js'
+import { episodeExportHealth } from './export-health.js'
 
 function toAbsPath(relativePath: string): string {
   if (path.isAbsolute(relativePath)) return relativePath
@@ -31,12 +32,17 @@ export async function mergeEpisodeVideos(episodeId: number, dramaId: number, sto
   if (storyboardIds?.length) {
     const allow = new Set(storyboardIds.map(Number))
     storyboards = storyboards.filter(sb => allow.has(sb.id))
+    if (storyboards.length !== allow.size) throw new Error('Some selected shots do not belong to this episode')
   }
 
   // 允许部分拼接:按镜号顺序拼接已生成的镜头,未生成的跳过
   const clips = storyboards
     .map(sb => ({ sb, url: sb.videoUrl || sb.composedVideoUrl }))
     .filter(c => Boolean(c.url)) as { sb: typeof storyboards[number]; url: string }[]
+
+  if (storyboardIds?.length && clips.length !== storyboards.length) {
+    throw new Error('Some selected shots have no video; select only completed clips')
+  }
 
   if (clips.length === 0) throw new Error('所选镜头还没有可拼接的视频')
 
@@ -53,6 +59,12 @@ export async function mergeEpisodeVideos(episodeId: number, dramaId: number, sto
   if (missing.length > 0) {
     const nums = missing.map(c => `S${c.sb.storyboardNumber}`).join('、')
     throw new Error(`镜头 ${nums} 的视频文件已丢失（本地文件不存在），请重新生成这些镜头的视频，或在拼接时取消勾选`)
+  }
+
+  const health = await episodeExportHealth(episodeId, clips.map(clip => clip.sb.id))
+  if (!health.ready) {
+    const first = health.clips.find(clip => clip.errors.length)
+    throw new Error(`Shot S${first?.shot_number || '?'} cannot be merged: ${first?.errors[0] || 'invalid video'}`)
   }
 
   const videos = clips.map(c => c.url)
@@ -128,6 +140,9 @@ async function doMerge(mergeId: number, episodeId: number, videos: string[]) {
 
   // 获取时长
   const duration = await getVideoDuration(outputPath)
+  if (duration <= 0 || fs.statSync(outputPath).size < 1024) {
+    throw new Error('Merged video failed media verification')
+  }
 
   const mergedRelative = `static/merged/${outputFilename}`
 

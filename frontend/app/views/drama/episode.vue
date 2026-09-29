@@ -602,7 +602,7 @@
                   <button
                     class="btn btn-icon btn-sm video-task-action"
                     :title="videoTaskActionLabel(task.storyboard)"
-                    :disabled="videoTaskState(task.storyboard) === 'pending'"
+                    :disabled="['pending', 'blocked'].includes(videoTaskState(task.storyboard))"
                     @click.stop="genVid(task.storyboard)"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
@@ -711,6 +711,13 @@
                 >
                   {{ t('episode.vid.setMain') }}
                 </button>
+                <button
+                  v-else-if="hasVid(selectedSb) && !selectedShotReadiness?.selected?.video && sbVideoHistory.some(isCurrentVideo)"
+                  class="btn btn-sm btn-primary"
+                  @click="confirmCurrentVideo"
+                >
+                  {{ t('episode.tasks.confirmVideo') }}
+                </button>
                 <a
                   v-if="previewVideoUrl || hasVid(selectedSb)"
                   :href="'/' + (previewVideoUrl || getVideoUrl(selectedSb))"
@@ -739,7 +746,7 @@
                     <div class="video-player-empty-desc">{{ videoTaskState(selectedSb) === 'pending' ? t('episode.vid.emptyGeneratingDesc') : t('episode.vid.emptyNoVideoDesc') }}</div>
                   </div>
                   <button
-                    v-if="videoTaskState(selectedSb) !== 'pending'"
+                    v-if="!['pending', 'blocked'].includes(videoTaskState(selectedSb))"
                     class="btn btn-primary btn-sm video-player-empty-action"
                     @click="genVid(selectedSb)"
                   >
@@ -772,6 +779,15 @@
               </div>
             </div>
                 <div class="video-inspector-body">
+                  <section v-if="selectedShotReadiness" class="video-inspector-section">
+                    <div class="video-inspector-prompt-head">
+                      <span class="video-inspector-label">{{ t('episode.tasks.readiness') }}</span>
+                      <span class="tag" :class="selectedShotReadiness.ready_for_video ? 'tag-success' : 'tag-error'">{{ selectedShotReadiness.ready_for_video ? t('episode.tasks.ready') : t('episode.tasks.needsWork') }}</span>
+                    </div>
+                    <div v-for="(blocker, index) in selectedShotReadiness.blockers" :key="index" class="video-task-error">
+                      {{ readinessBlockerLabel(blocker) }}
+                    </div>
+                  </section>
                   <section class="video-inspector-section">
                     <div class="video-inspector-prompt-head">
                       <span class="video-inspector-label">{{ t('episode.inspector.boundRefs') }}</span>
@@ -793,6 +809,13 @@
                       </button>
                     </div>
                     <div v-else class="video-bound-refs-empty">{{ t('episode.inspector.noBoundRefs') }}</div>
+                    <div v-for="asset in boundRefAssets.filter(item => item.kind === 'character')" :key="`look-${asset.id}`" class="video-param-row">
+                      <label class="video-param-name" :for="`shot-look-${asset.id}`">{{ asset.name }} · {{ t('episode.tasks.look') }}</label>
+                      <select :id="`shot-look-${asset.id}`" class="input" :value="shotLookId(selectedSb, asset.id) || ''" @change="setShotCharacterLook(asset.id, $event.target.value)">
+                        <option value="">{{ t('episode.tasks.baseLook') }}</option>
+                        <option v-for="look in looksForCharacter(asset.id)" :key="look.id" :value="look.id">{{ look.name }}</option>
+                      </select>
+                    </div>
                   </section>
                 </div>
 
@@ -820,7 +843,7 @@
                   </div>
                   <button
                     class="btn btn-primary video-inspector-action"
-                    :disabled="videoTaskState(selectedSb) === 'pending'"
+                    :disabled="['pending', 'blocked'].includes(videoTaskState(selectedSb))"
                     @click="genVid(selectedSb)"
                   >
                     {{ videoTaskActionLabel(selectedSb) }}
@@ -944,6 +967,21 @@
                   </button>
                 </div>
               </div>
+              <div class="export-health-panel" aria-live="polite">
+                <div class="export-health-summary">
+                  <span>{{ t('productionGuard.exportHealth') }}</span>
+                  <span v-if="exportHealth">{{ t('productionGuard.healthSummary', { errors: exportHealth.error_count, warnings: exportHealth.warning_count }) }}</span>
+                  <button class="btn btn-sm" type="button" :disabled="exportHealthLoading" @click="loadExportHealth">{{ t('common.refresh') }}</button>
+                </div>
+                <p v-if="exportHealthLoading" class="dim">{{ t('productionGuard.checkingClips') }}</p>
+                <p v-if="exportHealthError" role="alert">{{ exportHealthError }}</p>
+                <template v-if="exportHealth">
+                  <div v-for="clip in exportHealth.clips.filter(row => row.errors.length || row.warnings.length)" :key="clip.storyboard_id" class="export-health-line" :class="{ 'is-error': clip.errors.length }">
+                    <strong>S{{ clip.shot_number }}</strong>
+                    <span>{{ clipHealthMessage(clip) }}</span>
+                  </div>
+                </template>
+              </div>
               <div class="export-grid">
                 <div
                   v-for="(sb, i) in sbs"
@@ -1065,7 +1103,10 @@
                 <div v-if="row.errorMsg" class="video-task-error" :title="row.errorMsg">
                   {{ mapError(row.errorMsg) }}
                   <div v-if="row.kind === 'video' && videoModerationHint(row.errorMsg)" class="video-task-error-hint">{{ videoModerationHint(row.errorMsg) }}</div>
+                  <div v-if="row.provider === 'wancreate' && row.errorCode === '9006'" class="video-task-error-hint">{{ t('episode.tasks.wan9006Hint') }}</div>
                 </div>
+                <button v-if="row.kind === 'image' && row.status === 'completed' && row.storyboardId" class="btn btn-ghost btn-sm" @click="selectImageCandidate(row)">{{ t('episode.tasks.selectCandidate') }}</button>
+                <button v-if="row.status === 'unknown' && row.taskId" class="btn btn-ghost btn-sm" @click="recoverProviderTask(row)">{{ t('episode.tasks.recover') }}</button>
               </div>
               <span :class="['video-task-status', 'is-' + genTaskStateClass(row.status)]">
                 <span :class="['dot', genTaskStateClass(row.status) === 'done' && 'ok', genTaskStateClass(row.status) === 'pending' && 'pending']" />
@@ -1194,6 +1235,19 @@
                       :placeholder="t('episode.asset.sceneLightPlaceholder')"
                     />
                   </label>
+                </div>
+
+                <div v-if="assetDetail.type === 'character'" class="asset-detail-edit-field">
+                  <span>{{ t('episode.tasks.looks') }}</span>
+                  <div v-for="look in looksForCharacter(assetDetail.item.id)" :key="look.id" class="video-param-row">
+                    <img v-if="look.image_url" :src="assetImageSrc({ imageUrl: look.image_url })" :alt="look.name" width="40" height="40" class="previewable-image" />
+                    <span>{{ look.name }}</span>
+                    <button type="button" class="btn btn-ghost btn-sm" @click="deleteCharacterLook(look)">{{ t('common.delete') }}</button>
+                  </div>
+                  <input v-model="newLookName" class="input" :placeholder="t('episode.tasks.lookName')" />
+                  <button type="button" class="btn btn-ghost btn-sm" :disabled="uploadingLook" @click="uploadCharacterLook(assetDetail.item.id)">
+                    {{ t('episode.tasks.addLookImage') }}
+                  </button>
                 </div>
 
               </section>
@@ -1396,24 +1450,56 @@
         </div>
       </div>
 
-      <div v-if="batchVideoConfirm.open" class="overlay" @click.self="batchVideoConfirm.open = false">
+      <div v-if="batchVideoConfirm.open" class="overlay" @click.self="closeBatchVideoConfirm">
         <div class="dialog batch-video-dialog">
           <header class="dialog-head">
             <h2 class="dialog-title">{{ t('episode.vid.confirmTitle') }}</h2>
-            <button class="btn btn-ghost btn-icon" @click="batchVideoConfirm.open = false">
+            <button class="btn btn-ghost btn-icon" :aria-label="t('common.cancel')" @click="closeBatchVideoConfirm">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </header>
           <div class="dialog-body batch-video-body">
-            <div class="batch-video-row"><span>{{ t('episode.vid.confirmShots') }}</span><strong>{{ t('episode.vid.confirmShotsValue', { n: batchVideoConfirm.targets.length }) }}</strong></div>
+            <div class="batch-video-row"><span>{{ t('episode.vid.confirmShots') }}</span><strong>{{ t('episode.vid.confirmShotsValue', { n: batchVideoConfirm.previews.length }) }}</strong></div>
             <div class="batch-video-row"><span>{{ t('episode.vid.confirmTotal') }}</span><strong>{{ t('episode.vid.confirmApprox', { n: batchVideoTotalDuration }) }}</strong></div>
             <div class="batch-video-row"><span>{{ t('episode.vid.confirmModel') }}</span><strong>{{ effectiveVideoModelLabel || t('episode.vid.defaultModel') }}</strong></div>
             <div class="batch-video-row"><span>{{ t('episode.vid.confirmResolution') }}</span><strong>{{ episodeResolutionLabel }}</strong></div>
-            <p class="batch-video-note">{{ t('episode.vid.confirmNote') }}</p>
+            <div class="batch-video-row"><span>{{ t('productionGuard.estimatedBatch') }}</span><strong>{{ batchVideoCostKnown ? formatBaht(batchVideoEstimatedCost) : t('productionGuard.unpriced') }}</strong></div>
+            <div v-if="batchVideoBudget != null" class="batch-video-row"><span>{{ t('productionGuard.remainingBudget') }}</span><strong>{{ formatBaht(batchVideoBudget) }}</strong></div>
+            <p v-if="batchVideoBudgetIssue" class="batch-video-blocked" role="alert">{{ batchVideoBudgetIssue }}</p>
+            <p v-if="batchVideoConfirm.loading" class="batch-video-note" role="status">{{ t('episode.vid.preflightLoading') }}</p>
+            <p v-else-if="batchVideoBlocked" class="batch-video-blocked" role="alert">{{ t('episode.vid.preflightBlocked') }}</p>
+            <p v-else class="batch-video-note">{{ t('episode.vid.confirmNote') }}</p>
+            <div class="batch-video-previews">
+              <details v-for="(item, index) in batchVideoConfirm.previews" :key="item.sb.id" class="batch-video-preview" :open="index === 0 || !!item.error || !!item.plan.issues.length">
+                <summary class="batch-video-preview-head">
+                  <span class="batch-video-preview-title">{{ t('episode.vid.shotN', { n: item.sb.storyboard_number || item.sb.storyboardNumber || index + 1 }) }} · {{ item.sb.title || item.sb.description || '' }}</span>
+                  <span :class="['batch-video-preview-state', (item.error || item.plan.issues.length) ? 'is-error' : '']">{{ (item.error || item.plan.issues.length) ? t('episode.vid.preflightNeedsFix') : `${item.request.duration}s · ${item.plan.references.length} ${t('episode.vid.preflightImages')}` }}</span>
+                </summary>
+                <div class="batch-video-preview-content">
+                  <ul v-if="item.plan.issues.length || item.error" class="batch-video-issues">
+                    <li v-for="(issue, issueIndex) in item.plan.issues" :key="issueIndex">{{ videoPreflightIssue(issue) }}</li>
+                    <li v-if="item.error">{{ item.error }}</li>
+                  </ul>
+                  <div class="batch-video-preview-label">{{ t('episode.vid.preflightReferences') }}</div>
+                  <div v-if="item.plan.assetPlan.length" class="batch-video-refs">
+                    <div v-for="(asset, assetIndex) in item.plan.assetPlan" :key="`${asset.kind}-${assetIndex}`" class="batch-video-ref">
+                      <img v-if="asset.url" :src="assetImageSrc({ image_url: asset.url })" :alt="asset.name" loading="lazy" />
+                      <span v-else class="batch-video-ref-empty">—</span>
+                      <span class="batch-video-ref-name">{{ asset.name || t('episode.vid.unnamedReference') }}<small>{{ videoAssetKindLabel(asset.kind) }}</small></span>
+                      <strong>{{ asset.index ? `#${asset.index}` : t('episode.vid.preflightMissing') }}</strong>
+                    </div>
+                  </div>
+                  <p v-else class="batch-video-empty">{{ t('episode.vid.preflightNoReferences') }}</p>
+                  <div class="batch-video-preview-label">{{ t('episode.vid.preflightPrompt') }}</div>
+                  <pre class="batch-video-prompt">{{ item.prepared?.prompt || item.plan.resolvedPrompt || '—' }}</pre>
+                  <button v-if="item.error || item.plan.issues.length" class="btn btn-sm" @click="focusVideoPreflightShot(item.sb)">{{ t('episode.vid.preflightEditShot') }}</button>
+                </div>
+              </details>
+            </div>
           </div>
           <footer class="dialog-foot">
-            <button class="btn" @click="batchVideoConfirm.open = false">{{ t('common.cancel') }}</button>
-            <button class="btn btn-primary" @click="confirmBatchVideos">{{ t('episode.vid.confirmStart', { n: batchVideoConfirm.targets.length }) }}</button>
+            <button class="btn" @click="closeBatchVideoConfirm">{{ t('common.cancel') }}</button>
+            <button class="btn btn-primary" :disabled="batchVideoBlocked" @click="confirmBatchVideos">{{ t('episode.vid.confirmStart', { n: batchVideoConfirm.previews.length }) }}</button>
           </footer>
         </div>
       </div>
@@ -1442,6 +1528,7 @@ import { api, dramaAPI, episodeAPI, storyboardAPI, characterAPI, sceneAPI, propA
 import { startTour, autoTour } from '~/composables/useTour'
 import { useAgent } from '~/composables/useAgent'
 import { toastError, mapError, MODERATION_RE } from '~/composables/useToast'
+import { analyzeVideoShot } from '~/utils/videoPreflight'
 import LocaleSwitcher from '~/components/LocaleSwitcher.vue'
 
 definePageMeta({ layout: 'studio' })
@@ -1453,9 +1540,13 @@ const dramaId = Number(route.params.id)
 const episodeNumber = Number(route.params.episodeNumber)
 
 const drama = ref(null), episode = ref(null), chars = ref([]), scenes = ref([]), propItems = ref([]), sbs = ref([]), mergeData = ref(null)
+const characterLooks = ref([])
+const shotLookAssignments = ref([])
+const newLookName = ref('')
+const uploadingLook = ref(false)
 // 工作台面板位置记忆（按剧集隔离）：仅页面刷新(reload)时恢复到上次所在步骤；
 // 从列表/详情页点击进入时始终默认「剧本」面板
-const PANEL_STORE_KEY = `huobao:workbench:panel:${dramaId}:${episodeNumber}`
+const PANEL_STORE_KEY = `naka:workbench:panel:${dramaId}:${episodeNumber}`
 const isPageReload = (() => {
   try { return performance.getEntriesByType('navigation')[0]?.type === 'reload' } catch { return false }
 })()
@@ -1483,6 +1574,9 @@ const exportSelectedIds = ref([]) // 勾选的镜头 id
 const exportMerges = ref([])      // 成片(拼接记录)列表
 let exportSelTouched = false      // 用户手动操作过选择后,不再自动全选
 
+const exportHealth = ref(null)
+const exportHealthLoading = ref(false)
+const exportHealthError = ref('')
 const exportReadyIds = computed(() => sbs.value.filter(s => hasVid(s)).map(s => s.id))
 const exportSelectedReadyIds = computed(() => exportSelectedIds.value.filter(id => exportReadyIds.value.includes(id)))
 
@@ -1509,6 +1603,7 @@ function toggleSelectAllExport() {
 
 async function loadExportMerges() {
   if (!epId.value) return
+  void loadExportHealth()
   try { exportMerges.value = await mergeAPI.list(epId.value) || [] } catch { /* 静默 */ }
 }
 
@@ -1521,7 +1616,7 @@ watch([panel, scriptStep, prodTab], ([p, s, pt]) => {
   try { localStorage.setItem(PANEL_STORE_KEY, JSON.stringify({ panel: p, scriptStep: s, prodTab: pt })) } catch { /* 静默 */ }
 })
 // ===== 视频制作三栏宽度：拖拽调节 + 全局持久化（双击分隔条恢复默认） =====
-const VIDEO_COL_STORE_KEY = 'huobao:workbench:video-cols'
+const VIDEO_COL_STORE_KEY = 'naka:workbench:video-cols'
 const VIDEO_COL_DEFAULTS = { left: 236, right: 340 }
 const VIDEO_COL_LIMITS = { left: [180, 420], right: [260, 560] }
 const storedVideoCols = (() => {
@@ -1569,12 +1664,12 @@ const imageConfigs = ref([])
 const videoConfigs = ref([])
 const textConfigs = ref([])
 // 生成时可选模型：空串 = 跟随配置默认（models[0]）；选择持久化到 localStorage，刷新页面后保留
-const MODEL_STORE_KEYS = { chat: 'huobao:model:chat', image: 'huobao:model:image', video: 'huobao:model:video' }
+const MODEL_STORE_KEYS = { chat: 'naka:model:chat', image: 'naka:model:image', video: 'naka:model:video' }
 function readStoredModel(key, legacyKey = '') {
   try { return localStorage.getItem(key) || (legacyKey && localStorage.getItem(legacyKey)) || '' } catch { return '' }
 }
 // 顶栏文本模型：适用于所有 Chat Agent 调用（改写/提取/拆镜/视频提示词/最终提示词），空串 = 跟随配置默认
-const chatModel = ref(readStoredModel(MODEL_STORE_KEYS.chat, 'huobao:model:rewrite'))
+const chatModel = ref(readStoredModel(MODEL_STORE_KEYS.chat, 'naka:model:rewrite'))
 const imageModel = ref(readStoredModel(MODEL_STORE_KEYS.image))
 const videoModel = ref(readStoredModel(MODEL_STORE_KEYS.video))
 function persistModel(modelRef, key) {
@@ -1586,7 +1681,7 @@ persistModel(chatModel, MODEL_STORE_KEYS.chat)
 persistModel(imageModel, MODEL_STORE_KEYS.image)
 persistModel(videoModel, MODEL_STORE_KEYS.video)
 // 左侧菜单栏收起/展开：收起为窄图标栏给内容区让位，持久化到 localStorage
-const SIDEBAR_COLLAPSED_KEY = 'huobao:sidebar-collapsed'
+const SIDEBAR_COLLAPSED_KEY = 'naka:sidebar-collapsed'
 const sidebarCollapsed = ref((() => {
   try { return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1' } catch { return false }
 })())
@@ -1605,6 +1700,7 @@ const pendingCharImageIds = ref([])
 const pendingSceneImageIds = ref([])
 const pendingPropImageIds = ref([])
 const pendingVideoIds = ref([])
+const unknownVideoIds = ref([])
 const failedVideoMessages = ref({})
 // 任务列表面板：顶栏按钮触发的右侧抽屉,按集聚合 sys_task + video_merges
 const genTasks = ref([])
@@ -1960,6 +2056,7 @@ function videoModerationHint(msg) {
 
 function videoTaskState(sb) {
   if (hasVid(sb)) return 'done'
+  if (unknownVideoIds.value.includes(sb?.id)) return 'blocked'
   if (isPendingVideo(sb?.id)) return 'pending'
   if (videoFailMessage(sb?.id)) return 'failed'
   return 'ready'
@@ -1969,6 +2066,7 @@ function videoTaskStatusLabel(sb) {
   const state = videoTaskState(sb)
   if (state === 'done') return t('episode.status.done')
   if (state === 'pending') return t('episode.status.generating')
+  if (state === 'blocked') return t('episode.tasks.unknown')
   if (state === 'failed') return t('episode.status.failed')
   return t('episode.status.todo')
 }
@@ -1977,12 +2075,13 @@ function videoTaskActionLabel(sb) {
   const state = videoTaskState(sb)
   if (state === 'done') return t('episode.asset.regen')
   if (state === 'pending') return t('episode.asset.generating')
+  if (state === 'blocked') return t('episode.tasks.unknown')
   return t('episode.asset.generate')
 }
 
 const allVideoTaskRows = computed(() => sbs.value.map((sb, index) => {
   const duration = Number(sb.duration || 5)
-  const referenceCount = getShotReferenceImages(sb).length
+  const referenceCount = getVideoShotPlan(sb).references.length
   const sceneName = getSceneName(sb)
   return {
     id: sb.id,
@@ -2011,7 +2110,78 @@ function toggleVideoFilter(state) {
 // ===== 批量视频：选择模式 + 生成前确认（视频生成成本高，避免误触全量触发） =====
 const videoSelectMode = ref(false)
 const selectedVideoSbIds = ref([])
-const batchVideoConfirm = ref({ open: false, targets: [] })
+const batchVideoConfirm = ref({ open: false, previews: [], loading: false })
+let batchVideoPreviewRun = 0
+const batchVideoBlocked = computed(() => batchVideoConfirm.value.loading
+  || !batchVideoConfirm.value.previews.length
+  || batchVideoConfirm.value.previews.some(item => item.error || item.plan.issues.length)
+  || Boolean(batchVideoBudgetIssue.value))
+const batchVideoTotalDuration = computed(() =>
+  batchVideoConfirm.value.previews.reduce((sum, item) => sum + Number(item.request.duration), 0))
+const batchVideoCosts = computed(() => batchVideoConfirm.value.previews.map(item => item.prepared?.cost?.estimated_cost_thb))
+const batchVideoCostKnown = computed(() => batchVideoCosts.value.length > 0 && batchVideoCosts.value.every(cost => typeof cost === 'number'))
+const batchVideoEstimatedCost = computed(() => batchVideoCosts.value.reduce((sum, cost) => sum + (Number(cost) || 0), 0))
+const batchVideoBudget = computed(() => batchVideoConfirm.value.previews.find(item => item.prepared?.cost)?.prepared?.cost?.remaining_thb ?? null)
+const batchVideoBudgetIssue = computed(() => {
+  if (batchVideoConfirm.value.loading || batchVideoBudget.value == null) return ''
+  if (!batchVideoCostKnown.value) return t('productionGuard.needPrice')
+  if (batchVideoEstimatedCost.value > batchVideoBudget.value) return t('productionGuard.overBudget')
+  return ''
+})
+function formatBaht(value) { return `฿${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
+
+function closeBatchVideoConfirm() {
+  batchVideoPreviewRun++
+  batchVideoConfirm.value = { open: false, previews: [], loading: false }
+}
+
+async function loadExportHealth() {
+  if (!epId.value) return
+  exportHealthLoading.value = true
+  exportHealthError.value = ''
+  try { exportHealth.value = await mergeAPI.health(epId.value) }
+  catch (error) { exportHealthError.value = error.message || t('productionGuard.healthFailed') }
+  finally { exportHealthLoading.value = false }
+}
+
+function clipHealthMessage(clip) {
+  const source = clip.source_state === 'stale'
+    ? `${t('productionGuard.sourceChanged')}: ${clip.changed_sources.map(key => t(`productionGuard.source.${key}`)).join(', ')}`
+    : clip.source_state === 'untracked' ? t('productionGuard.sourceUnknown') : ''
+  return [source, ...clip.errors.map(clipProblemLabel), ...clip.warnings
+    .filter(warning => !warning.startsWith('Source changed:') && !warning.startsWith('Legacy clip:'))
+    .map(clipProblemLabel)].filter(Boolean).join(' · ')
+}
+function clipProblemLabel(problem) {
+  if (problem.startsWith('Clip duration differs')) return t('productionGuard.media.durationMismatch')
+  const keys = {
+    'No video selected': 'noVideo',
+    'Video file is missing': 'missingFile',
+    'Video file is empty or incomplete': 'incompleteFile',
+    'No decodable video stream': 'noVideoStream',
+    'Invalid duration': 'invalidDuration',
+    'Invalid dimensions': 'invalidDimensions',
+    'ffprobe could not read this video': 'unreadable',
+    'No audio stream': 'noAudio',
+    'Mixed aspect ratios in episode': 'mixedRatios',
+  }
+  return keys[problem] ? t(`productionGuard.media.${keys[problem]}`) : problem
+}
+
+function videoPreflightIssue(issue) {
+  return t(`episode.vid.preflightIssues.${issue.code}`, {
+    name: issue.name || t('episode.vid.unnamedReference'),
+    count: issue.count,
+    limit: issue.limit,
+  })
+}
+function videoAssetKindLabel(kind) {
+  return t(kind === 'scene' ? 'common.scene' : kind === 'prop' ? 'common.prop' : 'common.role')
+}
+function focusVideoPreflightShot(sb) {
+  selectedSb.value = sb
+  closeBatchVideoConfirm()
+}
 
 function isVideoSbSelected(id) { return selectedVideoSbIds.value.includes(id) }
 function toggleVideoSbSelect(id) {
@@ -2142,13 +2312,33 @@ const episodeResolutionLabel = computed(() =>
 const episodeResolutionShort = computed(() =>
   RESOLUTION_DISPLAY[resolutionProvider.value][episodeResolution.value] || episodeResolution.value)
 const effectiveVideoDuration = computed(() => Number(selectedSb.value?.duration || 10))
-const batchVideoTotalDuration = computed(() =>
-  batchVideoConfirm.value.targets.reduce((sum, sb) => sum + (Number(sb.duration) || 5), 0))
-
-function openBatchVideoConfirm(pool) {
-  const targets = pool.filter(s => !isPendingVideo(s.id))
+async function openBatchVideoConfirm(pool) {
+  const targets = pool.filter(s => !isPendingVideo(s.id) && !unknownVideoIds.value.includes(s.id))
   if (!targets.length) { toast.info(t('episode.vid.noneToGenerate')); return }
-  batchVideoConfirm.value = { open: true, targets }
+  const previews = targets.map(sb => {
+    const plan = getVideoShotPlan(sb)
+    const request = {
+      type: 'video',
+      storyboard_id: sb.id,
+      drama_id: dramaId,
+      prompt: plan.resolvedPrompt,
+      duration: Number(sb.duration || 10),
+      aspect_ratio: dramaAspectRatio.value,
+      generate_audio: true,
+      model: bareModelName(videoModel.value) || undefined,
+      config_id: ownerConfigId(videoModelOptions.value, videoModel.value),
+      reference_image_urls: plan.references,
+    }
+    return { sb, plan, request, prepared: null, error: '' }
+  })
+  const run = ++batchVideoPreviewRun
+  batchVideoConfirm.value = { open: true, previews, loading: true }
+  await Promise.all(previews.map(async item => {
+    if (item.plan.issues.length) return
+    try { item.prepared = await taskAPI.preflight(item.request) }
+    catch (e) { item.error = e.message || t('episode.vid.preflightFailed') }
+  }))
+  if (run === batchVideoPreviewRun) batchVideoConfirm.value.loading = false
 }
 function batchVideos() {
   // 选择模式且有勾选 → 仅所选（允许重出已完成镜头）；否则全部未完成（待生成+失败）
@@ -2162,11 +2352,11 @@ function retryFailedVideos() {
   openBatchVideoConfirm(sbs.value.filter(s => videoTaskState(s) === 'failed'))
 }
 function confirmBatchVideos() {
-  const targets = [...batchVideoConfirm.value.targets]
-  batchVideoConfirm.value = { open: false, targets: [] }
-  if (!targets.length) return
-  const ids = targets.map(s => s.id)
-  targets.forEach(sb => genVid(sb, { silent: true }))
+  if (batchVideoBlocked.value) return
+  const previews = [...batchVideoConfirm.value.previews]
+  closeBatchVideoConfirm()
+  const ids = previews.map(item => item.sb.id)
+  previews.forEach(item => genVid(item.sb, { approved: true, request: item.request, silent: true }))
   toast.success(t('episode.vid.batchStarted', { n: ids.length }))
   watchAsyncResult(() => ids.every(id => {
     const target = sbs.value.find(s => s.id === id)
@@ -2219,11 +2409,13 @@ async function loadGenTasks() {
     // pending/failed 全量重建而非与现有值并集——否则刷新恢复的"生成中"在任务失败后
     // 永不消退(videoTaskState 中 pending 优先于 failed,重试按钮还被禁用)
     const pending = new Set()
+    const unknown = new Set()
     const failed = {}
     for (const [sbId, t] of latestBySb) {
       // 分镜已有视频(失败后重试成功)时不再报历史错误
       if (hasVid(sbs.value.find(s => s.id === sbId))) continue
-      if (t.status === 'processing') pending.add(sbId)
+      if (['queued', 'submitting', 'processing'].includes(t.status)) pending.add(sbId)
+      else if (t.status === 'unknown') unknown.add(sbId)
       else if (t.status === 'failed') failed[sbId] = t.error_msg || t('episode.status.failed')
     }
     // 刚点击提交、任务记录尚未加载出来的本地状态保留,避免状态闪退
@@ -2232,7 +2424,9 @@ async function loadGenTasks() {
       if (!latestBySb.has(Number(id))) failed[id] = failedVideoMessages.value[id]
     }
     pendingVideoIds.value = [...pending]
+    unknownVideoIds.value = [...unknown]
     failedVideoMessages.value = failed
+    if (selectedSb.value?.id) await loadSelectedShotReadiness()
   } catch { /* 静默失败,不打断其他刷新 */ }
 }
 
@@ -2241,7 +2435,7 @@ function stopGenTasksPolling() {
 }
 
 const genTaskActiveCount = computed(() =>
-  genTasks.value.filter(t => t.status === 'processing').length +
+  genTasks.value.filter(t => ['queued', 'submitting', 'processing'].includes(t.status)).length +
   genMerges.value.filter(m => m.status === 'processing' || m.status === 'pending').length
 )
 const genTaskDoneCount = computed(() =>
@@ -2279,11 +2473,15 @@ const genTaskRows = computed(() => {
     key: `task-${t.id}`,
     kind: t.type, // image | video
     id: t.id,
+    storyboardId: t.storyboard_id,
+    slot: taskRowSlot(t),
     targetLabel: genTaskTargetLabel(t),
     provider: t.provider || '',
     model: t.model || '',
     status: t.status || 'processing',
     errorMsg: t.error_msg || '',
+    errorCode: t.error_code || '',
+    taskId: t.task_id || '',
     previewUrl: t.local_path || t.result_url || '',
     prompt: t.prompt || '',
     createdAt: t.created_at || '',
@@ -2313,6 +2511,7 @@ function genTaskKindLabel(kind) {
 function genTaskStatusLabel(status) {
   if (status === 'completed') return t('episode.status.done')
   if (status === 'failed') return t('episode.status.failed')
+  if (status === 'unknown') return t('episode.tasks.unknown')
   return t('episode.status.generating')
 }
 
@@ -2320,7 +2519,34 @@ function genTaskStatusLabel(status) {
 function genTaskStateClass(status) {
   if (status === 'completed') return 'done'
   if (status === 'failed') return 'failed'
+  if (status === 'unknown') return 'blocked'
   return 'pending'
+}
+
+function taskRowSlot(task) {
+  if (task.type === 'video') return 'video'
+  let params = {}
+  try { params = JSON.parse(task.params || '{}') } catch {}
+  return params.frameType === 'first_frame' ? 'first_frame' : params.frameType === 'last_frame' ? 'last_frame' : 'composed'
+}
+
+async function selectImageCandidate(row) {
+  try {
+    const selected = await storyboardAPI.selectMedia(row.storyboardId, row.id, row.slot)
+    const shot = sbs.value.find(sb => sb.id === row.storyboardId)
+    const field = { composed: 'composed_image', first_frame: 'first_frame_image', last_frame: 'last_frame_image' }[row.slot]
+    if (shot && field) shot[field] = selected.path
+    toast.success(t('episode.tasks.candidateSelected'))
+    await loadSelectedShotReadiness()
+  } catch (error) { toastError(error) }
+}
+
+async function recoverProviderTask(row) {
+  try {
+    await taskAPI.recover(row.id)
+    toast.success(t('episode.tasks.recoverStarted'))
+    await loadGenTasks()
+  } catch (error) { toastError(error) }
 }
 
 // local_path 为站内相对路径补 '/',远端 result_url 原样使用
@@ -2526,6 +2752,23 @@ const currentSubStageLabel = computed(() => currentStageLabel.value)
 
 const totalDuration = computed(() => sbs.value.reduce((s, sb) => s + (sb.duration || 10), 0))
 const selectedSb = ref(null)
+const selectedShotReadiness = ref(null)
+async function loadSelectedShotReadiness() {
+  const id = selectedSb.value?.id
+  if (!id) { selectedShotReadiness.value = null; return }
+  try {
+    const result = await storyboardAPI.readiness(id)
+    if (selectedSb.value?.id === id) selectedShotReadiness.value = result
+  } catch { selectedShotReadiness.value = null }
+}
+watch(() => selectedSb.value?.id, loadSelectedShotReadiness)
+
+function readinessBlockerLabel(blocker) {
+  const code = blocker.code
+  if (code === 'missing_prompt') return t('episode.tasks.missingPrompt')
+  if (code === 'select_image_candidate') return t('episode.tasks.selectImageForSlot', { slot: blocker.slot })
+  return t('episode.tasks.missingAsset', { name: blocker.name || code })
+}
 const selectedVideoTaskNumber = computed(() => {
   const index = videoTaskRows.value.findIndex(task => String(task.id) === String(selectedSb.value?.id))
   return index >= 0 ? index + 1 : 0
@@ -2537,7 +2780,9 @@ function updateField(sb, field, value) {
   sb[field] = value
   const camelField = toCamel(field)
   if (camelField !== field) sb[camelField] = value
-  storyboardAPI.update(sb.id, { [field]: value }).catch(e => toastError(e))
+  storyboardAPI.update(sb.id, { [field]: value })
+    .then(() => { if (field === 'video_prompt') loadSelectedShotReadiness() })
+    .catch(e => toastError(e))
 }
 
 function toCamel(field) {
@@ -2621,6 +2866,11 @@ async function refresh() {
       try { scenes.value = await episodeAPI.scenes(ep.id) } catch { scenes.value = [] }
       try { propItems.value = await episodeAPI.props(ep.id) } catch { propItems.value = [] }
       sbs.value = await episodeAPI.storyboards(ep.id)
+      const [looksResult, assignmentsResult] = await Promise.allSettled([
+        characterAPI.looks(dramaId), episodeAPI.characterLooks(ep.id),
+      ])
+      characterLooks.value = looksResult.status === 'fulfilled' ? looksResult.value : []
+      shotLookAssignments.value = assignmentsResult.status === 'fulfilled' ? assignmentsResult.value : []
       selectedVideoSbIds.value = selectedVideoSbIds.value.filter(id => sbs.value.some(sb => sb.id === id))
       if (sbs.value.length) {
         const currentSelectedId = selectedSb.value?.id
@@ -3021,6 +3271,49 @@ function batchPropImages() {
 function getVideoUrl(s) { return s?.video_url || s?.videoUrl || s?.composed_video_url || s?.composedVideoUrl || null }
 function hasVid(s) { return !!getVideoUrl(s) }
 
+function looksForCharacter(characterId) {
+  return characterLooks.value.filter(look => look.character_id === characterId)
+}
+function shotLookId(sb, characterId) {
+  return shotLookAssignments.value.find(row => row.storyboard_id === sb?.id && row.character_id === characterId)?.look_id || null
+}
+function characterImageForShot(sb, character) {
+  const lookId = shotLookId(sb, character.id)
+  return lookId ? characterLooks.value.find(look => look.id === lookId)?.image_url || '' : character.image_url || character.imageUrl || ''
+}
+async function setShotCharacterLook(characterId, value) {
+  const sb = selectedSb.value
+  if (!sb) return
+  const lookId = value ? Number(value) : null
+  try {
+    await storyboardAPI.assignLook(sb.id, characterId, lookId)
+    shotLookAssignments.value = shotLookAssignments.value.filter(row => !(row.storyboard_id === sb.id && row.character_id === characterId))
+    if (lookId) shotLookAssignments.value.push({ storyboard_id: sb.id, character_id: characterId, look_id: lookId })
+    await loadSelectedShotReadiness()
+  } catch (error) { toastError(error) }
+}
+function uploadCharacterLook(characterId) {
+  pickFile('image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp', async file => {
+    uploadingLook.value = true
+    try {
+      const uploaded = await uploadAPI.image(file)
+      const name = newLookName.value.trim() || file.name.replace(/\.[^.]+$/, '')
+      const look = await characterAPI.createLook(characterId, { name, image_url: uploaded.path })
+      characterLooks.value.push(look)
+      newLookName.value = ''
+      toast.success(t('episode.tasks.lookAdded'))
+    } catch (error) { toastError(error) }
+    finally { uploadingLook.value = false }
+  })
+}
+async function deleteCharacterLook(look) {
+  try {
+    await characterAPI.deleteLook(look.character_id, look.id)
+    characterLooks.value = characterLooks.value.filter(row => row.id !== look.id)
+    toast.success(t('index.deleted'))
+  } catch (error) { toastError(error) }
+}
+
 // ===== 分镜视频历史（一个分镜可能生成多个视频,sys_task 留存全部记录）=====
 const sbVideoHistory = ref([])
 const previewVideoUrl = ref('') // 正在预览的历史视频(相对路径);空 = 预览当前主视频
@@ -3051,9 +3344,12 @@ async function setAsMainVideo() {
   const sb = selectedSb.value
   if (!sb || !previewVideoUrl.value) return
   try {
-    await storyboardAPI.update(sb.id, { video_url: previewVideoUrl.value })
-    sb.video_url = previewVideoUrl.value
-    sb.videoUrl = previewVideoUrl.value
+    const candidate = sbVideoHistory.value.find(task => taskVideoPath(task) === previewVideoUrl.value)
+    if (!candidate) return
+    const selected = await storyboardAPI.selectMedia(sb.id, candidate.id, 'video')
+    sb.video_url = selected.path
+    sb.videoUrl = selected.path
+    await loadSelectedShotReadiness()
     toast.success(t('episode.vid.setMainDone'))
   } catch (e) { toastError(e, { fallback: 'episode.vid.setMainFailed' }) }
 }
@@ -3075,21 +3371,34 @@ function formatHistoryTime(iso) {
   return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
-function getShotReferenceImages(sb) {
-  const refs = []
-  const pushRef = (value) => {
-    if (!value || refs.includes(value) || refs.length >= refImageLimit.value) return
-    refs.push(value)
-  }
+function getVideoShotPlan(sb) {
+  const assets = []
   const scene = getStoryboardScene(sb)
-  pushRef(scene?.image_url || scene?.imageUrl)
+  if (scene) assets.push({ kind: 'scene', name: scene.location, url: scene.image_url || scene.imageUrl || '' })
+  else if (sb?.scene_id || sb?.sceneId) assets.push({ kind: 'scene', name: `#${sb.scene_id || sb.sceneId}`, url: '' })
   for (const char of getStoryboardCharacters(sb)) {
-    pushRef(char?.image_url || char?.imageUrl)
+    assets.push({ kind: 'character', name: char.name, url: characterImageForShot(sb, char) })
   }
   for (const prop of getStoryboardProps(sb)) {
-    pushRef(prop?.image_url || prop?.imageUrl)
+    assets.push({ kind: 'prop', name: prop.name, url: prop.image_url || prop.imageUrl || '' })
   }
-  return refs
+  return analyzeVideoShot({
+    prompt: sb?.video_prompt || sb?.videoPrompt || '',
+    assets,
+    limit: refImageLimit.value,
+    duration: Number(sb?.duration || 10),
+  })
+}
+
+async function confirmCurrentVideo() {
+  const sb = selectedSb.value
+  const candidate = sbVideoHistory.value.find(isCurrentVideo)
+  if (!sb || !candidate) return
+  try {
+    await storyboardAPI.selectMedia(sb.id, candidate.id, 'video')
+    await loadSelectedShotReadiness()
+    toast.success(t('episode.tasks.videoConfirmed'))
+  } catch (error) { toastError(error) }
 }
 
 // 右侧参考素材面板：本集全部可绑定素材（场景单选、角色/道具多选），bound 标记是否已绑定
@@ -3097,7 +3406,7 @@ function getShotReferenceImages(sb) {
 function shotBindableAssets(sb) {
   const out = []
   for (const char of visualChars.value) {
-    const imageUrl = char.image_url || char.imageUrl || ''
+    const imageUrl = characterImageForShot(sb, char)
     out.push({
       key: `character-${char.id}`,
       id: char.id,
@@ -3184,7 +3493,7 @@ const mentionOptions = computed(() => {
       value: c.name,
       kind: 'character',
       group: t('common.role'),
-      image: thumbOf(assetImageSrc(c)),
+      image: thumbOf(assetImageSrc({ imageUrl: characterImageForShot(sb, c) })),
     })),
     ...(scene ? [{
       label: `${scene.location} · ${scene.time || t('episode.asset.noTime')}`,
@@ -3202,44 +3511,6 @@ const mentionOptions = computed(() => {
     })),
   ]
 })
-
-// 按参考图顺序（场景图在前、角色图居中、道具图在后）为 @名字 建立索引映射，供视频提示词引用替换
-function getShotReferenceIndexMap(sb) {
-  const ordered = []
-  const seen = new Set()
-  const push = (name, url) => {
-    if (!url || seen.has(url) || ordered.length >= refImageLimit.value) return
-    seen.add(url)
-    ordered.push({ name, imageUrl: url })
-  }
-  const scene = getStoryboardScene(sb)
-  push(scene?.location || '', scene?.image_url || scene?.imageUrl)
-  for (const char of getStoryboardCharacters(sb)) {
-    push(char.name || '', char?.image_url || char?.imageUrl)
-  }
-  for (const prop of getStoryboardProps(sb)) {
-    push(prop.name || '', prop?.image_url || prop?.imageUrl)
-  }
-  const nameToIndex = {}
-  ordered.forEach((a, i) => { if (a.name && !(a.name in nameToIndex)) nameToIndex[a.name] = i + 1 })
-  return nameToIndex
-}
-
-// 将视频提示词里的 @名字 替换为 @图片N名字（N 为参考图序号，1 起），生成时使用
-function resolveVideoPromptRefs(sb) {
-  const prompt = sb.video_prompt || sb.videoPrompt || ''
-  const map = getShotReferenceIndexMap(sb)
-  const names = Object.keys(map).sort((a, b) => b.length - a.length)
-  if (!names.length) return prompt
-  return prompt.replace(/@([^\s@]+)/g, (m, raw) => {
-    for (const name of names) {
-      if (raw.startsWith(name)) {
-        return `@图片${map[name]}${name}${raw.slice(name.length)}`
-      }
-    }
-    return m
-  })
-}
 
 // 分镜时长（视频生成参数区直接编辑并保存到分镜）：
 // 统一限制 2-30s，列表/批量/单次生成统一读取该值；超出厂商支持范围由后端适配器收敛
@@ -3294,27 +3565,14 @@ function uploadAssetImage(kind, id) {
 }
 
 async function genVid(sb, opts = {}) {
-  const referenceImages = getShotReferenceImages(sb)
-  // 参考素材完全来自分镜绑定的角色/场景/道具图片
-  const params = {
-    storyboard_id: sb.id,
-    drama_id: dramaId,
-    prompt: resolveVideoPromptRefs(sb),
-    duration: Number(sb.duration || 10),
-    aspect_ratio: dramaAspectRatio.value,
-    generate_audio: true,
-    model: bareModelName(videoModel.value) || undefined,
-    config_id: ownerConfigId(videoModelOptions.value, videoModel.value),
-    reference_image_urls: referenceImages,
-  }
-  if (!params.prompt && !referenceImages.length) {
-    toast.error(t('episode.vid.needRefOrPrompt'))
+  if (!opts.approved) {
+    await openBatchVideoConfirm([sb])
     return
   }
   try {
     delete failedVideoMessages.value[sb.id]
     if (!isPendingVideo(sb.id)) pendingVideoIds.value.push(sb.id)
-    const generation = await taskAPI.generate({ type: 'video', ...params })
+    const generation = await taskAPI.generate(opts.request)
     if (!opts.silent) toast.success(t('episode.vid.generating'))
     await refresh()
     pollVideoGeneration(generation?.id, sb.id)
@@ -3337,7 +3595,7 @@ async function pollVideoGeneration(generationId, storyboardId) {
     }, 60, 4000)
     return
   }
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < 900; i++) {
     await sleep(4000)
     try {
       const res = await taskAPI.get(generationId)
@@ -3358,6 +3616,12 @@ async function pollVideoGeneration(generationId, storyboardId) {
         toastError(errMsg, { fallback: 'episode.vid.genFailed' })
         return
       }
+      if (res?.status === 'unknown') {
+        pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== storyboardId)
+        if (!unknownVideoIds.value.includes(storyboardId)) unknownVideoIds.value.push(storyboardId)
+        toast.warning(t('episode.tasks.unknown'))
+        return
+      }
     } catch {}
   }
   pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== storyboardId)
@@ -3374,6 +3638,12 @@ async function doMerge(ids) {
     return
   }
   try {
+    const health = await mergeAPI.health(epId.value, storyboardIds)
+    if (!health.ready) {
+      exportHealth.value = health
+      toast.error(t('productionGuard.fixClips'))
+      return
+    }
     await mergeAPI.merge(epId.value, storyboardIds)
     toast.success(t('episode.export.mergingToast'))
   } catch (e) {
@@ -4972,8 +5242,8 @@ button.video-task-metric.on { box-shadow: 0 0 0 2px var(--accent); }
   font-weight: 600;
 }
 /* 批量生成确认弹窗 */
-.batch-video-dialog { width: 420px; max-width: calc(100vw - 48px); }
-.batch-video-body { display: flex; flex-direction: column; gap: 10px; }
+.batch-video-dialog { width: 680px; max-width: calc(100vw - 32px); max-height: min(86vh, 900px); display: flex; flex-direction: column; }
+.batch-video-body { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 .batch-video-row {
   display: flex;
   justify-content: space-between;
@@ -4987,6 +5257,31 @@ button.video-task-metric.on { box-shadow: 0 0 0 2px var(--accent); }
 }
 .batch-video-row strong { color: var(--text-0); font-weight: 600; }
 .batch-video-note { margin: 4px 0 0; font-size: 11px; color: var(--text-3); line-height: 1.6; }
+.batch-video-blocked { padding: 9px 12px; border-radius: var(--radius); background: var(--error-bg); color: var(--error); font-size: 12px; line-height: 1.5; }
+.batch-video-previews { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.batch-video-preview { border: 1px solid var(--surface-outline); border-radius: var(--radius-lg); background: var(--surface-raised); overflow: hidden; }
+.batch-video-preview-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; font-size: 12px; }
+.batch-video-preview-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.batch-video-preview-title { color: var(--text-0); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.batch-video-preview-state { color: var(--text-3); white-space: nowrap; flex: none; }
+.batch-video-preview-state.is-error { color: var(--error); font-weight: 650; }
+.batch-video-preview-content { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 14px; }
+.batch-video-preview-label { color: var(--text-2); font-size: 11px; font-weight: 650; }
+.batch-video-issues { margin: 0; padding: 9px 10px 9px 26px; color: var(--error); background: var(--error-bg); border-radius: var(--radius-sm); font-size: 12px; line-height: 1.5; }
+.batch-video-refs { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; }
+.batch-video-ref { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 5px; border: 1px solid var(--surface-outline); border-radius: var(--radius-sm); font-size: 11px; }
+.batch-video-ref img, .batch-video-ref-empty { width: 32px; height: 32px; flex: none; object-fit: cover; border-radius: 4px; background: var(--surface-muted); }
+.batch-video-ref-empty { display: grid; place-items: center; color: var(--text-3); }
+.batch-video-ref-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.batch-video-ref-name small { display: block; color: var(--text-3); font-size: 10px; }
+.batch-video-ref strong { color: var(--text-2); font-size: 10px; }
+.batch-video-empty { color: var(--text-3); font-size: 11px; }
+.batch-video-prompt { max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: 10px; border-radius: var(--radius-sm); background: var(--bg-input); border: 1px solid var(--surface-outline); color: var(--text-1); font: 11px/1.6 var(--font-mono); }
+@media (max-width: 600px) {
+  .batch-video-dialog { max-height: 92dvh; }
+  .batch-video-preview-head { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .batch-video-preview-title { max-width: 100%; }
+}
 .video-task-row {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr) auto;
@@ -5673,6 +5968,12 @@ button.video-task-metric.on { box-shadow: 0 0 0 2px var(--accent); }
 .export-main { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: stretch; gap: 18px; padding: 16px 20px 24px; }
 .export-section { display: flex; flex-direction: column; min-height: 0; }
 .export-section-grow { flex: 1; }
+.export-health-panel { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-surface); font-size: 12px; line-height: 1.5; }
+.export-health-summary { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-weight: 600; }
+.export-health-summary .btn { margin-left: auto; }
+.export-health-line { display: flex; gap: 10px; padding-top: 6px; color: var(--warning); }
+.export-health-line.is-error { color: var(--error); }
+.export-health-line strong { min-width: 28px; font-variant-numeric: tabular-nums; }
 .export-section-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .export-section-title { font-size: 13px; font-weight: 800; color: var(--text-0); }
 .export-merge-strip { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }

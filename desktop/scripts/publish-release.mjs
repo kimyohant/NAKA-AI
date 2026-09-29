@@ -10,7 +10,7 @@
  *
  * 产物布局:
  *   GitHub: vX.Y.Z Release(空格文件名自动规范化为点号,见 make-update-feed)
- *   COS:    huobao-drama/vX.Y.Z/<点号文件名> + huobao-drama/latest.json(指向 COS 直链)
+ *   COS:    naka-ai/vX.Y.Z/<点号文件名> + naka-ai/latest.json(指向 COS 直链)
  *
  * 国内下载基址(COS_BASE_URL)与更新器兜底源保持一致,将来绑自定义域名/加 CDN 只改这一处。
  */
@@ -25,9 +25,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DESKTOP = path.resolve(__dirname, '..')
 const RELEASE = path.join(DESKTOP, 'release')
 
-/** 国内下载基址:默认桶默认域名,可被 COS_BASE_URL 覆盖(如 https://dl.chatfire.site/huobao-drama) */
-const COS_BASE_URL = process.env.COS_BASE_URL || 'https://installer.chatfire.site/huobao-drama'
-const COS_KEY_PREFIX = 'huobao-drama'
+/** 国内下载基址:默认桶默认域名,可被 COS_BASE_URL 覆盖(如 https://dl.chatfire.site/naka-ai) */
+const COS_BASE_URL = process.env.COS_BASE_URL || 'https://installer.chatfire.site/naka-ai'
+const COS_KEY_PREFIX = 'naka-ai'
 
 const pkg = JSON.parse(fs.readFileSync(path.join(DESKTOP, 'package.json'), 'utf8'))
 const version = pkg.version
@@ -96,7 +96,7 @@ const buildFeed = async (baseUrl) => {
 }
 
 // GitHub 版(沿用 make-update-feed 的 base-url 约定)
-const ghFeed = await buildFeed(`https://github.com/chatfire-AI/huobao-drama/releases/download/${tag}`)
+const ghFeed = await buildFeed(`https://github.com/kimyohant/naka-ai/releases/download/${tag}`)
 fs.writeFileSync(path.join(RELEASE, 'latest.json'), JSON.stringify(ghFeed, null, 2))
 if (!skipGh) execFileSync('gh', ['release', 'upload', tag, path.join(RELEASE, 'latest.json'), '--clobber'], { stdio: 'inherit' })
 
@@ -120,6 +120,6 @@ console.log(`  ✓ latest.json (no-cache)`)
 
 console.log(`
 发布完成:
-  海外  https://github.com/chatfire-AI/huobao-drama/releases/${tag}
+  海外  https://github.com/kimyohant/naka-ai/releases/${tag}
   国内  ${COS_BASE_URL}/latest.json
 `)

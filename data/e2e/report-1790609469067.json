@@ -1,0 +1,77 @@
+{
+  "startedAt": "2026-09-28T15:31:09.039Z",
+  "textModel": "gemini-2.5-flash",
+  "budget": 120,
+  "steps": [
+    {
+      "name": "0. Preflight",
+      "status": "pass",
+      "seconds": 1,
+      "result": {
+        "health": "ok",
+        "wanCredits": 303,
+        "contentLanguage": "th",
+        "textConfig": "#8 gemini",
+        "textModelOverride": "gemini-2.5-flash"
+      }
+    },
+    {
+      "name": "1. Wan Create configs (low priority, test-only lock)",
+      "status": "pass",
+      "seconds": 0,
+      "result": {
+        "image": 12,
+        "video": 13
+      }
+    },
+    {
+      "name": "2. Create project",
+      "status": "pass",
+      "seconds": 0,
+      "result": {
+        "id": 5,
+        "title": "[E2E] ร่มคันเดียว 2026-09-28T15:31"
+      }
+    },
+    {
+      "name": "3. Create episode (locked to Wan) + save story",
+      "status": "pass",
+      "seconds": 0,
+      "result": {
+        "id": 22,
+        "number": 1,
+        "imageConfig": 12,
+        "videoConfig": 13,
+        "storyChars": 501
+      }
+    },
+    {
+      "name": "4. AI script rewrite (script_rewriter agent)",
+      "status": "pass",
+      "seconds": 12,
+      "result": {
+        "scriptChars": 885,
+        "thai": true,
+        "preview": "## S01 | INT · ร้านกาแฟ | คืนวันศุกร์\n\nฝนตกหนักในคืนวันศุกร์ที่ร้านกาแฟเล็กๆ ริมถนนสุขุมวิท \"น้ำ\" บาริสต้าสาววัย 22 ปี ผมสั้นประบ่า สวมผ้ากันเปื้อนสีเขียว กำลัง"
+      }
+    },
+    {
+      "name": "5. Extract characters / scenes / props",
+      "status": "fail",
+      "seconds": 5,
+      "error": "extraction incomplete: 0 chars / 0 scenes; status {\"characters\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.526Z\",\"finished_at\":\"2026-09-28T15:31:23.350Z\",\"error\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 36.710820021s.\"},\"scenes\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.591Z\",\"finished_at\":\"2026-09-28T15:31:23.520Z\",\"error\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 36.516632901s.\"},\"props\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.641Z\",\"finished_at\":\"2026-09-28T15:31:23.600Z\",\"error\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 36.487892816s.\"}}"
+    }
+  ],
+  "ids": {
+    "configs": {
+      "image": 12,
+      "video": 13
+    },
+    "drama": 5,
+    "episode": 22
+  },
+  "findings": [],
+  "aborted": "extraction incomplete: 0 chars / 0 scenes; status {\"characters\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.526Z\",\"finished_at\":\"2026-09-28T15:31:23.350Z\",\"error\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 36.710820021s.\"},\"scenes\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.591Z\",\"finished_at\":\"2026-09-28T15:31:23.520Z\",\"error\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 36.516632901s.\"},\"props\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.641Z\",\"finished_at\":\"2026-09-28T15:31:23.600Z\",\"error\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 36.487892816s.\"}}",
+  "finishedAt": "2026-09-28T15:31:27.814Z",
+  "wanCreditsUsed": 0
+}

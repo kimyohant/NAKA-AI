@@ -4,7 +4,7 @@
  * 序列：validate → stop backend → move → write config → restart backend → done
  * 铁律：copy 校验通过前绝不删旧目录；配置搬完才写；任何失败回滚并以旧目录拉起后端。
  *
- * 进度经 IPC 'huobao:migrate-progress' 推送（80ms 节流，done/error 必发）。
+ * 进度经 IPC 'naka:migrate-progress' 推送（80ms 节流，done/error 必发）。
  */
 import { app, dialog, ipcMain } from 'electron'
 import type { BrowserWindow } from 'electron'
@@ -42,7 +42,7 @@ export interface MigrateOptions {
 }
 
 export function registerMigrationIpc(deps: MigrationDeps): void {
-  ipcMain.handle('huobao:start-migration', async (_event, opts: MigrateOptions) => {
+  ipcMain.handle('naka:start-migration', async (_event, opts: MigrateOptions) => {
     await runMigration(deps, opts)
     return { ok: true }
   })
@@ -56,7 +56,7 @@ function makeReporter(getWindow: () => BrowserWindow | null) {
     const now = Date.now()
     if (!force && progress.phase !== 'done' && progress.phase !== 'error' && now - lastSent < 80) return
     lastSent = now
-    getWindow()?.webContents.send('huobao:migrate-progress', progress)
+    getWindow()?.webContents.send('naka:migrate-progress', progress)
   }
 }
 
@@ -83,7 +83,7 @@ async function validateTarget(deps: MigrationDeps, target: string, currentDir: s
   }
 
   // 可写探针
-  const probe = path.join(target, `.huobao-probe-${Date.now()}`)
+  const probe = path.join(target, `.naka-probe-${Date.now()}`)
   await fsp.writeFile(probe, 'probe')
   await fsp.rm(probe)
 

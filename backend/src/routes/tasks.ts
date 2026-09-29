@@ -2,10 +2,12 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 import { success, created, badRequest } from '../utils/response.js'
-import { generateImage, generateVideo } from '../services/generation.js'
+import { generateImage, generateVideo, resumeGenerationTask } from '../services/generation.js'
 import { getActiveConfig, getConfigById } from '../services/ai.js'
 import { getDramaStylePrompt } from '../services/style-preset.js'
 import { logTaskError, logTaskPayload, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { storyboardReadiness } from '../services/storyboard-readiness.js'
+import { quoteGeneration } from '../services/generation-cost.js'
 
 const app = new Hono()
 
@@ -102,8 +104,82 @@ function validateVideoRequest(body: any, provider?: string): string | null {
   if (!String(body.prompt || '').trim() && imgs + vids + auds === 0 && !first && !last && !file && !link) {
     return '视频生成需要至少一个参考素材或 prompt'
   }
+  for (const match of String(body.prompt || '').matchAll(/@图片(\d+)/g)) {
+    const index = Number(match[1])
+    if (index < 1 || index > imgs) return `提示词引用了图片${index}，但只提交了 ${imgs} 张参考图`
+  }
   return null
 }
+
+async function resolveTaskContext(body: any, type: TaskType) {
+  let configId: number | undefined = body.config_id
+  let episodeResolution: string | undefined
+  let storyboardDramaId: number | undefined
+  if (body.storyboard_id) {
+    const [sb] = await db.select().from(schema.storyboards).where(eq(schema.storyboards.id, Number(body.storyboard_id)))
+    if (sb) {
+      const [ep] = await db.select().from(schema.episodes).where(eq(schema.episodes.id, sb.episodeId))
+      const locked = type === 'image' ? ep?.imageConfigId : ep?.videoConfigId
+      if (locked != null && configId == null) configId = locked
+      if (type === 'video' && ep?.resolution) episodeResolution = ep.resolution
+      storyboardDramaId = ep?.dramaId ?? undefined
+    }
+  }
+  return { configId, episodeResolution, storyboardDramaId }
+}
+
+async function prepareVideoTask(body: any, context: Awaited<ReturnType<typeof resolveTaskContext>>) {
+  if (body.storyboard_id) {
+    const readiness = await storyboardReadiness(Number(body.storyboard_id))
+    if (!readiness) throw new Error('Storyboard not found')
+    const blocker = readiness.blockers[0]
+    if (blocker?.code === 'select_image_candidate') throw new Error(`Select the generated ${blocker.slot} image for this shot before video generation`)
+    if (blocker?.code === 'missing_prompt') throw new Error('Add a video prompt for this shot before generation')
+    if (blocker) throw new Error(`Add an image for ${blocker.name || 'the bound asset'} before video generation`)
+  }
+  const videoBody = normalizeVideoRequest(body)
+  // A storyboard already has approved visual assets. Sending it as text-only video
+  // silently drops costume, cast and set continuity (for example from API scripts).
+  if (body.storyboard_id && !videoBody.reference_image_urls.length
+    && !videoBody.reference_video_urls.length
+    && !videoBody.first_frame_url && !videoBody.image_url) {
+    throw new Error('Storyboard video needs a reference image or first frame. Generate from the studio workbench so character, costume and scene images are included.')
+  }
+  const config = context.configId
+    ? (await getConfigById(context.configId)) ?? await getActiveConfig('video')
+    : await getActiveConfig('video')
+  if (!config) throw new Error('未配置视频模型，请先到「设置」页添加并启用 AI 服务')
+  const validationError = validateVideoRequest(videoBody, config.provider)
+  if (validationError) throw new Error(validationError)
+  let prompt = String(videoBody.prompt || '')
+  if (prompt.trim()) {
+    const stylePrompt = await getDramaStylePrompt(body.drama_id ?? context.storyboardDramaId ?? null)
+    if (stylePrompt) prompt = `${stylePrompt}，\n${prompt}`
+  }
+  return { videoBody, config, prompt }
+}
+
+// Read-only preview. The same preparation runs again when the approved job is submitted.
+app.post('/preflight', async (c) => {
+  try {
+    const body = await c.req.json()
+    if (body.type !== 'video') return badRequest(c, 'type 必须为 video')
+    const context = await resolveTaskContext(body, 'video')
+    const prepared = await prepareVideoTask(body, context)
+    return success(c, {
+      prompt: prepared.prompt,
+      provider: prepared.config.provider,
+      model: prepared.videoBody.model || prepared.config.model,
+      duration: prepared.videoBody.duration,
+      resolution: context.episodeResolution || prepared.videoBody.resolution,
+      aspect_ratio: prepared.videoBody.aspect_ratio,
+      reference_image_urls: prepared.videoBody.reference_image_urls,
+      cost: quoteGeneration(context.storyboardDramaId || body.drama_id, prepared.config.id, 'video', prepared.videoBody.duration),
+    })
+  } catch (err: any) {
+    return badRequest(c, err.message)
+  }
+})
 
 // POST /tasks — 发起生成任务（body.type: image | video）
 app.post('/', async (c) => {
@@ -115,32 +191,13 @@ app.post('/', async (c) => {
     if (!body.prompt) return badRequest(c, '提示词必填')
   }
 
-  const videoBody = type === 'video' ? normalizeVideoRequest(body) : null
-
   try {
     // 请求显式指定 config_id（工作台模型下拉跨厂商切换）时优先；
     // 未指定才回退到集锁定配置，避免锁定配置与所选模型错配（如锁定 Seedance 却传 MiniMax 模型名）
-    let configId: number | undefined = body.config_id
-    let episodeResolution: string | undefined
-    let storyboardDramaId: number | undefined
-    if (body.storyboard_id) {
-      const [sb] = await db.select().from(schema.storyboards).where(eq(schema.storyboards.id, Number(body.storyboard_id)))
-      if (sb) {
-        const [ep] = await db.select().from(schema.episodes).where(eq(schema.episodes.id, sb.episodeId))
-        const locked = type === 'image' ? ep?.imageConfigId : ep?.videoConfigId
-        if (locked != null && configId == null) configId = locked
-        if (type === 'video' && ep?.resolution) episodeResolution = ep.resolution
-        storyboardDramaId = ep?.dramaId ?? undefined
-      }
-    }
-
-    if (type === 'video' && videoBody) {
-      const effectiveConfig = configId
-        ? (await getConfigById(configId)) ?? await getActiveConfig('video')
-        : await getActiveConfig('video')
-      const validationError = validateVideoRequest(videoBody, effectiveConfig?.provider)
-      if (validationError) return badRequest(c, validationError)
-    }
+    const context = await resolveTaskContext(body, type)
+    const { configId, episodeResolution } = context
+    const prepared = type === 'video' ? await prepareVideoTask(body, context) : null
+    const videoBody = prepared?.videoBody
 
     logTaskStart('TaskAPI', 'generate', {
       type,
@@ -150,14 +207,6 @@ app.post('/', async (c) => {
       dramaId: body.drama_id,
     })
     logTaskPayload('TaskAPI', 'request body', body)
-
-    // 视频生成时把项目视觉风格词注入提示词最前方（与图片侧的自动注入保持一致口径）
-    let videoPrompt = videoBody?.prompt
-    if (type === 'video' && String(videoPrompt || '').trim()) {
-      const dramaId = body.drama_id ?? storyboardDramaId ?? null
-      const stylePrompt = await getDramaStylePrompt(dramaId)
-      if (stylePrompt) videoPrompt = `${stylePrompt}，\n${videoPrompt}`
-    }
 
     const id = type === 'image'
       ? await generateImage({
@@ -175,7 +224,7 @@ app.post('/', async (c) => {
       : await generateVideo({
         storyboardId: body.storyboard_id,
         dramaId: body.drama_id,
-        prompt: videoPrompt,
+        prompt: prepared!.prompt,
         model: videoBody!.model,
         referenceMode: 'reference',
         imageUrl: videoBody!.image_url,
@@ -214,6 +263,15 @@ app.get('/:id', async (c) => {
   return success(c, row || null)
 })
 
+// Resume polling an accepted provider task. This endpoint never submits a new paid task.
+app.post('/:id/recover', async (c) => {
+  const id = Number(c.req.param('id'))
+  if (!Number.isInteger(id) || id < 1) return badRequest(c, 'Invalid task ID')
+  const result = await resumeGenerationTask(id)
+  if (result === 'unavailable') return badRequest(c, 'Provider task ID or original configuration is unavailable')
+  return success(c, { status: result })
+})
+
 // GET /tasks — 按 type / storyboard_id / drama_id 过滤
 app.get('/', async (c) => {
   const type = c.req.query('type')
@@ -232,6 +290,13 @@ app.get('/', async (c) => {
 // DELETE /tasks/:id
 app.delete('/:id', async (c) => {
   const id = Number(c.req.param('id'))
+  const [task] = await db.select().from(schema.sysTask).where(eq(schema.sysTask.id, id))
+  if (task && ['queued', 'submitting', 'processing'].includes(task.status || '')) {
+    return badRequest(c, 'Cannot delete an active generation task')
+  }
+  const selections = await db.select().from(schema.storyboardMediaSelections)
+    .where(eq(schema.storyboardMediaSelections.taskId, id))
+  if (selections.length) return badRequest(c, 'Cannot delete media selected for a shot')
   await db.delete(schema.sysTask).where(eq(schema.sysTask.id, id))
   return success(c)
 })

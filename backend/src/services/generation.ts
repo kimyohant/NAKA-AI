@@ -3,18 +3,22 @@
  * 创建(processing) → 适配器构建请求 → 同步完成或异步轮询 → 下载落盘 → 回写业务表
  */
 import { db, getInsertId, schema } from '../db/index.js'
-import { eq } from 'drizzle-orm'
-import { getActiveConfig, getConfigById } from './ai.js'
+import { and, eq } from 'drizzle-orm'
+import { getActiveConfig, getConfigById, getConfigForRecovery } from './ai.js'
 import { now, AppError } from '../utils/response.js'
 import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readImageAsCompressedDataUrl, saveBase64Image } from '../utils/storage.js'
 import { extractVideoPoster } from '../utils/video-poster.js'
 import { getImageAdapter, getVideoAdapter } from './adapters/registry'
 import type { AIConfig, ImageGenerationRecord, VideoGenerationRecord } from './adapters/types'
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess, logTaskWarn, redactUrl } from '../utils/task-logger.js'
+import { taskMediaSlot } from './storyboard-readiness.js'
+import { estimateCostThb } from './generation-cost.js'
+import { sourceSnapshotForShot } from './source-freshness.js'
 
 type TaskType = 'image' | 'video'
 
 const taskLabel = (type: TaskType) => (type === 'image' ? 'ImageTask' : 'VideoTask')
+const activeTasks = new Set<number>()
 
 // 轮询节奏：图片 5s×120（上限 10 分钟）；视频 10s×300
 /** 提交被厂商以「忙/稍后再试」拒绝时的排队重试：每 15s 一次，最多约 10 分钟 */
@@ -165,22 +169,104 @@ async function createTask(
   params: Record<string, unknown>,
 ): Promise<number> {
   const ts = now()
-  const res = await db.insert(schema.sysTask).values({
-    type,
-    ...fields,
-    provider: config.provider,
-    params: JSON.stringify(params),
-    status: 'processing',
-    createdAt: ts,
-    updatedAt: ts,
+  const snapshot = type === 'video' && fields.storyboardId ? sourceSnapshotForShot(fields.storyboardId) : null
+  const id = db.transaction(tx => {
+    const shot = fields.storyboardId
+      ? tx.select().from(schema.storyboards).where(eq(schema.storyboards.id, fields.storyboardId)).get()
+      : null
+    if (fields.storyboardId && !shot) throw new Error('Storyboard not found')
+    const episode = shot ? tx.select().from(schema.episodes).where(eq(schema.episodes.id, shot.episodeId)).get() : null
+    const character = fields.characterId ? tx.select().from(schema.characters).where(eq(schema.characters.id, fields.characterId)).get() : null
+    const scene = fields.sceneId ? tx.select().from(schema.scenes).where(eq(schema.scenes.id, fields.sceneId)).get() : null
+    const prop = fields.propId ? tx.select().from(schema.props).where(eq(schema.props.id, fields.propId)).get() : null
+    const dramaId = episode?.dramaId || character?.dramaId || scene?.dramaId || prop?.dramaId || fields.dramaId || undefined
+    const drama = dramaId ? tx.select().from(schema.dramas).where(eq(schema.dramas.id, dramaId)).get() : null
+    const configRow = config.id ? tx.select().from(schema.aiServiceConfigs).where(eq(schema.aiServiceConfigs.id, config.id)).get() : null
+    const estimatedCostThb = estimateCostThb(configRow?.settings || null, type, Number(params.duration))
+    if (drama?.budgetThb != null) {
+      if (estimatedCostThb === null) throw new Error('Set a price for this AI configuration before generating within a project budget')
+      const existing = tx.select().from(schema.sysTask).where(eq(schema.sysTask.dramaId, drama.id)).all()
+      const allocated = existing.reduce((sum, task) => sum + (task.estimatedCostThb || 0), 0)
+      if (allocated + estimatedCostThb > drama.budgetThb + 0.00001) {
+        throw new Error(`Project budget exceeded. Remaining estimate: ฿${Math.max(0, drama.budgetThb - allocated).toFixed(2)}`)
+      }
+    }
+    const res = tx.insert(schema.sysTask).values({
+      type,
+      ...fields,
+      dramaId,
+      provider: config.provider,
+      configId: config.id,
+      params: JSON.stringify(params),
+      estimatedCostThb,
+      sourceSnapshot: snapshot ? JSON.stringify(snapshot) : null,
+      status: 'queued',
+      createdAt: ts,
+      updatedAt: ts,
+    }).run()
+    return getInsertId(res)
   })
-
-  const id = getInsertId(res)
-  processTask(id, config).catch(err => {
-    logTaskError(taskLabel(type), 'process', { id, error: err.message })
-    console.error(`${taskLabel(type)} ${id} failed:`, err)
-  })
+  startTask(id, config, false)
   return id
+}
+
+function startTask(id: number, config: AIConfig, resumePolling: boolean): boolean {
+  if (activeTasks.has(id)) return false
+  activeTasks.add(id)
+  const work = resumePolling ? resumePollingTask(id, config) : processTask(id, config)
+  void work.catch(async err => {
+    logTaskError('SysTask', 'worker-error', { id, error: err?.message })
+    console.error(`Generation task ${id} worker failed:`, err)
+    try {
+      await markUnknown(id, 'Worker stopped unexpectedly; check the provider task before retrying')
+    } catch (persistError) {
+      console.error(`Could not persist generation task ${id} failure:`, persistError)
+    }
+  }).finally(() => activeTasks.delete(id))
+  return true
+}
+
+async function recoveryConfig(record: SysTaskRecord): Promise<AIConfig | null> {
+  if (record.configId) {
+    const config = await getConfigForRecovery(record.configId)
+    return config?.provider === record.provider ? config : null
+  }
+  // Older tasks did not persist a config ID. Resume only when the provider match is unique.
+  const rows = await db.select().from(schema.aiServiceConfigs)
+  const matches = rows.filter(r => r.serviceType === record.type && r.provider === record.provider)
+  return matches.length === 1 ? getConfigForRecovery(matches[0].id) : null
+}
+
+async function resumePollingTask(id: number, config: AIConfig) {
+  const [record] = await db.select().from(schema.sysTask).where(eq(schema.sysTask.id, id))
+  if (record?.taskId) await pollTask(record, config, record.taskId)
+}
+
+export async function recoverGenerationTasks(): Promise<{ resumed: number; queued: number; unknown: number }> {
+  const rows = await db.select().from(schema.sysTask)
+  const counts = { resumed: 0, queued: 0, unknown: 0 }
+  for (const record of rows) {
+    if (!['queued', 'submitting', 'processing'].includes(record.status || '')) continue
+    const config = await recoveryConfig(record)
+    if (record.taskId && config) {
+      if (startTask(record.id, config, true)) counts.resumed++
+    } else if (record.status === 'queued' && config) {
+      if (startTask(record.id, config, false)) counts.queued++
+    } else {
+      await markUnknown(record.id, config ? 'Submission state is uncertain after restart; check provider history before creating a new task' : 'Original provider configuration unavailable; check provider history')
+      counts.unknown++
+    }
+  }
+  return counts
+}
+
+export async function resumeGenerationTask(id: number): Promise<'resumed' | 'active' | 'unavailable'> {
+  const [record] = await db.select().from(schema.sysTask).where(eq(schema.sysTask.id, id))
+  if (!record?.taskId || !['unknown', 'processing'].includes(record.status || '')) return 'unavailable'
+  const config = await recoveryConfig(record)
+  if (!config) return 'unavailable'
+  await db.update(schema.sysTask).set({ status: 'processing', errorMsg: null, updatedAt: now() }).where(eq(schema.sysTask.id, id))
+  return startTask(id, config, true) ? 'resumed' : 'active'
 }
 
 function parseTaskParams(raw: string | null | undefined): Record<string, any> {
@@ -193,6 +279,9 @@ function parseTaskParams(raw: string | null | undefined): Record<string, any> {
 }
 
 async function processTask(id: number, config: AIConfig) {
+  let submitStarted = false
+  let providerRejected = false
+  let providerErrorCode: string | undefined
   try {
     const [record] = await db.select().from(schema.sysTask).where(eq(schema.sysTask.id, id))
     if (!record) return
@@ -277,14 +366,23 @@ async function processTask(id: number, config: AIConfig) {
     const submitAdapter = type === 'image' ? getImageAdapter(config.provider) : getVideoAdapter(config.provider)
     let result: any
     for (let attempt = 0; ; attempt++) {
+      await db.update(schema.sysTask)
+        .set({ status: 'submitting', updatedAt: now() })
+        .where(eq(schema.sysTask.id, id))
+      submitStarted = true
       const resp = await fetch(url, {
         method,
         headers,
         body: isMultipart ? (body as FormData) : JSON.stringify(body),
         signal: AbortSignal.timeout(600_000),
       })
-      if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`)
+      if (!resp.ok) {
+        providerRejected = resp.status >= 400 && resp.status < 500
+        throw new Error(`Provider HTTP ${resp.status}`)
+      }
       result = await resp.json() as any
+      providerRejected = result?.success === false
+      providerErrorCode = result?.errorCode || result?.code
       logTaskPayload(label, 'response payload', { id, provider: config.provider, result })
       if (!submitAdapter.isRetryableSubmit?.(result) || attempt >= SUBMIT_RETRY_MAX) break
       logTaskWarn(label, 'submit-busy-retry', { id, provider: config.provider, attempt: attempt + 1, waitMs: SUBMIT_RETRY_DELAY_MS })
@@ -312,8 +410,10 @@ async function processTask(id: number, config: AIConfig) {
         throw new Error('No image URL or base64 data in response')
       }
 
+      if (!taskId) throw new Error('Provider accepted generation without a task ID')
+
       await markPolling(id, taskId)
-      pollTask(record, config, taskId!)
+      await pollTask(record, config, taskId!)
       return
     }
 
@@ -326,10 +426,14 @@ async function processTask(id: number, config: AIConfig) {
       return
     }
 
+    if (!taskId) throw new Error('Provider accepted generation without a task ID')
     await markPolling(id, taskId)
-    pollTask(record, config, taskId!)
+    await pollTask(record, config, taskId!)
   } catch (err: any) {
-    await failTask(id, err.message)
+    const rawMessage = String(err?.message || err)
+    const message = (config.apiKey ? rawMessage.replaceAll(config.apiKey, '[redacted]') : rawMessage).slice(0, 500)
+    if (submitStarted && !providerRejected) await markUnknown(id, message, providerErrorCode)
+    else await failTask(id, message, providerErrorCode)
   }
 }
 
@@ -340,10 +444,17 @@ async function markPolling(id: number, taskId: string | undefined) {
   logTaskProgress('SysTask', 'poll-start', { id, taskId })
 }
 
-async function failTask(id: number, message: string) {
+async function failTask(id: number, message: string, code?: string) {
   logTaskError('SysTask', 'failed', { id, error: message })
   await db.update(schema.sysTask)
-    .set({ status: 'failed', errorMsg: message, updatedAt: now() })
+    .set({ status: 'failed', errorMsg: message, errorCode: code || null, updatedAt: now() })
+    .where(eq(schema.sysTask.id, id))
+}
+
+async function markUnknown(id: number, message: string, code?: string) {
+  logTaskWarn('SysTask', 'unknown', { id, error: message, code })
+  await db.update(schema.sysTask)
+    .set({ status: 'unknown', errorMsg: message.slice(0, 500), errorCode: code || null, updatedAt: now() })
     .where(eq(schema.sysTask.id, id))
 }
 
@@ -358,7 +469,7 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
 
   for (let i = 0; i < profile.attempts; i++) {
     if (profile.maxDurationMs && Date.now() - startedAt >= profile.maxDurationMs) {
-      await failTask(record.id, 'Timeout: Polling exceeded 10 minutes')
+      await markUnknown(record.id, 'Polling timed out; provider task may still be running')
       return
     }
     await new Promise(r => setTimeout(r, profile.intervalMs))
@@ -412,20 +523,22 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
       }
       if (pollResp.status === 'failed') {
         // 上游明确失败（如内容审核拦截）属终态：立即落库，不重试不等待超时
-        await failTask(record.id, pollResp.error || 'Generation failed')
+        const failure = String(pollResp.error || 'Generation failed')
+        const code = /^\s*([0-9]{3,}|[A-Z][A-Z0-9_]{2,})(?:\s|$)/.exec(failure)?.[1]
+        await failTask(record.id, failure, code)
         return
       }
     } catch (err: any) {
       const exhausted = i === profile.attempts - 1
         || (profile.maxDurationMs != null && Date.now() - startedAt >= profile.maxDurationMs)
       if (exhausted) {
-        await failTask(record.id, `Timeout: ${err.message}`)
+        await markUnknown(record.id, `Polling stopped: ${err.message}`)
         return
       }
       logTaskWarn(label, 'poll-retry', { id: record.id, taskId, attempt: i + 1, error: err.message })
     }
   }
-  await failTask(record.id, 'Timeout: polling attempts exhausted')
+  await markUnknown(record.id, 'Polling attempts exhausted; provider task may still be running')
 }
 
 async function handleImageComplete(record: SysTaskRecord, imageUrl: string) {
@@ -433,37 +546,37 @@ async function handleImageComplete(record: SysTaskRecord, imageUrl: string) {
   // 列表页缩略图（前端按命名约定推导地址，失败不影响主流程）
   await generateImageThumb(localPath)
 
+  await writeBackImageAssets(record, localPath)
   await db.update(schema.sysTask)
     .set({ resultUrl: imageUrl, localPath, status: 'completed', completedAt: now(), updatedAt: now() })
     .where(eq(schema.sysTask.id, record.id))
 
   logTaskSuccess('ImageTask', 'downloaded', { id: record.id, provider: record.provider, localPath })
-
-  await writeBackImageAssets(record, localPath)
 }
 
 async function handleImageCompleteBase64(record: SysTaskRecord, base64Data: string, mimeType: string) {
   const localPath = await saveBase64Image(base64Data, mimeType, 'images')
   await generateImageThumb(localPath)
 
+  await writeBackImageAssets(record, localPath)
   await db.update(schema.sysTask)
     .set({ localPath, status: 'completed', completedAt: now(), updatedAt: now() })
     .where(eq(schema.sysTask.id, record.id))
 
   logTaskSuccess('ImageTask', 'saved-base64', { id: record.id, provider: record.provider, mimeType, localPath })
-
-  await writeBackImageAssets(record, localPath)
 }
 
 // 图片完成后回写业务表：分镜(按 frameType)、角色、场景、道具
 async function writeBackImageAssets(record: SysTaskRecord, localPath: string) {
   const params = parseTaskParams(record.params)
   if (record.storyboardId) {
+    const [selected] = await db.select().from(schema.storyboardMediaSelections)
+      .where(and(eq(schema.storyboardMediaSelections.storyboardId, record.storyboardId), eq(schema.storyboardMediaSelections.slot, taskMediaSlot(record))))
     const sbUpdate: Record<string, any> = { updatedAt: now() }
     if (params.frameType === 'first_frame') sbUpdate.firstFrameImage = localPath
     else if (params.frameType === 'last_frame') sbUpdate.lastFrameImage = localPath
     else sbUpdate.composedImage = localPath
-    await db.update(schema.storyboards).set(sbUpdate).where(eq(schema.storyboards.id, record.storyboardId))
+    if (!selected) await db.update(schema.storyboards).set(sbUpdate).where(eq(schema.storyboards.id, record.storyboardId))
   }
   if (record.characterId) {
     await db.update(schema.characters).set({ imageUrl: localPath, updatedAt: now() }).where(eq(schema.characters.id, record.characterId))
@@ -480,17 +593,20 @@ async function handleVideoComplete(record: SysTaskRecord, videoUrl: string, dura
   const localPath = await downloadFile(videoUrl, 'videos')
   // 海报帧供列表/封面展示，避免前端为显示首帧缓冲整个视频
   await extractVideoPoster(localPath)
+  if (record.storyboardId) {
+    const [selected] = await db.select().from(schema.storyboardMediaSelections)
+      .where(and(eq(schema.storyboardMediaSelections.storyboardId, record.storyboardId), eq(schema.storyboardMediaSelections.slot, 'video')))
+    if (!selected) {
+      await db.update(schema.storyboards)
+        .set({ videoUrl: localPath, duration: duration || undefined, updatedAt: now() })
+        .where(eq(schema.storyboards.id, record.storyboardId))
+    }
+  }
   await db.update(schema.sysTask)
     .set({ resultUrl: videoUrl, localPath, status: 'completed', completedAt: now(), updatedAt: now() })
     .where(eq(schema.sysTask.id, record.id))
 
   logTaskSuccess('VideoTask', 'downloaded', { id: record.id, localPath, storyboardId: record.storyboardId, duration })
-
-  if (record.storyboardId) {
-    await db.update(schema.storyboards)
-      .set({ videoUrl: localPath, duration: duration || undefined, updatedAt: now() })
-      .where(eq(schema.storyboards.id, record.storyboardId))
-  }
 }
 
 // ─── 参考素材归一化 ───────────────────────────────────────────────

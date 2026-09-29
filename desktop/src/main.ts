@@ -171,10 +171,10 @@ function startBackend(): void {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     PORT: String(backendPort),
-    HUOBAO_DESKTOP: '1',
+    NAKA_DESKTOP: '1',
     // 数据目录单一来源：重启/迁移后只需改 currentDataDir
-    HUOBAO_DATA_DIR: currentDataDir,
-    SQLITE_PATH: path.join(currentDataDir, 'huobao.sqlite3'),
+    NAKA_DATA_DIR: currentDataDir,
+    SQLITE_PATH: path.join(currentDataDir, 'naka.sqlite3'),
     WORKSPACE_PATH: currentWorkspaceDir,
     FRONTEND_DIST: currentFrontendDist,
   }
@@ -186,7 +186,7 @@ function startBackend(): void {
 
   backend = utilityProcess.fork(BACKEND_BUNDLE, [], {
     env,
-    serviceName: 'huobao-backend',
+    serviceName: 'naka-backend',
     stdio: 'pipe',
   })
   console.log(`[main] backend forked from ${BACKEND_BUNDLE}`)
@@ -276,12 +276,12 @@ async function bootstrap() {
 
 /** 可写探针 */
 async function assertWritable(dir: string): Promise<void> {
-  const probe = path.join(dir, `.huobao-probe-${Date.now()}`)
+  const probe = path.join(dir, `.naka-probe-${Date.now()}`)
   await fsp.writeFile(probe, 'probe')
   await fsp.rm(probe)
 }
 
-ipcMain.handle('huobao:pick-directory', async () => {
+ipcMain.handle('naka:pick-directory', async () => {
   if (!mainWindow) return { ok: false, error: '窗口未就绪' }
   const res = await dialog.showOpenDialog(mainWindow, {
     title: '选择数据存储目录',

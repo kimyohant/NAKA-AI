@@ -3,6 +3,7 @@ import { and, eq, isNull, like, desc } from 'drizzle-orm'
 import { db, getInsertId, schema } from '../db/index.js'
 import { success, badRequest, notFound, created, now } from '../utils/response.js'
 import { toSnakeCase, toSnakeCaseArray } from '../utils/transform.js'
+import { budgetForDrama } from '../services/generation-cost.js'
 
 const app = new Hono()
 
@@ -101,6 +102,13 @@ app.get('/stats', async (c) => {
 })
 
 // GET /dramas/:id - Get drama detail
+app.get('/:id/budget', async (c) => {
+  const id = Number(c.req.param('id'))
+  if (!Number.isInteger(id) || id < 1) return badRequest(c, 'Invalid project ID')
+  try { return success(c, budgetForDrama(id)) }
+  catch { return notFound(c, 'Project not found') }
+})
+
 app.get('/:id', async (c) => {
   const id = Number(c.req.param('id'))
   const [drama] = await db.select().from(schema.dramas).where(eq(schema.dramas.id, id))
@@ -143,6 +151,15 @@ app.put('/:id', async (c) => {
     updates.metadata = typeof body.metadata === 'object' && body.metadata !== null
       ? JSON.stringify(body.metadata)
       : body.metadata
+  }
+  if ('budget_thb' in body) {
+    const raw = body.budget_thb
+    if (raw === null || raw === '') updates.budgetThb = null
+    else {
+      const amount = Number(raw)
+      if (!Number.isFinite(amount) || amount < 0 || amount > 100_000_000) return badRequest(c, 'Budget must be between 0 and 100,000,000 THB')
+      updates.budgetThb = Math.round(amount * 100) / 100
+    }
   }
   await db.update(schema.dramas).set(updates).where(eq(schema.dramas.id, id))
   return success(c)
