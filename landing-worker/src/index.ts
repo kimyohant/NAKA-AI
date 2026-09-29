@@ -1,4 +1,5 @@
 import { runSalesAgent } from "./agent";
+import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
 import { getDisplayName, pushText, replyOrPush, startLoading, verifySignature } from "./line";
 import { handleStudio } from "./studio";
@@ -183,6 +184,19 @@ async function handleAdmin(request: Request, env: Env, url: URL): Promise<Respon
       conv.history.push({ role: "assistant", content: `[แอดมิน] ${text}` });
       await saveConversation(db, conv);
       return json({ ok: true });
+    }
+  }
+
+  // ---- credits (manual grants until payments exist) ----
+  if (path[0] === "credits" && path[1]) {
+    const userId = decodeURIComponent(path[1]);
+    if (method === "GET") {
+      return json({ balance: await getBalance(db, userId), plan: await getPlan(db, userId), ledger: await ledgerFor(db, userId) });
+    }
+    if (method === "POST") {
+      const { amount, note } = await body<{ amount: number; note?: string }>();
+      if (!Number.isInteger(amount) || amount <= 0) return json({ error: "amount ต้องเป็นจำนวนเต็มบวก" }, 400);
+      return json({ balance: await grantCredits(db, userId, amount, "grant", note ?? "") }, 201);
     }
   }
 
