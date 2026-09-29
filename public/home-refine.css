@@ -357,3 +357,28 @@ html { scroll-padding-top: 92px; }
   .flow-step, .flow-start, .flow-frame, .flow-fallback-product, .flow-fallback-naka, .flow-fallback-output span { transition: none; }
   .flow-step:hover { transform: none; }
 }
+
+/* Illustrated Thai-style card covers (added 2026-09-29) */
+.team-art.has-cover { position: relative; }
+.team-art.has-cover .art-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.team-card:hover .team-art.has-cover .art-cover { transform: scale(1.045); }
+.team-art.has-cover::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 38%; background: linear-gradient(transparent, rgba(9, 23, 54, .28)); pointer-events: none; }
+.art-pill-live { position: absolute; top: 18px; left: 18px; z-index: 2; color: #fff; background: #f64066; padding: 8px 12px; border-radius: 9px; font-size: 12px; font-weight: 700; box-shadow: 0 8px 20px rgba(6, 23, 50, .35); }
+@media (prefers-reduced-motion: reduce) { .team-card:hover .team-art.has-cover .art-cover { transform: none; } }
+
+/* Hero quick start: type the product, land on /create/ with it filled in */
+.hero-quickstart { margin-top: 30px; max-width: 540px; }
+.quickstart-label { display: block; margin-bottom: 10px; color: #b7d4fb; font-size: 14px; font-weight: 600; }
+.quickstart-row { display: flex; gap: 6px; padding: 6px; border: 1px solid #a7cdf866; border-radius: 999px; background: #ffffff12; transition: border-color .18s, background .18s; }
+.quickstart-row:focus-within { border-color: #8cdbfa; background: #ffffff1c; }
+.quickstart-row input { flex: 1; min-width: 0; border: 0; background: transparent; color: #fff; font: inherit; font-size: 16px; padding: 0 16px; }
+.quickstart-row input::placeholder { color: #9fb4d4; }
+.quickstart-row input:focus { outline: none; }
+.quickstart-row .button { flex: none; min-height: 50px; }
+.hero-quickstart + .hero-actions { margin-top: 18px; }
+@media (max-width: 760px) {
+  .hero-quickstart { margin-top: 24px; }
+  .quickstart-row { flex-direction: column; border-radius: 20px; padding: 8px; }
+  .quickstart-row input { min-height: 48px; }
+  .quickstart-row .button { width: 100%; }
+}

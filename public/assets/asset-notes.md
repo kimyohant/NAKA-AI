@@ -60,3 +60,13 @@ Composition/framing: square photograph, three-quarter view, quiet asymmetrical c
 Lighting/mood: warm side sunlight from upper left, delicate shadows, tactile realistic material, luxury natural skincare editorial, restrained colors.
 Constraints: blank labels without text, no brand marks, no logos, no watermarks, no lettering of any kind. Sharp beautiful soap texture, photographic realism.
 ```
+
+## card-drama.jpg, card-live.jpg, card-bot.jpg
+
+1600x900 JPEG cover illustrations added 2026-09-29 for the team service cards
+(drama / live / bot), replacing the old CSS-only placeholder art. Generated with
+Seedream 5.0 image-to-image using `naka-plush-sales.png` as the identity
+reference so the plush naga character stays on-model. Thai-style scenes: film
+director set with Thai cinema backdrop (drama), livestream table with mangoes,
+jasmine garland and Thai silk (live), chat-helper at a Thai shop counter with
+blank speech bubbles (bot). The sales card keeps its video artwork.

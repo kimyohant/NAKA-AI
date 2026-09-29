@@ -67,6 +67,8 @@
   document.querySelector('#workflow-intro').textContent = job.intro;
   document.querySelector('#name-label').textContent = job.nameLabel;
   document.querySelector('#product-name').placeholder = job.namePlaceholder;
+  const prefilledName = new URLSearchParams(location.search).get('name');
+  if (prefilledName) document.querySelector('#product-name').value = prefilledName.slice(0, 120);
   document.querySelector('#details-label').textContent = job.detailsLabel;
   document.querySelector('#product-details').placeholder = job.detailsPlaceholder;
   document.querySelector('#channel-label').textContent = job.channelLabel;
