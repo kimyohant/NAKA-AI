@@ -5,6 +5,22 @@ export interface Env {
   LINE_CHANNEL_SECRET: string;
   LINE_CHANNEL_ACCESS_TOKEN: string;
   ADMIN_TOKEN: string;
+  // Phase 1 auth — contract in docs/phase1-tasks.md
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  SESSION_SECRET: string;
+  SMS_PROVIDER: "mock" | "thaibulksms";
+  SMS_API_KEY?: string;
+  SMS_API_SECRET?: string;
+  APP_ORIGIN: string;
+}
+
+/** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */
+export interface User {
+  id: string;
+  displayName: string;
+  phone: string | null;
+  email: string | null;
 }
 
 export interface Product {
