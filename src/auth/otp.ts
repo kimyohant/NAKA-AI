@@ -2,6 +2,7 @@ import type { Env } from '../types';
 import { AuthError, constantTimeEqual, hmac, json, now, randomToken, readJson } from './common';
 import { createSession, identityUser } from './session';
 import { smsProvider } from './sms';
+import { verifyTurnstile } from './turnstile';
 
 export function normalizePhone(input: unknown): string {
   if (typeof input !== 'string' || input.length > 32) throw new AuthError(400, 'กรุณากรอกเบอร์มือถือไทยให้ถูกต้อง');
@@ -19,8 +20,10 @@ function generateCode(): string {
 }
 
 export async function requestOtp(request: Request, env: Env): Promise<Response> {
-  const phone = normalizePhone((await readJson(request)).phone);
+  const body = await readJson(request, 4096);
+  const phone = normalizePhone(body.phone);
   const provider = smsProvider(env);
+  await verifyTurnstile(request, env, body.turnstileToken);
   const timestamp = now();
   const ipHash = await hmac(env, `ip:${request.headers.get('CF-Connecting-IP') || 'unknown'}`);
   const challenge = randomToken();
@@ -35,7 +38,7 @@ export async function requestOtp(request: Request, env: Env): Promise<Response> 
       SELECT ?, ?, ?, ?
       WHERE NOT EXISTS (SELECT 1 FROM auth_otp_requests WHERE phone = ? AND created_at > ?)
       AND (SELECT COUNT(*) FROM auth_otp_requests WHERE phone = ? AND created_at > ?) < 3
-      AND (SELECT COUNT(*) FROM auth_otp_requests WHERE ip_hash = ? AND created_at > ?) < 20
+      AND (SELECT COUNT(*) FROM auth_otp_requests WHERE ip_hash = ? AND created_at > ?) < 60
       RETURNING id`).bind(challenge, phone, ipHash, timestamp, phone, timestamp - 60, phone, timestamp - 3600, ipHash, timestamp - 3600),
     env.DB.prepare(`INSERT INTO otp_codes (phone, challenge_id, code_hash, expires_at, attempts, ready, created_at)
       SELECT ?, ?, ?, ?, 0, 0, ? WHERE EXISTS (SELECT 1 FROM auth_otp_requests WHERE id = ?)
@@ -53,7 +56,7 @@ export async function requestOtp(request: Request, env: Env): Promise<Response> 
       .bind(phone, phone, phone, ipHash, ipHash).first<{ latest: number | null; phone_count: number; phone_first: number; ip_count: number; ip_first: number }>();
     const retry = Math.max(1, (limits?.latest ?? timestamp - 60) + 60 - timestamp,
       limits && limits.phone_count >= 3 ? limits.phone_first + 3600 - timestamp : 0,
-      limits && limits.ip_count >= 20 ? limits.ip_first + 3600 - timestamp : 0);
+      limits && limits.ip_count >= 60 ? limits.ip_first + 3600 - timestamp : 0);
     throw new AuthError(429, 'ขอรหัสบ่อยเกินไป กรุณารอสักครู่', retry);
   }
   try {

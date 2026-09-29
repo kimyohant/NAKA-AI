@@ -1,5 +1,40 @@
 # Shared auth integration status
 
+## รอบ 2 — Turnstile / feat/social (2026-09-29)
+
+รอบนี้ทำใน `naka-ai-social` ตาม AGENTS.md ใหม่ ข้อมูล worktree ด้านล่างเป็นประวัติ
+เพิ่ม Siteverify ก่อนใช้โควตา/ส่ง SMS, ตรวจ success, hostname ตรง APP_ORIGIN และ
+action `otp_request`; หาก HTTPS ไม่ตั้ง `TURNSTILE_SECRET_KEY` ตอบ 503
+ข้ามได้เฉพาะ loopback HTTP ที่ไม่ตั้ง key หากตั้ง key ใน dev ก็ต้องตรวจจริง
+IP จำกัด 60 ครั้ง/ชั่วโมง; เบอร์ยัง 3 ครั้ง/ชั่วโมงและ cooldown 60 วินาที
+
+### สิ่งที่หน้า login ของ Z.AI ต้องต่อ
+
+1. ใส่ Turnstile widget ด้วย **site key สาธารณะ** ที่อนุญาต hostname ของ APP_ORIGIN
+   โหลด `https://challenges.cloudflare.com/turnstile/v0/api.js` และกำหนด
+   `data-sitekey="PUBLIC_SITE_KEY" data-action="otp_request"` บน `.cf-turnstile`
+2. อ่าน token จาก success callback หรือ input `cf-turnstile-response`
+   แล้วส่ง JSON `{ "phone": "0812345678", "turnstileToken": "..." }`
+   ไป `POST /api/auth/otp/request` แบบ same-origin พร้อม session cookie
+   เก็บ token ใน memory เท่านั้น; ไม่ต้องส่ง token ไป `/otp/verify`
+3. ปิดปุ่มขอ OTP จนมี token; ล้าง token เมื่อ error/expired callback
+   เรียก `turnstile.reset(widgetId)` หลัง request ทุกครั้ง รวม 429/network error
+   เพราะ token ใช้ครั้งเดียวและหมดอายุใน 5 นาที ต้องยืนยันใหม่ก่อน resend
+4. แสดงข้อความ API ตามจริง: 400 `ยืนยันว่าไม่ใช่บอตไม่สำเร็จ กรุณาลองใหม่`,
+   503 ระบบยังไม่พร้อม, 429 ใช้ Retry-After; ไม่แสดงว่าเบอร์ผิดแทน
+5. ตั้ง `TURNSTILE_SECRET_KEY` ใน Worker secret เท่านั้น ห้ามส่งไป frontend
+   request OTP จำกัด 4096 bytes เพื่อรองรับ token สูงสุด 2048 ตัวอักษร
+   route auth อื่นยังจำกัด 2048 bytes
+
+ตรวจ protocol จาก [Cloudflare server-side validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/)
+โดยใช้ form POST พร้อม secret/response/remoteip, timeout และไม่ตาม redirect
+ทุก provider ในเทสต์เป็น mock ไม่มีการส่ง SMS หรือเรียก Siteverify จริง
+
+### ผลตรวจรอบ 2
+
+`npm run typecheck` ผ่าน; `npm test` ผ่าน 63/63 รวม Turnstile และ workerd/D1
+ส่วน auth รอบแรกด้านล่างเป็นประวัติการส่งมอบ
+
 ## สถานะปัจจุบัน — Agent A / feat/auth
 
 ตั้งแต่ 2026-09-29 ทำงานเฉพาะ `C:\Users\natta\OneDrive\Desktop\naka-ai-auth`
