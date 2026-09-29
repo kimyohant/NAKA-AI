@@ -32,6 +32,8 @@ export interface EnqueueInput {
   costCredits: number;
   priority?: number;
   maxAttempts?: number;
+  /** false for background work (inbox replies) that must not use the plan's parallel slots. Default true. */
+  countsTowardLimit?: boolean;
 }
 
 export type EnqueueResult =
@@ -56,23 +58,24 @@ export async function enqueueJob(db: D1Database, req: EnqueueInput): Promise<Enq
   if (!req.userId || !req.kind) throw new RangeError("userId and kind are required");
   if (!Number.isInteger(req.costCredits) || req.costCredits < 0) throw new RangeError("costCredits must be a non-negative integer");
   const jobId = crypto.randomUUID();
+  const limited = req.countsTowardLimit === false ? 0 : 1;
   const [hold] = await db.batch([
     db
       .prepare(
         `INSERT INTO credit_ledger (user_id, delta, reason, job_id)
          SELECT ?1, -?2, 'job_hold', ?3
          WHERE (SELECT COALESCE(SUM(delta), 0) FROM credit_ledger WHERE user_id = ?1) >= ?2
-           AND (SELECT COUNT(*) FROM jobs WHERE user_id = ?1 AND status IN ('queued', 'running'))
-               < (SELECT max_parallel_jobs FROM plans WHERE id = ${PLAN_ID_SQL})`,
+           AND (?4 = 0 OR (SELECT COUNT(*) FROM jobs WHERE user_id = ?1 AND status IN ('queued', 'running') AND counts_toward_limit = 1)
+               < (SELECT max_parallel_jobs FROM plans WHERE id = ${PLAN_ID_SQL}))`,
       )
-      .bind(req.userId, req.costCredits, jobId),
+      .bind(req.userId, req.costCredits, jobId, limited),
     db
       .prepare(
-        `INSERT INTO jobs (id, user_id, kind, priority, input, cost_credits, max_attempts)
-         SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7
+        `INSERT INTO jobs (id, user_id, kind, priority, input, cost_credits, max_attempts, counts_toward_limit)
+         SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8
          WHERE EXISTS (SELECT 1 FROM credit_ledger WHERE job_id = ?1 AND reason = 'job_hold')`,
       )
-      .bind(jobId, req.userId, req.kind, req.priority ?? 0, JSON.stringify(req.input ?? {}), req.costCredits, req.maxAttempts ?? 3),
+      .bind(jobId, req.userId, req.kind, req.priority ?? 0, JSON.stringify(req.input ?? {}), req.costCredits, req.maxAttempts ?? 3, limited),
   ]);
   if (hold.meta.changes === 1) return { ok: true, jobId };
 

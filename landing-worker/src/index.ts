@@ -3,6 +3,7 @@ import { runSalesAgent } from "./agent";
 import { handleAuth, requireUser } from "./auth";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
+import { drainInbox, handleInbox, handleMetaWebhook, INBOX_JOB_KIND, makeInboxHandler } from "./inbox";
 import { runQueue, type JobHandler } from "./jobs";
 import { getDisplayName, pushText, replyOrPush, startLoading, verifySignature } from "./line";
 import { handleSocial, publishDuePosts } from "./social";
@@ -37,6 +38,13 @@ export default {
       const userId = url.pathname.startsWith("/api/social/media/") ? null : (await requireUser(request, env))?.id ?? null;
       return (await handleSocial(request, env, url, userId)) ?? json({ error: "not found" }, 404);
     }
+    if (url.pathname === "/api/inbox" || url.pathname.startsWith("/api/inbox/")) {
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleInbox(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
+    // Meta authenticates with X-Hub-Signature-256, not a session.
+    if (url.pathname === "/webhook/meta") return handleMetaWebhook(request, env, ctx);
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);
     if (url.pathname === "/api/health") return json({ ok: true });
     if (url.pathname === "/world/index.wasm" && (request.method === "GET" || request.method === "HEAD")) {
@@ -75,11 +83,16 @@ export default {
       (result) => { if (result.published || result.failed) console.log("social posts", result.published, result.failed); },
       () => console.error("social publish run failed"),
     ));
+    // Pick up stored webhooks and queue inbox replies; the replies themselves run in runQueue.
+    ctx.waitUntil(drainInbox(env, { maxReceipts: 5, maxMessages: 20 }).then(
+      (result) => { if (result.receipts || result.enqueued) console.log("inbox", result.receipts, result.enqueued); },
+      () => console.error("inbox drain failed"),
+    ));
   },
 } satisfies ExportedHandler<Env>;
 
 function jobHandlers(env: Env): Record<string, JobHandler> {
-  return { [AFFILIATE_JOB_KIND]: makeAffiliateHandler(env) };
+  return { [AFFILIATE_JOB_KIND]: makeAffiliateHandler(env), [INBOX_JOB_KIND]: makeInboxHandler(env) };
 }
 
 async function handleLineWebhook(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
