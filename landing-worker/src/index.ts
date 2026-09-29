@@ -5,6 +5,7 @@ import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
 import { runQueue, type JobHandler } from "./jobs";
 import { getDisplayName, pushText, replyOrPush, startLoading, verifySignature } from "./line";
+import { handleSocial, publishDuePosts } from "./social";
 import { handleStudio } from "./studio";
 import type { Env } from "./types";
 
@@ -30,6 +31,11 @@ export default {
       const user = await requireUser(request, env);
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
       return (await handleAffiliateApi(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
+    if (url.pathname === "/api/social" || url.pathname.startsWith("/api/social/")) {
+      // Signed media links are fetched by Instagram without a session; every other route needs one.
+      const userId = url.pathname.startsWith("/api/social/media/") ? null : (await requireUser(request, env))?.id ?? null;
+      return (await handleSocial(request, env, url, userId)) ?? json({ error: "not found" }, 404);
     }
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);
     if (url.pathname === "/api/health") return json({ ok: true });
@@ -63,6 +69,11 @@ export default {
     ctx.waitUntil(runQueue(env.DB, jobHandlers(env), { maxJobs: 30, concurrency: 5 }).then(
       (result) => { if (result.ran || result.recovered) console.log("queue", result); },
       (err) => console.error("queue run failed", err),
+    ));
+    // Separate from the job queue so missing social config never stops AI jobs.
+    ctx.waitUntil(publishDuePosts(env, { maxPosts: 2 }).then(
+      (result) => { if (result.published || result.failed) console.log("social posts", result.published, result.failed); },
+      () => console.error("social publish run failed"),
     ));
   },
 } satisfies ExportedHandler<Env>;
