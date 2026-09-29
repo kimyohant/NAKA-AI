@@ -155,3 +155,27 @@ test("admin credit routes need the admin token and grant to a user", async () =>
   assert.equal(info.plan.id, "free");
   assert.equal(info.ledger[0].note, "ทดลองใช้");
 });
+
+test("runQueue runs jobs in parallel up to the concurrency limit and never runs one twice", async () => {
+  sqlite.exec("INSERT INTO plans (id, name, max_parallel_jobs) VALUES ('pro', 'Pro', 20)");
+  sqlite.exec("INSERT INTO subscriptions (user_id, plan_id) VALUES ('u1', 'pro')");
+  await credits.grantCredits(db, "u1", 20, "grant");
+  for (let i = 0; i < 7; i++) await jobs.enqueueJob(db, { userId: "u1", kind: "k", input: { i }, costCredits: 1 });
+
+  let active = 0;
+  let peak = 0;
+  const seen = [];
+  const result = await jobs.runQueue(db, {
+    k: async (job) => {
+      seen.push(job.id);
+      peak = Math.max(peak, ++active);
+      await new Promise((r) => setTimeout(r, 15));
+      active--;
+      return { output: {} };
+    },
+  }, { maxJobs: 5, concurrency: 3 });
+  assert.equal(result.ran, 5);
+  assert.equal(new Set(seen).size, 5);
+  assert.ok(peak <= 3 && peak > 1, `peak concurrency was ${peak}`);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM jobs WHERE status = 'queued'").get().n, 2);
+});

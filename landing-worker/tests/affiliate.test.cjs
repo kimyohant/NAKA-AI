@@ -138,3 +138,25 @@ test("the API enqueues, reports queue position, and hides failures and other use
   assert.equal(failed.status, "failed");
   assert.doesNotMatch(failed.error, /403|secret/);
 });
+
+test("the worker mounts /api/affiliate behind the session cookie", async () => {
+  const { sqlite: s, db: authDb } = migratedDb("0001_auth.sql", "0002_credits_jobs.sql");
+  const worker = require(path.join(buildDir, "index.js")).default;
+  const { sha256 } = require(path.join(buildDir, "auth", "common.js"));
+  const token = "A".repeat(43);
+  s.prepare("INSERT INTO users (id, display_name, created_at) VALUES ('u1', 'ทดสอบ', 0)").run();
+  s.prepare("INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (?, 'u1', ?, 0)").run(await sha256(token), 4102444800);
+  await credits.grantCredits(authDb, "u1", 3, "grant");
+  const env = { DB: authDb, ASSETS: { fetch: async () => new Response("asset") }, APP_ORIGIN: "https://naka-ai.com" };
+  const post = (headers) => worker.fetch(new Request("https://naka-ai.com/api/affiliate/reviews", {
+    method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(brief),
+  }), env, { waitUntil() {} });
+
+  assert.equal((await post({ Origin: "https://naka-ai.com" })).status, 401);
+  assert.equal((await post({ Origin: "https://evil.example", Cookie: `naka_session=${token}` })).status, 403);
+  const created = await post({ Origin: "https://naka-ai.com", Cookie: `naka_session=${token}` });
+  assert.equal(created.status, 202);
+  const { jobId } = await created.json();
+  const status = await worker.fetch(new Request(`https://naka-ai.com/api/affiliate/reviews/${jobId}`, { headers: { Cookie: `naka_session=${token}` } }), env, {});
+  assert.deepEqual(await status.json(), { status: "queued", ahead: 0 });
+});
