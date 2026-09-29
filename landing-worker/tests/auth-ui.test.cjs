@@ -79,9 +79,11 @@ test('app dashboard renders three account states and links all four workflows', 
   assert.ok(html.includes('id="app-error"'), 'unavailable state panel');
   assert.ok(html.includes('id="retry-button"'), 'retry control');
   assert.ok(html.includes('id="signout-status"'), 'sign-out status is announced');
-  for (const workflow of ['sales', 'drama', 'live', 'bot']) {
+  for (const workflow of ['sales', 'drama', 'live']) {
     assert.ok(html.includes(`/create/?workflow=${workflow}`), `missing workflow ${workflow}`);
   }
+  // The chat-bot card opens the working inbox rather than the old brief form.
+  assert.ok(html.includes('href="/app/inbox/"'), 'missing chat-bot inbox link');
   const js = read('public/app/app.js');
   const signedOut = js.indexOf('status === "signed-out"');
   const unavailable = js.indexOf('status === "unavailable"');
