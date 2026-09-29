@@ -27,6 +27,10 @@ export interface Env {
   MEDIA?: R2Bucket; // clip uploads for posting; bound once the R2 bucket exists
   // AI Inbox (Phase 4) — contract in docs/phase4-inbox.md
   META_WEBHOOK_VERIFY_TOKEN?: string;
+  // Online payment (Omise / Opn Payments) — src/billing
+  OMISE_PUBLIC_KEY?: string; // pkey_…, public; served to the billing page for card forms
+  OMISE_SECRET_KEY?: string; // skey_…
+  OMISE_WEBHOOK_SECRET?: string; // base64 webhook signing secret from the Omise dashboard
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */

@@ -1,5 +1,6 @@
 import { AFFILIATE_JOB_KIND, handleAffiliateApi, makeAffiliateHandler } from "./affiliate";
 import { runSalesAgent } from "./agent";
+import { handleBilling, handleOmiseWebhook, runBillingCron } from "./billing";
 import { handleAuth, requireUser } from "./auth";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
@@ -43,6 +44,13 @@ export default {
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
       return (await handleInbox(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
     }
+    if (url.pathname.startsWith("/api/billing/")) {
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleBilling(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
+    // Omise signs its webhook (Omise-Signature); the charge is re-read from Omise before use.
+    if (url.pathname === "/webhook/omise") return handleOmiseWebhook(request, env);
     // Meta authenticates with X-Hub-Signature-256, not a session.
     if (url.pathname === "/webhook/meta") return handleMetaWebhook(request, env, ctx);
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);
@@ -82,6 +90,11 @@ export default {
     ctx.waitUntil(publishDuePosts(env, { maxPosts: 2 }).then(
       (result) => { if (result.published || result.failed) console.log("social posts", result.published, result.failed); },
       () => console.error("social publish run failed"),
+    ));
+    // End expired packages and give monthly credits to active ones.
+    ctx.waitUntil(runBillingCron(env).then(
+      (result) => { if (result.expired || result.toppedUp) console.log("billing", result.expired, result.toppedUp); },
+      () => console.error("billing cron failed"),
     ));
     // Pick up stored webhooks and queue inbox replies; the replies themselves run in runQueue.
     ctx.waitUntil(drainInbox(env, { maxReceipts: 5, maxMessages: 20 }).then(
