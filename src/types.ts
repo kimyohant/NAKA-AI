@@ -13,6 +13,9 @@ export interface Env {
   SMS_API_KEY?: string;
   SMS_API_SECRET?: string;
   APP_ORIGIN: string;
+  // Affiliate review voiceover (Google Cloud Text-to-Speech)
+  GOOGLE_TTS_API_KEY: string;
+  GOOGLE_TTS_VOICE?: string;
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */

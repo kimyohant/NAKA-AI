@@ -16,6 +16,7 @@
       "database_id": "c54b3e34-feab-4d93-af31-3354cc30fbe5"
     }
   ],
+  "triggers": { "crons": ["* * * * *"] },
   "workers_dev": true,
   "routes": [
     { "pattern": "naka-ai.com", "custom_domain": true },
