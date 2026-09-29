@@ -17,6 +17,13 @@ export interface Env {
   // Affiliate review voiceover (Google Cloud Text-to-Speech)
   GOOGLE_TTS_API_KEY: string;
   GOOGLE_TTS_VOICE?: string;
+  // Bot protection on OTP requests (Cloudflare Turnstile)
+  TURNSTILE_SECRET_KEY?: string;
+  // Social connector (Facebook Pages + Instagram) — contract in docs/phase3-social.md
+  META_APP_ID?: string;
+  META_APP_SECRET?: string;
+  SOCIAL_TOKEN_KEY?: string; // base64 32-byte AES-GCM key for stored page tokens
+  MEDIA?: R2Bucket; // clip uploads for posting; bound once the R2 bucket exists
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */
