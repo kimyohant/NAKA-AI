@@ -36,11 +36,53 @@
   <header class="landing-nav glass-nav">
     <div class="shell nav-row">
       <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" alt="" width="36" height="36"><span>naka<span>-ai</span><b>.</b></span></a>
-      <nav class="nav-links" aria-label="เมนูหลัก"><a href="#templates">เทมเพลต</a><a href="#how">วิธีทำงาน</a><a href="#why">ทำไมนาคา</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a></nav>
+      <!-- Main menu = the four products; each opens a small panel with samples and a start link -->
+      <nav class="nav-links" aria-label="ผลิตภัณฑ์">
+        <div class="nav-item">
+          <button class="nav-trigger" type="button" aria-expanded="false" aria-controls="menu-review">รีวิว Affiliate <span aria-hidden="true">▾</span></button>
+          <div class="nav-panel" id="menu-review" hidden>
+            <p class="panel-title">คลิปรีวิวสินค้า affiliate <em>ลองฟรี</em></p>
+            <p>รูปสินค้า 1–6 รูป ได้บท เสียงพากย์ไทย และคลิปแนวตั้งพร้อมแคปชันและลิงก์ของคุณ</p>
+            <div class="panel-links"><a href="#p-review">ดูตัวอย่างคลิป ↓</a><a class="panel-start" href="/review/?demo=1">เริ่มสร้างคลิป ↗</a></div>
+          </div>
+        </div>
+        <div class="nav-item">
+          <button class="nav-trigger" type="button" aria-expanded="false" aria-controls="menu-drama">ละครสั้น AI <span aria-hidden="true">▾</span></button>
+          <div class="nav-panel" id="menu-drama" hidden>
+            <p class="panel-title">ละครสั้นด้วย AI</p>
+            <p>จากพล็อตและตัวละคร เป็นฉากวิดีโอแนวตั้งพร้อมเสียงพากย์ ตัดเป็นตอนสั้นชวนติดตาม</p>
+            <div class="panel-links"><a href="#p-drama">ดูตัวอย่างละคร ↓</a><a class="panel-start" href="/create/?workflow=drama">เริ่มทำละคร ↗</a></div>
+          </div>
+        </div>
+        <div class="nav-item">
+          <button class="nav-trigger" type="button" aria-expanded="false" aria-controls="menu-live">AI Live <span aria-hidden="true">▾</span></button>
+          <div class="nav-panel" id="menu-live" hidden>
+            <p class="panel-title">AI Live ขายสินค้า</p>
+            <p>อวตาร AI แนะนำสินค้าและตอบคำถามคนดูระหว่างไลฟ์ ตามข้อมูลสินค้าที่คุณให้</p>
+            <div class="panel-links"><a href="#p-live">ดูตัวอย่าง ↓</a><a class="panel-start" href="/create/?workflow=live">เริ่มตั้งค่าไลฟ์ ↗</a></div>
+          </div>
+        </div>
+        <div class="nav-item">
+          <button class="nav-trigger" type="button" aria-expanded="false" aria-controls="menu-bot">แชทบอท <span aria-hidden="true">▾</span></button>
+          <div class="nav-panel" id="menu-bot" hidden>
+            <p class="panel-title">AI ตอบแชทและคอมเมนต์อัตโนมัติ</p>
+            <p>ตอบด้วยข้อมูลและน้ำเสียงของร้าน เรื่องที่ต้องตัดสินใจส่งต่อให้คนในร้าน</p>
+            <div class="panel-links"><a href="#p-bot">ดูตัวอย่างบทสนทนา ↓</a><a class="panel-start" href="/create/?workflow=bot">เริ่มตั้งค่าบอท ↗</a></div>
+          </div>
+        </div>
+        <a class="nav-plain" href="#pricing">ราคา</a>
+      </nav>
       <a class="btn btn-primary btn-sm nav-cta" href="/review/?demo=1">ลองฟรี <span aria-hidden="true">↗</span></a>
       <button class="menu-button" type="button" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
     </div>
-    <nav class="mobile-nav shell" id="mobile-nav" aria-label="เมนูมือถือ" hidden><a href="#templates">เทมเพลต</a><a href="#how">วิธีทำงาน</a><a href="#why">ทำไมนาคา</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a><a href="/review/?demo=1">ลองสร้างคลิปฟรี ↗</a></nav>
+    <nav class="mobile-nav shell" id="mobile-nav" aria-label="เมนูมือถือ" hidden>
+      <a href="#p-review"><b>รีวิว Affiliate</b><small>คลิปรีวิวพร้อมลิงก์ · ลองฟรี</small></a>
+      <a href="#p-drama"><b>ละครสั้น AI</b><small>ฉากแนวตั้งพร้อมเสียงพากย์</small></a>
+      <a href="#p-live"><b>AI Live</b><small>อวตารไลฟ์ขายสินค้า</small></a>
+      <a href="#p-bot"><b>แชทบอท</b><small>ตอบแชทและคอมเมนต์อัตโนมัติ</small></a>
+      <a href="#pricing"><b>ราคา</b></a>
+      <a class="mobile-cta" href="/review/?demo=1">ลองสร้างคลิปฟรี ↗</a>
+    </nav>
   </header>
 
   <main id="main">
@@ -97,42 +139,79 @@
       </div>
     </section>
 
-    <!-- Template gallery: each card opens its flow, ready to try -->
-    <section class="section templates" id="templates" aria-labelledby="templates-title">
-      <div class="shell">
-        <div class="section-head">
-          <div><p class="kicker">เริ่มจากเทมเพลต</p><h2 id="templates-title">เลือกแบบคลิป แล้วลองได้ทันที</h2></div>
-          <div class="rail-controls" aria-label="เลื่อนดูเทมเพลต"><button type="button" class="rail-arrow" data-direction="-1" aria-label="เทมเพลตก่อนหน้า">←</button><button type="button" class="rail-arrow" data-direction="1" aria-label="เทมเพลตถัดไป">→</button></div>
+    <!-- Product rows: one per product, each a rail of sample clips (Buzzy-style packs) -->
+    <section class="section products" aria-label="ตัวอย่างงานของแต่ละผลิตภัณฑ์">
+
+      <div class="product-row" id="p-review">
+        <div class="shell row-head">
+          <div><p class="kicker">01 · รีวิว Affiliate <span class="pill">ลองฟรี</span></p><h2>คลิปรีวิวสินค้า affiliate</h2><p class="row-sub">รูปสินค้า 1–6 รูป ได้บท เสียงพากย์ไทย และคลิปแนวตั้งพร้อมแคปชันที่แนบลิงก์ของคุณ</p></div>
+          <div class="row-actions"><a class="btn btn-primary btn-sm" href="/review/?demo=1">เริ่มสร้างคลิป ↗</a></div>
+        </div>
+        <div class="rail" id="rail-review" tabindex="0" aria-label="ตัวอย่างคลิปรีวิว">
+          <a class="tpl" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/soap-640.jpg" aria-hidden="true"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video></div><span class="tpl-chip">สบู่สมุนไพร</span><div class="tpl-body"><h3>รีวิว 3 จุดเด่น</h3><p>ฮุก · จุดเด่นจริง · ชวนกดลิงก์</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
+          <a class="tpl tpl-create" href="/review/?demo=1"><span class="create-plus" aria-hidden="true">＋</span><h3>สร้างคลิปรีวิวของคุณ</h3><p>ใส่รูปสินค้าแล้วลองฟรีด้วยบทตัวอย่าง ไม่ต้องสมัคร</p><span class="tpl-try">เริ่มเลย ↗</span></a>
         </div>
       </div>
-      <div class="rail" tabindex="0" aria-label="เทมเพลตคลิป">
-        <a class="tpl" href="/review/?demo=1">
-          <div class="tpl-media"><video autoplay muted loop playsinline preload="metadata" poster="/assets/soap-640.jpg" aria-hidden="true"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video></div>
-          <span class="tpl-chip tpl-chip-new">ใหม่ · ลองฟรี</span>
-          <div class="tpl-body"><h3>รีวิวสินค้า affiliate</h3><p>รูป 1–6 รูป ได้คลิปรีวิวพร้อมแคปชันและลิงก์ของคุณ</p><span class="tpl-try">ลองเลย ↗</span></div>
-        </a>
-        <a class="tpl" href="/create/?workflow=sales">
-          <div class="tpl-media"><img class="kenburns" src="/assets/soap-640.jpg" width="640" height="640" loading="lazy" alt=""></div>
-          <span class="tpl-chip">คลิปขาย</span>
-          <div class="tpl-body"><h3>คลิปขายสินค้า</h3><p>รูปสินค้า 1 รูป กลายเป็นคลิปแนวตั้งพร้อมเสียงพากย์</p><span class="tpl-try">เริ่มทำ ↗</span></div>
-        </a>
-        <a class="tpl" href="/create/?workflow=drama">
-          <div class="tpl-media"><img src="/assets/card-drama.jpg" width="1600" height="900" loading="lazy" alt=""></div>
-          <span class="tpl-chip">ละครสั้น</span>
-          <div class="tpl-body"><h3>ละครสั้น AI</h3><p>พล็อต ตัวละคร และเสียงพากย์ เป็นเรื่องสั้นชวนติดตาม</p><span class="tpl-try">เริ่มทำ ↗</span></div>
-        </a>
-        <a class="tpl" href="/create/?workflow=live">
-          <div class="tpl-media"><img src="/assets/card-live.jpg" width="1600" height="900" loading="lazy" alt=""></div>
-          <span class="tpl-chip tpl-chip-live">● LIVE</span>
-          <div class="tpl-body"><h3>AI Live</h3><p>อวตาร AI แนะนำสินค้าและคุยกับคนดูระหว่างไลฟ์</p><span class="tpl-try">เริ่มทำ ↗</span></div>
-        </a>
-        <a class="tpl" href="/create/?workflow=bot">
-          <div class="tpl-media"><img src="/assets/card-bot.jpg" width="1600" height="900" loading="lazy" alt=""></div>
-          <span class="tpl-chip">ตอบลูกค้า</span>
-          <div class="tpl-body"><h3>ตอบลูกค้าอัตโนมัติ</h3><p>ตอบคอมเมนต์และแชตด้วยข้อมูลและน้ำเสียงของร้าน</p><span class="tpl-try">เริ่มตั้งค่า ↗</span></div>
-        </a>
+
+      <div class="product-row" id="p-drama">
+        <div class="shell row-head">
+          <div><p class="kicker">02 · ละครสั้น AI</p><h2>ละครสั้นที่สร้างด้วยนาคา</h2><p class="row-sub">ทุกฉากในแถวนี้สร้างจากระบบละคร AI ของนาคา ตั้งแต่ตัวละคร ฉาก จนเป็นวิดีโอแนวตั้ง</p></div>
+          <div class="row-actions"><a class="btn btn-primary btn-sm" href="/create/?workflow=drama">เริ่มทำละคร ↗</a><div class="rail-controls"><button type="button" class="rail-arrow" data-rail="rail-drama" data-direction="-1" aria-label="เลื่อนซ้าย">←</button><button type="button" class="rail-arrow" data-rail="rail-drama" data-direction="1" aria-label="เลื่อนขวา">→</button></div></div>
+        </div>
+        <div class="rail" id="rail-drama" tabindex="0" aria-label="ตัวอย่างละครสั้น">
+          <a class="tpl" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-ep1.webp" aria-hidden="true"><source src="/showcase/drama/drama-ep1.mp4" type="video/mp4"></video></div><span class="tpl-chip tpl-chip-new">เต็มตอน</span><div class="tpl-body"><h3>EP1 เต็มตอน</h3><p>หลายฉากต่อกันเป็นตอนเดียว</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
+          <a class="tpl" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-01.jpg" aria-hidden="true"><source src="/showcase/drama/drama-01.mp4" type="video/mp4"></video></div><span class="tpl-chip">ฉากเปิดตัว</span><div class="tpl-body"><h3>ทายาทเจ้าของบ้าน</h3><p>เดินลงบันไดพรมแดง</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
+          <a class="tpl" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-05.jpg" aria-hidden="true"><source src="/showcase/drama/drama-05.mp4" type="video/mp4"></video></div><span class="tpl-chip">ดราม่า</span><div class="tpl-body"><h3>สาวใช้คนใหม่</h3><p>วันแรกในคฤหาสน์</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
+          <a class="tpl" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-02.jpg" aria-hidden="true"><source src="/showcase/drama/drama-02.mp4" type="video/mp4"></video></div><span class="tpl-chip">ดราม่า</span><div class="tpl-body"><h3>โถงทางเดินสีทอง</h3><p>งานหนักที่ไม่มีใครเห็น</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
+          <a class="tpl" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-04.jpg" aria-hidden="true"><source src="/showcase/drama/drama-04.mp4" type="video/mp4"></video></div><span class="tpl-chip">หักมุม</span><div class="tpl-body"><h3>จดหมายปริศนา</h3><p>ข้อความที่เปลี่ยนทุกอย่าง</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
+          <a class="tpl" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-03.jpg" aria-hidden="true"><source src="/showcase/drama/drama-03.mp4" type="video/mp4"></video></div><span class="tpl-chip">ลึกลับ</span><div class="tpl-body"><h3>ห้องหมายเลข 4</h3><p>ทางเดินที่ไม่ควรเข้าไป</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
+          <a class="tpl tpl-create" href="/create/?workflow=drama"><span class="create-plus" aria-hidden="true">＋</span><h3>เริ่มละครเรื่องของคุณ</h3><p>ใส่พล็อตและตัวละคร นาคาช่วยวางฉากและเขียนบท</p><span class="tpl-try">เริ่มเลย ↗</span></a>
+        </div>
       </div>
-      <p class="shell sample-note">ภาพและคลิปในเทมเพลตเป็นตัวอย่างสาธิต</p>
+
+      <div class="product-row" id="p-live">
+        <div class="shell row-head">
+          <div><p class="kicker">03 · AI Live</p><h2>AI Live ขายสินค้า</h2><p class="row-sub">อวตาร AI แนะนำสินค้าและตอบคำถามคนดูระหว่างไลฟ์ ตามข้อมูลสินค้าที่คุณให้</p></div>
+          <div class="row-actions"><a class="btn btn-primary btn-sm" href="/create/?workflow=live">เริ่มตั้งค่าไลฟ์ ↗</a></div>
+        </div>
+        <div class="rail" id="rail-live" tabindex="0" aria-label="ตัวอย่าง AI Live">
+          <a class="tpl" href="/create/?workflow=live"><div class="tpl-media"><img src="/assets/card-live.jpg" width="1600" height="900" loading="lazy" alt=""></div><span class="tpl-chip tpl-chip-live">● LIVE</span><div class="tpl-body"><h3>พิธีกรไลฟ์ตลาดไทย</h3><p>ภาพประกอบแนวทางไลฟ์ขายของ</p><span class="tpl-try">เริ่มตั้งค่า ↗</span></div></a>
+          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่างคอมเมนต์ระหว่างไลฟ์">
+            <p class="chat-head"><span class="live-dot" aria-hidden="true"></span>คอมเมนต์ระหว่างไลฟ์</p>
+            <ol class="chat-log"><li class="in">มีไซส์ L ไหมคะ</li><li class="out">มีค่ะ ไซส์ L ยังมีตามสต็อกที่ร้านอัปเดตไว้</li><li class="in">ส่งกี่วันถึงคะ</li><li class="out">ร้านส่งทุกวัน ตัดรอบบ่ายสองค่ะ รายละเอียดอยู่ในลิงก์ปักหมุด</li></ol>
+            <p class="chat-foot">อวตารอ่านคอมเมนต์และตอบจากข้อมูลร้าน</p>
+          </div>
+          <a class="tpl tpl-create" href="/create/?workflow=live"><span class="create-plus" aria-hidden="true">＋</span><h3>ตั้งค่าไลฟ์ของร้านคุณ</h3><p>สินค้า สคริปต์พิธีกร และคำถามที่พบบ่อย</p><span class="tpl-try">เริ่มเลย ↗</span></a>
+        </div>
+      </div>
+
+      <div class="product-row" id="p-bot">
+        <div class="shell row-head">
+          <div><p class="kicker">04 · แชทบอท</p><h2>AI ตอบแชทและคอมเมนต์อัตโนมัติ</h2><p class="row-sub">ตอบด้วยข้อมูลและน้ำเสียงของร้าน เรื่องคืนเงินหรือร้องเรียนส่งต่อให้คนในร้าน</p></div>
+          <div class="row-actions"><a class="btn btn-primary btn-sm" href="/create/?workflow=bot">เริ่มตั้งค่าบอท ↗</a><div class="rail-controls"><button type="button" class="rail-arrow" data-rail="rail-bot" data-direction="-1" aria-label="เลื่อนซ้าย">←</button><button type="button" class="rail-arrow" data-rail="rail-bot" data-direction="1" aria-label="เลื่อนขวา">→</button></div></div>
+        </div>
+        <div class="rail" id="rail-bot" tabindex="0" aria-label="ตัวอย่างบทสนทนาของบอท">
+          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่าง: ถามราคา">
+            <p class="chat-head">แชท · ถามราคา</p>
+            <ol class="chat-log"><li class="in">สบู่มะลิราคาเท่าไหร่คะ</li><li class="out">ก้อนละ 129 บาทค่ะ สนใจกี่ก้อนดีคะ</li><li class="in">เอา 3 ก้อนค่ะ</li><li class="out">รวม 387 บาทค่ะ ขอชื่อและที่อยู่จัดส่งทางแชทนี้ได้เลยค่ะ</li></ol>
+          </div>
+          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่าง: คอมเมนต์ใต้คลิป">
+            <p class="chat-head">คอมเมนต์ใต้คลิป</p>
+            <ol class="chat-log"><li class="in">ส่งต่างจังหวัดได้ไหมคะ</li><li class="out">ส่งได้ทั่วประเทศค่ะ รายละเอียดส่งให้ทางข้อความแล้วนะคะ</li><li class="note">เรื่องส่วนตัวคุยต่อในแชท ไม่ตอบในคอมเมนต์สาธารณะ</li></ol>
+          </div>
+          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่าง: ส่งต่อคนในร้าน">
+            <p class="chat-head">แชท · ขอคืนเงิน</p>
+            <ol class="chat-log"><li class="in">ของมาถึงแตกค่ะ ขอคืนเงินได้ไหม</li><li class="out">ขอโทษด้วยนะคะ ส่งเรื่องให้แอดมินดูแลแล้วค่ะ รบกวนส่งรูปสินค้าไว้ในแชทนี้</li><li class="note">บอตหยุดตอบ · แจ้งแอดมินให้รับช่วงต่อ</li></ol>
+          </div>
+          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่าง: ถามนอกข้อมูลร้าน">
+            <p class="chat-head">แชท · คำถามนอกข้อมูลร้าน</p>
+            <ol class="chat-log"><li class="in">ใช้กับผิวแพ้ง่ายได้ไหมคะ</li><li class="out">เรื่องนี้ขอให้แอดมินตอบให้ชัวร์นะคะ รอสักครู่ค่ะ</li><li class="note">ไม่เดาคำตอบเรื่องที่ร้านไม่ได้ให้ข้อมูล</li></ol>
+          </div>
+          <a class="tpl tpl-create" href="/create/?workflow=bot"><span class="create-plus" aria-hidden="true">＋</span><h3>ตั้งค่าบอทของร้านคุณ</h3><p>ใส่ข้อมูลสินค้า ค่าส่ง และเรื่องที่ต้องส่งต่อคน</p><span class="tpl-try">เริ่มเลย ↗</span></a>
+        </div>
+      </div>
+
+      <p class="shell sample-note">คลิปละครสร้างจากระบบของนาคา · บทสนทนาและร้านค้าเป็นตัวอย่างสาธิต</p>
     </section>
 
     <!-- How it works -->
@@ -206,7 +285,7 @@
   <footer class="site-footer">
     <div class="shell footer-row">
       <a class="brand" href="/"><img src="/logo.svg?v=4" alt="" width="30" height="30"><span>naka<span>-ai</span><b>.</b></span></a>
-      <nav aria-label="ลิงก์ท้ายหน้า"><a href="#templates">เทมเพลต</a><a href="#how">วิธีทำงาน</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a><a href="tel:+66892788587">0892788587</a></nav>
+      <nav aria-label="ลิงก์ท้ายหน้า"><a href="#p-review">รีวิว Affiliate</a><a href="#p-drama">ละครสั้น AI</a><a href="#p-live">AI Live</a><a href="#p-bot">แชทบอท</a><a href="#how">วิธีทำงาน</a><a href="#pricing">ราคา</a><a href="#faq">คำถาม</a><a href="tel:+66892788587">0892788587</a></nav>
       <span class="footer-copy">© <span id="year">2026</span> naka-ai · NAKA-AI Tech</span>
     </div>
   </footer>
