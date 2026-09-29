@@ -1,5 +1,50 @@
 # Shared auth integration status
 
+## สถานะปัจจุบัน — Agent A / feat/auth
+
+ตั้งแต่ 2026-09-29 ทำงานเฉพาะ `C:\Users\natta\OneDrive\Desktop\naka-ai-auth`
+ตาม `AGENTS.md` ของ worktree นี้ ใช้พอร์ต `8789` แก้เฉพาะ `src/auth/**`,
+`migrations/0001_auth.sql` และเอกสารนี้ ข้อความด้านล่างที่กล่าวถึง workspace
+ร่วมและพอร์ต 8788 เป็นประวัติจาก commit `8295a23` ไม่ใช่ขอบเขตงานปัจจุบัน
+
+### งานที่เหลือที่ดำเนินการแล้ว
+
+- ตรวจ `src/auth/sms.ts` เทียบ [เอกสาร ThaiBulkSMS](https://developer.thaibulksms.com/)
+  ได้เนื้อหา SMS API จากผลค้นบนโดเมนเอกสารทางการ แม้การเปิดหน้าโดยตรงแสดงเพียง
+  shell ของเว็บ ยืนยัน endpoint, Basic Auth, form fields และ response ตรงกับโค้ด
+  บันทึกแหล่งอ้างอิงและวันที่ตรวจใน source/README ไม่ต้องเดา endpoint หรือปิด provider
+- เพิ่มหัวข้อ **ทดสอบด้วยมือ** ใน `src/auth/README.md`: OTP แบบ `SMS_PROVIDER=mock`,
+  PowerShell ที่เก็บ cookie ใน memory, ผลที่ควรได้, rate limit/expiry/replay,
+  Google Web OAuth client และ redirect URIs ทั้งพอร์ต 8789 และ production
+- ปรับ default origin และข้อความคำสั่งใน `src/auth/setup-local.cjs` เป็นพอร์ต
+  8789 โดยยังไม่เขียนทับค่าตั้งค่าเดิม ไม่ได้รันสคริปต์หรือแก้ `.dev.vars` ในรอบนี้
+- ไม่ได้ตั้ง Google client จริง, ส่ง SMS จริง, deploy, push หรือแตะไฟล์ของ agent อื่น
+
+### ผลตรวจรอบนี้
+
+- `npm run typecheck`: ผ่านใน worktree `naka-ai-auth`
+- `npm test`: ผ่าน 57/57 รวม auth 28 กรณี และ workerd/D1 บน router จริง
+  ใช้ HTTP mocks สำหรับผู้ให้บริการทั้งหมด
+- `node --check src/auth/setup-local.cjs`: ผ่าน
+- ตัวอย่าง PowerShell ทั้ง 3 block ใน README ผ่าน parser โดยไม่ได้รันคำสั่งเหล่านั้น
+- `git diff --check`: ผ่าน แก้เพียง `src/auth/README.md`, `src/auth/sms.ts`,
+  `src/auth/setup-local.cjs` และเอกสารนี้ ไม่รวม `AGENTS.md` ใน commit
+- พร้อมส่งให้ Claude review; หลัง commit ให้ Agent A หยุดรอคำสั่งใหม่
+
+### ขอให้ Claude แก้
+
+1. `package.json`: `dev:auth` ยังเป็นพอร์ต 8788 ให้เปลี่ยนเป็น
+   `wrangler dev --ip 127.0.0.1 --port 8789` สำหรับ worktree auth หรือเพิ่ม script
+   แยกเฉพาะ Agent A โดยคงพอร์ตของ agent อื่น ระหว่างนี้ README ใช้คำสั่ง explicit
+2. `.dev.vars.example`: ปรับตัวอย่าง origin และ Google callback สำหรับ Agent A
+   เป็นพอร์ต 8789 ตอนรวมงาน ไฟล์นี้อยู่นอกขอบเขตจึงไม่ได้แก้
+3. ก่อนทดสอบด้วยมือ เจ้าของ environment ต้องตรวจ `.dev.vars` ใน worktree auth
+   ให้ origin ตรงกับ 8789 และ provider เป็น mock; setup เก็บค่าที่มีอยู่ ไม่เขียนทับ
+4. ก่อน release ตรวจรายการ frontend review ด้านล่างอีกครั้งใน branch UI ล่าสุด
+   ข้อสังเกตเดิมเป็น snapshot ของงานที่ยังทำไม่เสร็จ ไม่ใช่ผลตรวจล่าสุดของ Agent B
+
+## ประวัติ integration ก่อนแยก worktree (8295a23)
+
 The user authorized continuing integration and working alongside the existing
 frontend/queue agents on 2026-09-29.
 
