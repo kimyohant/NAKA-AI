@@ -19,6 +19,7 @@ export interface Env {
   GOOGLE_TTS_VOICE?: string;
   // Bot protection on OTP requests (Cloudflare Turnstile)
   TURNSTILE_SECRET_KEY?: string;
+  TURNSTILE_SITE_KEY?: string; // public; served to the login page by /api/auth/config
   // Social connector (Facebook Pages + Instagram) — contract in docs/phase3-social.md
   META_APP_ID?: string;
   META_APP_SECRET?: string;

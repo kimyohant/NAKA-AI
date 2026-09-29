@@ -14,7 +14,7 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
     const paths: Record<string, string> = {
       '/api/auth/otp/request': 'POST', '/api/auth/otp/verify': 'POST',
       '/api/auth/google/start': 'GET', '/api/auth/google/callback': 'GET',
-      '/api/auth/me': 'GET', '/api/auth/logout': 'POST',
+      '/api/auth/me': 'GET', '/api/auth/logout': 'POST', '/api/auth/config': 'GET',
     };
     const method = paths[url.pathname];
     if (!method) response = json({ error: 'ไม่พบเส้นทางที่ร้องขอ' }, 404);
@@ -32,6 +32,8 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
         case '/api/auth/google/start': response = await googleStart(request, env); break;
         case '/api/auth/google/callback': response = await googleCallback(request, env, url); break;
         case '/api/auth/logout': response = await logout(request, env); break;
+        // Public login settings. The Turnstile secret never leaves the Worker.
+        case '/api/auth/config': response = json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY?.trim() || null }); break;
         default: {
           const user = await requireUser(request, env);
           response = user ? json({ user, credits: await getBalance(env.DB, user.id) }) : json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
