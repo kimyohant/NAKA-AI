@@ -9,12 +9,9 @@ const STATE_COOKIE = 'naka_line_state';
 const STATE_SECONDS = 600;
 const CALLBACK = '/api/auth/line/callback';
 
-type LineEnv = Env & { LINE_LOGIN_CHANNEL_ID?: string; LINE_LOGIN_CHANNEL_SECRET?: string };
-
 function lineConfig(env: Env): { channelId: string; channelSecret: string; redirectUri: string } {
-  const configured = env as LineEnv;
-  const channelId = configured.LINE_LOGIN_CHANNEL_ID?.trim();
-  const channelSecret = configured.LINE_LOGIN_CHANNEL_SECRET?.trim();
+  const channelId = env.LINE_LOGIN_CHANNEL_ID?.trim();
+  const channelSecret = env.LINE_LOGIN_CHANNEL_SECRET?.trim();
   if (!channelId || !channelSecret) throw new AuthError(503, 'ระบบเข้าสู่ระบบด้วย LINE ยังไม่พร้อมใช้งาน');
   return { channelId, channelSecret, redirectUri: new URL(CALLBACK, appOrigin(env)).href };
 }
