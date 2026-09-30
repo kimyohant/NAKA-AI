@@ -6,6 +6,7 @@ import { handleOnboarding } from "./onboarding";
 import { handleAdminCustomers } from "./admin/customers";
 import { handleWorks } from "./works";
 import { handleAuth, requireUser } from "./auth";
+import { constantTimeEqual } from "./auth/common";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
 import { drainInbox, handleInbox, handleMetaWebhook, INBOX_JOB_KIND, makeInboxHandler } from "./inbox";
@@ -86,8 +87,8 @@ export default {
       return new Response(request.method === "HEAD" ? null : compressed.body, { status: compressed.status, headers });
     }
     if (url.pathname.startsWith("/api/admin/")) {
-      const auth = request.headers.get("Authorization");
-      if (!env.ADMIN_TOKEN || auth !== `Bearer ${env.ADMIN_TOKEN}`) return json({ error: "unauthorized" }, 401);
+      const auth = request.headers.get("Authorization") ?? "";
+      if (!env.ADMIN_TOKEN || !constantTimeEqual(auth, `Bearer ${env.ADMIN_TOKEN}`)) return json({ error: "unauthorized" }, 401);
       if (url.pathname === "/api/admin/studio") return handleStudio(request, env);
       try {
         const customerResponse = await handleAdminCustomers(request, env, url);
@@ -95,7 +96,7 @@ export default {
         return await handleAdmin(request, env, url);
       } catch (err) {
         console.error("admin error", err);
-        return json({ error: String(err) }, 500);
+        return json({ error: "internal error" }, 500);
       }
     }
     return env.ASSETS.fetch(request);
