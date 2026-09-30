@@ -30,6 +30,9 @@ export interface Env {
   // Online payment (Stripe Checkout) — src/billing
   STRIPE_SECRET_KEY?: string; // restricted key rk_… (or sk_…); unset = online payment off
   STRIPE_WEBHOOK_SECRET?: string; // whsec_… of the /webhook/stripe endpoint
+  // LINE Login (src/auth/line.ts) — its own LINE Login channel, not the Messaging API bot above
+  LINE_LOGIN_CHANNEL_ID?: string;
+  LINE_LOGIN_CHANNEL_SECRET?: string;
   RECEIPT_SELLER_NAME?: string; // unset = no receipts yet; the cron issues them once it is set
   RECEIPT_SELLER_ADDRESS?: string;
   RECEIPT_SELLER_TAX_ID?: string;

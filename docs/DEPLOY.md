@@ -23,6 +23,11 @@
 - [ ] ระหว่างรอ App Review ทดสอบได้ด้วยบัญชีที่เป็น admin/tester ของแอปเท่านั้น
 - ได้ค่า: `META_APP_ID`, `META_APP_SECRET` 🔑
 
+### LINE Login — ล็อกอินด้วย LINE (ฟรี ลดค่า SMS)
+- [ ] developers.line.biz → Provider เดิมหรือใหม่ → สร้าง channel ประเภท **LINE Login** (แยกจาก Messaging API ของบอต) App type **Web app**
+- [ ] แท็บ LINE Login → Callback URL = `https://naka-ai.com/api/auth/line/callback` · เปิด channel เป็น **Published**
+- ได้ค่า: `LINE_LOGIN_CHANNEL_ID`, `LINE_LOGIN_CHANNEL_SECRET` 🔑 (ไม่ตั้ง = ปุ่ม LINE ไม่แสดง)
+
 ### Google Cloud — ล็อกอินด้วย Google + เสียงพากย์ไทย
 - [ ] OAuth consent screen (External) + OAuth Client แบบ Web: Authorized redirect URI = `https://naka-ai.com/api/auth/google/callback`
 - [ ] เปิด Cloud Text-to-Speech API แล้วสร้าง API key ที่จำกัดให้ใช้ได้แค่ API นี้
@@ -85,6 +90,8 @@ openssl rand -hex 24      # META_WEBHOOK_VERIFY_TOKEN
 npx wrangler secret put SESSION_SECRET
 npx wrangler secret put GOOGLE_CLIENT_ID
 npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put LINE_LOGIN_CHANNEL_ID
+npx wrangler secret put LINE_LOGIN_CHANNEL_SECRET
 npx wrangler secret put GOOGLE_TTS_API_KEY
 npx wrangler secret put SMS_API_KEY
 npx wrangler secret put SMS_API_SECRET
@@ -124,6 +131,7 @@ npx wrangler deploy
 - [ ] หน้าแรกโหลด เมนู 4 ผลิตภัณฑ์ คลิปละครเล่น
 - [ ] `/login/` มี Turnstile → ขอ OTP ด้วยเบอร์ตัวเอง → ได้ SMS → เข้า `/app/` ได้
 - [ ] ล็อกอินด้วย Google ได้
+- [ ] ล็อกอินด้วย LINE ได้ ครั้งที่สองได้บัญชีเดิม
 - [ ] แอดมินเติมเครดิตทดสอบ: `curl -X POST https://naka-ai.com/api/admin/credits/<user-id> -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"amount":5,"note":"ทดสอบ"}'`
 - [ ] `/review/` สร้างคลิปรีวิวจริง 1 คลิป (ใช้ 1 เครดิต) → ได้บท + เสียงไทย → สร้างวิดีโอ → ดาวน์โหลด
 - [ ] `/app/inbox/` → เชื่อมเพจ Facebook → คอมเมนต์ใต้โพสต์เพจด้วยอีกบัญชี → ข้อความขึ้นใน inbox ภายใน 1–2 นาที
