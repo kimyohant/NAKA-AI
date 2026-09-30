@@ -1,7 +1,7 @@
 import type { Env, User } from '../types';
 import { signupBonusStatement, signupCredits } from '../onboarding/signup';
-import { AuthError, base64url, constantTimeEqual, hmac, json, now, readJson } from './common';
-import { createSession, getUser } from './session';
+import { AuthError, base64url, constantTimeEqual, cookie, cookieValue, hmac, json, now, randomToken, readJson, sha256 } from './common';
+import { createSession, getUser, SESSION_COOKIE, SESSION_SECONDS } from './session';
 import { verifyTurnstile } from './turnstile';
 
 // Email + password accounts. Passwords are hashed with PBKDF2-SHA256 (Web Crypto; Workers allow
@@ -145,6 +145,63 @@ export async function loginWithPassword(request: Request, env: Env): Promise<Res
     throw new AuthError(401, WRONG);
   }
   return json({ user }, 200, { 'Set-Cookie': await createSession(request, env, user) });
+}
+
+/** Whether a signed-in customer can use the self-service password form.
+ * Older auth deployments can still serve /me before migration 0012 is applied. */
+export async function hasPassword(env: Env, userId: string): Promise<boolean | undefined> {
+  const table = await env.DB.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'auth_passwords'").first();
+  if (!table) return undefined;
+  return !!await env.DB.prepare('SELECT 1 FROM auth_passwords WHERE user_id = ?').bind(userId).first();
+}
+
+/** POST /api/auth/password/change { currentPassword, newPassword } — user is from requireUser. */
+export async function changePassword(request: Request, env: Env, user: User): Promise<Response> {
+  const body = await readJson(request, 4096);
+  const account = await env.DB.prepare(`SELECT i.provider_uid AS email, p.hash FROM auth_identities i
+    JOIN auth_passwords p ON p.user_id = i.user_id WHERE i.user_id = ? AND i.provider = 'password'`)
+    .bind(user.id).first<{ email: string; hash: string }>();
+  if (!account) throw new AuthError(400, 'บัญชีนี้เข้าสู่ระบบด้วย Google หรือ LINE จึงไม่มีรหัสผ่าน');
+
+  const keys = await limitKeys(request, env, account.email);
+  const since = now() - WINDOW;
+  const failures = await recentCount(env, keys.email, 'login', since);
+  if (failures >= MAX_FAILS_PER_EMAIL || await recentCount(env, keys.ip, 'login', since) >= MAX_FAILS_PER_IP) {
+    throw new AuthError(429, 'ลองรหัสผ่านผิดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่', WINDOW);
+  }
+  const current = body.currentPassword;
+  if (typeof current !== 'string' || !current || [...current].length > MAX_PASSWORD ||
+      !await verifyPassword(current, account.hash)) {
+    await record(env, 'login', keys.email, keys.ip);
+    if (failures + 1 >= MAX_FAILS_PER_EMAIL) {
+      throw new AuthError(429, 'ลองรหัสผ่านผิดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่', WINDOW);
+    }
+    throw new AuthError(400, 'รหัสผ่านปัจจุบันไม่ถูกต้อง');
+  }
+  const next = checkPassword(body.newPassword);
+  if (next === current) throw new AuthError(400, 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม');
+
+  const session = cookie(request, SESSION_COOKIE);
+  if (!session) throw new AuthError(401, 'กรุณาเข้าสู่ระบบ');
+  const token = randomToken();
+  const digest = await sha256(token);
+  const previousDigest = await sha256(session);
+  const hash = await hashPassword(next);
+  const timestamp = now();
+  // A concurrent reset/change or revoked session cannot update the hash, delete sessions,
+  // or issue a replacement. All three statements commit together in D1.
+  const [updated] = await env.DB.batch([
+    env.DB.prepare(`UPDATE auth_passwords SET hash = ?, updated_at = ? WHERE user_id = ? AND hash = ?
+      AND EXISTS (SELECT 1 FROM sessions WHERE id = ? AND user_id = ? AND expires_at > ?)`)
+      .bind(hash, timestamp, user.id, account.hash, previousDigest, user.id, timestamp),
+    env.DB.prepare(`DELETE FROM sessions WHERE user_id = ?
+      AND EXISTS (SELECT 1 FROM auth_passwords WHERE user_id = ? AND hash = ?)`).bind(user.id, user.id, hash),
+    env.DB.prepare(`INSERT INTO sessions (id, user_id, expires_at, created_at)
+      SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM auth_passwords WHERE user_id = ? AND hash = ?)`)
+      .bind(digest, user.id, timestamp + SESSION_SECONDS, timestamp, user.id, hash),
+  ]);
+  if (updated.meta.changes !== 1) throw new AuthError(409, 'ข้อมูลบัญชีเปลี่ยนไป กรุณาเข้าสู่ระบบใหม่');
+  return json({ ok: true }, 200, { 'Set-Cookie': cookieValue(env, SESSION_COOKIE, token, SESSION_SECONDS) });
 }
 
 /** Admin reset: a new random password, shown once to the admin, and every session signed out. */
