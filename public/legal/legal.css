@@ -1,0 +1,137 @@
+/* Phase 6B — shared document style for /legal/ pages.
+   Same fonts and light palette as the home page (public/home.css):
+   Anuphan body, IBM Plex Sans Thai display, navy text on #f7f8fb.
+   No required JavaScript; every rule must survive a 360px viewport. */
+
+:root { font-family: "Anuphan", sans-serif; color: #172641; background: #f7f8fb; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: #f7f8fb; }
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; }
+a:focus-visible, button:focus-visible { outline: 3px solid #6bc5ec; outline-offset: 3px; }
+
+.doc-topbar {
+  background: #091736;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+}
+.doc-topbar .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "IBM Plex Sans Thai", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.04em;
+}
+.doc-topbar .brand img { border-radius: 10px; }
+.doc-topbar .back { margin-left: auto; color: #c8d8ef; font-size: 13px; }
+.doc-topbar .back:hover { color: #fff; }
+
+.doc-shell { width: min(100% - 40px, 760px); margin-inline: auto; padding: 30px 0 60px; }
+
+.doc-updated { margin: 0 0 6px; color: #60708a; font-size: 13px; }
+.doc-page h1 {
+  margin: 0 0 18px;
+  font-family: "IBM Plex Sans Thai", sans-serif;
+  font-size: clamp(28px, 5vw, 38px);
+  letter-spacing: -.04em;
+  line-height: 1.2;
+}
+.doc-lead { margin: 0 0 24px; color: #4c5d77; font-size: 16px; line-height: 1.8; }
+
+.doc-toc {
+  border: 1px solid #dbe5f1;
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px 18px;
+  margin: 0 0 30px;
+}
+.doc-toc strong { display: block; margin-bottom: 6px; font-size: 13px; color: #3069b5; }
+.doc-toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 24px; font-size: 14px; }
+.doc-toc li { margin: 3px 0; break-inside: avoid; }
+.doc-toc a:hover { color: #2e66b3; text-decoration: underline; text-underline-offset: 3px; }
+
+.doc-page h2 {
+  font-family: "IBM Plex Sans Thai", sans-serif;
+  font-size: 22px;
+  letter-spacing: -.025em;
+  margin: 34px 0 12px;
+  scroll-margin-top: 16px;
+}
+.doc-page h3 { font-size: 16px; margin: 22px 0 8px; }
+.doc-page p, .doc-page li { font-size: 15px; line-height: 1.9; }
+.doc-page ul, .doc-page ol { padding-left: 22px; }
+.doc-page li { margin: 6px 0; }
+.doc-page strong { font-weight: 700; }
+.doc-page code {
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  background: #e9eff9;
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.doc-table-wrap { overflow-x: auto; margin: 14px 0 22px; border: 1px solid #dbe5f1; border-radius: 14px; background: #fff; }
+.doc-table-wrap table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 14px; }
+.doc-table-wrap th, .doc-table-wrap td { border-bottom: 1px solid #e7edf5; padding: 10px 12px; text-align: left; vertical-align: top; line-height: 1.7; }
+.doc-table-wrap th { background: #eef3fa; font-size: 13px; color: #3069b5; }
+.doc-table-wrap tr:last-child td { border-bottom: 0; }
+.doc-table-wrap code { font-size: 12px; }
+
+.doc-note {
+  border-left: 4px solid #e8b93c;
+  background: #fdf6e3;
+  border-radius: 0 12px 12px 0;
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.doc-contact {
+  border: 1px solid #dbe5f1;
+  border-radius: 16px;
+  background: #fff;
+  padding: 18px 20px;
+  margin: 28px 0 0;
+}
+.doc-contact p { margin: 6px 0; }
+.doc-contact .doc-phone { font-family: "IBM Plex Sans Thai", sans-serif; font-size: 20px; font-weight: 700; color: #245eaf; }
+
+.fill-me {
+  background: #fff3c9;
+  border: 1.5px dashed #d9a927;
+  border-radius: 8px;
+  padding: 1px 8px;
+  font-weight: 600;
+  color: #7a5b00;
+  white-space: nowrap;
+}
+
+.doc-crosslinks { margin-top: 40px; border-top: 1px solid #dbe5f1; padding-top: 18px; }
+.doc-crosslinks strong { display: block; margin-bottom: 10px; font-size: 13px; color: #3069b5; }
+.doc-crosslinks ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.doc-crosslinks a {
+  display: inline-block;
+  border: 1px solid #c9d9ec;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #245eaf;
+  background: #fff;
+  transition: background .18s ease, color .18s ease;
+}
+.doc-crosslinks a:hover { background: #deebfb; }
+
+.doc-footer { text-align: center; color: #8491a5; font-size: 12px; padding: 26px 0 10px; }
+
+@media (max-width: 560px) {
+  .doc-shell { width: min(100% - 32px, 760px); padding-top: 22px; }
+  .doc-toc ol { columns: 1; }
+  .doc-page h1 { font-size: 26px; }
+  .doc-page h2 { font-size: 19px; }
+}
