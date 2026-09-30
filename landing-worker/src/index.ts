@@ -37,7 +37,7 @@ export default {
       return Response.redirect(`${main.origin}${url.pathname}${url.search}`, request.method === "GET" || request.method === "HEAD" ? 301 : 308);
     }
 
-    const authResponse = await handleAuth(request, env, url);
+    const authResponse = await handleAuth(request, env, url, ctx);
     if (authResponse) return authResponse;
 
     if (url.pathname.startsWith("/api/affiliate/")) {
