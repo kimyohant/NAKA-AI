@@ -133,6 +133,22 @@ test("card payments apply at once, or hand back the 3-D Secure page", async () =
   assert.equal((await call("/checkout", { method: "POST", body: { planId: "pro", period: "monthly", method: "card", token: "not-a-token" } })).status, 400);
 });
 
+test("a successful payment issues its receipt; a receipt failure never undoes the payment", async () => {
+  // Without the receipts table the receipt fails, and the package still switches on (the cron retries).
+  const paid = await (await call("/checkout", { method: "POST", body: { planId: "starter", period: "monthly", method: "card", token: "tokn_ok" } })).json();
+  assert.equal(paid.status, "successful");
+  assert.equal(sub().plan_id, "starter");
+
+  ({ sqlite, db } = migratedDb("0001_auth.sql", "0002_credits_jobs.sql", "0004_plans.sql", "0007_payments.sql", "0008_receipts.sql"));
+  env = { ...env, DB: db, RECEIPT_SELLER_NAME: "ร้านนาคา" };
+  sqlite.prepare("INSERT INTO users (id, display_name, created_at) VALUES ('u1', 'ร้านทดสอบ', 0)").run();
+  await call("/checkout", { method: "POST", body: { planId: "pro", period: "yearly", method: "card", token: "tokn_ok" } });
+  const receipts = sqlite.prepare("SELECT number, snapshot FROM receipts").all();
+  assert.equal(receipts.length, 1);
+  assert.match(receipts[0].number, /^RC\d{4}-000001$/);
+  assert.equal(JSON.parse(receipts[0].snapshot).amountSatang, 790000);
+});
+
 test("renewing the same package extends it; the cron tops up monthly and ends expired packages", async () => {
   await call("/checkout", { method: "POST", body: { planId: "pro", period: "monthly", method: "card", token: "tokn_a" } });
   const firstEnd = sub().expires_at;

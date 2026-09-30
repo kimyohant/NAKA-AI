@@ -1,6 +1,7 @@
 import { AFFILIATE_JOB_KIND, handleAffiliateApi, makeAffiliateHandler } from "./affiliate";
 import { runSalesAgent } from "./agent";
 import { handleBilling, handleOmiseWebhook, runBillingCron } from "./billing";
+import { backfillReceipts, handleReceipts } from "./receipts";
 import { handleAuth, requireUser } from "./auth";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
@@ -49,6 +50,11 @@ export default {
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
       return (await handleBilling(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
     }
+    if (url.pathname === "/api/receipts" || url.pathname.startsWith("/api/receipts/")) {
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleReceipts(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
     // Omise signs its webhook (Omise-Signature); the charge is re-read from Omise before use.
     if (url.pathname === "/webhook/omise") return handleOmiseWebhook(request, env);
     // Meta authenticates with X-Hub-Signature-256, not a session.
@@ -95,6 +101,11 @@ export default {
     ctx.waitUntil(runBillingCron(env).then(
       (result) => { if (result.expired || result.toppedUp) console.log("billing", result.expired, result.toppedUp); },
       () => console.error("billing cron failed"),
+    ));
+    // Receipts the payment path could not issue, or all of them once RECEIPT_SELLER_NAME is set.
+    ctx.waitUntil(backfillReceipts(env, { max: 20 }).then(
+      (issued) => { if (issued) console.log("receipts", issued); },
+      () => console.error("receipt backfill failed"),
     ));
     // Pick up stored webhooks and queue inbox replies; the replies themselves run in runQueue.
     ctx.waitUntil(drainInbox(env, { maxReceipts: 5, maxMessages: 20 }).then(

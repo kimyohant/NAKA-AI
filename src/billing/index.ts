@@ -1,5 +1,6 @@
 import type { Env } from "../types";
 import { getBalance } from "../credits";
+import { issueReceipt } from "../receipts";
 import { createCardCharge, createPromptPayCharge, getCharge, OmiseError, verifyWebhook, type Charge } from "./omise";
 
 // Prepaid packages for Thai customers: pay a month or a year with PromptPay QR or a card,
@@ -91,7 +92,10 @@ async function reconcile(env: Env, payment: PaymentRow, charge: Charge): Promise
     console.error("billing: charge does not match payment", payment.id);
     return;
   }
-  if (charge.status === "successful" && charge.paid !== false) await applyPayment(env, payment.id);
+  if (charge.status === "successful" && charge.paid !== false) {
+    // A receipt that fails here is issued by the cron backfill; it never undoes the payment.
+    if (await applyPayment(env, payment.id)) await issueReceipt(env, payment.id).catch(() => console.error("billing: receipt deferred to cron"));
+  }
   else if (charge.status === "failed" || charge.status === "expired") {
     await env.DB.prepare("UPDATE payments SET status = ?, failure = ? WHERE id = ? AND status = 'pending'")
       .bind(charge.status, charge.failure_code?.slice(0, 80) ?? null, payment.id).run();

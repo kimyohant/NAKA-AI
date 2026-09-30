@@ -29,6 +29,25 @@
       ? (sub.expiresAt ? 'ใช้ได้ถึง ' + day(sub.expiresAt) : 'ไม่มีวันหมดอายุ') + ' · เครดิตคงเหลือ ' + data.credits
       : 'เครดิตคงเหลือ ' + data.credits + ' · เลือกแพ็กเกจด้านล่างเพื่อเริ่มใช้งานเต็มรูปแบบ';
     renderPlans();
+    loadReceipts();
+  }
+
+  // Receipts are extra: if they fail to load, the rest of the page still works.
+  async function loadReceipts() {
+    try {
+      var list = (await api('/api/receipts')).receipts;
+      $('receipt-list').replaceChildren.apply($('receipt-list'), list.map(function (r) {
+        var item = document.createElement('li');
+        var link = document.createElement('a');
+        link.href = '/app/receipts/?id=' + encodeURIComponent(r.id);
+        link.textContent = r.number;
+        var meta = document.createElement('span');
+        meta.textContent = r.planName + ' ' + (r.period === 'yearly' ? 'รายปี' : 'รายเดือน') + ' · ' + baht(r.amount) + ' · ' + day(r.issuedAt);
+        item.append(link, meta);
+        return item;
+      }));
+      $('receipts').hidden = list.length === 0;
+    } catch (error) { /* keep the section hidden */ }
   }
 
   function renderPlans() {
