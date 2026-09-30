@@ -28,7 +28,7 @@
   // Non-secret settings (docs/DEPLOY.md §3). Secrets go through `wrangler secret put`.
   "vars": {
     "APP_ORIGIN": "https://naka-ai.com",
-    "SMS_PROVIDER": "android_gateway",
+    "SMS_PROVIDER": "off", // LINE Login only; "android_gateway" or "thaibulksms" to add phone OTP
     "RECEIPT_SELLER_NAME": "ณัฐพงษ์ โยธาไพ",
     "RECEIPT_SELLER_ADDRESS": "112/417 ถนนประชาร่วมมิตร ต.หนองญาติ อ.เมือง จ.นครพนม 48000"
   }

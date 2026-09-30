@@ -42,6 +42,12 @@
       .then(function (res) { return res.ok ? res.json() : {}; })
       .then(function (config) {
         lineButton.hidden = !config || config.lineLogin !== true;
+        if (config && config.googleLogin === false) googleButton.hidden = true;
+        if (config && config.phoneLogin === false) {
+          document.getElementById("otp-form").hidden = true;
+          document.getElementById("login-divider").hidden = true;
+          return; // no phone form, so no bot check either
+        }
         if (!config || !config.turnstileSiteKey) return;
         bot.siteKey = config.turnstileSiteKey;
         updateRequestButtons();

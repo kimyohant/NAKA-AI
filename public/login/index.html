@@ -28,7 +28,7 @@
     <section class="auth-card" aria-labelledby="auth-title">
       <p class="eyebrow">เข้าสู่ระบบ / สมัครใช้งาน</p>
       <h1 id="auth-title">ยินดีต้อนรับสู่ naka-ai</h1>
-      <p class="auth-lead">ใช้บัญชี LINE, Google หรือเบอร์โทรของร้านเข้าสู่ระบบ แล้วเริ่มทำคลิปขาย ละครสั้น ไลฟ์ และบอตตอบลูกค้าได้จากที่เดียว</p>
+      <p class="auth-lead">เข้าสู่ระบบด้วยบัญชีของคุณ แล้วเริ่มทำคลิปขาย ละครสั้น ไลฟ์ และบอตตอบลูกค้าได้จากที่เดียว</p>
 
       <p id="mock-note" class="mock-note" hidden>โหมดทดลอง (mock): ข้อมูลอยู่บนเครื่องนี้เท่านั้น — ใส่เบอร์ใดก็ได้ แล้วยืนยันด้วยตัวเลข 6 หลักใดก็ได้</p>
       <p id="form-error" class="form-error" role="status" aria-live="polite"></p>
@@ -42,7 +42,7 @@
         <span>เข้าสู่ระบบด้วย Google</span>
       </a>
 
-      <div class="divider" aria-hidden="true"><span>หรือ</span></div>
+      <div class="divider" id="login-divider" aria-hidden="true"><span>หรือ</span></div>
 
       <form id="otp-form" novalidate>
         <!-- Cloudflare Turnstile renders here when /api/auth/config returns a site key -->

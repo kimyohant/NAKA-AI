@@ -9,7 +9,7 @@ export interface Env {
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   SESSION_SECRET: string;
-  SMS_PROVIDER: "mock" | "thaibulksms" | "android_gateway";
+  SMS_PROVIDER: "mock" | "thaibulksms" | "android_gateway" | "off"; // "off" = no phone OTP, sign in with LINE/Google
   SMS_API_KEY?: string;
   SMS_API_SECRET?: string;
   SMS_SENDER?: string;

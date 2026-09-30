@@ -34,7 +34,7 @@
 - [ ] (ไม่บังคับ) ฟังเสียงไทยแล้วเลือก voice เช่น `th-TH-Standard-A` ตั้งเป็น `GOOGLE_TTS_VOICE`
 - ได้ค่า: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` 🔑, `GOOGLE_TTS_API_KEY` 🔑
 
-### SMS OTP — เลือกหนึ่งทาง (`SMS_PROVIDER`)
+### SMS OTP — ไม่บังคับ (`SMS_PROVIDER`; `"off"` = ล็อกอินด้วย LINE/Google เท่านั้น ฟอร์มเบอร์โทรจะไม่แสดง)
 
 **ก. มือถือ Android ของร้าน (`android_gateway`)** — ถูกที่สุดช่วงลูกค้ายังน้อย
 - [ ] ใช้มือถือ Android ที่มีซิมและแพ็กเกจ SMS เปิดเน็ตและชาร์จไฟตลอด ปิดโหมดประหยัดแบตให้แอปนี้
