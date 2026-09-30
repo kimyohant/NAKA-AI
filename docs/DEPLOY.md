@@ -34,7 +34,17 @@
 - [ ] (ไม่บังคับ) ฟังเสียงไทยแล้วเลือก voice เช่น `th-TH-Standard-A` ตั้งเป็น `GOOGLE_TTS_VOICE`
 - ได้ค่า: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` 🔑, `GOOGLE_TTS_API_KEY` 🔑
 
-### ThaiBulkSMS — OTP ทางเบอร์โทร
+### SMS OTP — เลือกหนึ่งทาง (`SMS_PROVIDER`)
+
+**ก. มือถือ Android ของร้าน (`android_gateway`)** — ถูกที่สุดช่วงลูกค้ายังน้อย
+- [ ] ใช้มือถือ Android ที่มีซิมและแพ็กเกจ SMS เปิดเน็ตและชาร์จไฟตลอด ปิดโหมดประหยัดแบตให้แอปนี้
+- [ ] ติดตั้งแอป **SMS Gateway for Android** (github.com/capcom6/android-sms-gateway หรือ Google Play) → เปิด **Cloud server** → จด username/password ที่แอปแสดง
+- [ ] ลองส่งจากแอปไปเบอร์ตัวเองก่อน 1 ครั้ง
+- ได้ค่า: `SMS_GATEWAY_USERNAME`, `SMS_GATEWAY_PASSWORD` 🔑 (`SMS_GATEWAY_URL` ไม่ต้องตั้ง ยกเว้นใช้ server ของตัวเอง ต้องเป็น https)
+- ข้อจำกัด: ผู้รับเห็นเบอร์มือถือแทนชื่อร้าน · มือถือดับ/ไม่ได้ออนไลน์ใน 1 ชั่วโมงล่าสุด = ขอ OTP ไม่ได้ (LINE/Google ยังใช้ได้)
+  · ค่ายอาจจำกัดซิมที่ส่ง SMS จำนวนมาก · ระบบรู้แค่ว่าส่งเข้าคิวของมือถือแล้ว ไม่รู้ว่าถึงผู้รับหรือไม่
+
+**ข. ThaiBulkSMS (`thaibulksms`)** — เมื่อลูกค้าเยอะขึ้น ชื่อผู้ส่งเป็นชื่อร้าน
 - [ ] สมัครบัญชี เติมเครดิต และ**จดทะเบียนชื่อผู้ส่ง (sender name)** รออนุมัติ
 - ได้ค่า: `SMS_API_KEY` 🔑, `SMS_API_SECRET` 🔑, `SMS_SENDER` (ชื่อที่อนุมัติแล้ว ตรงตัวพิมพ์เล็ก/ใหญ่)
 
@@ -70,7 +80,7 @@ openssl rand -hex 24      # META_WEBHOOK_VERIFY_TOKEN
 ```jsonc
 "vars": {
   "APP_ORIGIN": "https://naka-ai.com",
-  "SMS_PROVIDER": "thaibulksms",
+  "SMS_PROVIDER": "android_gateway",   // หรือ "thaibulksms"
   "TURNSTILE_SITE_KEY": "<site key>",
   "RECEIPT_SELLER_NAME": "<ชื่อผู้ขายบนใบเสร็จ ตรงกับที่จดทะเบียน>",
   "RECEIPT_SELLER_ADDRESS": "<ที่อยู่>",
@@ -93,6 +103,10 @@ npx wrangler secret put GOOGLE_CLIENT_SECRET
 npx wrangler secret put LINE_LOGIN_CHANNEL_ID
 npx wrangler secret put LINE_LOGIN_CHANNEL_SECRET
 npx wrangler secret put GOOGLE_TTS_API_KEY
+# SMS ทาง ก. (android_gateway)
+npx wrangler secret put SMS_GATEWAY_USERNAME
+npx wrangler secret put SMS_GATEWAY_PASSWORD
+# หรือทาง ข. (thaibulksms)
 npx wrangler secret put SMS_API_KEY
 npx wrangler secret put SMS_API_SECRET
 npx wrangler secret put SMS_SENDER
