@@ -35,6 +35,7 @@ export interface Env {
   RECEIPT_SELLER_ADDRESS?: string;
   RECEIPT_SELLER_TAX_ID?: string;
   RECEIPT_VAT_REGISTERED?: string; // "1" = short-form tax invoice with 7% VAT shown
+  SIGNUP_CREDITS?: string; // free credits granted once at signup; unset or not a positive integer = none
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */

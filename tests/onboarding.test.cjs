@@ -20,7 +20,7 @@ const { getBalance } = require(path.join(buildDir, 'credits.js'));
 const { migratedDb } = require('./helpers/d1.cjs');
 
 const MIGRATIONS = ['0001_auth.sql', '0002_credits_jobs.sql', '0003_social.sql',
-  '0004_plans.sql', '0005_inbox.sql', '0006_jobs_limit.sql', '0007_payments.sql'];
+  '0004_plans.sql', '0005_inbox.sql', '0006_jobs_limit.sql', '0007_payments.sql', '0008_receipts.sql'];
 
 test.after(() => rmSync(buildDir, { recursive: true, force: true }));
 

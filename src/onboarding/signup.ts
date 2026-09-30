@@ -4,14 +4,9 @@
 // integer value means no bonus is granted at all.
 import type { Env } from '../types';
 
-// Claude adds SIGNUP_CREDITS to Env in src/types.ts at merge
-// (docs/onboarding-integration-status.md); until then it is read through this
-// local type so the repo typechecks without touching shared files.
-type EnvWithSignupCredits = Env & { SIGNUP_CREDITS?: string };
-
 /** Positive integer credits to grant once at signup, or 0 when not granting. */
 export function signupCredits(env: Env): number {
-  const raw = (env as EnvWithSignupCredits).SIGNUP_CREDITS;
+  const raw = env.SIGNUP_CREDITS;
   const amount = Number(raw);
   return raw !== undefined && raw !== '' && Number.isInteger(amount) && amount > 0 ? amount : 0;
 }
