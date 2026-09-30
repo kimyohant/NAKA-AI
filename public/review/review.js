@@ -166,6 +166,13 @@
   }
 
   $('render-button').addEventListener('click', async () => {
+    // A job reopened from /app/ has no photos: they never leave this device. Never
+    // fall back to the site's sample photos for a real job — that would be another product.
+    if (!photos.length && !demo) {
+      setError('รูปสินค้าเก็บไว้บนเครื่องเท่านั้น กรุณาเลือกรูปสินค้าเดิมอีกครั้งด้านบน แล้วกดสร้างวิดีโอ');
+      fileInput.focus();
+      return;
+    }
     if (!window.NakaReviewRender.pickMimeType()) {
       return setError('เบราว์เซอร์นี้สร้างวิดีโอไม่ได้ ลองใช้ Chrome, Edge หรือ Safari รุ่นใหม่');
     }

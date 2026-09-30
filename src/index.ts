@@ -4,6 +4,7 @@ import { handleBilling, handleOmiseWebhook, runBillingCron } from "./billing";
 import { backfillReceipts, handleReceipts } from "./receipts";
 import { handleOnboarding } from "./onboarding";
 import { handleAdminCustomers } from "./admin/customers";
+import { handleWorks } from "./works";
 import { handleAuth, requireUser } from "./auth";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
@@ -56,6 +57,11 @@ export default {
       const user = await requireUser(request, env);
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
       return (await handleReceipts(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
+    if (url.pathname === "/api/works") {
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleWorks(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
     }
     if (url.pathname === "/api/onboarding") {
       const user = await requireUser(request, env);
