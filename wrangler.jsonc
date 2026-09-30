@@ -16,8 +16,10 @@
       "database_id": "c54b3e34-feab-4d93-af31-3354cc30fbe5"
     }
   ],
-  // Private bucket for clips waiting to be posted (src/social). Create with: wrangler r2 bucket create naka-ai-media
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "naka-ai-media" }],
+  // Private bucket for clips waiting to be posted (src/social). Not bound at launch: R2 is not enabled on
+  // the account and auto-posting is off (uploads answer 503). To turn it on, enable R2 in the dashboard,
+  // run `wrangler r2 bucket create naka-ai-media`, and restore:
+  //   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "naka-ai-media" }],
   "triggers": { "crons": ["* * * * *"] },
   "workers_dev": true,
   "routes": [
