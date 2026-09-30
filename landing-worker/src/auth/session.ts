@@ -12,7 +12,7 @@ export async function getUser(db: D1Database, id: string): Promise<User | null> 
     FROM users u WHERE u.id = ? AND u.status = 'active'`).bind(id).first<User>();
 }
 
-export async function identityUser(env: Env, provider: 'phone' | 'google', uid: string, name: string, email: string | null = null): Promise<User> {
+export async function identityUser(env: Env, provider: 'phone' | 'google' | 'line', uid: string, name: string, email: string | null = null): Promise<User> {
   const id = crypto.randomUUID();
   // D1 batches are transactions; the guarded insert avoids orphan users on races.
   const statements = [
