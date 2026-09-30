@@ -1,5 +1,6 @@
 import type { Env } from '../types';
 import { ledgerFor } from '../credits';
+import { hashPassword, temporaryPassword } from '../auth/password';
 
 const BASE = '/api/admin/customers';
 const MONTH = 30 * 86400;
@@ -11,7 +12,7 @@ class AdminError extends Error {
 }
 const CUSTOMER_SQL = `SELECT u.id, u.display_name AS name, u.status, u.created_at AS createdAt,
   (SELECT provider_uid FROM auth_identities WHERE user_id = u.id AND provider = 'phone' ORDER BY id LIMIT 1) AS phone,
-  (SELECT email FROM auth_identities WHERE user_id = u.id AND provider = 'google' ORDER BY id LIMIT 1) AS email,
+  (SELECT email FROM auth_identities WHERE user_id = u.id AND provider IN ('google', 'password') ORDER BY provider, id LIMIT 1) AS email,
   CASE WHEN s.status = 'active' AND (s.expires_at IS NULL OR s.expires_at > ?1) THEN s.plan_id ELSE 'free' END AS planId,
   s.expires_at AS expiresAt,
   (SELECT COALESCE(SUM(delta), 0) FROM credit_ledger WHERE user_id = u.id) AS credits
@@ -161,6 +162,34 @@ async function change(request: Request, env: Env, userId: string, action: Action
   return json({ ok: true, auditId: id });
 }
 
+/** A forgotten password: a new random one, returned once for the admin to give the customer, every
+ * session signed out, and the reset audited in the same transaction. The password itself is never stored or logged. */
+async function resetPassword(request: Request, env: Env, userId: string): Promise<Response> {
+  const data = await body(request);
+  const note = typeof data.note === 'string' ? data.note.trim() : '';
+  if (!note || note.length > 200) throw new AdminError(400, 'กรุณาระบุเหตุผล 1–200 ตัวอักษร');
+  const account = await env.DB.prepare(`SELECT i.provider_uid AS email, (SELECT COUNT(*) FROM sessions WHERE user_id = ?1) AS sessions
+    FROM auth_identities i JOIN auth_passwords p ON p.user_id = i.user_id WHERE i.user_id = ?1 AND i.provider = 'password'`)
+    .bind(userId).first<{ email: string; sessions: number }>();
+  if (!account) {
+    if (!await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(userId).first()) throw new AdminError(404, 'ไม่พบลูกค้านี้');
+    throw new AdminError(400, 'ลูกค้านี้ไม่ได้สมัครด้วยอีเมลและรหัสผ่าน');
+  }
+  const password = temporaryPassword();
+  const id = crypto.randomUUID();
+  const t = Math.floor(Date.now() / 1000);
+  const detail = JSON.stringify({ input: { note }, before: { email: account.email, sessions: account.sessions }, after: { sessions: 0 } });
+  const [audit] = await env.DB.batch([
+    env.DB.prepare(`INSERT INTO admin_audit (id, user_id, action, detail, note, created_at)
+      SELECT ?, ?, 'password', ?, ?, ? WHERE EXISTS (SELECT 1 FROM auth_passwords WHERE user_id = ?)`).bind(id, userId, detail, note, t, userId),
+    env.DB.prepare('UPDATE auth_passwords SET hash = ?, updated_at = ? WHERE user_id = ? AND EXISTS (SELECT 1 FROM admin_audit WHERE id = ?)')
+      .bind(await hashPassword(password), t, userId, id),
+    env.DB.prepare('DELETE FROM sessions WHERE user_id = ? AND EXISTS (SELECT 1 FROM admin_audit WHERE id = ?)').bind(userId, id),
+  ]);
+  if (audit.meta.changes !== 1) throw new AdminError(409, 'ข้อมูลลูกค้าเปลี่ยนแล้ว กรุณาโหลดใหม่');
+  return json({ ok: true, auditId: id, temporaryPassword: password });
+}
+
 /** Called after the shared router's ADMIN_TOKEN check; also fails closed when mounted alone. */
 export async function handleAdminCustomers(request: Request, env: Env, url: URL): Promise<Response | null> {
   if (url.pathname !== BASE && !url.pathname.startsWith(BASE + '/')) return null;
@@ -172,12 +201,13 @@ export async function handleAdminCustomers(request: Request, env: Env, url: URL)
       throw new AdminError(403, 'คำขอไม่ถูกต้อง');
     }
     if ((url.pathname === BASE || url.pathname === BASE + '/') && request.method === 'GET') return await customers(env, url);
-    const match = url.pathname.slice(BASE.length).match(/^\/([^/]+)(?:\/(credits|package|status))?$/);
+    const match = url.pathname.slice(BASE.length).match(/^\/([^/]+)(?:\/(credits|package|status|password))?$/);
     if (!match) return json({ error: 'ไม่พบรายการนี้' }, 404);
     let userId: string;
     try { userId = decodeURIComponent(match[1]); } catch { throw new AdminError(400, 'รหัสลูกค้าไม่ถูกต้อง'); }
     if (!userId || userId.length > 200) throw new AdminError(400, 'รหัสลูกค้าไม่ถูกต้อง');
     if (!match[2] && request.method === 'GET') return await detail(env, userId);
+    if (match[2] === 'password' && request.method === 'POST') return await resetPassword(request, env, userId);
     if (match[2] && request.method === 'POST') return await change(request, env, userId, match[2] as Action);
     const response = json({ error: 'ไม่รองรับวิธีเรียกใช้งานนี้' }, 405);
     response.headers.set('Allow', match[2] ? 'POST' : 'GET');

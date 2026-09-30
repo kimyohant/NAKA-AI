@@ -44,9 +44,31 @@
 
       <div class="divider" id="login-divider" aria-hidden="true"><span>หรือ</span></div>
 
+      <form id="password-form" novalidate>
+        <div class="pw-tabs" role="tablist" aria-label="เข้าสู่ระบบหรือสมัครสมาชิก">
+          <button type="button" role="tab" id="pw-tab-login" aria-selected="true">เข้าสู่ระบบ</button>
+          <button type="button" role="tab" id="pw-tab-register" aria-selected="false">สมัครสมาชิก</button>
+        </div>
+        <div class="field" id="pw-name-field" hidden>
+          <label for="pw-name">ชื่อร้าน <span class="optional">(ไม่บังคับ)</span></label>
+          <input id="pw-name" name="name" type="text" autocomplete="organization" maxlength="160" placeholder="เช่น ร้านนาคาของฝาก">
+        </div>
+        <div class="field">
+          <label for="pw-email">อีเมล</label>
+          <input id="pw-email" name="email" type="email" inputmode="email" autocomplete="username" maxlength="254" placeholder="you@example.com" required>
+        </div>
+        <div class="field">
+          <label for="pw-password">รหัสผ่าน</label>
+          <input id="pw-password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required>
+          <p class="field-help" id="pw-help">ลืมรหัสผ่าน? โทร <a href="tel:+66892788587">089-278-8587</a> ให้ทีมงานตั้งรหัสใหม่ให้</p>
+        </div>
+        <button class="primary-button" id="pw-submit" type="submit">เข้าสู่ระบบ</button>
+      </form>
+
+      <!-- Cloudflare Turnstile renders here when /api/auth/config returns a site key -->
+      <div class="turnstile-box" id="turnstile-box" hidden></div>
+
       <form id="otp-form" novalidate>
-        <!-- Cloudflare Turnstile renders here when /api/auth/config returns a site key -->
-        <div class="turnstile-box" id="turnstile-box" hidden></div>
         <div class="field" id="step-phone">
           <label for="phone">เบอร์โทรของร้าน</label>
           <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0812345678" required>

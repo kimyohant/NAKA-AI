@@ -8,7 +8,7 @@
     pending: 'รอชำระ', successful: 'สำเร็จ', failed: 'ไม่สำเร็จ', revoked: 'ยกเลิกการเชื่อมต่อ', error: 'ขัดข้อง',
     monthly: 'รายเดือน', yearly: 'รายปี', card: 'บัตร', promptpay: 'พร้อมเพย์',
     grant: 'เติมเครดิต', purchase: 'ซื้อเครดิต', job_hold: 'ใช้เครดิต', job_refund: 'คืนเครดิต',
-    credits: 'เติมเครดิต', package: 'จัดการแพ็กเกจ', status: 'เปลี่ยนสถานะ', free: 'ฟรี',
+    credits: 'เติมเครดิต', package: 'จัดการแพ็กเกจ', status: 'เปลี่ยนสถานะ', password: 'ตั้งรหัสผ่านใหม่', stripe_checkout: 'Stripe', free: 'ฟรี',
     starter: 'เริ่มต้น', pro: 'โปร', business: 'ธุรกิจ', max: 'สูงสุด',
     facebook: 'Facebook', instagram: 'Instagram' };
   function label(value) { return labels[value] || value || '—'; }
@@ -144,18 +144,19 @@
       var plan = plans.find(function (p) { return p.id === data.planId; });
       title = 'เปิด/ต่อแพ็กเกจ ' + (plan ? plan.name : data.planId) + ' ' + data.months + ' เดือนให้ ' + who;
       effect = 'แพ็กเดิมที่ยังไม่หมดอายุจะต่อจากวันหมดเดิมโดยไม่เติมเครดิตเพิ่ม แพ็กใหม่หรือหมดแล้วเริ่มวันนี้และเติมให้ถึงยอดแพ็กเกจ โดยไม่ลดยอดที่สูงกว่า ไม่มีใบเสร็จจากรายการนี้';
-    } else { title = (data.status === 'disabled' ? 'ระงับบัญชี ' : 'เปิดใช้งานบัญชี ') + who; effect = data.status === 'disabled' ? 'ลูกค้าจะออกจากระบบทุกอุปกรณ์ทันที' : 'ลูกค้าต้องเข้าสู่ระบบใหม่เพื่อใช้งาน'; }
+    } else if (action === 'password') { title = 'ตั้งรหัสผ่านใหม่ให้ ' + who; effect = 'ระบบสุ่มรหัสใหม่และแสดงครั้งเดียวหลังยืนยัน รหัสเดิมใช้ไม่ได้ และลูกค้าจะออกจากระบบทุกอุปกรณ์'; }
+    else { title = (data.status === 'disabled' ? 'ระงับบัญชี ' : 'เปิดใช้งานบัญชี ') + who; effect = data.status === 'disabled' ? 'ลูกค้าจะออกจากระบบทุกอุปกรณ์ทันที' : 'ลูกค้าต้องเข้าสู่ระบบใหม่เพื่อใช้งาน'; }
     $('confirm-summary').textContent = title; $('confirm-effect').textContent = effect;
     $('confirm-note').textContent = 'เหตุผล: ' + note; $('confirmation').hidden = false;
     message('mutation-status', 'ตรวจสอบรายการก่อนกดยืนยัน'); lock(false); $('confirm-title').focus();
   }
-  ['credits', 'package', 'status'].forEach(function (action) {
+  ['credits', 'package', 'status', 'password'].forEach(function (action) {
     $(action + '-form').addEventListener('submit', function (event) {
       event.preventDefault(); if (pending || busy) return;
       var data = { note: $(action + '-note').value };
       if (action === 'credits') data.amount = Number($('amount').value);
       else if (action === 'package') { data.planId = $('plan').value; data.months = Number($('months').value); }
-      else data.status = $('status').value;
+      else if (action === 'status') data.status = $('status').value;
       review(action, data, event);
     });
   });
@@ -166,7 +167,8 @@
       var result = await api('/' + encodeURIComponent(operation.id) + '/' + operation.action, operation.data);
       pending = null; $('confirmation').hidden = true; $(operation.action + '-note').value = '';
       lock(false);
-      message('mutation-status', 'บันทึกสำเร็จ · รหัสบันทึก ' + result.auditId);
+      message('mutation-status', 'บันทึกสำเร็จ · รหัสบันทึก ' + result.auditId +
+        (result.temporaryPassword ? ' · รหัสผ่านใหม่: ' + result.temporaryPassword + ' (แสดงครั้งเดียว แจ้งลูกค้าแล้วปิดหน้านี้)' : ''));
       try { await openCustomer(operation.id, false); await loadCustomers(); }
       catch { if (token) { message('detail-status', 'บันทึกสำเร็จแล้ว แต่โหลดข้อมูลล่าสุดไม่สำเร็จ กรุณาโหลดใหม่โดยไม่ส่งรายการซ้ำ', true); $('reload-detail').hidden = false; } }
     } catch (error) {

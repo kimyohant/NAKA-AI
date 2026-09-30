@@ -1,4 +1,4 @@
-// Login page — OTP by phone and Google, per the Phase 1 auth contract
+// Login page — email + password, Google, LINE and phone OTP; only the configured ones are shown
 // (docs/phase1-tasks.md). With ?mock=1 every /api/auth/* call is stubbed
 // locally so the flow can be tried before the auth backend lands.
 (function () {
@@ -43,11 +43,10 @@
       .then(function (config) {
         lineButton.hidden = !config || config.lineLogin !== true;
         if (config && config.googleLogin === false) googleButton.hidden = true;
-        if (config && config.phoneLogin === false) {
-          document.getElementById("otp-form").hidden = true;
-          document.getElementById("login-divider").hidden = true;
-          return; // no phone form, so no bot check either
-        }
+        if (config && config.phoneLogin === false) document.getElementById("otp-form").hidden = true;
+        if (config && config.passwordLogin !== true) passwordForm.hidden = true;
+        // "or" separates the provider buttons from the forms; without buttons it has nothing to separate.
+        document.getElementById("login-divider").hidden = lineButton.hidden && googleButton.hidden;
         if (!config || !config.turnstileSiteKey) return;
         bot.siteKey = config.turnstileSiteKey;
         updateRequestButtons();
@@ -71,6 +70,54 @@
       })
       .catch(function () { /* config unavailable: the server still decides whether a token is required */ });
   }
+
+  // Email + password: one form, two modes. The server decides every rule; this only collects input.
+  var passwordForm = document.getElementById("password-form");
+  var pwMode = "login";
+  var pwSubmit = document.getElementById("pw-submit");
+  var pwPassword = document.getElementById("pw-password");
+  function setPasswordMode(mode) {
+    pwMode = mode;
+    var register = mode === "register";
+    document.getElementById("pw-tab-login").setAttribute("aria-selected", String(!register));
+    document.getElementById("pw-tab-register").setAttribute("aria-selected", String(register));
+    document.getElementById("pw-name-field").hidden = !register;
+    document.getElementById("pw-help").hidden = register;
+    pwPassword.setAttribute("autocomplete", register ? "new-password" : "current-password");
+    pwPassword.placeholder = register ? "อย่างน้อย 8 ตัวอักษร" : "";
+    pwSubmit.textContent = register ? "สมัครสมาชิก" : "เข้าสู่ระบบ";
+    clearError();
+  }
+  document.getElementById("pw-tab-login").addEventListener("click", function () { setPasswordMode("login"); });
+  document.getElementById("pw-tab-register").addEventListener("click", function () { setPasswordMode("register"); });
+  passwordForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    clearError();
+    var email = document.getElementById("pw-email").value.trim();
+    var password = pwPassword.value;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError("กรุณากรอกอีเมลให้ถูกต้อง");
+    if (pwMode === "register" && password.length < 8) return showError("รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร");
+    if (!password) return showError("กรุณากรอกรหัสผ่าน");
+    if (bot.siteKey && !bot.token) return showError("กรุณายืนยันว่าไม่ใช่บอตก่อน");
+    if (auth.mockMode()) { auth.signIn(auth.MOCK_GOOGLE_USER, { provider: "password" }); location.assign(nextTarget); return; }
+    var label = pwSubmit.textContent;
+    setBusy(pwSubmit, true, pwMode === "register" ? "กำลังสมัคร…" : "กำลังเข้าสู่ระบบ…");
+    try {
+      var body = { email: email, password: password, turnstileToken: bot.token || undefined };
+      if (pwMode === "register") body.name = document.getElementById("pw-name").value.trim() || undefined;
+      var response = await fetch("/api/auth/password/" + pwMode, {
+        method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.error || "ทำรายการไม่สำเร็จ กรุณาลองใหม่");
+      location.assign(nextTarget);
+    } catch (error) {
+      showError(error.message);
+      pwPassword.value = "";
+      setBusy(pwSubmit, false, label);
+      resetBotCheck();
+    }
+  });
 
   function showError(message) {
     errorEl.textContent = message;
