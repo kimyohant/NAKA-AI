@@ -9,7 +9,7 @@ export interface Env {
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   SESSION_SECRET: string;
-  SMS_PROVIDER: "mock" | "thaibulksms";
+  SMS_PROVIDER: "mock" | "thaibulksms" | "android_gateway";
   SMS_API_KEY?: string;
   SMS_API_SECRET?: string;
   SMS_SENDER?: string;
@@ -30,6 +30,10 @@ export interface Env {
   // Online payment (Stripe Checkout) — src/billing
   STRIPE_SECRET_KEY?: string; // restricted key rk_… (or sk_…); unset = online payment off
   STRIPE_WEBHOOK_SECRET?: string; // whsec_… of the /webhook/stripe endpoint
+  // SMS_PROVIDER=android_gateway (src/auth/sms.ts): the shop's Android phone via SMS Gateway for Android
+  SMS_GATEWAY_URL?: string; // https only; unset = the project's cloud server
+  SMS_GATEWAY_USERNAME?: string;
+  SMS_GATEWAY_PASSWORD?: string;
   // LINE Login (src/auth/line.ts) — its own LINE Login channel, not the Messaging API bot above
   LINE_LOGIN_CHANNEL_ID?: string;
   LINE_LOGIN_CHANNEL_SECRET?: string;
