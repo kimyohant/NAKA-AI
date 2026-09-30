@@ -91,9 +91,19 @@ npx wrangler secret put OMISE_WEBHOOK_SECRET
 
 ```sh
 npm run typecheck && npm test                               # ต้องผ่านทั้งหมด
-npx wrangler d1 migrations apply naka-ai-db --remote        # 0001 → 0006 ไม่แตะตาราง LINE เดิม
+npx wrangler d1 migrations apply naka-ai-db --remote        # 0001 → 0007 ไม่แตะตาราง LINE เดิม
 npx wrangler deploy
 ```
+
+หรือ deploy จาก GitHub (หลังตั้งค่าครั้งแรก): แท็บ Actions → **Deploy** → Run workflow บน `main`
+ระบบจะรัน typecheck + เทสก่อน ถ้าไม่ผ่านจะไม่ deploy แล้วจึง apply migration และ deploy ให้
+
+- [ ] ตั้งค่าครั้งแรก: Cloudflare → My Profile → API Tokens → สร้างจาก template "Edit Cloudflare Workers" แล้วเพิ่มสิทธิ์ **D1: Edit**
+- [ ] GitHub repo → Settings → Secrets and variables → Actions: เพิ่ม `CLOUDFLARE_API_TOKEN` 🔑 และ `CLOUDFLARE_ACCOUNT_ID`
+- [ ] (แนะนำ) Settings → Environments → `production` → Required reviewers = ตัวเอง จะได้ต้องกดยืนยันก่อน deploy ทุกครั้ง
+- ย้อนฐานข้อมูลถ้า migration พัง: `npx wrangler d1 time-travel restore naka-ai-db --timestamp=<เวลาก่อน deploy>` (ย้อนได้ 30 วัน)
+
+ทุก push และ PR จะรัน typecheck + เทสอัตโนมัติ (workflow **CI**) งานของ agent ที่ขึ้นกากบาทแดงยังไม่ต้อง merge
 
 ## 5. ทดสอบหลัง deploy (ทำเองบน naka-ai.com)
 
