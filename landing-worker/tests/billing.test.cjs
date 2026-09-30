@@ -49,6 +49,9 @@ beforeEach(() => {
         source: card ? null : { scannable_code: { image: { download_uri: `https://api.omise.co/charges/${id}/documents/qr.png` } } },
       };
       charges.set(id, charge);
+      // Omise created and charged the card, but its reply never reached us.
+      if (card === "tokn_timeout") { charge.status = "successful"; charge.paid = true; throw new TypeError("network timeout"); }
+      if (card === "tokn_declined") return Response.json({ object: "error", code: "failed_processing" }, { status: 400 });
       return Response.json(charge);
     }
     const found = u.pathname.match(/^\/charges\/(chrg_test_\d+)$/);
@@ -131,6 +134,26 @@ test("card payments apply at once, or hand back the 3-D Secure page", async () =
   assert.equal(secure.status, "pending");
   assert.equal(secure.redirect, "https://pay.omise.co/3ds/abc");
   assert.equal((await call("/checkout", { method: "POST", body: { planId: "pro", period: "monthly", method: "card", token: "not-a-token" } })).status, 400);
+});
+
+test("a card charge whose reply is lost stays pending and the webhook still applies it", async () => {
+  const lost = await call("/checkout", { method: "POST", body: { planId: "starter", period: "monthly", method: "card", token: "tokn_timeout" } });
+  assert.equal(lost.status, 502);
+  const payment = sqlite.prepare("SELECT * FROM payments WHERE user_id = 'u1'").get();
+  assert.equal(payment.status, "pending", "an unknown outcome must not be marked failed");
+  assert.equal(payment.omise_charge_id, null);
+  assert.equal(sub(), undefined);
+
+  const [charge] = charges.values();
+  assert.equal((await billing.handleOmiseWebhook(signedWebhook(completeEvent(charge.id)), env)).status, 204);
+  assert.equal(sub().plan_id, "starter");
+  assert.equal(await credits.getBalance(db, "u1"), 30);
+  const linked = sqlite.prepare("SELECT status, omise_charge_id FROM payments WHERE id = ?").get(payment.id);
+  assert.deepEqual({ ...linked }, { status: "successful", omise_charge_id: charge.id });
+
+  // A clear decline is still a failure, and an unknown charge id changes nothing.
+  assert.equal((await call("/checkout", { method: "POST", user: "u2", body: { planId: "pro", period: "monthly", method: "card", token: "tokn_declined" } })).status, 502);
+  assert.equal(sqlite.prepare("SELECT status FROM payments WHERE user_id = 'u2'").get().status, "failed");
 });
 
 test("a successful payment issues its receipt; a receipt failure never undoes the payment", async () => {
