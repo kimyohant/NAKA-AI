@@ -134,7 +134,7 @@ test('config advertises password sign-in and hides unconfigured methods', async 
   const f = setup(t);
   const url = new URL('https://naka.test/api/auth/config');
   const config = await (await handleAuth(new Request(url), f.env, url)).json();
-  assert.deepEqual(config, { turnstileSiteKey: null, lineLogin: false, googleLogin: false, phoneLogin: false, passwordLogin: true });
+  assert.deepEqual(config, { turnstileSiteKey: null, lineLogin: false, googleLogin: false, phoneLogin: false, passwordLogin: true, passwordReset: false });
 });
 
 test('migration 0012 keeps identities and the admin audit history in order', () => {

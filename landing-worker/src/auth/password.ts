@@ -1,6 +1,7 @@
 import type { Env, User } from '../types';
 import { signupBonusStatement, signupCredits } from '../onboarding/signup';
-import { AuthError, base64url, constantTimeEqual, cookie, cookieValue, hmac, json, now, randomToken, readJson, sha256 } from './common';
+import { appOrigin, AuthError, base64url, constantTimeEqual, cookie, cookieValue, hmac, json, now, randomToken, readJson, sha256 } from './common';
+import { emailProvider } from './email';
 import { createSession, getUser, SESSION_COOKIE, SESSION_SECONDS } from './session';
 import { verifyTurnstile } from './turnstile';
 
@@ -202,6 +203,100 @@ export async function changePassword(request: Request, env: Env, user: User): Pr
   ]);
   if (updated.meta.changes !== 1) throw new AuthError(409, 'ข้อมูลบัญชีเปลี่ยนไป กรุณาเข้าสู่ระบบใหม่');
   return json({ ok: true }, 200, { 'Set-Cookie': cookieValue(env, SESSION_COOKIE, token, SESSION_SECONDS) });
+}
+
+const RESET_EXPIRES = 30 * 60;
+const RESET_WINDOW = 60 * 60;
+const RESET_INVALID = 'ลิงก์หมดอายุหรือถูกใช้ไปแล้ว กรุณาขอลิงก์ใหม่';
+const RESET_LIMIT = 'ขอลิงก์บ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่';
+const RESET_ATTEMPT_LIMIT = 'ลองลิงก์ผิดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่';
+
+async function pruneResets(env: Env, t: number): Promise<void> {
+  await env.DB.prepare('DELETE FROM auth_password_resets WHERE created_at < ?').bind(t - 24 * 3600).run();
+}
+
+/** POST /api/auth/password/forgot { email, turnstileToken? } */
+export async function forgotPassword(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
+  const t = now();
+  const body = await readJson(request, 4096);
+  const email = normalizeEmail(body.email);
+  await botCheck(request, env, body.turnstileToken);
+  const provider = emailProvider(env);
+  const keys = await limitKeys(request, env, email);
+  const [emailCount, ipCount] = await Promise.all([
+    env.DB.prepare('SELECT COUNT(*) AS n FROM auth_password_resets WHERE email_key = ? AND created_at > ?')
+      .bind(keys.email, t - RESET_WINDOW).first<{ n: number }>(),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM auth_password_resets WHERE ip_key = ? AND created_at > ?')
+      .bind(keys.ip, t - RESET_WINDOW).first<{ n: number }>(),
+  ]);
+  if ((emailCount?.n ?? 0) >= 3 || (ipCount?.n ?? 0) >= 10) {
+    throw new AuthError(429, RESET_LIMIT, RESET_WINDOW);
+  }
+  await pruneResets(env, t);
+  const account = await env.DB.prepare(`SELECT i.user_id FROM auth_identities i
+    JOIN auth_passwords p ON p.user_id = i.user_id JOIN users u ON u.id = i.user_id
+    WHERE i.provider = 'password' AND i.provider_uid = ? AND u.status = 'active'`)
+    .bind(email).first<{ user_id: string }>();
+  // Generate and hash for every accepted address, including unknown/passwordless accounts.
+  const token = randomToken();
+  const digest = await sha256(token);
+  await env.DB.batch([
+    env.DB.prepare('UPDATE auth_password_resets SET used_at = ? WHERE user_id = ? AND used_at IS NULL')
+      .bind(t, account?.user_id ?? ''),
+    env.DB.prepare(`INSERT INTO auth_password_resets
+      (email_key, ip_key, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?)`)
+      .bind(keys.email, keys.ip, account?.user_id ?? null, account ? digest : null, t + RESET_EXPIRES, t),
+  ]);
+  if (account) {
+    const link = `${appOrigin(env).origin}/login/reset/#token=${token}`;
+    const message = `มีผู้ขอตั้งรหัสผ่านใหม่สำหรับบัญชี NAKA-AI ของคุณ\n\nเปิดลิงก์นี้เพื่อตั้งรหัสผ่านใหม่:\n${link}\n\nลิงก์มีอายุ 30 นาที หากคุณไม่ได้เป็นผู้ขอ กรุณาเพิกเฉยต่ออีเมลนี้`;
+    const delivery = provider.send(email, 'ตั้งรหัสผ่านใหม่สำหรับ NAKA-AI', message)
+      .catch(() => { console.error('Password reset email delivery failed'); });
+    if (ctx) ctx.waitUntil(delivery);
+    else void delivery;
+  }
+  return json({ ok: true });
+}
+
+/** POST /api/auth/password/reset { token, newPassword } */
+export async function resetPassword(request: Request, env: Env): Promise<Response> {
+  const t = now();
+  await pruneResets(env, t);
+  const body = await readJson(request, 4096);
+  const next = checkPassword(body.newPassword);
+  await botCheck(request, env, body.turnstileToken);
+  const ip = (await limitKeys(request, env, '')).ip;
+  if (await recentCount(env, ip, 'login', t - WINDOW) >= 10) throw new AuthError(429, RESET_ATTEMPT_LIMIT, WINDOW);
+  const token = body.token;
+  const digest = typeof token === 'string' && /^[A-Za-z0-9_-]{43}$/.test(token) ? await sha256(token) : '';
+  const row = await env.DB.prepare(`SELECT r.user_id FROM auth_password_resets r JOIN users u ON u.id = r.user_id
+    JOIN auth_passwords p ON p.user_id = r.user_id
+    WHERE r.token_hash = ? AND r.used_at IS NULL AND r.expires_at > ? AND u.status = 'active'`)
+    .bind(digest, t).first<{ user_id: string }>();
+  if (!row) {
+    await record(env, 'login', ip);
+    throw new AuthError(400, RESET_INVALID);
+  }
+  const hash = await hashPassword(next);
+  const [updated] = await env.DB.batch([
+    env.DB.prepare(`UPDATE auth_passwords SET hash = ?, updated_at = ? WHERE user_id = ?
+      AND EXISTS (SELECT 1 FROM auth_password_resets WHERE token_hash = ? AND user_id = ?
+        AND used_at IS NULL AND expires_at > ?)
+      AND EXISTS (SELECT 1 FROM users WHERE id = ? AND status = 'active')`)
+      .bind(hash, t, row.user_id, digest, row.user_id, t, row.user_id),
+    env.DB.prepare(`UPDATE auth_password_resets SET used_at = ? WHERE token_hash = ? AND user_id = ?
+      AND used_at IS NULL AND EXISTS (SELECT 1 FROM auth_passwords WHERE user_id = ? AND hash = ?)`)
+      .bind(t, digest, row.user_id, row.user_id, hash),
+    env.DB.prepare(`DELETE FROM sessions WHERE user_id = ?
+      AND EXISTS (SELECT 1 FROM auth_password_resets WHERE token_hash = ? AND user_id = ? AND used_at = ?)
+      AND EXISTS (SELECT 1 FROM auth_passwords WHERE user_id = ? AND hash = ?)`)
+      .bind(row.user_id, digest, row.user_id, t, row.user_id, hash),
+  ]);
+  if (updated.meta.changes !== 1) {
+    await record(env, 'login', ip);
+    throw new AuthError(400, RESET_INVALID);
+  }
+  return json({ ok: true });
 }
 
 /** Admin reset: a new random password, shown once to the admin, and every session signed out. */
