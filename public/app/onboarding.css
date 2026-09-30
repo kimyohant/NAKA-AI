@@ -1,0 +1,95 @@
+/* Phase 5B welcome card — same glass language as public/app/app.css
+   (navy theme, Anuphan/IBM Plex Sans Thai, 22px radius panels). */
+
+.onboarding-card { margin: 26px 0 0; }
+
+.onboarding-inner {
+  background: linear-gradient(150deg, #234d9430, #ffffff0a 55%);
+  border: 1px solid #8dddff3d;
+  border-radius: 22px;
+  padding: 22px 24px 18px;
+}
+
+.onboarding-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.onboarding-head h2 {
+  margin: 0;
+  font-family: "IBM Plex Sans Thai", sans-serif;
+  font-size: 19px;
+  line-height: 1.45;
+  letter-spacing: -.02em;
+  color: #fff;
+}
+.onboarding-hide {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid #ffffff30;
+  border-radius: 999px;
+  color: #b9cdec;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 13px;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.onboarding-hide:hover { background: #ffffff12; border-color: #ffffff5c; color: #fff; }
+
+.onboarding-progress { margin: 8px 0 0; color: #9fb4d6; font-size: 12px; }
+
+.onboarding-steps { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 9px; }
+.onboarding-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid #ffffff1c;
+  border-radius: 14px;
+  background: #ffffff08;
+}
+.onboarding-step.is-done { border-color: #8dddff4d; background: #8dddff10; }
+
+.onboarding-mark {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px dashed #ffffff4d;
+  color: #8dddff;
+  font-size: 14px;
+  font-weight: 700;
+}
+.onboarding-step.is-done .onboarding-mark { border: 0; background: #8dddff26; }
+
+.onboarding-label { flex: 1; min-width: 0; font-size: 14px; color: #e6eefc; }
+.onboarding-step.is-done .onboarding-label { color: #b9cdec; }
+
+.onboarding-go {
+  flex-shrink: 0;
+  color: #a9e2fb;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 7px 12px;
+  border: 1px solid #8dddff4d;
+  border-radius: 999px;
+  transition: background .18s ease, color .18s ease;
+}
+.onboarding-go:hover { background: #8dddff26; color: #fff; }
+.onboarding-step.is-done .onboarding-go { color: #9fb4d6; border-color: #ffffff26; }
+
+a:focus-visible, button:focus-visible { outline: 3px solid #87d9fa; outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-hide, .onboarding-go { transition: none; }
+}
+
+@media (max-width: 560px) {
+  .onboarding-card { margin-top: 20px; }
+  .onboarding-inner { padding: 18px 16px 14px; }
+  .onboarding-head { flex-direction: column; }
+  .onboarding-head h2 { font-size: 17px; }
+  .onboarding-step { flex-wrap: wrap; }
+  .onboarding-label { flex-basis: calc(100% - 38px); }
+  .onboarding-go { margin-left: 38px; }
+}

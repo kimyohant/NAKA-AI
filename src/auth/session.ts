@@ -1,4 +1,5 @@
 import type { Env, User } from '../types';
+import { signupBonusStatement, signupCredits } from '../onboarding/signup';
 import { AuthError, cookie, cookieValue, now, randomToken, sha256 } from './common';
 
 export const SESSION_SECONDS = 30 * 24 * 60 * 60;
@@ -14,14 +15,19 @@ export async function getUser(db: D1Database, id: string): Promise<User | null> 
 export async function identityUser(env: Env, provider: 'phone' | 'google', uid: string, name: string, email: string | null = null): Promise<User> {
   const id = crypto.randomUUID();
   // D1 batches are transactions; the guarded insert avoids orphan users on races.
-  await env.DB.batch([
+  const statements = [
     env.DB.prepare(`INSERT INTO users (id, display_name, created_at)
       SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM auth_identities WHERE provider = ? AND provider_uid = ?)`)
       .bind(id, name, now(), provider, uid),
     env.DB.prepare(`INSERT INTO auth_identities (id, user_id, provider, provider_uid, email, verified_at)
       VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(provider, provider_uid) DO UPDATE SET email = excluded.email, verified_at = excluded.verified_at`)
       .bind(crypto.randomUUID(), id, provider, uid, email, now()),
-  ]);
+  ];
+  // Signup bonus (docs/phase5-onboarding.md): only when SIGNUP_CREDITS is a
+  // positive integer, in the same transaction as the new user row.
+  const bonus = signupCredits(env);
+  if (bonus > 0) statements.push(signupBonusStatement(env.DB, id, bonus));
+  await env.DB.batch(statements);
   const identity = await env.DB.prepare('SELECT user_id FROM auth_identities WHERE provider = ? AND provider_uid = ?').bind(provider, uid).first<{ user_id: string }>();
   const user = identity && await getUser(env.DB, identity.user_id);
   if (!user) throw new AuthError(403, 'บัญชีนี้ไม่สามารถเข้าสู่ระบบได้');
