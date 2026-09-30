@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#091736">
+  <title>บัญชีของฉัน — naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/glass-nav.css">
+  <link rel="stylesheet" href="/account-menu.css">
+  <link rel="stylesheet" href="/app/app.css">
+  <link rel="stylesheet" href="/app/account/account.css">
+  <script src="/account-menu.js" defer></script>
+  <script src="/app/account/account.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">ข้ามไปที่เนื้อหา</a>
+  <header class="app-topbar glass-nav">
+    <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" width="36" height="36" alt=""><span>naka<span class="brand-accent">-ai</span><b>.</b></span></a>
+    <span class="header-divider" aria-hidden="true"></span>
+    <span class="topbar-label">บัญชีของฉัน</span>
+    <nav class="topbar-nav" aria-label="เมนูหลัก">
+      <a href="/app/">พื้นที่ของร้าน</a>
+      <a href="/app/inbox/">กล่องข้อความ</a>
+      <a href="/app/billing/">แพ็กเกจ</a>
+    </nav>
+    <div data-account-menu></div>
+  </header>
+
+  <main id="main" class="shell">
+    <p id="page-loading" class="app-loading" role="status">กำลังโหลดข้อมูลบัญชี…</p>
+
+    <div id="page-error" class="app-error" hidden>
+      <p>โหลดข้อมูลบัญชีไม่สำเร็จ เพราะเชื่อมต่อเซิร์ฟเวอร์ไม่ได้ชั่วขณะ</p>
+      <button class="signout-button" id="retry-button" type="button">ลองอีกครั้ง</button>
+    </div>
+
+    <div id="page" hidden>
+      <div class="inbox-head">
+        <div><h1>บัญชีของฉัน</h1><p>ข้อมูลบัญชี เครดิตคงเหลือ และการเปลี่ยนรหัสผ่านด้วยตัวเอง</p></div>
+      </div>
+
+      <section class="account-card" aria-labelledby="profile-title">
+        <p class="panel-label" id="profile-title">ข้อมูลบัญชี</p>
+        <p class="account-row"><span>ชื่อที่แสดง</span><strong id="account-name"></strong></p>
+        <p class="account-row"><span>เข้าสู่ระบบด้วย</span><strong id="account-contact"></strong></p>
+        <p class="account-row"><span>เครดิตคงเหลือ</span><strong><span id="account-credits"></span> เครดิต</strong></p>
+        <a class="account-billing-link" href="/app/billing/">เติมเครดิต / ซื้อแพ็กเกจ <span aria-hidden="true">↗</span></a>
+      </section>
+
+      <section class="account-card" id="password-section" aria-labelledby="password-title" hidden>
+        <p class="panel-label" id="password-title">เปลี่ยนรหัสผ่าน</p>
+        <form id="password-form" novalidate>
+          <label for="current-password">รหัสผ่านปัจจุบัน</label>
+          <input id="current-password" name="currentPassword" type="password" autocomplete="current-password" required>
+          <label for="new-password">รหัสผ่านใหม่</label>
+          <input id="new-password" name="newPassword" type="password" autocomplete="new-password" minlength="8" required>
+          <label for="confirm-password">ยืนยันรหัสผ่านใหม่</label>
+          <input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
+          <button class="signout-button account-submit" id="change-button" type="submit">เปลี่ยนรหัสผ่าน</button>
+        </form>
+        <p class="field-help">อย่างน้อย 8 ตัวอักษร · เปลี่ยนสำเร็จแล้วอุปกรณ์อื่นจะออกจากระบบทันที</p>
+        <p id="password-status" class="password-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="account-card" id="no-password" hidden>
+        <p class="panel-label">รหัสผ่าน</p>
+        <p>บัญชีนี้เข้าสู่ระบบด้วย Google จึงไม่มีรหัสผ่านให้เปลี่ยน — เข้าสู่ระบบด้วย Google ได้จากหน้า <a href="/login/">เข้าสู่ระบบ</a></p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

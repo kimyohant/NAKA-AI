@@ -250,6 +250,13 @@
     dashboard.textContent = "แดชบอร์ดของฉัน";
     menu.appendChild(dashboard);
 
+    var account = document.createElement("a");
+    account.className = "acct-item";
+    account.href = "/app/account/";
+    account.setAttribute("role", "menuitem");
+    account.textContent = "บัญชีของฉัน";
+    menu.appendChild(account);
+
     menu.appendChild(
       menuItem("ออกจากระบบ", async function () {
         var result = await signOut();
