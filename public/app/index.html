@@ -16,9 +16,11 @@
   <link rel="stylesheet" href="/account-menu.css">
   <link rel="stylesheet" href="/app/app.css">
   <link rel="stylesheet" href="/app/onboarding.css">
+  <link rel="stylesheet" href="/app/works.css">
   <script src="/account-menu.js" defer></script>
   <script src="/app/app.js" defer></script>
   <script src="/app/onboarding.js" defer></script>
+  <script src="/app/works.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">ข้ามไปที่เนื้อหา</a>
@@ -75,7 +77,15 @@
         </section>
       </div>
 
-      <p class="jobs-note">งานที่คุณสร้างจะแสดงรายการในหน้านี้เมื่อระบบคิวงานพร้อม</p>
+      <section class="works-section" aria-labelledby="works-title">
+        <div class="works-heading">
+          <div><p class="panel-label">งานที่เคยสร้าง</p><h2 id="works-title">ผลงานของฉัน</h2></div>
+          <button class="works-button" id="works-refresh" type="button">รีเฟรช</button>
+        </div>
+        <p class="works-message" id="works-message" role="status" aria-live="polite">กำลังโหลดผลงาน…</p>
+        <ul class="works-list" id="works-list" aria-label="รายการผลงาน"></ul>
+        <button class="works-button works-more" id="works-more" type="button" hidden>ดูเพิ่ม</button>
+      </section>
     </div>
   </main>
 </body>
