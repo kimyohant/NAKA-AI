@@ -4,7 +4,7 @@ import { appOrigin, AuthError, json, secret } from './common';
 import { googleCallback, googleStart } from './google';
 import { lineCallback, lineStart } from './line';
 import { requestOtp, verifyOtp } from './otp';
-import { loginWithPassword, registerWithPassword } from './password';
+import { changePassword, hasPassword, loginWithPassword, registerWithPassword } from './password';
 import { smsProvider } from './sms';
 import { logout, requireUser } from './session';
 
@@ -18,7 +18,7 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
       '/api/auth/otp/request': 'POST', '/api/auth/otp/verify': 'POST',
       '/api/auth/google/start': 'GET', '/api/auth/google/callback': 'GET',
       '/api/auth/line/start': 'GET', '/api/auth/line/callback': 'GET',
-      '/api/auth/password/register': 'POST', '/api/auth/password/login': 'POST',
+      '/api/auth/password/register': 'POST', '/api/auth/password/login': 'POST', '/api/auth/password/change': 'POST',
       '/api/auth/me': 'GET', '/api/auth/logout': 'POST', '/api/auth/config': 'GET',
     };
     const method = paths[url.pathname];
@@ -40,6 +40,11 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
         case '/api/auth/line/callback': response = await lineCallback(request, env, url); break;
         case '/api/auth/password/register': response = await registerWithPassword(request, env); break;
         case '/api/auth/password/login': response = await loginWithPassword(request, env); break;
+        case '/api/auth/password/change': {
+          const user = await requireUser(request, env);
+          response = user ? await changePassword(request, env, user) : json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
+          break;
+        }
         case '/api/auth/logout': response = await logout(request, env); break;
         // Public login settings. The Turnstile secret never leaves the Worker.
         // Which sign-in methods are configured, so the page never offers one that can only fail.
@@ -49,7 +54,11 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
           phoneLogin: phoneConfigured(env), passwordLogin: true }); break;
         default: {
           const user = await requireUser(request, env);
-          response = user ? json({ user, credits: await getBalance(env.DB, user.id) }) : json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
+          if (user) {
+            const password = await hasPassword(env, user.id);
+            response = json({ user, credits: await getBalance(env.DB, user.id),
+              ...(password === undefined ? {} : { hasPassword: password }) });
+          } else response = json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
         }
       }
     }
