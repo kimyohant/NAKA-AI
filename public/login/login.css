@@ -84,6 +84,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 }
 .provider-button:hover { background: #fff; transform: translateY(-1px); }
 .provider-button svg { width: 19px; height: 19px; flex-shrink: 0; }
+.provider-button[hidden] { display: none; }
+.line-button { margin-bottom: 10px; border-color: #06c755; background: #06c755; color: #fff; }
+.line-button:hover { background: #05b94e; }
+.line-mark { font-family: Arial, sans-serif; font-size: 11px; font-weight: 800; letter-spacing: -.04em; }
 
 .divider { display: flex; align-items: center; gap: 14px; margin: 20px 0; color: #8ba2c6; font-size: 12px; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #ffffff26; }

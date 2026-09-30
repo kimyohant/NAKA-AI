@@ -2,6 +2,7 @@ import type { Env } from '../types';
 import { getBalance } from '../credits';
 import { appOrigin, AuthError, json, secret } from './common';
 import { googleCallback, googleStart } from './google';
+import { lineCallback, lineStart } from './line';
 import { requestOtp, verifyOtp } from './otp';
 import { logout, requireUser } from './session';
 
@@ -14,6 +15,7 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
     const paths: Record<string, string> = {
       '/api/auth/otp/request': 'POST', '/api/auth/otp/verify': 'POST',
       '/api/auth/google/start': 'GET', '/api/auth/google/callback': 'GET',
+      '/api/auth/line/start': 'GET', '/api/auth/line/callback': 'GET',
       '/api/auth/me': 'GET', '/api/auth/logout': 'POST', '/api/auth/config': 'GET',
     };
     const method = paths[url.pathname];
@@ -31,6 +33,8 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
         case '/api/auth/otp/verify': response = await verifyOtp(request, env); break;
         case '/api/auth/google/start': response = await googleStart(request, env); break;
         case '/api/auth/google/callback': response = await googleCallback(request, env, url); break;
+        case '/api/auth/line/start': response = await lineStart(request, env); break;
+        case '/api/auth/line/callback': response = await lineCallback(request, env, url); break;
         case '/api/auth/logout': response = await logout(request, env); break;
         // Public login settings. The Turnstile secret never leaves the Worker.
         case '/api/auth/config': response = json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY?.trim() || null }); break;

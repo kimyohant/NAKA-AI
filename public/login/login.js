@@ -12,6 +12,7 @@
 
   var errorEl = document.getElementById("form-error");
   var mockNote = document.getElementById("mock-note");
+  var lineButton = document.getElementById("line-button");
   var googleButton = document.getElementById("google-button");
   var stepPhone = document.getElementById("step-phone");
   var stepCode = document.getElementById("step-code");
@@ -40,6 +41,7 @@
     fetch("/api/auth/config", { credentials: "same-origin" })
       .then(function (res) { return res.ok ? res.json() : {}; })
       .then(function (config) {
+        lineButton.hidden = !config || config.lineLogin !== true;
         if (!config || !config.turnstileSiteKey) return;
         bot.siteKey = config.turnstileSiteKey;
         updateRequestButtons();
@@ -235,13 +237,15 @@
     location.assign(nextTarget);
   });
 
-  // Boot: mock setup, ?error=google message, then skip the page if already signed in.
+  // Boot: mock setup, provider error message, then skip the page if already signed in.
   if (auth.mockMode()) {
     auth.installMockFetch();
     mockNote.hidden = false;
   }
   if (params.get("error") === "google") {
     showError("เข้าสู่ระบบด้วย Google ไม่สำเร็จ ลองอีกครั้งหรือใช้เบอร์โทรแทนได้เลย");
+  } else if (params.get("error") === "line") {
+    showError("เข้าสู่ระบบด้วย LINE ไม่สำเร็จ ลองอีกครั้งหรือใช้ Google หรือเบอร์โทรแทนได้เลย");
   }
   setupBotCheck();
   auth.me().then(function (state) {
