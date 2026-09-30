@@ -23,6 +23,11 @@
 - [ ] ระหว่างรอ App Review ทดสอบได้ด้วยบัญชีที่เป็น admin/tester ของแอปเท่านั้น
 - ได้ค่า: `META_APP_ID`, `META_APP_SECRET` 🔑
 
+### สมัครด้วยอีเมล + รหัสผ่าน — เปิดอยู่แล้ว ไม่ต้องตั้งอะไร
+- รหัสผ่านเก็บแบบ PBKDF2 · ลองผิด 5 ครั้งใน 15 นาทีต่ออีเมลจะถูกพัก · สมัครได้ 5 บัญชีต่อ IP ต่อชั่วโมง
+- ยังไม่ยืนยันอีเมล · ลืมรหัสผ่าน: `/admin/customers/` → ลูกค้า → "ลืมรหัสผ่าน" → ได้รหัสใหม่แสดงครั้งเดียว แจ้งลูกค้าทางโทรศัพท์
+- แนะนำภายหลัง: เปิด Turnstile (ฟรี) เมื่อเริ่มมีบัญชีสแปม — ตั้ง `TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY` แล้วฟอร์มจะขอให้ยืนยันเอง
+
 ### LINE Login — ล็อกอินด้วย LINE (ฟรี ลดค่า SMS)
 - [ ] developers.line.biz → Provider เดิมหรือใหม่ → สร้าง channel ประเภท **LINE Login** (แยกจาก Messaging API ของบอต) App type **Web app**
 - [ ] แท็บ LINE Login → Callback URL = `https://naka-ai.com/api/auth/line/callback` · เปิด channel เป็น **Published**
@@ -144,6 +149,7 @@ npx wrangler deploy
 
 - [ ] หน้าแรกโหลด เมนู 4 ผลิตภัณฑ์ คลิปละครเล่น
 - [ ] `/login/` มี Turnstile → ขอ OTP ด้วยเบอร์ตัวเอง → ได้ SMS → เข้า `/app/` ได้
+- [ ] สมัครด้วยอีเมล + รหัสผ่าน → เข้า `/app/` ได้ · ออกจากระบบแล้วเข้าใหม่ได้ · รหัสผิดขึ้นข้อความเตือน
 - [ ] ล็อกอินด้วย Google ได้
 - [ ] ล็อกอินด้วย LINE ได้ ครั้งที่สองได้บัญชีเดิม
 - [ ] แอดมินเติมเครดิตทดสอบ: `curl -X POST https://naka-ai.com/api/admin/credits/<user-id> -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"amount":5,"note":"ทดสอบ"}'`
