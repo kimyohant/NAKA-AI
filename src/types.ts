@@ -14,6 +14,9 @@ export interface Env {
   SMS_API_SECRET?: string;
   SMS_SENDER?: string;
   APP_ORIGIN: string;
+  EMAIL_PROVIDER?: "off" | "mock" | "resend";
+  RESEND_API_KEY?: string;
+  EMAIL_FROM?: string;
   // Affiliate review voiceover (Google Cloud Text-to-Speech)
   GOOGLE_TTS_API_KEY: string;
   GOOGLE_TTS_VOICE?: string;
