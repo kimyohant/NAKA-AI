@@ -39,12 +39,9 @@ test('หน้าแรก, /login/ และ /app/billing/ ลิงก์ไ�
   }
 });
 
-test('ช่องที่เจ้าของต้องกรอก (fill-me) ทุกช่องอยู่ในรายการของ status doc', () => {
-  const doc = read(root, 'docs', 'legal-integration-status.md');
-  const fields = new Set();
+test('ไม่มีช่องที่ยังไม่ได้กรอก (fill-me) เหลือบนหน้าที่จะเผยแพร่', () => {
   for (const name of PAGES) {
-    for (const [, field] of page(name).matchAll(/class="fill-me">(\[[^\]]+\])</g)) fields.add(field);
+    const left = [...page(name).matchAll(/class="fill-me">([^<]*)</g)].map((m) => m[1]);
+    assert.deepEqual(left, [], `${name}: fill in ${left.join(', ')}`);
   }
-  assert.ok(fields.size > 0);
-  for (const field of fields) assert.ok(doc.includes('`' + field + '`'), `${field} missing from docs/legal-integration-status.md`);
 });
