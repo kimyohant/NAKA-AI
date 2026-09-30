@@ -1,0 +1,190 @@
+import type { Env } from '../types';
+import { ledgerFor } from '../credits';
+
+const BASE = '/api/admin/customers';
+const MONTH = 30 * 86400;
+const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
+  status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
+});
+class AdminError extends Error {
+  constructor(readonly status: number, message: string) { super(message); }
+}
+const CUSTOMER_SQL = `SELECT u.id, u.display_name AS name, u.status, u.created_at AS createdAt,
+  (SELECT provider_uid FROM auth_identities WHERE user_id = u.id AND provider = 'phone' ORDER BY id LIMIT 1) AS phone,
+  (SELECT email FROM auth_identities WHERE user_id = u.id AND provider = 'google' ORDER BY id LIMIT 1) AS email,
+  CASE WHEN s.status = 'active' AND (s.expires_at IS NULL OR s.expires_at > ?1) THEN s.plan_id ELSE 'free' END AS planId,
+  s.expires_at AS expiresAt,
+  (SELECT COALESCE(SUM(delta), 0) FROM credit_ledger WHERE user_id = u.id) AS credits
+  FROM users u LEFT JOIN subscriptions s ON s.user_id = u.id`;
+
+async function customers(env: Env, url: URL): Promise<Response> {
+  const query = (url.searchParams.get('q') ?? '').trim();
+  if (query.length > 200) throw new AdminError(400, 'คำค้นต้องไม่เกิน 200 ตัวอักษร');
+  const phone = query.replace(/[\s()-]/g, '');
+  const normalized = /^0\d{9}$/.test(phone) ? '+66' + phone.slice(1) : phone;
+  // instr treats % and _ literally. All identities participate in the search, not just the displayed one.
+  const { results } = await env.DB.prepare(`${CUSTOMER_SQL}
+    WHERE ?2 = '' OR instr(lower(u.id), lower(?2)) > 0 OR instr(lower(u.display_name), lower(?2)) > 0
+      OR EXISTS (SELECT 1 FROM auth_identities a WHERE a.user_id = u.id AND
+        ((a.provider = 'phone' AND instr(a.provider_uid, ?3) > 0) OR instr(lower(a.email), lower(?2)) > 0))
+    ORDER BY u.created_at DESC, u.id LIMIT 50`).bind(Math.floor(Date.now() / 1000), query, normalized || query).all();
+  return json({ customers: results });
+}
+
+async function detail(env: Env, userId: string): Promise<Response> {
+  const customer = await env.DB.prepare(`${CUSTOMER_SQL} WHERE u.id = ?2`)
+    .bind(Math.floor(Date.now() / 1000), userId).first();
+  if (!customer) throw new AdminError(404, 'ไม่พบลูกค้านี้');
+  const [subscription, ledger, payments, receipts, socialAccounts, audit, plans] = await Promise.all([
+    env.DB.prepare(`SELECT s.plan_id AS planId, p.name AS planName, s.status, s.expires_at AS expiresAt,
+      s.billing_period AS period, s.next_credit_at AS nextCreditAt FROM subscriptions s
+      JOIN plans p ON p.id = s.plan_id WHERE s.user_id = ?`).bind(userId).first(),
+    ledgerFor(env.DB, userId, 50),
+    env.DB.prepare(`SELECT id, plan_id AS planId, period, amount_satang / 100.0 AS amount, method, status,
+      created_at AS createdAt, paid_at AS paidAt FROM payments WHERE user_id = ? ORDER BY created_at DESC, id LIMIT 20`).bind(userId).all(),
+    env.DB.prepare('SELECT id, number FROM receipts WHERE user_id = ? ORDER BY issued_at DESC, year DESC, seq DESC').bind(userId).all(),
+    // Explicit allowlist: token_enc and provider credentials never leave this module.
+    env.DB.prepare('SELECT id, platform, name, status FROM social_accounts WHERE user_id = ? ORDER BY created_at DESC, id').bind(userId).all(),
+    env.DB.prepare('SELECT id, action, detail, note, created_at AS createdAt FROM admin_audit WHERE user_id = ? ORDER BY created_at DESC, rowid DESC')
+      .bind(userId).all<{ id: string; action: string; detail: string; note: string; createdAt: number }>(),
+    env.DB.prepare("SELECT id, name, monthly_credits AS monthlyCredits, price_thb AS price FROM plans WHERE price_thb > 0 AND id <> 'free' ORDER BY price_thb, id").all(),
+  ]);
+  return json({ customer, subscription, ledger, payments: payments.results, receipts: receipts.results,
+    socialAccounts: socialAccounts.results, audit: audit.results.map(row => ({ ...row, detail: JSON.parse(row.detail) })), plans: plans.results });
+}
+
+async function body(request: Request): Promise<Record<string, unknown>> {
+  if (request.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== 'application/json') {
+    throw new AdminError(400, 'กรุณาส่งข้อมูลเป็น JSON');
+  }
+  if (Number(request.headers.get('Content-Length')) > 4096) throw new AdminError(413, 'ข้อมูลต้องไม่เกิน 4 KB');
+  const reader = request.body?.getReader();
+  if (!reader) throw new AdminError(400, 'กรุณากรอกข้อมูล');
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > 4096) { await reader.cancel(); throw new AdminError(413, 'ข้อมูลต้องไม่เกิน 4 KB'); }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  try {
+    const value: unknown = JSON.parse(new TextDecoder('utf-8', { fatal: true, ignoreBOM: false }).decode(bytes));
+    if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, unknown>;
+  } catch { /* fall through to the public error */ }
+  throw new AdminError(400, 'ข้อมูล JSON ไม่ถูกต้อง');
+}
+
+type Action = 'credits' | 'package' | 'status';
+
+/** The audit INSERT reads before/after inside the transaction. Effects use that immutable snapshot,
+ * so parallel requests cannot lose a renewal or record a stale balance. No UPDATE/DELETE of audit.
+ */
+async function change(request: Request, env: Env, userId: string, action: Action): Promise<Response> {
+  const data = await body(request);
+  const note = typeof data.note === 'string' ? data.note.trim() : '';
+  if (!note || note.length > 200) throw new AdminError(400, 'กรุณาระบุเหตุผล 1–200 ตัวอักษร');
+  let input: Record<string, unknown>;
+  if (action === 'credits') {
+    if (!Number.isInteger(data.amount) || Number(data.amount) < 1 || Number(data.amount) > 10000) {
+      throw new AdminError(400, 'จำนวนเครดิตต้องเป็นจำนวนเต็ม 1–10000');
+    }
+    input = { amount: data.amount, note };
+  } else if (action === 'package') {
+    if (typeof data.planId !== 'string' || !data.planId || data.planId.length > 100 ||
+      !Number.isInteger(data.months) || Number(data.months) < 1 || Number(data.months) > 12) {
+      throw new AdminError(400, 'กรุณาเลือกแพ็กเกจและจำนวนเดือน 1–12');
+    }
+    input = { planId: data.planId, months: data.months, note };
+  } else {
+    if (data.status !== 'active' && data.status !== 'disabled') throw new AdminError(400, 'สถานะบัญชีไม่ถูกต้อง');
+    input = { status: data.status, note };
+  }
+  if (!await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(userId).first()) throw new AdminError(404, 'ไม่พบลูกค้านี้');
+  if (action === 'package' && !await env.DB.prepare("SELECT id FROM plans WHERE id = ? AND id <> 'free' AND price_thb > 0").bind(input.planId).first()) {
+    throw new AdminError(400, 'กรุณาเลือกแพ็กเกจที่มีราคา');
+  }
+  const id = crypto.randomUUID();
+  const t = Math.floor(Date.now() / 1000);
+  const before = `json_object('status', status, 'credits', credits, 'planId', plan_id,
+    'subscriptionStatus', sub_status, 'expiresAt', expires_at, 'nextCreditAt', next_credit_at,
+    'period', billing_period, 'sessions', sessions)`;
+  let after: string;
+  if (action === 'credits') after = `json_set(${before}, '$.credits', credits + json_extract(?3, '$.amount'))`;
+  else if (action === 'status') after = `json_set(${before}, '$.status', json_extract(?3, '$.status'),
+    '$.sessions', CASE WHEN json_extract(?3, '$.status') = 'disabled' THEN 0 ELSE sessions END)`;
+  else after = `json_set(${before}, '$.planId', p.id, '$.subscriptionStatus', 'active', '$.period', 'monthly',
+    '$.expiresAt', CASE WHEN extending THEN expires_at ELSE ?5 END + json_extract(?3, '$.months') * ${MONTH},
+    '$.nextCreditAt', CASE WHEN extending AND next_credit_at IS NOT NULL THEN next_credit_at ELSE ?5 + ${MONTH} END,
+    '$.credits', CASE WHEN extending THEN credits ELSE MAX(credits, p.monthly_credits) END)`;
+  const stateSql = `SELECT u.status, s.plan_id, s.status AS sub_status, s.expires_at, s.next_credit_at, s.billing_period,
+    (SELECT COALESCE(SUM(delta), 0) FROM credit_ledger WHERE user_id = u.id) AS credits,
+    (SELECT COUNT(*) FROM sessions WHERE user_id = u.id) AS sessions,
+    CASE WHEN s.plan_id = json_extract(?3, '$.planId') AND s.status = 'active' AND s.expires_at > ?5 THEN 1 ELSE 0 END AS extending
+    FROM users u LEFT JOIN subscriptions s ON s.user_id = u.id WHERE u.id = ?2`;
+  const statements = [env.DB.prepare(`WITH state AS (${stateSql})
+    INSERT INTO admin_audit (id, user_id, action, detail, note, created_at)
+    SELECT ?1, ?2, ?6, json_object('input', json(?3), 'before', ${before}, 'after', ${after}), ?4, ?5
+    FROM state ${action === 'package' ? "JOIN plans p ON p.id = json_extract(?3, '$.planId') AND p.id <> 'free' AND p.price_thb > 0" : ''}`)
+    .bind(id, userId, JSON.stringify(input), note, t, action)];
+
+  if (action === 'credits' || action === 'package') {
+    // Same grant ledger semantics as grantCredits(..., 'grant', note), but its standalone
+    // .run() cannot join an audit transaction. Keep this INSERT in the one atomic batch.
+    statements.push(env.DB.prepare(`INSERT INTO credit_ledger (user_id, delta, reason, note)
+      SELECT user_id, json_extract(detail, '$.after.credits') - json_extract(detail, '$.before.credits'), 'grant', note
+      FROM admin_audit WHERE id = ? AND json_extract(detail, '$.after.credits') > json_extract(detail, '$.before.credits')`).bind(id));
+  }
+  if (action === 'package') statements.push(env.DB.prepare(`INSERT INTO subscriptions
+    (user_id, plan_id, status, billing_period, expires_at, next_credit_at, provider_ref, updated_at)
+    SELECT user_id, json_extract(detail, '$.after.planId'), 'active', 'monthly',
+      json_extract(detail, '$.after.expiresAt'), json_extract(detail, '$.after.nextCreditAt'), 'admin:' || id, datetime('now')
+    FROM admin_audit WHERE id = ?
+    ON CONFLICT(user_id) DO UPDATE SET plan_id = excluded.plan_id, status = excluded.status,
+      billing_period = excluded.billing_period, expires_at = excluded.expires_at, next_credit_at = excluded.next_credit_at,
+      provider_ref = excluded.provider_ref, updated_at = excluded.updated_at`).bind(id));
+  if (action === 'status') {
+    statements.push(env.DB.prepare(`UPDATE users SET status = (SELECT json_extract(detail, '$.after.status') FROM admin_audit WHERE id = ?1)
+      WHERE id = ?2 AND EXISTS (SELECT 1 FROM admin_audit WHERE id = ?1)`).bind(id, userId));
+    statements.push(env.DB.prepare(`DELETE FROM sessions WHERE user_id = ?2 AND EXISTS
+      (SELECT 1 FROM admin_audit WHERE id = ?1 AND json_extract(detail, '$.after.status') = 'disabled')`).bind(id, userId));
+  }
+  const [audit] = await env.DB.batch(statements);
+  if (audit.meta.changes !== 1) throw new AdminError(409, 'ข้อมูลลูกค้าหรือแพ็กเกจเปลี่ยนแล้ว กรุณาโหลดใหม่');
+  // Do not read detail after commit: a failed refresh must never look like a failed mutation.
+  return json({ ok: true, auditId: id });
+}
+
+/** Called after the shared router's ADMIN_TOKEN check; also fails closed when mounted alone. */
+export async function handleAdminCustomers(request: Request, env: Env, url: URL): Promise<Response | null> {
+  if (url.pathname !== BASE && !url.pathname.startsWith(BASE + '/')) return null;
+  if (!env.ADMIN_TOKEN || request.headers.get('Authorization') !== 'Bearer ' + env.ADMIN_TOKEN) {
+    return json({ error: 'กรุณาเข้าสู่ระบบหลังร้านอีกครั้ง' }, 401);
+  }
+  try {
+    if (request.method === 'POST' && request.headers.has('Origin') && request.headers.get('Origin') !== url.origin) {
+      throw new AdminError(403, 'คำขอไม่ถูกต้อง');
+    }
+    if ((url.pathname === BASE || url.pathname === BASE + '/') && request.method === 'GET') return await customers(env, url);
+    const match = url.pathname.slice(BASE.length).match(/^\/([^/]+)(?:\/(credits|package|status))?$/);
+    if (!match) return json({ error: 'ไม่พบรายการนี้' }, 404);
+    let userId: string;
+    try { userId = decodeURIComponent(match[1]); } catch { throw new AdminError(400, 'รหัสลูกค้าไม่ถูกต้อง'); }
+    if (!userId || userId.length > 200) throw new AdminError(400, 'รหัสลูกค้าไม่ถูกต้อง');
+    if (!match[2] && request.method === 'GET') return await detail(env, userId);
+    if (match[2] && request.method === 'POST') return await change(request, env, userId, match[2] as Action);
+    const response = json({ error: 'ไม่รองรับวิธีเรียกใช้งานนี้' }, 405);
+    response.headers.set('Allow', match[2] ? 'POST' : 'GET');
+    return response;
+  } catch (error) {
+    if (error instanceof AdminError) return json({ error: error.message }, error.status);
+    console.error('admin customers: request failed');
+    return json({ error: 'ระบบขัดข้อง กรุณาโหลดข้อมูลล่าสุดก่อนลองอีกครั้ง' }, 500);
+  }
+}
