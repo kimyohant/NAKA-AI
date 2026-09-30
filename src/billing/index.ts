@@ -136,6 +136,13 @@ async function checkout(request: Request, env: Env, userId: string): Promise<Res
       ? await createPromptPayCharge(env, { amount, paymentId: id, userId, expiresAt: expiresAt! })
       : await createCardCharge(env, { amount, token: body.token as string, paymentId: id, userId, returnUri: `${new URL(env.APP_ORIGIN).origin}/app/billing/?payment=${id}` });
   } catch (error) {
+    // A timeout or 5xx does not say whether Omise created (and charged) the charge. Keep the
+    // payment pending: the webhook finds it through the charge metadata and applies it.
+    const unknown = !(error instanceof OmiseError) || error.message === "omise_network" || /^omise_5\d\d_/.test(error.message);
+    if (unknown && method === "card") {
+      console.error("billing: card charge outcome unknown", id);
+      throw new BillingError(502, "ยังไม่ทราบผลการชำระด้วยบัตร กรุณาอย่าชำระซ้ำ ระบบจะอัปเดตแพ็กเกจให้เองภายในไม่กี่นาที หรือติดต่อทีมงาน");
+    }
     await env.DB.prepare("UPDATE payments SET status = 'failed', failure = ? WHERE id = ?")
       .bind(error instanceof OmiseError ? error.message.slice(0, 80) : "omise_error", id).run();
     if (error instanceof OmiseError && error.message === "omise_not_configured") throw new BillingError(503, "ระบบชำระเงินออนไลน์ยังไม่เปิดใช้งาน กรุณาติดต่อทีมงาน");
@@ -211,10 +218,20 @@ export async function handleOmiseWebhook(request: Request, env: Env): Promise<Re
   let event: { key?: unknown; data?: { object?: unknown; id?: unknown } };
   try { event = JSON.parse(raw); } catch { return new Response(null, { status: 400 }); }
   if (event.key !== "charge.complete" || event.data?.object !== "charge" || typeof event.data.id !== "string") return new Response(null, { status: 204 });
-  const payment = await env.DB.prepare("SELECT * FROM payments WHERE omise_charge_id = ?").bind(event.data.id).first<PaymentRow>();
-  if (!payment) return new Response(null, { status: 204 });
   try {
-    await reconcile(env, payment, await getCharge(env, event.data.id));
+    let payment = await env.DB.prepare("SELECT * FROM payments WHERE omise_charge_id = ?").bind(event.data.id).first<PaymentRow>();
+    let charge: Charge | null = null;
+    if (!payment) {
+      // The checkout lost Omise's reply (timeout), so the charge id was never stored. Link it
+      // through the metadata of the charge as Omise reports it, never through the webhook body.
+      charge = await getCharge(env, event.data.id);
+      const paymentId = charge.metadata?.payment_id;
+      if (typeof paymentId !== "string") return new Response(null, { status: 204 });
+      payment = await env.DB.prepare("UPDATE payments SET omise_charge_id = ? WHERE id = ? AND omise_charge_id IS NULL AND status = 'pending' RETURNING *")
+        .bind(charge.id, paymentId).first<PaymentRow>();
+      if (!payment) return new Response(null, { status: 204 });
+    }
+    await reconcile(env, payment, charge ?? await getCharge(env, event.data.id));
   } catch {
     return new Response(null, { status: 503 }); // let Omise or the next poll try again
   }
