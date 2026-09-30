@@ -6,8 +6,8 @@
 ## 0. ก่อนเริ่ม
 
 - [ ] ล็อกอิน Cloudflare: `npx wrangler login`
-- [ ] สำรองฐานข้อมูลจริง: `npx wrangler d1 export naka-ai-db --remote --output backup-before-phase1.sql`
-- [ ] โค้ดที่จะ deploy คือ branch `integrate/phase1` (merge เข้า `main` ก่อน)
+- [ ] สำรองฐานข้อมูลจริง: `npx wrangler d1 export naka-ai-db --remote --output backup-before-launch.sql`
+- [ ] โค้ดที่จะ deploy คือ branch `main` และ CI บน GitHub ต้องขึ้นเครื่องหมายถูกเขียว
 
 ## 1. บริการภายนอก (ใช้เวลารออนุมัติ เริ่มก่อน)
 
@@ -100,7 +100,7 @@ npx wrangler secret put OMISE_WEBHOOK_SECRET
 
 ```sh
 npm run typecheck && npm test                               # ต้องผ่านทั้งหมด
-npx wrangler d1 migrations apply naka-ai-db --remote        # 0001 → 0007 ไม่แตะตาราง LINE เดิม
+npx wrangler d1 migrations apply naka-ai-db --remote        # 0001 → ล่าสุด ไม่แตะตาราง LINE เดิม
 npx wrangler deploy
 ```
 
@@ -125,6 +125,8 @@ npx wrangler deploy
 - [ ] ตั้งบอทเป็น "ร่างรออนุมัติ" → ได้ draft → กดส่ง → คำตอบขึ้นบน Facebook
 - [ ] `/app/billing/` (test keys) → เลือกแพ็กเกจเริ่มต้น → PromptPay ได้ QR → ใน Omise dashboard กด mark as paid → หน้าแจ้งสำเร็จ แพ็กเกจเปิด เครดิตขึ้น 30
 - [ ] จ่ายด้วยบัตรทดสอบของ Omise (รวมบัตรที่ต้องผ่าน 3-D Secure) → กลับมาที่ `/app/billing/?payment=…` แล้วสำเร็จ
+- [ ] สมัครด้วยเบอร์ที่ไม่เคยใช้ → การ์ดต้อนรับบน `/app/` บอกเครดิตฟรีตาม `SIGNUP_CREDITS` → ล็อกอินซ้ำเครดิตไม่เพิ่ม
+- [ ] หลังจ่ายสำเร็จ ใบเสร็จขึ้นใน `/app/billing/` (ต้องตั้ง `RECEIPT_SELLER_NAME` แล้ว) เปิดดูและพิมพ์ได้
 - [ ] ดู log: `npx wrangler tail`
 
 ## 6. แพ็กเกจลูกค้า
@@ -144,6 +146,5 @@ npx wrangler d1 execute naka-ai-db --remote --command "INSERT OR REPLACE INTO su
 ## สิ่งที่ยังไม่มี (ไม่ขวางการเปิดใช้)
 
 - ใบกำกับภาษีเต็มรูป (ต้องเก็บข้อมูลผู้ซื้อ ตอนนี้ออกด้วยมือ), ส่งใบเสร็จทางอีเมล, ใบลดหนี้
-- เครดิตฟรีตอนสมัคร
 - ราคาเครดิตของละคร/AI Live (ขึ้นกับต้นทุน Wan)
 - TikTok (รอ audit), Shopee (ไม่มี API วิดีโอ)
