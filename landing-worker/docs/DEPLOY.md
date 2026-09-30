@@ -33,11 +33,17 @@
 - [ ] สมัครบัญชี เติมเครดิต และ**จดทะเบียนชื่อผู้ส่ง (sender name)** รออนุมัติ
 - ได้ค่า: `SMS_API_KEY` 🔑, `SMS_API_SECRET` 🔑, `SMS_SENDER` (ชื่อที่อนุมัติแล้ว ตรงตัวพิมพ์เล็ก/ใหญ่)
 
-### Omise (Opn Payments) — รับเงินค่าแพ็กเกจ
-- [ ] สมัครบัญชีร้านค้าที่ omise.co ยืนยันตัวตน/ธุรกิจ และเปิดใช้ **PromptPay** กับ**บัตร** (รอ Omise อนุมัติ)
-- [ ] ทดสอบด้วย test keys ก่อน (`pkey_test_…` / `skey_test_…`) แล้วค่อยเปลี่ยนเป็น live keys
-- [ ] Webhooks: เพิ่ม endpoint `https://naka-ai.com/webhook/omise` แล้วคัดลอก **webhook secret** (ใช้ตรวจลายเซ็น `Omise-Signature`)
-- ได้ค่า: `OMISE_PUBLIC_KEY` (สาธารณะ), `OMISE_SECRET_KEY` 🔑, `OMISE_WEBHOOK_SECRET` 🔑
+### Stripe — รับเงินค่าแพ็กเกจ (Omise ไม่รับบุคคลธรรมดาแล้ว)
+- [ ] สมัครที่ stripe.com ประเทศ Thailand ประเภทธุรกิจ **Individual / sole proprietor** ยืนยันตัวตนและบัญชีธนาคาร
+- [ ] Settings → Payment methods: เปิด **PromptPay** และ **Cards** (หน้าชำระเงินแสดงตามที่เปิดไว้ โค้ดไม่ได้ล็อกวิธีชำระ)
+- [ ] Settings → Branding: โลโก้/สี naka-ai และ Public details: ชื่อร้าน เบอร์ อีเมล (ขึ้นบนหน้าชำระเงินและใบแจ้งยอดบัตร)
+- [ ] ทดสอบใน **sandbox** ก่อน แล้วค่อยใช้ live keys
+- [ ] API key: Developers → API keys → สร้าง **restricted key** (`rk_…`) ให้สิทธิ์ Checkout Sessions: **Write** เท่านั้น
+- [ ] Webhooks: เพิ่ม endpoint `https://naka-ai.com/webhook/stripe` เลือก event `checkout.session.completed`,
+      `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`
+      แล้วคัดลอก **Signing secret** (`whsec_…`)
+- ได้ค่า: `STRIPE_SECRET_KEY` 🔑 (restricted key), `STRIPE_WEBHOOK_SECRET` 🔑
+- รายละเอียดทั้งหมด: [STRIPE_INTEGRATION_TODO.md](../STRIPE_INTEGRATION_TODO.md)
 
 ### Cloudflare
 - [ ] Turnstile: สร้าง widget, hostname = `naka-ai.com` → ได้ `TURNSTILE_SITE_KEY` (สาธารณะ) และ `TURNSTILE_SECRET_KEY` 🔑
@@ -61,7 +67,6 @@ openssl rand -hex 24      # META_WEBHOOK_VERIFY_TOKEN
   "APP_ORIGIN": "https://naka-ai.com",
   "SMS_PROVIDER": "thaibulksms",
   "TURNSTILE_SITE_KEY": "<site key>",
-  "OMISE_PUBLIC_KEY": "<pkey_…>",
   "RECEIPT_SELLER_NAME": "<ชื่อผู้ขายบนใบเสร็จ ตรงกับที่จดทะเบียน>",
   "RECEIPT_SELLER_ADDRESS": "<ที่อยู่>",
   "RECEIPT_SELLER_TAX_ID": "<เลขผู้เสียภาษี 13 หลัก ไม่มีก็เว้นไว้>",
@@ -89,8 +94,8 @@ npx wrangler secret put META_APP_ID
 npx wrangler secret put META_APP_SECRET
 npx wrangler secret put META_WEBHOOK_VERIFY_TOKEN
 npx wrangler secret put SOCIAL_TOKEN_KEY
-npx wrangler secret put OMISE_SECRET_KEY
-npx wrangler secret put OMISE_WEBHOOK_SECRET
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_WEBHOOK_SECRET
 ```
 
 ค่าเดิมที่ควรมีอยู่แล้ว: `ANTHROPIC_API_KEY`, `ADMIN_TOKEN`, `LINE_CHANNEL_SECRET`, `LINE_CHANNEL_ACCESS_TOKEN`
@@ -123,8 +128,10 @@ npx wrangler deploy
 - [ ] `/review/` สร้างคลิปรีวิวจริง 1 คลิป (ใช้ 1 เครดิต) → ได้บท + เสียงไทย → สร้างวิดีโอ → ดาวน์โหลด
 - [ ] `/app/inbox/` → เชื่อมเพจ Facebook → คอมเมนต์ใต้โพสต์เพจด้วยอีกบัญชี → ข้อความขึ้นใน inbox ภายใน 1–2 นาที
 - [ ] ตั้งบอทเป็น "ร่างรออนุมัติ" → ได้ draft → กดส่ง → คำตอบขึ้นบน Facebook
-- [ ] `/app/billing/` (test keys) → เลือกแพ็กเกจเริ่มต้น → PromptPay ได้ QR → ใน Omise dashboard กด mark as paid → หน้าแจ้งสำเร็จ แพ็กเกจเปิด เครดิตขึ้น 30
-- [ ] จ่ายด้วยบัตรทดสอบของ Omise (รวมบัตรที่ต้องผ่าน 3-D Secure) → กลับมาที่ `/app/billing/?payment=…` แล้วสำเร็จ
+- [ ] `/app/billing/` (sandbox keys) → เลือกแพ็กเกจเริ่มต้น → ไปหน้า Stripe → บัตร `4242 4242 4242 4242` → กลับมา แพ็กเกจเปิด เครดิตขึ้น 30
+- [ ] บัตรที่ต้องผ่าน 3-D Secure `4000 0025 0000 3155` และบัตรถูกปฏิเสธ `4000 0000 0000 0002` → ผลตรงตามจริง
+- [ ] PromptPay ใน sandbox → หน้า Stripe มีปุ่มจำลองว่าจ่ายสำเร็จ/ล้มเหลว → แพ็กเกจเปิดเมื่อสำเร็จเท่านั้น
+- [ ] Stripe Dashboard → Webhooks → endpoint แสดงว่าส่งสำเร็จ (204)
 - [ ] สมัครด้วยเบอร์ที่ไม่เคยใช้ → การ์ดต้อนรับบน `/app/` บอกเครดิตฟรีตาม `SIGNUP_CREDITS` → ล็อกอินซ้ำเครดิตไม่เพิ่ม
 - [ ] หลังจ่ายสำเร็จ ใบเสร็จขึ้นใน `/app/billing/` (ต้องตั้ง `RECEIPT_SELLER_NAME` แล้ว) เปิดดูและพิมพ์ได้
 - [ ] `/admin/customers/` → กรอก token → ค้นเบอร์ตัวเอง → เติมเครดิต 1 → ยอดใน `/app/` ขึ้นตาม
@@ -132,7 +139,7 @@ npx wrangler deploy
 
 ## 6. แพ็กเกจลูกค้า
 
-ลูกค้าซื้อเองได้ที่ `/app/billing/` (PromptPay/บัตร ผ่าน Omise) ระบบเปิดแพ็กเกจ เติมเครดิตรายเดือน และหมดอายุให้อัตโนมัติ
+ลูกค้าซื้อเองได้ที่ `/app/billing/` (PromptPay/บัตร ผ่าน Stripe) ระบบเปิดแพ็กเกจ เติมเครดิตรายเดือน และหมดอายุให้อัตโนมัติ
 ถ้าลูกค้าโอนเงินนอกระบบ หรือต้องเติมเครดิต/ระงับบัญชี ใช้หน้า **`https://naka-ai.com/admin/customers/`**
 (กรอก `ADMIN_TOKEN` ครั้งเดียว ปิดแท็บแล้วต้องกรอกใหม่): ค้นด้วยเบอร์ `08…` อีเมล หรือชื่อ → เปิดรายละเอียด →
 เติมเครดิต / เปิดหรือต่อแพ็กเกจ 1–12 เดือน / ระงับหรือเปิดบัญชี ทุกฟอร์มต้องใส่เหตุผลและกดยืนยัน ทุกการกระทำมีบันทึกในหน้าลูกค้า

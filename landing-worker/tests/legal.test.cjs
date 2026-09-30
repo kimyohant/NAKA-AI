@@ -1,5 +1,5 @@
 // Phase 6B legal pages (docs/phase6-legal.md): static HTML that Meta, Google and
-// Omise reviewers must be able to open, linked from the pages customers see.
+// Stripe reviewers must be able to open, linked from the pages customers see.
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { existsSync, readFileSync } = require('node:fs');
