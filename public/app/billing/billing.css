@@ -1,4 +1,6 @@
 /* /app/billing/ — builds on /app/app.css and /app/inbox/inbox.css */
+/* The display rules below would otherwise override the hidden attribute. */
+.qr-box[hidden], .receipts[hidden] { display: none; }
 .current { margin-bottom: 22px; padding: 20px 22px; border: 1px solid #ffffff1f; border-radius: 20px; background: #ffffff0b; }
 .current-name { margin: 6px 0 4px; font-family: "IBM Plex Sans Thai", sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -.03em; }
 .current-meta { margin: 0; color: #c4d7ec; font-size: 14px; }
@@ -26,6 +28,13 @@
 .qr-box img { width: 260px; height: 260px; object-fit: contain; }
 .qr-box .hint { color: #4a5872; text-align: center; }
 .qr-amount { margin: 0; font-size: 18px; font-weight: 700; }
+
+.receipts { display: grid; gap: 10px; margin-top: 22px; padding: 22px; border: 1px solid #ffffff1f; border-radius: 20px; background: #ffffff0b; }
+.receipts h2 { margin: 0; font-size: 20px; }
+.receipt-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.receipt-list li { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.receipt-list a { color: #87d9fa; font-weight: 700; font-variant-numeric: tabular-nums; }
+.receipt-list span { color: #c4d7ec; font-size: 14px; }
 
 @media (max-width: 900px) { .plan-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .plan-list { grid-template-columns: 1fr; } }
