@@ -30,6 +30,13 @@ export default {
   async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
 
+    // www serves the same Worker, but sign-in, cookies and CSRF checks belong to APP_ORIGIN only:
+    // send every www request to the main domain instead of failing its logins and logouts.
+    const main = (() => { try { return new URL(env.APP_ORIGIN); } catch { return null; } })();
+    if (main && url.hostname === `www.${main.hostname}`) {
+      return Response.redirect(`${main.origin}${url.pathname}${url.search}`, request.method === "GET" || request.method === "HEAD" ? 301 : 308);
+    }
+
     const authResponse = await handleAuth(request, env, url);
     if (authResponse) return authResponse;
 
