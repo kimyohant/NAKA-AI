@@ -61,9 +61,16 @@ openssl rand -hex 24      # META_WEBHOOK_VERIFY_TOKEN
   "APP_ORIGIN": "https://naka-ai.com",
   "SMS_PROVIDER": "thaibulksms",
   "TURNSTILE_SITE_KEY": "<site key>",
-  "OMISE_PUBLIC_KEY": "<pkey_…>"
+  "OMISE_PUBLIC_KEY": "<pkey_…>",
+  "RECEIPT_SELLER_NAME": "<ชื่อผู้ขายบนใบเสร็จ ตรงกับที่จดทะเบียน>",
+  "RECEIPT_SELLER_ADDRESS": "<ที่อยู่>",
+  "RECEIPT_SELLER_TAX_ID": "<เลขผู้เสียภาษี 13 หลัก ไม่มีก็เว้นไว้>",
+  "RECEIPT_VAT_REGISTERED": "<\"1\" ถ้าจด VAT แล้ว ไม่งั้นลบบรรทัดนี้>"
 }
 ```
+
+ใบเสร็จ: ยังไม่ตั้ง `RECEIPT_SELLER_NAME` = ยังไม่ออกใบ ตั้งแล้ว cron จะออกย้อนหลังให้ทุกการชำระที่สำเร็จ
+ใบที่ออกแล้วแก้ไม่ได้ (ชื่อ/ที่อยู่/VAT ถูกเก็บไว้ในใบ) **ตรวจค่าให้ถูกก่อนตั้ง**
 
 ค่าลับ ตั้งทีละตัว (คำสั่งจะถามค่า ไม่เก็บในไฟล์):
 
@@ -134,7 +141,7 @@ npx wrangler d1 execute naka-ai-db --remote --command "INSERT OR REPLACE INTO su
 
 ## สิ่งที่ยังไม่มี (ไม่ขวางการเปิดใช้)
 
-- ใบกำกับภาษี/ใบเสร็จอัตโนมัติ (ตอนนี้ออกด้วยมือ)
+- ใบกำกับภาษีเต็มรูป (ต้องเก็บข้อมูลผู้ซื้อ ตอนนี้ออกด้วยมือ), ส่งใบเสร็จทางอีเมล, ใบลดหนี้
 - เครดิตฟรีตอนสมัคร
 - ราคาเครดิตของละคร/AI Live (ขึ้นกับต้นทุน Wan)
 - TikTok (รอ audit), Shopee (ไม่มี API วิดีโอ)

@@ -31,6 +31,10 @@ export interface Env {
   OMISE_PUBLIC_KEY?: string; // pkey_…, public; served to the billing page for card forms
   OMISE_SECRET_KEY?: string; // skey_…
   OMISE_WEBHOOK_SECRET?: string; // base64 webhook signing secret from the Omise dashboard
+  RECEIPT_SELLER_NAME?: string; // unset = no receipts yet; the cron issues them once it is set
+  RECEIPT_SELLER_ADDRESS?: string;
+  RECEIPT_SELLER_TAX_ID?: string;
+  RECEIPT_VAT_REGISTERED?: string; // "1" = short-form tax invoice with 7% VAT shown
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */
