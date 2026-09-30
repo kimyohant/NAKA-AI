@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#235BE8">
+  <title>จัดการลูกค้า — หลังร้าน naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/customers/customers.css">
+  <script src="/admin/customers/customers.js" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
+  <header class="topbar"><a href="/admin/">naka-ai · หลังร้าน</a><button id="logout" type="button" hidden>ออกจากระบบ</button></header>
+  <main id="main">
+    <section id="login" class="card login" aria-labelledby="login-title">
+      <h1 id="login-title">เข้าสู่หน้าจัดการลูกค้า</h1>
+      <p class="muted">ใช้โทเคนผู้ดูแลระบบ ข้อมูลเข้าสู่ระบบจะเก็บเฉพาะแท็บนี้</p>
+      <form id="login-form">
+        <label for="token">โทเคนผู้ดูแลระบบ</label>
+        <input id="token" type="password" autocomplete="off" required>
+        <button class="primary" type="submit">เข้าสู่ระบบ</button>
+      </form>
+      <p id="login-status" role="status" aria-live="polite"></p>
+    </section>
+    <div id="app" hidden>
+      <div class="page-heading"><h1>จัดการลูกค้า</h1><p class="muted">ค้นลูกค้า ตรวจประวัติ และจัดการเครดิตหรือแพ็กเกจ</p></div>
+      <section class="card" aria-labelledby="search-title">
+        <form id="search-form" class="search-form">
+          <div><label id="search-title" for="query">ค้นด้วยเบอร์โทร อีเมล ชื่อ หรือรหัสลูกค้า</label><input id="query" type="search" maxlength="200" placeholder="เช่น 0812345678 หรือชื่อร้าน"></div>
+          <button type="submit" class="primary">ค้นหา</button><button id="reset-search" type="button">ลูกค้าล่าสุด</button>
+        </form>
+        <p id="list-status" role="status" aria-live="polite"></p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="ผลการค้นหาลูกค้า">
+          <table class="customers"><caption class="sr-only">ผลการค้นหา สูงสุด 50 คน</caption><thead><tr><th scope="col">ลูกค้า</th><th scope="col">สถานะ</th><th scope="col">แพ็กเกจ</th><th scope="col" class="num">เครดิต</th></tr></thead><tbody id="customer-list"></tbody></table>
+        </div>
+      </section>
+      <p id="detail-status" role="status" aria-live="polite"></p>
+      <button id="reload-detail" type="button" hidden>โหลดรายละเอียดล่าสุด</button>
+      <section id="detail" aria-labelledby="customer-title" hidden>
+        <div class="card">
+          <div class="detail-heading"><h2 id="customer-title" tabindex="-1"></h2><span id="customer-status" class="badge"></span></div>
+          <dl id="customer-summary" class="summary"></dl>
+          <h3>แพ็กเกจปัจจุบัน</h3><dl id="subscription-summary" class="summary"></dl>
+        </div>
+        <div class="actions">
+          <form id="credits-form" class="card"><fieldset>
+            <legend>เติมเครดิต</legend>
+            <label for="amount">จำนวนเครดิต</label><input id="amount" type="number" min="1" max="10000" step="1" value="30" required>
+            <label for="credits-note">เหตุผลในการเติม</label><textarea id="credits-note" maxlength="200" required></textarea>
+            <button type="submit">ตรวจรายการเติมเครดิต</button>
+          </fieldset></form>
+          <form id="package-form" class="card"><fieldset>
+            <legend>เปิดหรือต่อแพ็กเกจ</legend>
+            <p class="muted">สำหรับชำระนอกระบบ · 1 เดือน = 30 วัน · ไม่ออกใบเสร็จ</p>
+            <label for="plan">แพ็กเกจ</label><select id="plan" required></select>
+            <label for="months">จำนวนเดือน</label><input id="months" type="number" min="1" max="12" step="1" value="1" required>
+            <label for="package-note">เหตุผล / รายการโอน</label><textarea id="package-note" maxlength="200" required></textarea>
+            <button id="package-review" type="submit">ตรวจรายการแพ็กเกจ</button>
+          </fieldset></form>
+          <form id="status-form" class="card"><fieldset>
+            <legend>สถานะบัญชี</legend>
+            <p class="muted">ระงับบัญชีจะออกจากระบบทุกอุปกรณ์ทันที เปิดกลับแล้วต้องเข้าสู่ระบบใหม่</p>
+            <label for="status">สถานะที่ต้องการ</label><select id="status"><option value="disabled">ระงับบัญชี</option><option value="active">เปิดใช้งาน</option></select>
+            <label for="status-note">เหตุผลในการเปลี่ยน</label><textarea id="status-note" maxlength="200" required></textarea>
+            <button type="submit">ตรวจรายการสถานะ</button>
+          </fieldset></form>
+        </div>
+        <section id="confirmation" class="card confirmation" aria-labelledby="confirm-title" hidden>
+          <h3 id="confirm-title" tabindex="-1">ยืนยันรายการ</h3>
+          <p id="confirm-summary"></p><p id="confirm-effect"></p><p id="confirm-note" class="preserve-lines"></p>
+          <div class="row"><button id="confirm" class="primary" type="button">ยืนยันและบันทึก</button><button id="cancel" type="button">กลับไปแก้ไข</button></div>
+        </section>
+        <p id="mutation-status" role="status" aria-live="polite"></p>
+        <section class="card"><h3>ประวัติเครดิตล่าสุด 50 รายการ</h3><div id="ledger" class="history"></div></section>
+        <section class="card"><h3>การชำระเงินล่าสุด 20 รายการ</h3><div id="payments" class="history"></div></section>
+        <section class="card"><h3>ใบเสร็จ</h3><p class="muted">แสดงเลขที่ใบเสร็จของลูกค้า</p><div id="receipts" class="history"></div></section>
+        <section class="card"><h3>บัญชีโซเชียลที่เชื่อม</h3><div id="social" class="history"></div></section>
+        <section class="card"><h3>บันทึกการจัดการลูกค้า</h3><div id="audit" class="history"></div></section>
+      </section>
+    </div>
+    <noscript><p>กรุณาเปิด JavaScript เพื่อใช้งานหน้าจัดการลูกค้า</p></noscript>
+  </main>
+</body>
+</html>
