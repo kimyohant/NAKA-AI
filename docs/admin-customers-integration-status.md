@@ -51,3 +51,10 @@ node node_modules/wrangler/bin/wrangler.js dev src/admin/dev-worker.ts -c wrangl
 ไม่มี field ใหม่ใน `src/types.ts` หรือ dependency ใหม่ และไม่ขอเปลี่ยนสัญญากลาง
 
 ข้อสังเกต: `grantCredits()` เดิมทำ `.run()` แยกเอง จึง import มาเรียกตรง ๆ ใน transaction audit ไม่ได้ โมดูลนี้ใช้ `INSERT credit_ledger` ที่มีผลเหมือน `grantCredits(..., 'grant', note)` ภายใน `DB.batch` และมีเทสเทียบ balance/reason/note/rollback ครบ ถ้า shared helper ในอนาคตรองรับ batch ได้ อาจรวม implementation นี้กลับไปที่ helper โดยเจ้าของไฟล์
+
+## Claude ต่อสายแล้ว (merge)
+
+- `handleAdminCustomers` อยู่ใน block `/api/admin/*` ของ `src/index.ts` หลังตรวจ `ADMIN_TOKEN` ก่อน `handleAdmin` เดิม
+- ลบ `src/admin/dev-worker.ts` แล้ว (route จริงใช้ได้ผ่าน `npm run dev` ปกติ) คำสั่ง local ข้างบนใช้ `npm run dev` แทน `wrangler dev src/admin/dev-worker.ts`
+- ลิงก์ "จัดการลูกค้า" ที่หัว `public/admin/index.html`
+- ตรวจแล้ว: 157/157, API ทั้ง 3 ฟอร์มผ่าน router จริง, หน้าเว็บที่ 360px ไม่ล้นจอ หน้ายืนยันแสดงก่อน POST

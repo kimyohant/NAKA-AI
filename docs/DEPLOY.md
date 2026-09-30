@@ -127,21 +127,16 @@ npx wrangler deploy
 - [ ] จ่ายด้วยบัตรทดสอบของ Omise (รวมบัตรที่ต้องผ่าน 3-D Secure) → กลับมาที่ `/app/billing/?payment=…` แล้วสำเร็จ
 - [ ] สมัครด้วยเบอร์ที่ไม่เคยใช้ → การ์ดต้อนรับบน `/app/` บอกเครดิตฟรีตาม `SIGNUP_CREDITS` → ล็อกอินซ้ำเครดิตไม่เพิ่ม
 - [ ] หลังจ่ายสำเร็จ ใบเสร็จขึ้นใน `/app/billing/` (ต้องตั้ง `RECEIPT_SELLER_NAME` แล้ว) เปิดดูและพิมพ์ได้
+- [ ] `/admin/customers/` → กรอก token → ค้นเบอร์ตัวเอง → เติมเครดิต 1 → ยอดใน `/app/` ขึ้นตาม
 - [ ] ดู log: `npx wrangler tail`
 
 ## 6. แพ็กเกจลูกค้า
 
 ลูกค้าซื้อเองได้ที่ `/app/billing/` (PromptPay/บัตร ผ่าน Omise) ระบบเปิดแพ็กเกจ เติมเครดิตรายเดือน และหมดอายุให้อัตโนมัติ
-ถ้าลูกค้าโอนเงินนอกระบบ แอดมินตั้งแพ็กเกจด้วยมือได้ด้วย SQL:
-
-```sh
-# หา user id จากเบอร์ (เก็บเป็น +66…) หรือ Google (ใช้อีเมล)
-npx wrangler d1 execute naka-ai-db --remote --command "SELECT user_id, provider, provider_uid, email FROM auth_identities WHERE provider_uid = '+66812345678' OR email = 'shop@example.com'"
-
-npx wrangler d1 execute naka-ai-db --remote --command "INSERT OR REPLACE INTO subscriptions (user_id, plan_id) VALUES ('<user-id>', 'pro')"
-```
-
-แล้วเติมเครดิตตามแพ็กเกจด้วย `/api/admin/credits` (ข้อ 5) · plan id: `starter`, `pro`, `business`, `max`
+ถ้าลูกค้าโอนเงินนอกระบบ หรือต้องเติมเครดิต/ระงับบัญชี ใช้หน้า **`https://naka-ai.com/admin/customers/`**
+(กรอก `ADMIN_TOKEN` ครั้งเดียว ปิดแท็บแล้วต้องกรอกใหม่): ค้นด้วยเบอร์ `08…` อีเมล หรือชื่อ → เปิดรายละเอียด →
+เติมเครดิต / เปิดหรือต่อแพ็กเกจ 1–12 เดือน / ระงับหรือเปิดบัญชี ทุกฟอร์มต้องใส่เหตุผลและกดยืนยัน ทุกการกระทำมีบันทึกในหน้าลูกค้า
+การเปิดแพ็กเกจจากหน้านี้ไม่ออกใบเสร็จ (ไม่มีการชำระผ่านระบบ)
 
 ## สิ่งที่ยังไม่มี (ไม่ขวางการเปิดใช้)
 

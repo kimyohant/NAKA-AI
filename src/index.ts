@@ -3,6 +3,7 @@ import { runSalesAgent } from "./agent";
 import { handleBilling, handleOmiseWebhook, runBillingCron } from "./billing";
 import { backfillReceipts, handleReceipts } from "./receipts";
 import { handleOnboarding } from "./onboarding";
+import { handleAdminCustomers } from "./admin/customers";
 import { handleAuth, requireUser } from "./auth";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
@@ -83,6 +84,8 @@ export default {
       if (!env.ADMIN_TOKEN || auth !== `Bearer ${env.ADMIN_TOKEN}`) return json({ error: "unauthorized" }, 401);
       if (url.pathname === "/api/admin/studio") return handleStudio(request, env);
       try {
+        const customerResponse = await handleAdminCustomers(request, env, url);
+        if (customerResponse) return customerResponse;
         return await handleAdmin(request, env, url);
       } catch (err) {
         console.error("admin error", err);
