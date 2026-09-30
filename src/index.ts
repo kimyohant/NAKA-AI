@@ -1,6 +1,6 @@
 import { AFFILIATE_JOB_KIND, handleAffiliateApi, makeAffiliateHandler } from "./affiliate";
 import { runSalesAgent } from "./agent";
-import { handleBilling, handleOmiseWebhook, runBillingCron } from "./billing";
+import { handleBilling, handleStripeWebhook, runBillingCron } from "./billing";
 import { backfillReceipts, handleReceipts } from "./receipts";
 import { handleOnboarding } from "./onboarding";
 import { handleAdminCustomers } from "./admin/customers";
@@ -69,8 +69,8 @@ export default {
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
       return (await handleOnboarding(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
     }
-    // Omise signs its webhook (Omise-Signature); the charge is re-read from Omise before use.
-    if (url.pathname === "/webhook/omise") return handleOmiseWebhook(request, env);
+    // Stripe signs its webhook (Stripe-Signature); the session is re-read from Stripe before use.
+    if (url.pathname === "/webhook/stripe") return handleStripeWebhook(request, env);
     // Meta authenticates with X-Hub-Signature-256, not a session.
     if (url.pathname === "/webhook/meta") return handleMetaWebhook(request, env, ctx);
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);

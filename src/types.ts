@@ -27,10 +27,9 @@ export interface Env {
   MEDIA?: R2Bucket; // clip uploads for posting; bound once the R2 bucket exists
   // AI Inbox (Phase 4) — contract in docs/phase4-inbox.md
   META_WEBHOOK_VERIFY_TOKEN?: string;
-  // Online payment (Omise / Opn Payments) — src/billing
-  OMISE_PUBLIC_KEY?: string; // pkey_…, public; served to the billing page for card forms
-  OMISE_SECRET_KEY?: string; // skey_…
-  OMISE_WEBHOOK_SECRET?: string; // base64 webhook signing secret from the Omise dashboard
+  // Online payment (Stripe Checkout) — src/billing
+  STRIPE_SECRET_KEY?: string; // restricted key rk_… (or sk_…); unset = online payment off
+  STRIPE_WEBHOOK_SECRET?: string; // whsec_… of the /webhook/stripe endpoint
   RECEIPT_SELLER_NAME?: string; // unset = no receipts yet; the cron issues them once it is set
   RECEIPT_SELLER_ADDRESS?: string;
   RECEIPT_SELLER_TAX_ID?: string;
