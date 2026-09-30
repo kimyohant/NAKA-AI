@@ -4,6 +4,7 @@ import { appOrigin, AuthError, json, secret } from './common';
 import { googleCallback, googleStart } from './google';
 import { lineCallback, lineStart } from './line';
 import { requestOtp, verifyOtp } from './otp';
+import { smsProvider } from './sms';
 import { logout, requireUser } from './session';
 
 export { requireUser } from './session';
@@ -37,8 +38,11 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
         case '/api/auth/line/callback': response = await lineCallback(request, env, url); break;
         case '/api/auth/logout': response = await logout(request, env); break;
         // Public login settings. The Turnstile secret never leaves the Worker.
+        // Which sign-in methods are configured, so the page never offers one that can only fail.
         case '/api/auth/config': response = json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY?.trim() || null,
-          lineLogin: !!env.LINE_LOGIN_CHANNEL_ID?.trim() && !!env.LINE_LOGIN_CHANNEL_SECRET?.trim() }); break;
+          lineLogin: !!env.LINE_LOGIN_CHANNEL_ID?.trim() && !!env.LINE_LOGIN_CHANNEL_SECRET?.trim(),
+          googleLogin: !!env.GOOGLE_CLIENT_ID?.trim() && !!env.GOOGLE_CLIENT_SECRET?.trim(),
+          phoneLogin: phoneConfigured(env) }); break;
         default: {
           const user = await requireUser(request, env);
           response = user ? json({ user, credits: await getBalance(env.DB, user.id) }) : json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
@@ -58,4 +62,8 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
   response.headers.set('Referrer-Policy', 'no-referrer');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   return response;
+}
+
+function phoneConfigured(env: Env): boolean {
+  try { smsProvider(env); return true; } catch { return false; }
 }
