@@ -24,5 +24,12 @@
     { "pattern": "naka-ai.com", "custom_domain": true },
     { "pattern": "www.naka-ai.com", "custom_domain": true }
   ],
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // Non-secret settings (docs/DEPLOY.md §3). Secrets go through `wrangler secret put`.
+  "vars": {
+    "APP_ORIGIN": "https://naka-ai.com",
+    "SMS_PROVIDER": "android_gateway",
+    "RECEIPT_SELLER_NAME": "ณัฐพงษ์ โยธาไพ",
+    "RECEIPT_SELLER_ADDRESS": "112/417 ถนนประชาร่วมมิตร ต.หนองญาติ อ.เมือง จ.นครพนม 48000"
+  }
 }
