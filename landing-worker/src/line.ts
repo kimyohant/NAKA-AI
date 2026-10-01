@@ -38,15 +38,16 @@ export async function replyOrPush(env: Env, replyToken: string, userId: string, 
   const messages = toMessages(text);
   const res = await call(env, "/message/reply", { replyToken, messages });
   if (res.ok) return;
-  console.warn("LINE reply failed, falling back to push", res.status, await res.text());
+  // Log only the status code: LINE error bodies can echo message content the customer sent.
+  console.warn("LINE reply failed, falling back to push", res.status);
   const push = await call(env, "/message/push", { to: userId, messages });
-  if (!push.ok) console.error("LINE push failed", push.status, await push.text());
+  if (!push.ok) console.error("LINE push failed", push.status);
 }
 
 /** Push a message outside the reply window (used by admins in human mode). */
 export async function pushText(env: Env, userId: string, text: string): Promise<boolean> {
   const res = await call(env, "/message/push", { to: userId, messages: toMessages(text) });
-  if (!res.ok) console.error("LINE push failed", res.status, await res.text());
+  if (!res.ok) console.error("LINE push failed", res.status);
   return res.ok;
 }
 
