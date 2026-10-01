@@ -47,6 +47,7 @@
 - [ ] ทดสอบตาม §5 ข้อ "ลืมรหัสผ่านทางอีเมล"
 - ได้ค่า: `RESEND_API_KEY` 🔑 · `EMAIL_FROM` (ไม่ลับ แต่ตั้งผ่าน `secret put` ตามแผน 9A เพื่อไม่ต้องแก้ `wrangler.jsonc` เพิ่ม)
 - โค้ดฝั่งส่ง: `src/auth/email.ts` (POST https://api.resend.com/emails, plain text ภาษาไทย, หมดเวลา 10 วินาที, ไม่ตาม redirect)
+- อ้างอิงเพิ่มเติม: [docs/password-reset-integration-status.md](password-reset-integration-status.md) · [Resend — DMARC](https://resend.com/docs/dashboard/domains/dmarc) (ตรวจ 2026-09-30)
 
 ### LINE Login — ล็อกอินด้วย LINE (ฟรี ลดค่า SMS)
 - [ ] developers.line.biz → Provider เดิมหรือใหม่ → สร้าง channel ประเภท **LINE Login** (แยกจาก Messaging API ของบอต) App type **Web app**
