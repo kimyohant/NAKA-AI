@@ -4,22 +4,25 @@ const path = require("node:path");
 
 /** Minimal D1Database over node:sqlite: prepare/bind/first/all/run and a transactional batch. */
 function d1(sqlite) {
+  const runSync = (sql, params) => {
+    const r = sqlite.prepare(sql).run(...params);
+    return { meta: { changes: Number(r.changes), last_row_id: Number(r.lastInsertRowid) } };
+  };
   const statement = (sql, params = []) => ({
+    sql, params,
     bind: (...next) => statement(sql, next),
     first: async () => sqlite.prepare(sql).get(...params) ?? null,
     all: async () => ({ results: sqlite.prepare(sql).all(...params) }),
-    run: async () => {
-      const r = sqlite.prepare(sql).run(...params);
-      return { meta: { changes: Number(r.changes), last_row_id: Number(r.lastInsertRowid) } };
-    },
+    run: async () => runSync(sql, params),
   });
   return {
     prepare: (sql) => statement(sql),
+    // Like D1, a batch runs start to finish without another query in between.
     batch: async (statements) => {
       sqlite.exec("BEGIN");
       try {
         const results = [];
-        for (const s of statements) results.push(await s.run());
+        for (const s of statements) results.push(runSync(s.sql, s.params));
         sqlite.exec("COMMIT");
         return results;
       } catch (err) {

@@ -44,34 +44,37 @@ async function paidPlan(env: Env, planId: unknown): Promise<PlanRow> {
  * Switch on the package for a successful payment, exactly once. The claim, the subscription and
  * the credit top-up are one D1 batch (one transaction), each guarded by the claim's token.
  * Paying again for the same, still-active package extends it; a new or different package starts now
- * and tops credits up to the package's monthly amount.
+ * and tops credits up to the package's monthly amount. Whether it extends is decided inside the batch,
+ * so two payments applied at the same time still add up.
  */
 export async function applyPayment(env: Env, paymentId: string): Promise<boolean> {
   const payment = await env.DB.prepare("SELECT * FROM payments WHERE id = ?").bind(paymentId).first<PaymentRow>();
   if (!payment || payment.status !== "pending") return false;
-  const current = await env.DB.prepare("SELECT plan_id, status, expires_at FROM subscriptions WHERE user_id = ?")
-    .bind(payment.user_id).first<{ plan_id: string; status: string; expires_at: number | null }>();
   const t = now();
-  const extending = !!current && current.plan_id === payment.plan_id && current.status === "active" && (current.expires_at ?? 0) > t;
   const duration = payment.period === "yearly" ? YEAR : MONTH;
   const token = crypto.randomUUID();
   const claimed = "EXISTS (SELECT 1 FROM payments WHERE id = ?1 AND apply_token = ?2)";
+  // The top-up runs before the subscription is written, so both see the same subscription.
+  // The top-up statement has no binding for the time, so it reads the paid_at the claim just wrote.
+  const extending = (at: string) =>
+    `subscriptions.plan_id = ?4 AND subscriptions.status = 'active' AND COALESCE(subscriptions.expires_at, 0) > ${at}`;
 
-  const statements = [
+  const [claim] = await env.DB.batch([
     env.DB.prepare("UPDATE payments SET status = 'successful', paid_at = ?3, apply_token = ?2 WHERE id = ?1 AND status = 'pending' AND apply_token IS NULL")
       .bind(payment.id, token, t),
+    topUpStatement(env, payment.user_id, payment.plan_id, `แพ็กเกจ ${payment.plan_id}`,
+      `${claimed} AND NOT EXISTS (SELECT 1 FROM subscriptions WHERE subscriptions.user_id = ?3 AND ${extending("(SELECT paid_at FROM payments WHERE id = ?1)")})`,
+      payment.id, token),
     env.DB.prepare(
       `INSERT INTO subscriptions (user_id, plan_id, status, billing_period, expires_at, next_credit_at, provider_ref, updated_at)
        SELECT ?3, ?4, 'active', ?5, ?6 + ?7, ?6 + ${MONTH}, ?1, datetime('now') WHERE ${claimed}
        ON CONFLICT(user_id) DO UPDATE SET
-         expires_at = CASE WHEN ?8 = 1 THEN subscriptions.expires_at + ?7 ELSE ?6 + ?7 END,
-         next_credit_at = CASE WHEN ?8 = 1 AND subscriptions.next_credit_at IS NOT NULL THEN subscriptions.next_credit_at ELSE ?6 + ${MONTH} END,
+         expires_at = CASE WHEN ${extending("?6")} THEN subscriptions.expires_at + ?7 ELSE ?6 + ?7 END,
+         next_credit_at = CASE WHEN ${extending("?6")} AND subscriptions.next_credit_at IS NOT NULL THEN subscriptions.next_credit_at ELSE ?6 + ${MONTH} END,
          plan_id = excluded.plan_id, status = 'active', billing_period = excluded.billing_period,
          provider_ref = excluded.provider_ref, updated_at = excluded.updated_at`,
-    ).bind(payment.id, token, payment.user_id, payment.plan_id, payment.period, t, duration, extending ? 1 : 0),
-  ];
-  if (!extending) statements.push(topUpStatement(env, payment.user_id, payment.plan_id, `แพ็กเกจ ${payment.plan_id}`, claimed, payment.id, token));
-  const [claim] = await env.DB.batch(statements);
+    ).bind(payment.id, token, payment.user_id, payment.plan_id, payment.period, t, duration),
+  ]);
   return claim.meta.changes === 1;
 }
 
