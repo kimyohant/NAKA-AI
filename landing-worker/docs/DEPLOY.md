@@ -25,8 +25,28 @@
 
 ### สมัครด้วยอีเมล + รหัสผ่าน — เปิดอยู่แล้ว ไม่ต้องตั้งอะไร
 - รหัสผ่านเก็บแบบ PBKDF2 · ลองผิด 5 ครั้งใน 15 นาทีต่ออีเมลจะถูกพัก · สมัครได้ 5 บัญชีต่อ IP ต่อชั่วโมง
-- ยังไม่ยืนยันอีเมล · ลืมรหัสผ่าน: `/admin/customers/` → ลูกค้า → "ลืมรหัสผ่าน" → ได้รหัสใหม่แสดงครั้งเดียว แจ้งลูกค้าทางโทรศัพท์
-- แนะนำภายหลัง: เปิด Turnstile (ฟรี) เมื่อเริ่มมีบัญชีสแปม — ตั้ง `TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY` แล้วฟอร์มจะขอให้ยืนยันเอง
+- ยังไม่ยืนยันอีเมล · ลืมรหัสผ่าน (ปัจจุบัน): `/admin/customers/` → ลูกค้า → "ลืมรหัสผ่าน" → ได้รหัสใหม่แสดงครั้งเดียว แจ้งลูกค้าทางโทรศัพท์
+- ลืมรหัสผ่านทางอีเมล: API พร้อมบน `main` แล้ว (phase 9A, migration `0013`) แต่**ยังปิด** — จะเปิดเองเมื่อตั้ง Resend ครบ
+  ดูหัวข้อถัดไป (หน้าเว็บฝั่งลูกค้ามาพร้อม phase 9B ยังไม่อยู่บน `main` ตอนนี้)
+- เปิด Turnstile ภายหลังเมื่อเริ่มมีบัญชีสแปม — ขั้นตอนอยู่ §7.2
+
+### Resend — ส่งอีเมลลืมรหัสผ่าน (แผนฟรีพอสำหรับงานนี้)
+ระบบจะเปิด**เองทันที**เมื่อครบทั้ง 3 ค่า: `"EMAIL_PROVIDER": "resend"` + `RESEND_API_KEY` 🔑 + `EMAIL_FROM`
+ยังตั้งไม่ครบ = ยังปิด หน้าล็อกอินยังแจ้งให้โทรทีมงาน และ `GET /api/auth/config` ตอบ `passwordReset: false` — ตั้งครึ่งค่าไม่มีอะไรพัง
+
+- [ ] สมัคร resend.com ยืนยันอีเมล (โควตาแผนฟรีตรวจที่ resend.com/pricing)
+- [ ] **Domains → Add Domain** → ใส่ `naka-ai.com` → คัดลอก DNS records ที่หน้านั้นแสดง**ให้ครบทุกรายการ**
+      (TXT ยืนยันความเป็นเจ้าของ + CNAME DKIM 2 รายการ และ SPF/MX ถ้ามีให้) ไปเพิ่มที่ DNS ของ Cloudflare
+      — CNAME ตั้งเป็น **DNS only** (เมฆสีเทา) ห้าม proxy ผ่าน Cloudflare ไม่งั้นยืนยันโดเมนไม่ผ่าน
+- [ ] กลับหน้า Resend กด **Verify** รอจนสถานะเป็น **Verified** ก่อนขั้นถัดไป (ส่งจากโดเมนที่ยังไม่ Verified ไม่ได้)
+- [ ] **API Keys → Create API Key** → คัดลอกค่า (แสดงครั้งเดียว)
+- [ ] ตั้งค่าบน Worker (เป็นงานของ A ตามกติกา): เพิ่ม `"EMAIL_PROVIDER": "resend"` ใน `"vars"` ของ `wrangler.jsonc`
+      แล้ว `npx wrangler secret put RESEND_API_KEY` และ `npx wrangler secret put EMAIL_FROM`
+- [ ] `EMAIL_FROM` ใช้รูปแบบ `naka-ai <no-reply@naka-ai.com>` — โดเมนต้องตรงกับที่ Verified ไว้ (โดเมนอื่น Resend ปฏิเสธ)
+- [ ] ตามด้วย migration `0013` + deploy ตาม §4 (ทำครั้งเดียวพร้อมกัน)
+- [ ] ทดสอบตาม §5 ข้อ "ลืมรหัสผ่านทางอีเมล"
+- ได้ค่า: `RESEND_API_KEY` 🔑 · `EMAIL_FROM` (ไม่ลับ แต่ตั้งผ่าน `secret put` ตามแผน 9A เพื่อไม่ต้องแก้ `wrangler.jsonc` เพิ่ม)
+- โค้ดฝั่งส่ง: `src/auth/email.ts` (POST https://api.resend.com/emails, plain text ภาษาไทย, หมดเวลา 10 วินาที, ไม่ตาม redirect)
 
 ### LINE Login — ล็อกอินด้วย LINE (ฟรี ลดค่า SMS)
 - [ ] developers.line.biz → Provider เดิมหรือใหม่ → สร้าง channel ประเภท **LINE Login** (แยกจาก Messaging API ของบอต) App type **Web app**
@@ -91,7 +111,8 @@ openssl rand -hex 24      # META_WEBHOOK_VERIFY_TOKEN
   "RECEIPT_SELLER_ADDRESS": "<ที่อยู่>",
   "RECEIPT_SELLER_TAX_ID": "<เลขผู้เสียภาษี 13 หลัก ไม่มีก็เว้นไว้>",
   "RECEIPT_VAT_REGISTERED": "<\"1\" ถ้าจด VAT แล้ว ไม่งั้นลบบรรทัดนี้>",
-  "SIGNUP_CREDITS": "<เครดิตฟรีตอนสมัคร เช่น \"3\" ไม่แจกก็ลบบรรทัดนี้>"
+  "SIGNUP_CREDITS": "<เครดิตฟรีตอนสมัคร เช่น \"3\" ไม่แจกก็ลบบรรทัดนี้>",
+  "EMAIL_PROVIDER": "resend"   // เมื่อตั้ง Resend เสร็จแล้วเท่านั้น (§1) — ก่อนหน้านั้นไม่ต้องมีบรรทัดนี้
 }
 ```
 
@@ -122,6 +143,9 @@ npx wrangler secret put META_WEBHOOK_VERIFY_TOKEN
 npx wrangler secret put SOCIAL_TOKEN_KEY
 npx wrangler secret put STRIPE_SECRET_KEY
 npx wrangler secret put STRIPE_WEBHOOK_SECRET
+# ลืมรหัสผ่านทางอีเมล — ตั้งเมื่อตั้ง Resend เสร็จแล้ว (§1) ตั้งครบทั้ง EMAIL_PROVIDER ใน vars ด้วยจึงจะเปิด
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put EMAIL_FROM
 ```
 
 ค่าเดิมที่ควรมีอยู่แล้ว: `ANTHROPIC_API_KEY`, `ADMIN_TOKEN`, `LINE_CHANNEL_SECRET`, `LINE_CHANNEL_ACCESS_TOKEN`
@@ -148,8 +172,11 @@ npx wrangler deploy
 ## 5. ทดสอบหลัง deploy (ทำเองบน naka-ai.com)
 
 - [ ] หน้าแรกโหลด เมนู 4 ผลิตภัณฑ์ คลิปละครเล่น
-- [ ] `/login/` มี Turnstile → ขอ OTP ด้วยเบอร์ตัวเอง → ได้ SMS → เข้า `/app/` ได้
+- [ ] `/login/` (เมื่อเปิด Turnstile + SMS แล้ว — ปัจจุบัน `SMS_PROVIDER` เป็น `off` ข้ามข้อนี้ได้): มีกล่องยืนยัน → ขอ OTP ด้วยเบอร์ตัวเอง → ได้ SMS → เข้า `/app/` ได้
 - [ ] สมัครด้วยอีเมล + รหัสผ่าน → เข้า `/app/` ได้ · ออกจากระบบแล้วเข้าใหม่ได้ · รหัสผิดขึ้นข้อความเตือน
+- [ ] ลืมรหัสผ่านทางอีเมล (เมื่อเปิด Resend + UI phase 9B บน main แล้ว): `/login/` → ลืมรหัสผ่าน → กรอกอีเมลตัวเอง
+      → ได้อีเมลภายใน ~1 นาที → ลิงก์ตั้งรหัสใหม่ → ล็อกอินด้วยรหัสใหม่ได้ · ล็อกอินด้วยรหัสเก่าไม่ได้แล้ว
+      · กรอกอีเมลที่ไม่มีในระบบ → หน้าเว็บแสดงข้อความเดียวกัน (ไม่เปิดเผยว่ามีบัญชีหรือไม่)
 - [ ] ล็อกอินด้วย Google ได้
 - [ ] ล็อกอินด้วย LINE ได้ ครั้งที่สองได้บัญชีเดิม
 - [ ] แอดมินเติมเครดิตทดสอบ: `curl -X POST https://naka-ai.com/api/admin/credits/<user-id> -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"amount":5,"note":"ทดสอบ"}'`
@@ -172,6 +199,39 @@ npx wrangler deploy
 (กรอก `ADMIN_TOKEN` ครั้งเดียว ปิดแท็บแล้วต้องกรอกใหม่): ค้นด้วยเบอร์ `08…` อีเมล หรือชื่อ → เปิดรายละเอียด →
 เติมเครดิต / เปิดหรือต่อแพ็กเกจ 1–12 เดือน / ระงับหรือเปิดบัญชี ทุกฟอร์มต้องใส่เหตุผลและกดยืนยัน ทุกการกระทำมีบันทึกในหน้าลูกค้า
 การเปิดแพ็กเกจจากหน้านี้ไม่ออกใบเสร็จ (ไม่มีการชำระผ่านระบบ)
+
+## 7. เปิดฟีเจอร์ถัดไป: สร้างคลิปรีวิว (/review/) และ Turnstile
+
+### 7.1 ฟีเจอร์สร้างคลิปรีวิว — โค้ดพร้อมบน `main` แล้ว เปิดให้ลูกค้าใช้จริงต้องมีครบข้อนี้
+
+ระบบเดินแบบนี้: ลูกค้ากรอกข้อมูลสินค้า + รูป (รูปไม่ออกจากเครื่องลูกค้า) → งานเข้าคิว ตัดเครดิตทันที →
+cron ทุกนาทีหยิบงานมาให้ Claude เขียนบท + Google TTS ทำเสียงพากย์ไทย → เบราว์เซอร์ของลูกค้าเรนเดอร์วิดีโอ 9:16 → ดาวน์โหลด
+งานล้มเหลวระบบคืนเครดิตให้เอง (โค้ดทำแล้ว) หน้า landing มีปุ่ม "ลองฟรี" (`/review/?demo=1` ไม่เสียเครดิต) อยู่แล้ว
+สร้างจริงต้องล็อกอินและมีเครดิต รายการงานเก่าดูที่แดชบอร์ด `/app/` (ส่วนผลงาน, `GET /api/works`)
+
+- [ ] `ANTHROPIC_API_KEY` ตั้งอยู่แล้ว — ตรวจด้วย `npx wrangler secret list` (ขาด = งานทุกงาน fail)
+- [ ] `GOOGLE_TTS_API_KEY` 🔑 ตั้งแล้ว และเปิด Cloud Text-to-Speech API แล้ว (ขั้นตอนใน §1) — ขาด = งาน fail ตอนทำเสียง
+- [ ] ตัดสินใจราคาต่อคลิป: โค้ดล็อกไว้ที่ `REVIEW_COST_CREDITS = 1` เครดิต ใน `src/affiliate.ts` (ค่าชั่วคราว)
+      ก่อนขึ้นราคาจริงให้แก้ค่านี้ในโค้ด (merge ผ่าน A) ไม่มีการตั้งผ่านหน้าเว็บ
+- [ ] ลูกค้าต้องมีทางได้เครดิตอย่างน้อย 1 ทางก่อนเปิดใช้: ตั้ง `SIGNUP_CREDITS` (§3) / เปิดขายแพ็กเกจผ่าน Stripe
+      ([STRIPE_INTEGRATION_TODO.md](../STRIPE_INTEGRATION_TODO.md)) / เติมให้เองที่ `/admin/customers/` (§6)
+      — ปัจจุบันทั้งสามทางยังไม่เปิด ลูกค้าใหม่จึงสร้างคลิปจริงไม่ได้แม้โค้ดพร้อม
+- [ ] ไม่ต้องตั้ง R2: วิดีโอเรนเดอร์ในเบราว์เซอร์ของลูกค้า R2 (`naka-ai-media`) ใช้เฉพาะตอนเปิดโพสต์อัตโนมัติลงโซเชียล
+- [ ] deploy แล้วทดสอบตาม §5 ข้อ `/review/` และลองให้งานพังจงใจ 1 งาน เพื่อยืนยันว่าเครดิตถูกคืน
+
+### 7.2 Turnstile — ปิดอยู่ตอนนี้ เปิดอย่างไรไม่ให้พังหน้าอื่น
+
+ฝั่งเซิร์ฟเวอร์ตรวจ token เฉพาะเมื่อ `TURNSTILE_SECRET_KEY` ถูกตั้ง และหน้าเว็บแสดง widget เฉพาะเมื่อ
+`TURNSTILE_SITE_KEY` ถูกตั้ง (ส่งผ่าน `GET /api/auth/config`) → **ตั้งทั้งคู่แล้ว deploy พร้อมกันในรอบเดียว**
+ปัจจุบันทั้งสองค่ายังไม่ตั้ง: `/login/` ยังไม่โหลด Turnstile และ endpoint ทุกตัวยังไม่ขอ token
+
+- [ ] Cloudflare Dashboard → Turnstile → **Add widget**: hostname `naka-ai.com` (อยากทดสอบบนเครื่องเพิ่ม `localhost`),
+      widget mode **Managed** → ได้ **Site Key** (ค่าสาธารณะ) และ **Secret Key** 🔑
+- [ ] (A) เพิ่ม `"TURNSTILE_SITE_KEY": "<site key>"` ใน `"vars"` ของ `wrangler.jsonc`
+- [ ] `npx wrangler secret put TURNSTILE_SECRET_KEY`
+- [ ] deploy แล้วตรวจ: `/login/` มีกล่องยืนยันแสดงขึ้น → ล็อกอินทุกช่องทางยังผ่าน → `npx wrangler tail` ไม่มี 400 จาก siteverify
+- [ ] ระวัง: เมื่อเปิดแล้ว การขอ OTP (`/api/auth/otp` ใช้เมื่อเปิด SMS) จะ**บังคับ** token บน https ทันที
+      ปัจจุบัน `SMS_PROVIDER: "off"` จึงไม่กระทบใด ๆ และฟอร์มลืมรหัสผ่าน/ตั้งรหัสใหม่ (phase 9B) จะส่ง token ให้เองเมื่อ widget แสดง
 
 ## สิ่งที่ยังไม่มี (ไม่ขวางการเปิดใช้)
 

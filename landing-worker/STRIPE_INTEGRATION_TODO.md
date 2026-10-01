@@ -4,6 +4,10 @@ naka-ai sells prepaid packages (monthly or yearly, renewed by paying again) thro
 This replaced Omise, which no longer onboards sole proprietors. This file is the single source of truth for what is
 left to do before taking real money.
 
+**สถานะ ณ 2026-10-01:** โค้ดฝั่ง Stripe อยู่บน `main` ครบและ deploy แล้ว แต่ยัง**ไม่ได้ตั้ง** `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`
+และยังไม่ได้ตั้งค่า Dashboard ข้อ 1–4 ของหัวข้อ Setup → ระบบชำระออนไลน์ยังปิด: `GET /api/billing/config` ตอบ `enabled: false`
+และหน้า `/app/billing/` ปิดปุ่มชำระ แจ้งให้โทร 089-278-8587 สั่งซื้อแทน ตั้งค่าตามหัวข้อ Setup ให้ครบแล้วระบบเปิดเองทันที **ไม่ต้องแก้โค้ดเพิ่ม**
+
 ## Values to Replace
 
 The following values are placeholders and must be updated before going live.
@@ -58,7 +62,8 @@ These parameters were configured in Checkout Studio and are already set correctl
    Webhooks are required: PromptPay settles *after* the page closes, and only the webhook (or the customer's
    return-page poll) switches the package on.
 5. **Secrets** — `npx wrangler secret put STRIPE_SECRET_KEY` and `npx wrangler secret put STRIPE_WEBHOOK_SECRET`.
-6. **Database** — `npx wrangler d1 migrations apply naka-ai-db --remote` (adds `migrations/0010_stripe.sql`).
+6. **Database** — `npx wrangler d1 migrations apply naka-ai-db --remote` รันครั้งเดียวพาทุก migration ที่ยังค้างขึ้นพร้อมกัน
+   (`0010_stripe.sql` รวมอยู่ในนั้น; ล่าสุดบน `main` ตอนนี้คือ `0013_password_reset.sql`)
 7. **Dependency** — `stripe` (^22.6.2) is in `package.json`; `npm ci` installs it.
 
 ## New and changed files
