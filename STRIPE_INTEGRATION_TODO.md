@@ -4,9 +4,10 @@ naka-ai sells prepaid packages (monthly or yearly, renewed by paying again) thro
 This replaced Omise, which no longer onboards sole proprietors. This file is the single source of truth for what is
 left to do before taking real money.
 
-**สถานะ ณ 2026-10-01:** โค้ดฝั่ง Stripe อยู่บน `main` ครบและ deploy แล้ว แต่ยัง**ไม่ได้ตั้ง** `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`
-และยังไม่ได้ตั้งค่า Dashboard ข้อ 1–4 ของหัวข้อ Setup → ระบบชำระออนไลน์ยังปิด: `GET /api/billing/config` ตอบ `enabled: false`
-และหน้า `/app/billing/` ปิดปุ่มชำระ แจ้งให้โทร 089-278-8587 สั่งซื้อแทน ตั้งค่าตามหัวข้อ Setup ให้ครบแล้วระบบเปิดเองทันที **ไม่ต้องแก้โค้ดเพิ่ม**
+**สถานะ ณ 2026-10-01: เปิดรับเงินจริงแล้ว** ตั้งแต่ launch 2026-09-30 — live restricted key (`STRIPE_SECRET_KEY`) และ
+`STRIPE_WEBHOOK_SECRET` ตั้งบน Worker แล้ว (ตรวจด้วย `npx wrangler secret list`), webhook `https://naka-ai.com/webhook/stripe`
+และ migration `0010_stripe.sql` ขึ้นแล้ว หัวข้อ Setup ด้านล่างเก็บไว้อ้างอิงเมื่อต้องตั้งใหม่หรือหมุน key
+งานที่ยังค้าง: ข้อ 1 ใน [docs/security-audit-2026-10.md](docs/security-audit-2026-10.md) (ชำระแพ็กเกจเดียวกันพร้อมกันสองรายการแล้วอายุไม่ต่อ)
 
 ## Values to Replace
 
