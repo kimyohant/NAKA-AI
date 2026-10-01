@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#091736">
+  <title>ตั้งรหัสผ่านใหม่ — naka-ai</title>
+  <meta name="description" content="ตั้งรหัสผ่านใหม่ของบัญชี NAKA-AI จากลิงก์ที่ได้รับทางอีเมล">
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/glass-nav.css">
+  <link rel="stylesheet" href="/login/login.css">
+  <link rel="stylesheet" href="/login/reset/reset.css">
+  <script src="/login/reset/reset.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">ข้ามไปที่แบบฟอร์ม</a>
+  <header class="auth-topbar glass-nav">
+    <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" width="38" height="38" alt=""><span>naka<span class="brand-accent">-ai</span><b>.</b></span></a>
+    <a class="back-link" href="/login/">← กลับหน้าเข้าสู่ระบบ</a>
+  </header>
+
+  <main id="main" class="auth-layout shell">
+    <section class="auth-card" aria-labelledby="reset-title">
+      <p class="eyebrow">ตั้งรหัสผ่านใหม่</p>
+      <h1 id="reset-title">ตั้งรหัสผ่านใหม่ของ naka-ai</h1>
+      <p class="auth-lead">ใส่รหัสผ่านใหม่จากลิงก์ที่ได้รับทางอีเมล เมื่อเสร็จแล้วจะเข้าสู่ระบบด้วยรหัสใหม่ได้ทันที</p>
+
+      <p id="reset-status" class="form-error" role="status" aria-live="polite"></p>
+      <p id="reset-ok" class="reset-ok" hidden>ตั้งรหัสผ่านใหม่แล้ว — <a href="/login/">เข้าสู่ระบบด้วยรหัสใหม่ได้เลย</a></p>
+      <p id="no-token" class="no-token" hidden>ลิงก์นี้ไม่มีรหัสยืนยัน — กรุณาขอลิงก์ตั้งรหัสผ่านใหม่จาก <a href="/login/">หน้าเข้าสู่ระบบ</a></p>
+
+      <form id="reset-form" novalidate hidden>
+        <div class="field">
+          <label for="new-password">รหัสผ่านใหม่</label>
+          <input id="new-password" name="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+        </div>
+        <div class="field">
+          <label for="confirm-password">ยืนยันรหัสผ่านใหม่</label>
+          <input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+          <p class="field-help">อย่างน้อย 8 ตัวอักษร · เมื่อสำเร็จอุปกรณ์ทุกเครื่องที่ล็อกอินอยู่จะออกจากระบบ</p>
+        </div>
+        <!-- Cloudflare Turnstile renders here when /api/auth/config returns a site key -->
+        <div class="turnstile-box" id="turnstile-box" hidden></div>
+        <button class="primary-button" id="reset-button" type="submit">ตั้งรหัสผ่านใหม่</button>
+      </form>
+
+      <p class="fine-print">ถ้าไม่ได้ขอตั้งรหัสผ่านใหม่ ให้เพิกเฉยอีเมลฉบับนั้น — รหัสผ่านเดิมของคุณยังใช้ได้ตามปกติ · <a href="/legal/privacy/">นโยบายความเป็นส่วนตัว</a></p>
+    </section>
+  </main>
+</body>
+</html>

@@ -23,6 +23,11 @@
   var verifyButton = document.getElementById("verify-button");
   var resendButton = document.getElementById("resend-button");
   var resendNote = document.getElementById("resend-note");
+  var forgotArea = document.getElementById("forgot-area");
+  var forgotButton = document.getElementById("forgot-button");
+  var forgotStatus = document.getElementById("forgot-status");
+  var forgotAvailable = false;
+  var forgotSent = false;
 
   // Bot check before an SMS is sent (docs/auth-integration-status.md). Each token is
   // single-use, so the widget is reset after every request, successful or not.
@@ -45,6 +50,12 @@
         if (config && config.googleLogin === false) googleButton.hidden = true;
         if (config && config.phoneLogin === false) document.getElementById("otp-form").hidden = true;
         if (config && config.passwordLogin !== true) passwordForm.hidden = true;
+        // Phase 9B: the self-service reset link appears only when the email
+        // provider is configured (9A answers passwordReset from /api/auth/config).
+        if (config && config.passwordReset === true) {
+          forgotAvailable = true;
+          forgotArea.hidden = pwMode === "register";
+        }
         // "or" separates the provider buttons from the forms; without buttons it has nothing to separate.
         document.getElementById("login-divider").hidden = lineButton.hidden && googleButton.hidden;
         if (!config || !config.turnstileSiteKey) return;
@@ -83,6 +94,7 @@
     document.getElementById("pw-tab-register").setAttribute("aria-selected", String(register));
     document.getElementById("pw-name-field").hidden = !register;
     document.getElementById("pw-help").hidden = register;
+    document.getElementById("forgot-area").hidden = register || !forgotAvailable;
     pwPassword.setAttribute("autocomplete", register ? "new-password" : "current-password");
     pwPassword.placeholder = register ? "อย่างน้อย 8 ตัวอักษร" : "";
     pwSubmit.textContent = register ? "สมัครสมาชิก" : "เข้าสู่ระบบ";
@@ -118,6 +130,49 @@
       resetBotCheck();
     }
   });
+
+  // Phase 9B: self-service reset link (docs/phase9-password-reset.md). 9A answers
+  // { ok: true } the same way whether or not the email has an account — so the UI
+  // shows a neutral message only, never confirms or denies an account existing.
+  async function requestResetLink() {
+    clearError();
+    var email = document.getElementById("pw-email").value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError("กรอกอีเมลที่ใช้สมัครในช่องด้านบนก่อน แล้วกดรับลิงก์อีกครั้ง");
+      document.getElementById("pw-email").focus();
+      return;
+    }
+    if (bot.siteKey && !bot.token) {
+      showError("กรุณายืนยันว่าไม่ใช่บอตก่อน");
+      return;
+    }
+    if (auth.mockMode()) { showForgotSent(); return; }
+    setBusy(forgotButton, true, "กำลังส่งลิงก์…");
+    try {
+      var payload = { email: email };
+      if (bot.token) payload.turnstileToken = bot.token;
+      var res = await fetch("/api/auth/password/forgot", {
+        method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      var body = await res.json().catch(function () { return null; });
+      if (res.ok) { showForgotSent(); resetBotCheck(); return; }
+      showError((body && body.error) || "ส่งลิงก์ไม่สำเร็จ ลองอีกครั้งในภายหลัง");
+      resetBotCheck();
+    } catch (err) {
+      showError("ส่งลิงก์ไม่สำเร็จ ลองอีกครั้งในภายหลัง");
+      resetBotCheck();
+    } finally {
+      setBusy(forgotButton, false, "ลืมรหัสผ่าน? รับลิงก์ตั้งรหัสใหม่ทางอีเมล");
+    }
+  }
+  function showForgotSent() {
+    clearError();
+    forgotSent = true;
+    forgotButton.hidden = true;
+    forgotStatus.textContent = "ถ้าอีเมลนี้มีบัญชี NAKA-AI เราได้ส่งลิงก์ตั้งรหัสผ่านใหม่ไปแล้ว (ลิงก์ใช้ได้ 30 นาที) ตรวจกล่องจดหมายและโฟลเดอร์สแปมด้วย";
+  }
+  forgotButton.addEventListener("click", requestResetLink);
 
   function showError(message) {
     errorEl.textContent = message;
