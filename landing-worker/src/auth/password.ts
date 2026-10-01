@@ -223,16 +223,6 @@ export async function forgotPassword(request: Request, env: Env, ctx?: Execution
   await botCheck(request, env, body.turnstileToken);
   const provider = emailProvider(env);
   const keys = await limitKeys(request, env, email);
-  const [emailCount, ipCount] = await Promise.all([
-    env.DB.prepare('SELECT COUNT(*) AS n FROM auth_password_resets WHERE email_key = ? AND created_at > ?')
-      .bind(keys.email, t - RESET_WINDOW).first<{ n: number }>(),
-    env.DB.prepare('SELECT COUNT(*) AS n FROM auth_password_resets WHERE ip_key = ? AND created_at > ?')
-      .bind(keys.ip, t - RESET_WINDOW).first<{ n: number }>(),
-  ]);
-  if ((emailCount?.n ?? 0) >= 3 || (ipCount?.n ?? 0) >= 10) {
-    throw new AuthError(429, RESET_LIMIT, RESET_WINDOW);
-  }
-  await pruneResets(env, t);
   const account = await env.DB.prepare(`SELECT i.user_id FROM auth_identities i
     JOIN auth_passwords p ON p.user_id = i.user_id JOIN users u ON u.id = i.user_id
     WHERE i.provider = 'password' AND i.provider_uid = ? AND u.status = 'active'`)
@@ -240,13 +230,20 @@ export async function forgotPassword(request: Request, env: Env, ctx?: Execution
   // Generate and hash for every accepted address, including unknown/passwordless accounts.
   const token = randomToken();
   const digest = await sha256(token);
-  await env.DB.batch([
-    env.DB.prepare('UPDATE auth_password_resets SET used_at = ? WHERE user_id = ? AND used_at IS NULL')
-      .bind(t, account?.user_id ?? ''),
+  // The limits are counted in the same statement that writes the row, so concurrent requests
+  // cannot all pass them. Older tokens are invalidated only when this request is admitted.
+  const [, admitted] = await env.DB.batch([
+    env.DB.prepare('DELETE FROM auth_password_resets WHERE created_at < ?').bind(t - 24 * 3600),
     env.DB.prepare(`INSERT INTO auth_password_resets
-      (email_key, ip_key, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?)`)
-      .bind(keys.email, keys.ip, account?.user_id ?? null, account ? digest : null, t + RESET_EXPIRES, t),
+      (email_key, ip_key, user_id, token_hash, expires_at, created_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6
+      WHERE (SELECT COUNT(*) FROM auth_password_resets WHERE email_key = ?1 AND created_at > ?7) < 3
+      AND (SELECT COUNT(*) FROM auth_password_resets WHERE ip_key = ?2 AND created_at > ?7) < 10`)
+      .bind(keys.email, keys.ip, account?.user_id ?? null, account ? digest : null, t + RESET_EXPIRES, t, t - RESET_WINDOW),
+    env.DB.prepare(`UPDATE auth_password_resets SET used_at = ?1 WHERE user_id = ?2 AND used_at IS NULL
+      AND token_hash IS NOT ?3 AND EXISTS (SELECT 1 FROM auth_password_resets WHERE token_hash = ?3)`)
+      .bind(t, account?.user_id ?? '', digest),
   ]);
+  if (admitted.meta.changes !== 1) throw new AuthError(429, RESET_LIMIT, RESET_WINDOW);
   if (account) {
     const link = `${appOrigin(env).origin}/login/reset/#token=${token}`;
     const message = `มีผู้ขอตั้งรหัสผ่านใหม่สำหรับบัญชี NAKA-AI ของคุณ\n\nเปิดลิงก์นี้เพื่อตั้งรหัสผ่านใหม่:\n${link}\n\nลิงก์มีอายุ 30 นาที หากคุณไม่ได้เป็นผู้ขอ กรุณาเพิกเฉยต่ออีเมลนี้`;
