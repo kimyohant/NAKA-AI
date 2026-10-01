@@ -5,3 +5,5 @@ node_modules/
 creative/godot/.godot/
 creative/godot-flow/.godot/
 *.blend1
+.claude/settings.local.json
+.openclaw/
