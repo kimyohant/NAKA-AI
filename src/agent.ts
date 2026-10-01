@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createOrder, getSettings, ordersForUser, searchProducts, type Conversation, type OrderInput } from "./db";
+import { errorSummary } from "./jobs";
 import type { Env } from "./types";
 
 const MODEL = "claude-opus-5";
@@ -159,8 +160,10 @@ export async function runSalesAgent(env: Env, conv: Conversation, userText: stri
         const content = await runTool(env, conv, block.name, block.input as Record<string, unknown>);
         toolResults.push({ type: "tool_result", tool_use_id: block.id, content });
       } catch (err) {
-        console.error("tool failed", block.name, err);
-        toolResults.push({ type: "tool_result", tool_use_id: block.id, content: `เกิดข้อผิดพลาด: ${String(err)}`, is_error: true });
+        // Provider/D1 error messages can echo customer content: keep them out of logs and
+        // never feed them back into the conversation the model sees.
+        console.error("tool failed", block.name, errorSummary(err));
+        toolResults.push({ type: "tool_result", tool_use_id: block.id, content: "เกิดข้อผิดพลาดชั่วคราว กรุณาลองอีกครั้งนะคะ", is_error: true });
       }
     }
     messages.push({ role: "user", content: toolResults });
