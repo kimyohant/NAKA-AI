@@ -131,15 +131,16 @@ async function checkout(request: Request, env: Env, userId: string): Promise<Res
   let stripe;
   try { stripe = stripeClient(env); } catch { throw new BillingError(503, "ระบบชำระเงินออนไลน์ยังไม่เปิดใช้งาน กรุณาติดต่อทีมงาน"); }
 
-  const open = await env.DB.prepare("SELECT COUNT(*) AS n FROM payments WHERE user_id = ? AND status = 'pending' AND created_at > ?")
-    .bind(userId, now() - 3600).first<{ n: number }>();
-  if ((open?.n ?? 0) >= MAX_OPEN_CHECKOUTS_PER_HOUR) throw new BillingError(429, "มีรายการที่รอชำระหลายรายการแล้ว กรุณาชำระรายการเดิมหรือรอสักครู่");
-
   const amount = priceSatang(plan, period);
   const id = crypto.randomUUID();
-  const expiresAt = now() + CHECKOUT_MINUTES * 60;
-  await env.DB.prepare(`INSERT INTO payments (id, user_id, plan_id, period, amount_satang, method, expires_at, created_at)
-    VALUES (?, ?, ?, ?, ?, 'stripe_checkout', ?, ?)`).bind(id, userId, plan.id, period, amount, expiresAt, now()).run();
+  const t = now();
+  const expiresAt = t + CHECKOUT_MINUTES * 60;
+  // Counted in the insert itself, so concurrent requests cannot all pass the limit.
+  const inserted = await env.DB.prepare(`INSERT INTO payments (id, user_id, plan_id, period, amount_satang, method, expires_at, created_at)
+    SELECT ?1, ?2, ?3, ?4, ?5, 'stripe_checkout', ?6, ?7
+    WHERE (SELECT COUNT(*) FROM payments WHERE user_id = ?2 AND status = 'pending' AND created_at > ?7 - 3600) < ?8`)
+    .bind(id, userId, plan.id, period, amount, expiresAt, t, MAX_OPEN_CHECKOUTS_PER_HOUR).run();
+  if (inserted.meta.changes !== 1) throw new BillingError(429, "มีรายการที่รอชำระหลายรายการแล้ว กรุณาชำระรายการเดิมหรือรอสักครู่");
 
   let session: CheckoutSession;
   try {

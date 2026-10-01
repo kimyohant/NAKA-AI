@@ -213,6 +213,13 @@ test("two payments for the same package applied at the same time add up to two p
   assert.equal(await credits.getBalance(db, "u1"), 80, "only the first payment tops up");
 });
 
+test("concurrent checkouts cannot pass the open-checkout limit together", async () => {
+  const responses = await Promise.all(Array.from({ length: 8 }, () => call("/checkout", { method: "POST", body: { planId: "pro", period: "monthly" } })));
+  assert.deepEqual(responses.map((r) => r.status).toSorted(), [201, 201, 201, 201, 201, 429, 429, 429]);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM payments").get().n, 5);
+  assert.equal(created.length, 5, "a refused checkout never reaches Stripe");
+});
+
 test("a Stripe error fails the checkout; unconfigured, cross-site and too many open checkouts are refused", async () => {
   http.mock.mockImplementation(async () => { throw new TypeError("network down"); });
   assert.equal((await call("/checkout", { method: "POST", user: "u9", body: { planId: "pro", period: "monthly" } })).status, 502);

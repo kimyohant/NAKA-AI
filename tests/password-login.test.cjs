@@ -94,6 +94,20 @@ test('sign in works with the right password only, the same answer for unknown em
   assert.equal(locked.status, 429, 'even the right password waits once the email is locked');
 });
 
+test('concurrent wrong passwords and sign-ups cannot pass the limits together; successful sign-ins do not count', async (t) => {
+  const f = setup(t);
+  await f.post('register', { email: 'shop@example.com', password: 'secret-pass' });
+  for (let i = 0; i < 6; i++) assert.equal((await f.post('login', { email: 'shop@example.com', password: 'secret-pass' })).status, 200);
+
+  const guesses = await Promise.all(Array.from({ length: 8 }, (_, i) =>
+    f.post('login', { email: 'shop@example.com', password: `guess-${i}` }, `192.0.2.${i}`)));
+  assert.deepEqual(guesses.map(r => r.status).toSorted(), [401, 401, 401, 401, 401, 429, 429, 429]);
+
+  const signups = await Promise.all(Array.from({ length: 8 }, (_, i) =>
+    f.post('register', { email: `c${i}@shop.co`, password: 'secret-pass' }, '198.51.100.8')));
+  assert.deepEqual(signups.map(r => r.status).toSorted(), [201, 201, 201, 201, 201, 429, 429, 429]);
+});
+
 test('a disabled account cannot sign in', async (t) => {
   const f = setup(t);
   const user = await f.me(await f.post('register', { email: 'shop@example.com', password: 'secret-pass' }));
