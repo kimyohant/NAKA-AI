@@ -43,7 +43,7 @@
 - [ ] ตั้งค่าบน Worker (เป็นงานของ A ตามกติกา): เพิ่ม `"EMAIL_PROVIDER": "resend"` ใน `"vars"` ของ `wrangler.jsonc`
       แล้ว `npx wrangler secret put RESEND_API_KEY` และ `npx wrangler secret put EMAIL_FROM`
 - [ ] `EMAIL_FROM` ใช้รูปแบบ `naka-ai <no-reply@naka-ai.com>` — โดเมนต้องตรงกับที่ Verified ไว้ (โดเมนอื่น Resend ปฏิเสธ)
-- [ ] ตามด้วย migration `0013` + deploy ตาม §4 (ทำครั้งเดียวพร้อมกัน)
+- [x] migration `0013` ขึ้น remote D1 แล้ว (2026-10-01) — เหลือ deploy ตาม §4 หลังตั้งค่าข้างบนครบ
 - [ ] ทดสอบตาม §5 ข้อ "ลืมรหัสผ่านทางอีเมล"
 - ได้ค่า: `RESEND_API_KEY` 🔑 · `EMAIL_FROM` (ไม่ลับ แต่ตั้งผ่าน `secret put` ตามแผน 9A เพื่อไม่ต้องแก้ `wrangler.jsonc` เพิ่ม)
 - โค้ดฝั่งส่ง: `src/auth/email.ts` (POST https://api.resend.com/emails, plain text ภาษาไทย, หมดเวลา 10 วินาที, ไม่ตาม redirect)
@@ -210,13 +210,14 @@ cron ทุกนาทีหยิบงานมาให้ Claude เขี�
 งานล้มเหลวระบบคืนเครดิตให้เอง (โค้ดทำแล้ว) หน้า landing มีปุ่ม "ลองฟรี" (`/review/?demo=1` ไม่เสียเครดิต) อยู่แล้ว
 สร้างจริงต้องล็อกอินและมีเครดิต รายการงานเก่าดูที่แดชบอร์ด `/app/` (ส่วนผลงาน, `GET /api/works`)
 
-- [ ] `ANTHROPIC_API_KEY` ตั้งอยู่แล้ว — ตรวจด้วย `npx wrangler secret list` (ขาด = งานทุกงาน fail)
+- [ ] `ANTHROPIC_API_KEY` 🔑 **ยังไม่ได้ตั้ง** (ตรวจ `npx wrangler secret list` เมื่อ 2026-10-01) — ขาด = งานทุกงาน fail
 - [ ] `GOOGLE_TTS_API_KEY` 🔑 ตั้งแล้ว และเปิด Cloud Text-to-Speech API แล้ว (ขั้นตอนใน §1) — ขาด = งาน fail ตอนทำเสียง
 - [ ] ตัดสินใจราคาต่อคลิป: โค้ดล็อกไว้ที่ `REVIEW_COST_CREDITS = 1` เครดิต ใน `src/affiliate.ts` (ค่าชั่วคราว)
       ก่อนขึ้นราคาจริงให้แก้ค่านี้ในโค้ด (merge ผ่าน A) ไม่มีการตั้งผ่านหน้าเว็บ
 - [ ] ลูกค้าต้องมีทางได้เครดิตอย่างน้อย 1 ทางก่อนเปิดใช้: ตั้ง `SIGNUP_CREDITS` (§3) / เปิดขายแพ็กเกจผ่าน Stripe
       ([STRIPE_INTEGRATION_TODO.md](../STRIPE_INTEGRATION_TODO.md)) / เติมให้เองที่ `/admin/customers/` (§6)
-      — ปัจจุบันทั้งสามทางยังไม่เปิด ลูกค้าใหม่จึงสร้างคลิปจริงไม่ได้แม้โค้ดพร้อม
+      — ปัจจุบันขายแพ็กเกจผ่าน Stripe และเติมเองที่หน้าแอดมินใช้ได้แล้ว ส่วน `SIGNUP_CREDITS` ยังไม่ตั้ง
+      สิ่งที่ขวางจริงคือ API key สองตัวข้างบน
 - [ ] ไม่ต้องตั้ง R2: วิดีโอเรนเดอร์ในเบราว์เซอร์ของลูกค้า R2 (`naka-ai-media`) ใช้เฉพาะตอนเปิดโพสต์อัตโนมัติลงโซเชียล
 - [ ] deploy แล้วทดสอบตาม §5 ข้อ `/review/` และลองให้งานพังจงใจ 1 งาน เพื่อยืนยันว่าเครดิตถูกคืน
 

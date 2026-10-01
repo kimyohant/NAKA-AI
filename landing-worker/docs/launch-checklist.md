@@ -25,7 +25,7 @@ npx wrangler tail               # ดู log จริงหลังเปิ�
 ## 2. การสร้างคลิป — Anthropic + Google TTS (ใช้งานจริงต้องมี)
 
 - **ทำอะไร:** สคริปต์/ร่างข้อความ/คอนเทนต์ (Anthropic Claude) และเสียงพากย์ไทย (Google Cloud Text-to-Speech) ของ `/review/`, `/studio/`, ร่าง Inbox
-- **ไฟล์/ตัวแปร:** `ANTHROPIC_API_KEY` 🔑 (ตั้งแต่ยุคบอท LINE — DEPLOY §3 บอกว่าควรมีอยู่แล้ว ให้ตรวจด้วย secret list) · `GOOGLE_TTS_API_KEY` 🔑 + `GOOGLE_TTS_VOICE` (ไม่บังคับ เช่น `th-TH-Standard-A`) · ใช้ใน `src/agent.ts`, `src/affiliate.ts`, `src/studio.ts`, `src/inbox/draft.ts`
+- **ไฟล์/ตัวแปร:** `ANTHROPIC_API_KEY` 🔑 (ยังไม่ได้ตั้ง — ตรวจด้วย secret list เมื่อ 2026-10-01) · `GOOGLE_TTS_API_KEY` 🔑 + `GOOGLE_TTS_VOICE` (ไม่บังคับ เช่น `th-TH-Standard-A`) · ใช้ใน `src/agent.ts`, `src/affiliate.ts`, `src/studio.ts`, `src/inbox/draft.ts`
 - **ค่าใช้จ่าย:** มี — Anthropic คิดตามการใช้งาน (pay-as-you-go) · Google TTS มีโควตาฟรีรายเดือนแล้วคิดตามตัวอักษร (ตรวจแผนปัจจุบันที่ cloud.google.com/text-to-speech/pricing)
 - **เปิดยังไง:** ขาดตัวไหน `npx wrangler secret put <ชื่อ>` → ทดสอบสร้างคลิปรีวิวจริง 1 คลิป (DEPLOY §5 มีรายการ) → ดู `npx wrangler tail` หา error
 
@@ -64,7 +64,7 @@ npx wrangler tail               # ดู log จริงหลังเปิ�
 ## 7. ลืมรหัสผ่านทางอีเมล — Resend (API พร้อมบน main · ยังไม่เปิดใช้)
 
 - **ทำอะไร:** ลูกค้ากดรับลิงก์ตั้งรหัสใหม่ทางอีเมลจากหน้า login ทำเองได้ ไม่ต้องโทรแอดมิน (หน้า `/login/reset/`)
-- **ไฟล์/ตัวแปร:** `EMAIL_PROVIDER=resend` + `EMAIL_FROM` (vars) · `RESEND_API_KEY` 🔑 · migration `0013_password_reset.sql` (remote D1) · หน้า login ปุ่มลืมรหัสผ่าน + `/login/reset/` (`public/login/`)
+- **ไฟล์/ตัวแปร:** `EMAIL_PROVIDER=resend` + `EMAIL_FROM` (vars) · `RESEND_API_KEY` 🔑 · migration `0013_password_reset.sql` (ขึ้น remote D1 แล้ว 2026-10-01) · หน้า login ปุ่มลืมรหัสผ่าน + `/login/reset/` (`public/login/`)
 - **ค่าใช้จ่าย:** Resend มีแผนฟรีตามจำนวนฉบับ/เดือน แล้วคิดเพิ่ม (resend.com/pricing) · **ต้องยืนยันโดเมนผู้ส่ง (DNS SPF/DKIM) ก่อน**
 - **เปิดยังไง:** ตาม [docs/DEPLOY.md](DEPLOY.md) หัวข้อ "ลืมรหัสผ่านทางอีเมล — Resend" (ขั้นตอนครบ + ลิงก์เอกสาร Resend ที่ตรวจแล้ว 2026-09-30)
 
