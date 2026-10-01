@@ -43,6 +43,19 @@ export type EnqueueResult =
 /** Thrown by a handler when retrying cannot help (bad input, refused content). */
 export class PermanentJobError extends Error {}
 
+/**
+ * Class-level description of an error for logs and stored job errors: the error's name plus
+ * an HTTP status when the provider supplies one, never the message — provider messages can
+ * echo customer content. PermanentJobError keeps its message because handlers throw it with
+ * fixed, content-free reason codes (e.g. 'script refused', 'tts 403').
+ */
+export function errorSummary(err: unknown): string {
+  if (err instanceof PermanentJobError) return err.message.slice(0, MAX_ERROR_LENGTH);
+  const status = (err as { status?: unknown } | null)?.status;
+  const name = err instanceof Error ? err.name : typeof err;
+  return typeof status === "number" && Number.isFinite(status) ? `${name} (status ${status})` : name;
+}
+
 export type JobHandler = (job: Job) => Promise<{ output: unknown; providerCostUsd?: number }>;
 
 const MAX_ERROR_LENGTH = 500;
@@ -195,8 +208,10 @@ async function runJob(db: D1Database, handlers: Record<string, JobHandler>, job:
     const applied = await completeJob(db, job.id, job.attempts, output, providerCostUsd);
     if (!applied) console.error("job fencing: discarded result from a worker that lost its lease", job.id, job.kind);
   } catch (err) {
-    console.error("job failed", job.id, job.kind, err);
-    await failJob(db, job.id, job.attempts, err instanceof Error ? err.message : String(err), !(err instanceof PermanentJobError));
+    // Keep provider error details (which can carry customer content) out of logs and the job row.
+    const summary = errorSummary(err);
+    console.error("job failed", job.id, job.kind, summary);
+    await failJob(db, job.id, job.attempts, summary, !(err instanceof PermanentJobError));
   }
 }
 

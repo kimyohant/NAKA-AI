@@ -1,4 +1,5 @@
 import type { Env } from "../types";
+import { readBodyBytes } from "../auth/common";
 import { getBalance } from "../credits";
 import { issueReceipt } from "../receipts";
 import { createCheckoutSession, getCheckoutSession, stripeClient, verifyWebhookEvent, type CheckoutSession } from "./stripe";
@@ -224,9 +225,11 @@ export async function handleStripeWebhook(request: Request, env: Env): Promise<R
   let stripe;
   try { stripe = stripeClient(env); } catch { return new Response(null, { status: 503 }); }
   if (!env.STRIPE_WEBHOOK_SECRET?.trim()) return new Response(null, { status: 503 });
-  const raw = await request.text();
-  if (raw.length > 256 * 1024) return new Response(null, { status: 413 });
-  const event = await verifyWebhookEvent(stripe, env, raw, request.headers.get("Stripe-Signature"));
+  // Cut oversized payloads off before the rest can be buffered; the raw bytes still reach
+  // the signature check intact.
+  const rawBytes = await readBodyBytes(request, 256 * 1024);
+  if (rawBytes === null) return new Response(null, { status: 413 });
+  const event = await verifyWebhookEvent(stripe, env, new TextDecoder().decode(rawBytes), request.headers.get("Stripe-Signature"));
   if (!event) return new Response(null, { status: 400 });
   if (!SESSION_EVENTS.has(event.type)) return new Response(null, { status: 204 });
   const sessionId = (event.data.object as { id?: unknown }).id;

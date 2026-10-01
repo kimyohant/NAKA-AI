@@ -47,11 +47,13 @@ export function cookie(request: Request, name: string): string | null {
 export function cookieValue(env: Env, name: string, value: string, age: number): string {
   return `${name}=${value}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${age}${appOrigin(env).protocol === 'https:' ? '; Secure' : ''}`;
 }
-export async function readJson(request: Request, maxBytes = 2048): Promise<Record<string, unknown>> {
-  if (request.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== 'application/json') throw new AuthError(400, 'กรุณาส่งข้อมูลในรูปแบบ JSON');
-  if (Number(request.headers.get('Content-Length')) > maxBytes) throw new AuthError(413, 'ข้อมูลมีขนาดใหญ่เกินไป');
+/** Stream the request body up to maxBytes, counting bytes as they arrive, so oversized
+ * requests are cut off before the rest of the body can be buffered. Returns null when the
+ * body exceeds maxBytes. The raw bytes come back intact for webhook signature verification. */
+export async function readBodyBytes(request: Request, maxBytes: number): Promise<Uint8Array | null> {
+  if (Number(request.headers.get('Content-Length')) > maxBytes) return null;
   const reader = request.body?.getReader();
-  if (!reader) throw new AuthError(400, 'ข้อมูลไม่ถูกต้อง');
+  if (!reader) return new Uint8Array(0);
   const chunks: Uint8Array[] = [];
   let size = 0;
   try {
@@ -59,13 +61,20 @@ export async function readJson(request: Request, maxBytes = 2048): Promise<Recor
       const { done, value } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > maxBytes) { await reader.cancel(); throw new AuthError(413, 'ข้อมูลมีขนาดใหญ่เกินไป'); }
+      if (size > maxBytes) { await reader.cancel(); return null; }
       chunks.push(value);
     }
   } finally { reader.releaseLock(); }
   const bytes = new Uint8Array(size);
   let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return bytes;
+}
+
+export async function readJson(request: Request, maxBytes = 2048): Promise<Record<string, unknown>> {
+  if (request.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== 'application/json') throw new AuthError(400, 'กรุณาส่งข้อมูลในรูปแบบ JSON');
+  const bytes = await readBodyBytes(request, maxBytes);
+  if (bytes === null) throw new AuthError(413, 'ข้อมูลมีขนาดใหญ่เกินไป');
   try {
     const body: unknown = JSON.parse(new TextDecoder().decode(bytes));
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error();

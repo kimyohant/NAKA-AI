@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import { constantTimeEqual } from '../auth/common';
 import { ledgerFor } from '../credits';
 import { hashPassword, temporaryPassword } from '../auth/password';
 
@@ -193,7 +194,8 @@ async function resetPassword(request: Request, env: Env, userId: string): Promis
 /** Called after the shared router's ADMIN_TOKEN check; also fails closed when mounted alone. */
 export async function handleAdminCustomers(request: Request, env: Env, url: URL): Promise<Response | null> {
   if (url.pathname !== BASE && !url.pathname.startsWith(BASE + '/')) return null;
-  if (!env.ADMIN_TOKEN || request.headers.get('Authorization') !== 'Bearer ' + env.ADMIN_TOKEN) {
+  const authorized = !!env.ADMIN_TOKEN && constantTimeEqual(request.headers.get('Authorization') ?? '', `Bearer ${env.ADMIN_TOKEN}`);
+  if (!authorized) {
     return json({ error: 'กรุณาเข้าสู่ระบบหลังร้านอีกครั้ง' }, 401);
   }
   try {
