@@ -85,8 +85,8 @@ test("the queue runs higher priority first, then oldest first", async () => {
 test("a retryable failure goes back to the queue with backoff and keeps the hold", async () => {
   await credits.grantCredits(db, "u1", 10, "grant");
   const { jobId } = await jobs.enqueueJob(db, { userId: "u1", kind: "video", input: {}, costCredits: 4 });
-  await jobs.claimNextJob(db);
-  assert.equal(await jobs.failJob(db, jobId, "provider 503"), "queued");
+  const claimed = await jobs.claimNextJob(db);
+  assert.equal(await jobs.failJob(db, jobId, claimed.attempts, "provider 503"), "queued");
   assert.equal(await jobs.claimNextJob(db), null, "backoff delays the retry");
   assert.equal(row("SELECT run_after > datetime('now') AS later FROM jobs WHERE id = ?", jobId).later, 1);
   assert.equal(await credits.getBalance(db, "u1"), 6);
@@ -95,14 +95,14 @@ test("a retryable failure goes back to the queue with backoff and keeps the hold
 test("a job that runs out of attempts fails and is refunded exactly once", async () => {
   await credits.grantCredits(db, "u1", 10, "grant");
   const { jobId } = await jobs.enqueueJob(db, { userId: "u1", kind: "video", input: {}, costCredits: 4, maxAttempts: 2 });
-  await jobs.claimNextJob(db);
-  assert.equal(await jobs.failJob(db, jobId, "timeout"), "queued");
+  const first = await jobs.claimNextJob(db);
+  assert.equal(await jobs.failJob(db, jobId, first.attempts, "timeout"), "queued");
   makeRunnableNow(jobId);
-  await jobs.claimNextJob(db);
-  assert.equal(await jobs.failJob(db, jobId, "timeout"), "failed");
+  const second = await jobs.claimNextJob(db);
+  assert.equal(await jobs.failJob(db, jobId, second.attempts, "timeout"), "failed");
   assert.equal(await credits.getBalance(db, "u1"), 10);
 
-  assert.equal(await jobs.failJob(db, jobId, "late duplicate"), "failed");
+  assert.equal(await jobs.failJob(db, jobId, second.attempts, "late duplicate"), "failed");
   assert.equal(row("SELECT COUNT(*) AS n FROM credit_ledger WHERE reason = 'job_refund'").n, 1);
   assert.equal(await credits.getBalance(db, "u1"), 10);
 });

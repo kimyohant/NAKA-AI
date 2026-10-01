@@ -132,8 +132,8 @@ test("the API enqueues, reports queue position, and hides failures and other use
   assert.deepEqual(queued, { status: "queued", ahead: 0 });
   assert.equal((await call("GET", `/api/affiliate/reviews/${jobId}`, null, "u2")).status, 404);
 
-  await jobs.claimNextJob(db);
-  await jobs.failJob(db, jobId, "tts 403 secret detail", false);
+  const claimed = await jobs.claimNextJob(db);
+  await jobs.failJob(db, jobId, claimed.attempts, "tts 403 secret detail", false);
   const failed = await (await call("GET", `/api/affiliate/reviews/${jobId}`)).json();
   assert.equal(failed.status, "failed");
   assert.doesNotMatch(failed.error, /403|secret/);
