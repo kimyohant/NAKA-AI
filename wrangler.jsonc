@@ -21,7 +21,8 @@
   // run `wrangler r2 bucket create naka-ai-media`, and restore:
   //   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "naka-ai-media" }],
   "triggers": { "crons": ["* * * * *"] },
-  "workers_dev": true,
+  // Served only on naka-ai.com: a second *.workers.dev origin is not used anywhere (security audit note).
+  "workers_dev": false,
   "routes": [
     { "pattern": "naka-ai.com", "custom_domain": true },
     { "pattern": "www.naka-ai.com", "custom_domain": true }
