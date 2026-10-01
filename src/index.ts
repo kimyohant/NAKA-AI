@@ -6,11 +6,11 @@ import { handleOnboarding } from "./onboarding";
 import { handleAdminCustomers } from "./admin/customers";
 import { handleWorks } from "./works";
 import { handleAuth, requireUser } from "./auth";
-import { constantTimeEqual } from "./auth/common";
+import { constantTimeEqual, readBodyBytes } from "./auth/common";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
 import { drainInbox, handleInbox, handleMetaWebhook, INBOX_JOB_KIND, makeInboxHandler } from "./inbox";
-import { runQueue, type JobHandler } from "./jobs";
+import { runQueue, errorSummary, type JobHandler } from "./jobs";
 import { getDisplayName, pushText, replyOrPush, startLoading, verifySignature } from "./line";
 import { handleSocial, publishDuePosts } from "./social";
 import { handleStudio } from "./studio";
@@ -102,7 +102,7 @@ export default {
         if (customerResponse) return customerResponse;
         return await handleAdmin(request, env, url);
       } catch (err) {
-        console.error("admin error", err);
+        console.error("admin error", errorSummary(err));
         return json({ error: "internal error" }, 500);
       }
     }
@@ -113,7 +113,7 @@ export default {
   async scheduled(_controller, env, ctx): Promise<void> {
     ctx.waitUntil(runQueue(env.DB, jobHandlers(env), { maxJobs: 30, concurrency: 5 }).then(
       (result) => { if (result.ran || result.recovered) console.log("queue", result); },
-      (err) => console.error("queue run failed", err),
+      (err) => console.error("queue run failed", errorSummary(err)),
     ));
     // Separate from the job queue so missing social config never stops AI jobs.
     ctx.waitUntil(publishDuePosts(env, { maxPosts: 2 }).then(
@@ -142,14 +142,18 @@ function jobHandlers(env: Env): Record<string, JobHandler> {
   return { [AFFILIATE_JOB_KIND]: makeAffiliateHandler(env), [INBOX_JOB_KIND]: makeInboxHandler(env) };
 }
 
+const LINE_WEBHOOK_MAX_BYTES = 256 * 1024; // LINE payloads are small; anything larger is refused unread
+
 async function handleLineWebhook(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const body = await request.text();
+  const rawBytes = await readBodyBytes(request, LINE_WEBHOOK_MAX_BYTES);
+  if (rawBytes === null) return new Response("payload too large", { status: 413 });
+  const body = new TextDecoder().decode(rawBytes);
   if (!(await verifySignature(body, request.headers.get("x-line-signature"), env.LINE_CHANNEL_SECRET))) {
     return new Response("invalid signature", { status: 401 });
   }
   const { events } = JSON.parse(body) as { events: LineEvent[] };
   // Acknowledge LINE immediately; the agent runs in the background.
-  ctx.waitUntil(Promise.all(events.map((e) => handleLineEvent(env, e).catch((err) => console.error("event failed", err)))));
+  ctx.waitUntil(Promise.all(events.map((e) => handleLineEvent(env, e).catch((err) => console.error("event failed", errorSummary(err))))));
   return new Response("ok");
 }
 
