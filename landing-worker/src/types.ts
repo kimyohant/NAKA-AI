@@ -9,11 +9,14 @@ export interface Env {
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   SESSION_SECRET: string;
-  SMS_PROVIDER: "mock" | "thaibulksms";
+  SMS_PROVIDER: "mock" | "thaibulksms" | "android_gateway" | "off"; // "off" = no phone OTP, sign in with LINE/Google
   SMS_API_KEY?: string;
   SMS_API_SECRET?: string;
   SMS_SENDER?: string;
   APP_ORIGIN: string;
+  EMAIL_PROVIDER?: "off" | "mock" | "resend";
+  RESEND_API_KEY?: string;
+  EMAIL_FROM?: string;
   // Affiliate review voiceover (Google Cloud Text-to-Speech)
   GOOGLE_TTS_API_KEY: string;
   GOOGLE_TTS_VOICE?: string;
@@ -27,10 +30,16 @@ export interface Env {
   MEDIA?: R2Bucket; // clip uploads for posting; bound once the R2 bucket exists
   // AI Inbox (Phase 4) — contract in docs/phase4-inbox.md
   META_WEBHOOK_VERIFY_TOKEN?: string;
-  // Online payment (Omise / Opn Payments) — src/billing
-  OMISE_PUBLIC_KEY?: string; // pkey_…, public; served to the billing page for card forms
-  OMISE_SECRET_KEY?: string; // skey_…
-  OMISE_WEBHOOK_SECRET?: string; // base64 webhook signing secret from the Omise dashboard
+  // Online payment (Stripe Checkout) — src/billing
+  STRIPE_SECRET_KEY?: string; // restricted key rk_… (or sk_…); unset = online payment off
+  STRIPE_WEBHOOK_SECRET?: string; // whsec_… of the /webhook/stripe endpoint
+  // SMS_PROVIDER=android_gateway (src/auth/sms.ts): the shop's Android phone via SMS Gateway for Android
+  SMS_GATEWAY_URL?: string; // https only; unset = the project's cloud server
+  SMS_GATEWAY_USERNAME?: string;
+  SMS_GATEWAY_PASSWORD?: string;
+  // LINE Login (src/auth/line.ts) — its own LINE Login channel, not the Messaging API bot above
+  LINE_LOGIN_CHANNEL_ID?: string;
+  LINE_LOGIN_CHANNEL_SECRET?: string;
   RECEIPT_SELLER_NAME?: string; // unset = no receipts yet; the cron issues them once it is set
   RECEIPT_SELLER_ADDRESS?: string;
   RECEIPT_SELLER_TAX_ID?: string;

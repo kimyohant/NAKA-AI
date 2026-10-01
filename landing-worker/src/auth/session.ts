@@ -8,11 +8,11 @@ export const SESSION_COOKIE = 'naka_session';
 export async function getUser(db: D1Database, id: string): Promise<User | null> {
   return db.prepare(`SELECT u.id, u.display_name AS displayName,
     (SELECT provider_uid FROM auth_identities WHERE user_id = u.id AND provider = 'phone' LIMIT 1) AS phone,
-    (SELECT email FROM auth_identities WHERE user_id = u.id AND provider = 'google' LIMIT 1) AS email
+    (SELECT email FROM auth_identities WHERE user_id = u.id AND provider IN ('google', 'password') ORDER BY provider LIMIT 1) AS email
     FROM users u WHERE u.id = ? AND u.status = 'active'`).bind(id).first<User>();
 }
 
-export async function identityUser(env: Env, provider: 'phone' | 'google', uid: string, name: string, email: string | null = null): Promise<User> {
+export async function identityUser(env: Env, provider: 'phone' | 'google' | 'line', uid: string, name: string, email: string | null = null): Promise<User> {
   const id = crypto.randomUUID();
   // D1 batches are transactions; the guarded insert avoids orphan users on races.
   const statements = [

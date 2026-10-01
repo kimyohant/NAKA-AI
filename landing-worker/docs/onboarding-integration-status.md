@@ -46,3 +46,7 @@ Branch: `feat/onboarding` (แตกจาก `main` @ f542b0b) · สถาน�
 
 - `signupBonus` ใช้ `SUM(delta) WHERE note='signup_bonus'` — ถ้าในอนาคตมีการปรับโบนัสหลายรอบจะรวมกัน ซึ่งสอดคล้องกับ balance
 - การแจกโบนัสใช้ `INSERT…SELECT` ที่มีเงื่อนไขในตัว (ไม่พึ่ง read-then-write) จึงปลอดภัยกับ race
+
+## Claude merge แล้ว (2026-09-30)
+
+ต่อ route, เพิ่ม `SIGNUP_CREDITS` ใน `Env` และแก้ topbar ล้นที่ 360px แล้วใน main (`42b47af`, `148545c`)

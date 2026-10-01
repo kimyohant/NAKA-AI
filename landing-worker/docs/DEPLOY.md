@@ -6,8 +6,8 @@
 ## 0. ก่อนเริ่ม
 
 - [ ] ล็อกอิน Cloudflare: `npx wrangler login`
-- [ ] สำรองฐานข้อมูลจริง: `npx wrangler d1 export naka-ai-db --remote --output backup-before-phase1.sql`
-- [ ] โค้ดที่จะ deploy คือ branch `integrate/phase1` (merge เข้า `main` ก่อน)
+- [ ] สำรองฐานข้อมูลจริง: `npx wrangler d1 export naka-ai-db --remote --output backup-before-launch.sql`
+- [ ] โค้ดที่จะ deploy คือ branch `main` และ CI บน GitHub ต้องขึ้นเครื่องหมายถูกเขียว
 
 ## 1. บริการภายนอก (ใช้เวลารออนุมัติ เริ่มก่อน)
 
@@ -23,21 +23,47 @@
 - [ ] ระหว่างรอ App Review ทดสอบได้ด้วยบัญชีที่เป็น admin/tester ของแอปเท่านั้น
 - ได้ค่า: `META_APP_ID`, `META_APP_SECRET` 🔑
 
+### สมัครด้วยอีเมล + รหัสผ่าน — เปิดอยู่แล้ว ไม่ต้องตั้งอะไร
+- รหัสผ่านเก็บแบบ PBKDF2 · ลองผิด 5 ครั้งใน 15 นาทีต่ออีเมลจะถูกพัก · สมัครได้ 5 บัญชีต่อ IP ต่อชั่วโมง
+- ยังไม่ยืนยันอีเมล · ลืมรหัสผ่าน: `/admin/customers/` → ลูกค้า → "ลืมรหัสผ่าน" → ได้รหัสใหม่แสดงครั้งเดียว แจ้งลูกค้าทางโทรศัพท์
+- แนะนำภายหลัง: เปิด Turnstile (ฟรี) เมื่อเริ่มมีบัญชีสแปม — ตั้ง `TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY` แล้วฟอร์มจะขอให้ยืนยันเอง
+
+### LINE Login — ล็อกอินด้วย LINE (ฟรี ลดค่า SMS)
+- [ ] developers.line.biz → Provider เดิมหรือใหม่ → สร้าง channel ประเภท **LINE Login** (แยกจาก Messaging API ของบอต) App type **Web app**
+- [ ] แท็บ LINE Login → Callback URL = `https://naka-ai.com/api/auth/line/callback` · เปิด channel เป็น **Published**
+- ได้ค่า: `LINE_LOGIN_CHANNEL_ID`, `LINE_LOGIN_CHANNEL_SECRET` 🔑 (ไม่ตั้ง = ปุ่ม LINE ไม่แสดง)
+
 ### Google Cloud — ล็อกอินด้วย Google + เสียงพากย์ไทย
 - [ ] OAuth consent screen (External) + OAuth Client แบบ Web: Authorized redirect URI = `https://naka-ai.com/api/auth/google/callback`
 - [ ] เปิด Cloud Text-to-Speech API แล้วสร้าง API key ที่จำกัดให้ใช้ได้แค่ API นี้
 - [ ] (ไม่บังคับ) ฟังเสียงไทยแล้วเลือก voice เช่น `th-TH-Standard-A` ตั้งเป็น `GOOGLE_TTS_VOICE`
 - ได้ค่า: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` 🔑, `GOOGLE_TTS_API_KEY` 🔑
 
-### ThaiBulkSMS — OTP ทางเบอร์โทร
+### SMS OTP — ไม่บังคับ (`SMS_PROVIDER`; `"off"` = ล็อกอินด้วย LINE/Google เท่านั้น ฟอร์มเบอร์โทรจะไม่แสดง)
+
+**ก. มือถือ Android ของร้าน (`android_gateway`)** — ถูกที่สุดช่วงลูกค้ายังน้อย
+- [ ] ใช้มือถือ Android ที่มีซิมและแพ็กเกจ SMS เปิดเน็ตและชาร์จไฟตลอด ปิดโหมดประหยัดแบตให้แอปนี้
+- [ ] ติดตั้งแอป **SMS Gateway for Android** (github.com/capcom6/android-sms-gateway หรือ Google Play) → เปิด **Cloud server** → จด username/password ที่แอปแสดง
+- [ ] ลองส่งจากแอปไปเบอร์ตัวเองก่อน 1 ครั้ง
+- ได้ค่า: `SMS_GATEWAY_USERNAME`, `SMS_GATEWAY_PASSWORD` 🔑 (`SMS_GATEWAY_URL` ไม่ต้องตั้ง ยกเว้นใช้ server ของตัวเอง ต้องเป็น https)
+- ข้อจำกัด: ผู้รับเห็นเบอร์มือถือแทนชื่อร้าน · มือถือดับ/ไม่ได้ออนไลน์ใน 1 ชั่วโมงล่าสุด = ขอ OTP ไม่ได้ (LINE/Google ยังใช้ได้)
+  · ค่ายอาจจำกัดซิมที่ส่ง SMS จำนวนมาก · ระบบรู้แค่ว่าส่งเข้าคิวของมือถือแล้ว ไม่รู้ว่าถึงผู้รับหรือไม่
+
+**ข. ThaiBulkSMS (`thaibulksms`)** — เมื่อลูกค้าเยอะขึ้น ชื่อผู้ส่งเป็นชื่อร้าน
 - [ ] สมัครบัญชี เติมเครดิต และ**จดทะเบียนชื่อผู้ส่ง (sender name)** รออนุมัติ
 - ได้ค่า: `SMS_API_KEY` 🔑, `SMS_API_SECRET` 🔑, `SMS_SENDER` (ชื่อที่อนุมัติแล้ว ตรงตัวพิมพ์เล็ก/ใหญ่)
 
-### Omise (Opn Payments) — รับเงินค่าแพ็กเกจ
-- [ ] สมัครบัญชีร้านค้าที่ omise.co ยืนยันตัวตน/ธุรกิจ และเปิดใช้ **PromptPay** กับ**บัตร** (รอ Omise อนุมัติ)
-- [ ] ทดสอบด้วย test keys ก่อน (`pkey_test_…` / `skey_test_…`) แล้วค่อยเปลี่ยนเป็น live keys
-- [ ] Webhooks: เพิ่ม endpoint `https://naka-ai.com/webhook/omise` แล้วคัดลอก **webhook secret** (ใช้ตรวจลายเซ็น `Omise-Signature`)
-- ได้ค่า: `OMISE_PUBLIC_KEY` (สาธารณะ), `OMISE_SECRET_KEY` 🔑, `OMISE_WEBHOOK_SECRET` 🔑
+### Stripe — รับเงินค่าแพ็กเกจ (Omise ไม่รับบุคคลธรรมดาแล้ว)
+- [ ] สมัครที่ stripe.com ประเทศ Thailand ประเภทธุรกิจ **Individual / sole proprietor** ยืนยันตัวตนและบัญชีธนาคาร
+- [ ] Settings → Payment methods: เปิด **PromptPay** และ **Cards** (หน้าชำระเงินแสดงตามที่เปิดไว้ โค้ดไม่ได้ล็อกวิธีชำระ)
+- [ ] Settings → Branding: โลโก้/สี naka-ai และ Public details: ชื่อร้าน เบอร์ อีเมล (ขึ้นบนหน้าชำระเงินและใบแจ้งยอดบัตร)
+- [ ] ทดสอบใน **sandbox** ก่อน แล้วค่อยใช้ live keys
+- [ ] API key: Developers → API keys → สร้าง **restricted key** (`rk_…`) ให้สิทธิ์ Checkout Sessions: **Write** เท่านั้น
+- [ ] Webhooks: เพิ่ม endpoint `https://naka-ai.com/webhook/stripe` เลือก event `checkout.session.completed`,
+      `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`
+      แล้วคัดลอก **Signing secret** (`whsec_…`)
+- ได้ค่า: `STRIPE_SECRET_KEY` 🔑 (restricted key), `STRIPE_WEBHOOK_SECRET` 🔑
+- รายละเอียดทั้งหมด: [STRIPE_INTEGRATION_TODO.md](../STRIPE_INTEGRATION_TODO.md)
 
 ### Cloudflare
 - [ ] Turnstile: สร้าง widget, hostname = `naka-ai.com` → ได้ `TURNSTILE_SITE_KEY` (สาธารณะ) และ `TURNSTILE_SECRET_KEY` 🔑
@@ -59,9 +85,8 @@ openssl rand -hex 24      # META_WEBHOOK_VERIFY_TOKEN
 ```jsonc
 "vars": {
   "APP_ORIGIN": "https://naka-ai.com",
-  "SMS_PROVIDER": "thaibulksms",
+  "SMS_PROVIDER": "android_gateway",   // หรือ "thaibulksms"
   "TURNSTILE_SITE_KEY": "<site key>",
-  "OMISE_PUBLIC_KEY": "<pkey_…>",
   "RECEIPT_SELLER_NAME": "<ชื่อผู้ขายบนใบเสร็จ ตรงกับที่จดทะเบียน>",
   "RECEIPT_SELLER_ADDRESS": "<ที่อยู่>",
   "RECEIPT_SELLER_TAX_ID": "<เลขผู้เสียภาษี 13 หลัก ไม่มีก็เว้นไว้>",
@@ -80,7 +105,13 @@ openssl rand -hex 24      # META_WEBHOOK_VERIFY_TOKEN
 npx wrangler secret put SESSION_SECRET
 npx wrangler secret put GOOGLE_CLIENT_ID
 npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put LINE_LOGIN_CHANNEL_ID
+npx wrangler secret put LINE_LOGIN_CHANNEL_SECRET
 npx wrangler secret put GOOGLE_TTS_API_KEY
+# SMS ทาง ก. (android_gateway)
+npx wrangler secret put SMS_GATEWAY_USERNAME
+npx wrangler secret put SMS_GATEWAY_PASSWORD
+# หรือทาง ข. (thaibulksms)
 npx wrangler secret put SMS_API_KEY
 npx wrangler secret put SMS_API_SECRET
 npx wrangler secret put SMS_SENDER
@@ -89,8 +120,8 @@ npx wrangler secret put META_APP_ID
 npx wrangler secret put META_APP_SECRET
 npx wrangler secret put META_WEBHOOK_VERIFY_TOKEN
 npx wrangler secret put SOCIAL_TOKEN_KEY
-npx wrangler secret put OMISE_SECRET_KEY
-npx wrangler secret put OMISE_WEBHOOK_SECRET
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_WEBHOOK_SECRET
 ```
 
 ค่าเดิมที่ควรมีอยู่แล้ว: `ANTHROPIC_API_KEY`, `ADMIN_TOKEN`, `LINE_CHANNEL_SECRET`, `LINE_CHANNEL_ACCESS_TOKEN`
@@ -100,7 +131,7 @@ npx wrangler secret put OMISE_WEBHOOK_SECRET
 
 ```sh
 npm run typecheck && npm test                               # ต้องผ่านทั้งหมด
-npx wrangler d1 migrations apply naka-ai-db --remote        # 0001 → 0007 ไม่แตะตาราง LINE เดิม
+npx wrangler d1 migrations apply naka-ai-db --remote        # 0001 → ล่าสุด ไม่แตะตาราง LINE เดิม
 npx wrangler deploy
 ```
 
@@ -118,32 +149,32 @@ npx wrangler deploy
 
 - [ ] หน้าแรกโหลด เมนู 4 ผลิตภัณฑ์ คลิปละครเล่น
 - [ ] `/login/` มี Turnstile → ขอ OTP ด้วยเบอร์ตัวเอง → ได้ SMS → เข้า `/app/` ได้
+- [ ] สมัครด้วยอีเมล + รหัสผ่าน → เข้า `/app/` ได้ · ออกจากระบบแล้วเข้าใหม่ได้ · รหัสผิดขึ้นข้อความเตือน
 - [ ] ล็อกอินด้วย Google ได้
+- [ ] ล็อกอินด้วย LINE ได้ ครั้งที่สองได้บัญชีเดิม
 - [ ] แอดมินเติมเครดิตทดสอบ: `curl -X POST https://naka-ai.com/api/admin/credits/<user-id> -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"amount":5,"note":"ทดสอบ"}'`
 - [ ] `/review/` สร้างคลิปรีวิวจริง 1 คลิป (ใช้ 1 เครดิต) → ได้บท + เสียงไทย → สร้างวิดีโอ → ดาวน์โหลด
 - [ ] `/app/inbox/` → เชื่อมเพจ Facebook → คอมเมนต์ใต้โพสต์เพจด้วยอีกบัญชี → ข้อความขึ้นใน inbox ภายใน 1–2 นาที
 - [ ] ตั้งบอทเป็น "ร่างรออนุมัติ" → ได้ draft → กดส่ง → คำตอบขึ้นบน Facebook
-- [ ] `/app/billing/` (test keys) → เลือกแพ็กเกจเริ่มต้น → PromptPay ได้ QR → ใน Omise dashboard กด mark as paid → หน้าแจ้งสำเร็จ แพ็กเกจเปิด เครดิตขึ้น 30
-- [ ] จ่ายด้วยบัตรทดสอบของ Omise (รวมบัตรที่ต้องผ่าน 3-D Secure) → กลับมาที่ `/app/billing/?payment=…` แล้วสำเร็จ
+- [ ] `/app/billing/` (sandbox keys) → เลือกแพ็กเกจเริ่มต้น → ไปหน้า Stripe → บัตร `4242 4242 4242 4242` → กลับมา แพ็กเกจเปิด เครดิตขึ้น 30
+- [ ] บัตรที่ต้องผ่าน 3-D Secure `4000 0025 0000 3155` และบัตรถูกปฏิเสธ `4000 0000 0000 0002` → ผลตรงตามจริง
+- [ ] PromptPay ใน sandbox → หน้า Stripe มีปุ่มจำลองว่าจ่ายสำเร็จ/ล้มเหลว → แพ็กเกจเปิดเมื่อสำเร็จเท่านั้น
+- [ ] Stripe Dashboard → Webhooks → endpoint แสดงว่าส่งสำเร็จ (204)
+- [ ] สมัครด้วยเบอร์ที่ไม่เคยใช้ → การ์ดต้อนรับบน `/app/` บอกเครดิตฟรีตาม `SIGNUP_CREDITS` → ล็อกอินซ้ำเครดิตไม่เพิ่ม
+- [ ] หลังจ่ายสำเร็จ ใบเสร็จขึ้นใน `/app/billing/` (ต้องตั้ง `RECEIPT_SELLER_NAME` แล้ว) เปิดดูและพิมพ์ได้
+- [ ] `/admin/customers/` → กรอก token → ค้นเบอร์ตัวเอง → เติมเครดิต 1 → ยอดใน `/app/` ขึ้นตาม
 - [ ] ดู log: `npx wrangler tail`
 
 ## 6. แพ็กเกจลูกค้า
 
-ลูกค้าซื้อเองได้ที่ `/app/billing/` (PromptPay/บัตร ผ่าน Omise) ระบบเปิดแพ็กเกจ เติมเครดิตรายเดือน และหมดอายุให้อัตโนมัติ
-ถ้าลูกค้าโอนเงินนอกระบบ แอดมินตั้งแพ็กเกจด้วยมือได้ด้วย SQL:
-
-```sh
-# หา user id จากเบอร์ (เก็บเป็น +66…) หรือ Google (ใช้อีเมล)
-npx wrangler d1 execute naka-ai-db --remote --command "SELECT user_id, provider, provider_uid, email FROM auth_identities WHERE provider_uid = '+66812345678' OR email = 'shop@example.com'"
-
-npx wrangler d1 execute naka-ai-db --remote --command "INSERT OR REPLACE INTO subscriptions (user_id, plan_id) VALUES ('<user-id>', 'pro')"
-```
-
-แล้วเติมเครดิตตามแพ็กเกจด้วย `/api/admin/credits` (ข้อ 5) · plan id: `starter`, `pro`, `business`, `max`
+ลูกค้าซื้อเองได้ที่ `/app/billing/` (PromptPay/บัตร ผ่าน Stripe) ระบบเปิดแพ็กเกจ เติมเครดิตรายเดือน และหมดอายุให้อัตโนมัติ
+ถ้าลูกค้าโอนเงินนอกระบบ หรือต้องเติมเครดิต/ระงับบัญชี ใช้หน้า **`https://naka-ai.com/admin/customers/`**
+(กรอก `ADMIN_TOKEN` ครั้งเดียว ปิดแท็บแล้วต้องกรอกใหม่): ค้นด้วยเบอร์ `08…` อีเมล หรือชื่อ → เปิดรายละเอียด →
+เติมเครดิต / เปิดหรือต่อแพ็กเกจ 1–12 เดือน / ระงับหรือเปิดบัญชี ทุกฟอร์มต้องใส่เหตุผลและกดยืนยัน ทุกการกระทำมีบันทึกในหน้าลูกค้า
+การเปิดแพ็กเกจจากหน้านี้ไม่ออกใบเสร็จ (ไม่มีการชำระผ่านระบบ)
 
 ## สิ่งที่ยังไม่มี (ไม่ขวางการเปิดใช้)
 
 - ใบกำกับภาษีเต็มรูป (ต้องเก็บข้อมูลผู้ซื้อ ตอนนี้ออกด้วยมือ), ส่งใบเสร็จทางอีเมล, ใบลดหนี้
-- เครดิตฟรีตอนสมัคร
 - ราคาเครดิตของละคร/AI Live (ขึ้นกับต้นทุน Wan)
 - TikTok (รอ audit), Shopee (ไม่มี API วิดีโอ)
