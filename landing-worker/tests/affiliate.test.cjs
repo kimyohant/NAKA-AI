@@ -112,6 +112,21 @@ test("a refused script fails the job at once and refunds the seller", async () =
   assert.equal(await credits.getBalance(db, "u1"), 5);
 });
 
+test("an Anthropic rejection is stored and logged by status code, never by its message", async () => {
+  const { default: Anthropic } = require("@anthropic-ai/sdk");
+  await credits.grantCredits(db, "u1", 5, "grant");
+  const { jobId } = await jobs.enqueueJob(db, { userId: "u1", kind: affiliate.AFFILIATE_JOB_KIND, input: brief, costCredits: 1 });
+  const handler = affiliate.makeAffiliateHandler(env, async () => {
+    throw new Anthropic.BadRequestError(400, undefined, "bad request echoing สบู่มะลิ 129 บาท", new Headers());
+  });
+  const logged = [];
+  const consoleError = mock.method(console, "error", (...args) => { logged.push(args.map(String).join(" ")); });
+  try { await jobs.runQueue(db, { [affiliate.AFFILIATE_JOB_KIND]: handler }); } finally { consoleError.mock.restore(); }
+  const row = sqlite.prepare("SELECT status, error FROM jobs WHERE id = ?").get(jobId);
+  assert.deepEqual({ ...row }, { status: "failed", error: "anthropic 400" });
+  assert.ok(!logged.join("\n").includes("สบู่มะลิ"), "the product details stay out of the logs");
+});
+
 test("the API enqueues, reports queue position, and hides failures and other users' jobs", async () => {
   const call = (method, pathname, body, userId = "u1") => affiliate.handleAffiliateApi(
     new Request(`https://naka-ai.com${pathname}`, {

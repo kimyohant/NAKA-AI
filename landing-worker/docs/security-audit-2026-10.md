@@ -11,10 +11,10 @@
 | 1 | ชำระแพ็กเกจเดียวกันพร้อมกัน | แก้แล้ว · deploy 2026-10-01 (version `8040aef2`) | `da67c1e` |
 | 2 | คำขอลิงก์รีเซ็ตพร้อมกันข้าม limit | แก้แล้ว · รอ deploy | `01c0b4e` |
 | 3 | worker ที่ lease หมดเขียนทับ attempt ใหม่ | แก้แล้ว · รอ deploy | `50301c3` |
-| 4 | webhook อ่าน body ก่อนตรวจขนาด | กำลังแก้ (`fix/audit-low-items`) | |
-| 5 | error อาจพาข้อมูลลูกค้าเข้า log | กำลังแก้ (`fix/audit-low-items`) | |
+| 4 | webhook อ่าน body ก่อนตรวจขนาด | แก้แล้ว · รอ deploy | `b3746a4` |
+| 5 | error อาจพาข้อมูลลูกค้าเข้า log | แก้แล้ว (รวมข้อความ Anthropic ใน `src/affiliate.ts`) · รอ deploy | `b3746a4`, ดู commit ถัดไป |
 | 6 | rate limiter อื่นนับก่อนเขียน | แก้แล้ว (ล็อกอิน, สมัคร, เปลี่ยนรหัส, เดา token รีเซ็ต, เปิด Checkout) · รอ deploy | `481ffe7` |
-| 7 | token แอดมินเทียบไม่ constant-time | กำลังแก้ (`fix/audit-low-items`) | |
+| 7 | token แอดมินเทียบไม่ constant-time | แก้แล้ว · รอ deploy | `b3746a4` |
 
 ## ข้อค้นพบ
 

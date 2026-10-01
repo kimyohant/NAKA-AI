@@ -235,9 +235,12 @@ export function makeAffiliateHandler(
     try {
       script = parseReviewScript(await generate(input, env.ANTHROPIC_API_KEY), input.imageCount);
     } catch (error) {
-      if (error instanceof PermanentJobError || error instanceof Anthropic.BadRequestError ||
-          error instanceof Anthropic.AuthenticationError || error instanceof Anthropic.PermissionDeniedError) {
-        throw new PermanentJobError(error.message);
+      if (error instanceof PermanentJobError) throw error;
+      // A PermanentJobError's message is stored and logged, so Anthropic's message (which can
+      // echo the product details) is replaced by its status code.
+      if (error instanceof Anthropic.BadRequestError || error instanceof Anthropic.AuthenticationError ||
+          error instanceof Anthropic.PermissionDeniedError) {
+        throw new PermanentJobError(`anthropic ${error.status}`);
       }
       throw error;
     }
