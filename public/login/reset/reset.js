@@ -91,6 +91,7 @@
       }
       if (response.status === 429) {
         setStatus((data && data.error) || "ลองผิดหลายครั้งเกินไป รอสักครู่แล้วลองใหม่อีกครั้ง");
+        resetBotCheck();
         return;
       }
       // 400 covers a bad/expired/used link and a password that breaks the rules.
