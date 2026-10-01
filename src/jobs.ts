@@ -86,7 +86,8 @@ export async function enqueueJob(db: D1Database, req: EnqueueInput): Promise<Enq
   return { ok: false, reason: (balance?.balance ?? 0) < req.costCredits ? "insufficient_credits" : "too_many_jobs" };
 }
 
-/** Atomically move the next runnable job to 'running' with a lease. Null when the queue is empty. */
+/** Atomically move the next runnable job to 'running' with a lease. Null when the queue is empty.
+ * The returned `attempts` is the worker's fencing token — pass it back to completeJob/failJob. */
 export async function claimNextJob(db: D1Database, leaseSeconds = 300): Promise<Job | null> {
   return db
     .prepare(
@@ -101,51 +102,59 @@ export async function claimNextJob(db: D1Database, leaseSeconds = 300): Promise<
     .first<Job>();
 }
 
-export async function completeJob(db: D1Database, jobId: string, output: unknown, providerCostUsd?: number): Promise<void> {
-  await db
+/**
+ * Mark the job done — only if this worker still owns the attempt. `expectedAttempts` is the
+ * fencing token from claimNextJob; a worker that overstayed its lease and lost the job to
+ * recovery is fenced out and returns false without writing anything.
+ */
+export async function completeJob(db: D1Database, jobId: string, expectedAttempts: number, output: unknown, providerCostUsd?: number): Promise<boolean> {
+  const result = await db
     .prepare(
       `UPDATE jobs SET status = 'done', output = ?, provider_cost_usd = ?, lease_until = NULL, error = NULL,
          updated_at = datetime('now'), finished_at = datetime('now')
-       WHERE id = ? AND status = 'running'`,
+       WHERE id = ? AND status = 'running' AND attempts = ?`,
     )
-    .bind(JSON.stringify(output ?? null), providerCostUsd ?? null, jobId)
+    .bind(JSON.stringify(output ?? null), providerCostUsd ?? null, jobId, expectedAttempts)
     .run();
+  return result.meta.changes === 1;
 }
 
 /**
- * Record a failed attempt. A retryable failure with attempts left goes back to the queue
- * with exponential backoff; otherwise the job fails and its hold is refunded.
+ * Record a failed attempt — only if this worker still owns it (`expectedAttempts` fences out
+ * workers whose lease was taken over). A retryable failure with attempts left goes back to the
+ * queue with exponential backoff; otherwise the job fails and its hold is refunded exactly once.
  */
-export async function failJob(db: D1Database, jobId: string, error: string, retryable = true): Promise<JobStatus | null> {
+export async function failJob(db: D1Database, jobId: string, expectedAttempts: number, error: string, retryable = true): Promise<JobStatus | null> {
   const message = error.slice(0, MAX_ERROR_LENGTH);
   const [retried] = await db.batch([
     db
       .prepare(
         `UPDATE jobs SET status = 'queued', lease_until = NULL, error = ?1, updated_at = datetime('now'),
            run_after = datetime('now', '+' || MIN(?2 * (1 << (attempts - 1)), ?3) || ' seconds')
-         WHERE id = ?4 AND status = 'running' AND ?5 AND attempts < max_attempts`,
+         WHERE id = ?4 AND status = 'running' AND attempts = ?5 AND ?6 AND attempts < max_attempts`,
       )
-      .bind(message, BASE_RETRY_SECONDS, MAX_RETRY_SECONDS, jobId, retryable ? 1 : 0),
+      .bind(message, BASE_RETRY_SECONDS, MAX_RETRY_SECONDS, jobId, expectedAttempts, retryable ? 1 : 0),
     db
       .prepare(
         `UPDATE jobs SET status = 'failed', lease_until = NULL, error = ?1,
            updated_at = datetime('now'), finished_at = datetime('now')
-         WHERE id = ?2 AND status = 'running'`,
+         WHERE id = ?2 AND status = 'running' AND attempts = ?3`,
       )
-      .bind(message, jobId),
-    refundStatement(db, jobId),
+      .bind(message, jobId, expectedAttempts),
+    refundStatement(db, jobId, expectedAttempts),
   ]);
   if (retried.meta.changes === 1) return "queued";
   const row = await db.prepare("SELECT status FROM jobs WHERE id = ?").bind(jobId).first<{ status: JobStatus }>();
   return row?.status ?? null;
 }
 
-/** Jobs whose worker died mid-run: count the lost attempt and retry or fail them. */
+/** Jobs whose worker died mid-run: count the lost attempt and retry or fail them.
+ * The attempt number read here is the fencing token that keeps the stalled worker out. */
 export async function recoverExpiredLeases(db: D1Database): Promise<number> {
   const { results } = await db
-    .prepare("SELECT id FROM jobs WHERE status = 'running' AND lease_until < datetime('now')")
-    .all<{ id: string }>();
-  for (const { id } of results) await failJob(db, id, "worker lease expired");
+    .prepare("SELECT id, attempts FROM jobs WHERE status = 'running' AND lease_until < datetime('now')")
+    .all<{ id: string; attempts: number }>();
+  for (const { id, attempts } of results) await failJob(db, id, attempts, "worker lease expired");
   return results.length;
 }
 
@@ -178,15 +187,16 @@ export async function runQueue(
 async function runJob(db: D1Database, handlers: Record<string, JobHandler>, job: Job): Promise<void> {
   const handler = Object.hasOwn(handlers, job.kind) ? handlers[job.kind] : undefined;
   if (!handler) {
-    await failJob(db, job.id, `no handler for kind '${job.kind}'`, false);
+    await failJob(db, job.id, job.attempts, `no handler for kind '${job.kind}'`, false);
     return;
   }
   try {
     const { output, providerCostUsd } = await handler(job);
-    await completeJob(db, job.id, output, providerCostUsd);
+    const applied = await completeJob(db, job.id, job.attempts, output, providerCostUsd);
+    if (!applied) console.error("job fencing: discarded result from a worker that lost its lease", job.id, job.kind);
   } catch (err) {
     console.error("job failed", job.id, job.kind, err);
-    await failJob(db, job.id, err instanceof Error ? err.message : String(err), !(err instanceof PermanentJobError));
+    await failJob(db, job.id, job.attempts, err instanceof Error ? err.message : String(err), !(err instanceof PermanentJobError));
   }
 }
 
@@ -209,12 +219,14 @@ export async function getJobForUser(db: D1Database, jobId: string, userId: strin
   return { job, ahead };
 }
 
-function refundStatement(db: D1Database, jobId: string) {
-  // The unique (job_id, reason) index makes a second refund a no-op.
+function refundStatement(db: D1Database, jobId: string, expectedAttempts: number) {
+  // The unique (job_id, reason) index makes a second refund a no-op, and the attempts guard
+  // pairs the refund with the failed attempt this call claimed — a fenced worker never
+  // refunds an attempt it no longer owns.
   return db
     .prepare(
       `INSERT OR IGNORE INTO credit_ledger (user_id, delta, reason, job_id)
-       SELECT user_id, cost_credits, 'job_refund', id FROM jobs WHERE id = ? AND status = 'failed'`,
+       SELECT user_id, cost_credits, 'job_refund', id FROM jobs WHERE id = ? AND status = 'failed' AND attempts = ?`,
     )
-    .bind(jobId);
+    .bind(jobId, expectedAttempts);
 }
