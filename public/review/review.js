@@ -24,6 +24,11 @@
   if (demo) $('demo-note').hidden = false;
   const prefilledName = new URLSearchParams(location.search).get('name');
   if (prefilledName) $('review-name').value = prefilledName.slice(0, 160);
+  const savedJobId = !demo && new URLSearchParams(location.search).get('job');
+  if (savedJobId) {
+    showWorking('กำลังตรวจสถานะงานเดิม…');
+    poll(savedJobId, true);
+  }
 
   function show(el, visible) { el.hidden = !visible; }
   function setError(message) { errorBox.textContent = message || ''; }
@@ -89,6 +94,9 @@
       }
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error || (response.status === 404 ? 'ระบบคลิปรีวิวยังไม่เปิดให้ใช้งาน' : 'ส่งงานไม่สำเร็จ ลองอีกครั้ง'));
+      const currentUrl = new URL(location.href);
+      currentUrl.searchParams.set('job', body.jobId);
+      history.replaceState(null, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
       showWorking('ส่งงานให้นาคาแล้ว');
       poll(body.jobId);
     } catch (err) {
@@ -103,9 +111,9 @@
     status.textContent = message;
   }
 
-  function poll(jobId) {
+  function poll(jobId, immediate = false) {
     clearTimeout(pollTimer);
-    pollTimer = setTimeout(async () => {
+    const check = async () => {
       try {
         const response = await fetch(`/api/affiliate/reviews/${encodeURIComponent(jobId)}`, { credentials: 'same-origin' });
         const body = await response.json().catch(() => ({}));
@@ -119,7 +127,9 @@
         status.textContent = `${err.message} กำลังลองใหม่…`;
       }
       poll(jobId);
-    }, POLL_MS);
+    };
+    if (immediate) void check();
+    else pollTimer = setTimeout(check, POLL_MS);
   }
 
   function fail(message) {
@@ -156,6 +166,13 @@
   }
 
   $('render-button').addEventListener('click', async () => {
+    // A job reopened from /app/ has no photos: they never leave this device. Never
+    // fall back to the site's sample photos for a real job — that would be another product.
+    if (!photos.length && !demo) {
+      setError('รูปสินค้าเก็บไว้บนเครื่องเท่านั้น กรุณาเลือกรูปสินค้าเดิมอีกครั้งด้านบน แล้วกดสร้างวิดีโอ');
+      fileInput.focus();
+      return;
+    }
     if (!window.NakaReviewRender.pickMimeType()) {
       return setError('เบราว์เซอร์นี้สร้างวิดีโอไม่ได้ ลองใช้ Chrome, Edge หรือ Safari รุ่นใหม่');
     }

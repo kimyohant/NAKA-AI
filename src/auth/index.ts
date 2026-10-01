@@ -1,19 +1,26 @@
 import type { Env } from '../types';
 import { getBalance } from '../credits';
 import { appOrigin, AuthError, json, secret } from './common';
+import { emailProvider } from './email';
 import { googleCallback, googleStart } from './google';
+import { lineCallback, lineStart } from './line';
 import { requestOtp, verifyOtp } from './otp';
+import { changePassword, forgotPassword, hasPassword, loginWithPassword, registerWithPassword, resetPassword } from './password';
+import { smsProvider } from './sms';
 import { logout, requireUser } from './session';
 
 export { requireUser } from './session';
 
-export async function handleAuth(request: Request, env: Env, url: URL): Promise<Response | null> {
+export async function handleAuth(request: Request, env: Env, url: URL, ctx?: ExecutionContext): Promise<Response | null> {
   if (url.pathname !== '/api/auth' && !url.pathname.startsWith('/api/auth/')) return null;
   let response: Response;
   try {
     const paths: Record<string, string> = {
       '/api/auth/otp/request': 'POST', '/api/auth/otp/verify': 'POST',
       '/api/auth/google/start': 'GET', '/api/auth/google/callback': 'GET',
+      '/api/auth/line/start': 'GET', '/api/auth/line/callback': 'GET',
+      '/api/auth/password/register': 'POST', '/api/auth/password/login': 'POST', '/api/auth/password/change': 'POST',
+      '/api/auth/password/forgot': 'POST', '/api/auth/password/reset': 'POST',
       '/api/auth/me': 'GET', '/api/auth/logout': 'POST', '/api/auth/config': 'GET',
     };
     const method = paths[url.pathname];
@@ -31,12 +38,31 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
         case '/api/auth/otp/verify': response = await verifyOtp(request, env); break;
         case '/api/auth/google/start': response = await googleStart(request, env); break;
         case '/api/auth/google/callback': response = await googleCallback(request, env, url); break;
+        case '/api/auth/line/start': response = await lineStart(request, env); break;
+        case '/api/auth/line/callback': response = await lineCallback(request, env, url); break;
+        case '/api/auth/password/register': response = await registerWithPassword(request, env); break;
+        case '/api/auth/password/login': response = await loginWithPassword(request, env); break;
+        case '/api/auth/password/forgot': response = await forgotPassword(request, env, ctx); break;
+        case '/api/auth/password/reset': response = await resetPassword(request, env); break;
+        case '/api/auth/password/change': {
+          const user = await requireUser(request, env);
+          response = user ? await changePassword(request, env, user) : json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
+          break;
+        }
         case '/api/auth/logout': response = await logout(request, env); break;
         // Public login settings. The Turnstile secret never leaves the Worker.
-        case '/api/auth/config': response = json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY?.trim() || null }); break;
+        // Which sign-in methods are configured, so the page never offers one that can only fail.
+        case '/api/auth/config': response = json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY?.trim() || null,
+          lineLogin: !!env.LINE_LOGIN_CHANNEL_ID?.trim() && !!env.LINE_LOGIN_CHANNEL_SECRET?.trim(),
+          googleLogin: !!env.GOOGLE_CLIENT_ID?.trim() && !!env.GOOGLE_CLIENT_SECRET?.trim(),
+          phoneLogin: phoneConfigured(env), passwordLogin: true, passwordReset: emailConfigured(env) }); break;
         default: {
           const user = await requireUser(request, env);
-          response = user ? json({ user, credits: await getBalance(env.DB, user.id) }) : json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
+          if (user) {
+            const password = await hasPassword(env, user.id);
+            response = json({ user, credits: await getBalance(env.DB, user.id),
+              ...(password === undefined ? {} : { hasPassword: password }) });
+          } else response = json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
         }
       }
     }
@@ -53,4 +79,12 @@ export async function handleAuth(request: Request, env: Env, url: URL): Promise<
   response.headers.set('Referrer-Policy', 'no-referrer');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   return response;
+}
+
+function phoneConfigured(env: Env): boolean {
+  try { smsProvider(env); return true; } catch { return false; }
+}
+
+function emailConfigured(env: Env): boolean {
+  try { emailProvider(env); return true; } catch { return false; }
 }

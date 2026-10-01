@@ -58,17 +58,10 @@
         <h2 id="pay-title">ชำระเงิน</h2>
         <p class="pay-summary" id="pay-summary">เลือกแพ็กเกจด้านบนก่อน</p>
         <div class="pay-buttons">
-          <button class="primary-button" type="button" id="pay-promptpay" disabled>จ่ายด้วย PromptPay (สแกน QR)</button>
-          <button class="secondary-button" type="button" id="pay-card" disabled>จ่ายด้วยบัตรเครดิต/เดบิต</button>
-        </div>
-        <div class="qr-box" id="qr-box" hidden>
-          <img id="qr-image" alt="QR PromptPay สำหรับชำระเงิน" width="260" height="260">
-          <p class="qr-amount" id="qr-amount"></p>
-          <p class="hint" id="qr-countdown"></p>
-          <p class="hint">สแกนด้วยแอปธนาคารใดก็ได้ หน้านี้จะอัปเดตเองเมื่อชำระเสร็จ</p>
+          <button class="primary-button" type="button" id="pay-now" disabled>ไปหน้าชำระเงิน (PromptPay หรือบัตร)</button>
         </div>
         <p class="form-status" id="pay-status" role="status" aria-live="polite"></p>
-        <p class="hint">ชำระเงินผ่าน Omise (Opn Payments) ระบบไม่ได้เก็บข้อมูลบัตรของคุณ · ต้องการใบกำกับภาษีเต็มรูปหรือมีคำถาม โทร <a href="tel:+66892788587">089-278-8587</a></p>
+        <p class="hint">ชำระเงินบนหน้าที่ปลอดภัยของ Stripe ระบบไม่ได้เก็บข้อมูลบัตรของคุณ · ต้องการใบกำกับภาษีเต็มรูปหรือมีคำถาม โทร <a href="tel:+66892788587">089-278-8587</a></p>
       </section>
 
       <section class="receipts" id="receipts" aria-labelledby="receipts-title" hidden>
@@ -76,6 +69,7 @@
         <ul class="receipt-list" id="receipt-list"></ul>
       </section>
     </div>
+    <p class="legal-links" style="text-align:center;font-size:12.5px;color:#9fb4d6;margin:32px 0 24px"><a href="/legal/terms/">ข้อกำหนด</a> · <a href="/legal/refund/">นโยบายคืนเงิน</a> · <a href="/legal/privacy/">ความเป็นส่วนตัว</a></p>
   </main>
 </body>
 </html>

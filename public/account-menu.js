@@ -250,6 +250,13 @@
     dashboard.textContent = "แดชบอร์ดของฉัน";
     menu.appendChild(dashboard);
 
+    var account = document.createElement("a");
+    account.className = "acct-item";
+    account.href = "/app/account/";
+    account.setAttribute("role", "menuitem");
+    account.textContent = "บัญชีของฉัน";
+    menu.appendChild(account);
+
     menu.appendChild(
       menuItem("ออกจากระบบ", async function () {
         var result = await signOut();
@@ -315,6 +322,9 @@
   function renderAll(state) {
     var signedIn = !!state && state.status === "signed-in";
     document.querySelectorAll("[data-account-menu]").forEach(function (container) {
+      // .acct marks "inside the menu" for the outside-click handler (and positions the dropdown);
+      // without it the click that opens the menu also closes it.
+      container.classList.add("acct");
       container.textContent = "";
       if (signedIn) renderUser(container, state);
       else renderLogin(container);

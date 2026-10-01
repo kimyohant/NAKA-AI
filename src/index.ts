@@ -1,9 +1,12 @@
 import { AFFILIATE_JOB_KIND, handleAffiliateApi, makeAffiliateHandler } from "./affiliate";
 import { runSalesAgent } from "./agent";
-import { handleBilling, handleOmiseWebhook, runBillingCron } from "./billing";
+import { handleBilling, handleStripeWebhook, runBillingCron } from "./billing";
 import { backfillReceipts, handleReceipts } from "./receipts";
 import { handleOnboarding } from "./onboarding";
+import { handleAdminCustomers } from "./admin/customers";
+import { handleWorks } from "./works";
 import { handleAuth, requireUser } from "./auth";
+import { constantTimeEqual } from "./auth/common";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
 import { drainInbox, handleInbox, handleMetaWebhook, INBOX_JOB_KIND, makeInboxHandler } from "./inbox";
@@ -27,7 +30,14 @@ export default {
   async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
 
-    const authResponse = await handleAuth(request, env, url);
+    // www serves the same Worker, but sign-in, cookies and CSRF checks belong to APP_ORIGIN only:
+    // send every www request to the main domain instead of failing its logins and logouts.
+    const main = (() => { try { return new URL(env.APP_ORIGIN); } catch { return null; } })();
+    if (main && url.hostname === `www.${main.hostname}`) {
+      return Response.redirect(`${main.origin}${url.pathname}${url.search}`, request.method === "GET" || request.method === "HEAD" ? 301 : 308);
+    }
+
+    const authResponse = await handleAuth(request, env, url, ctx);
     if (authResponse) return authResponse;
 
     if (url.pathname.startsWith("/api/affiliate/")) {
@@ -56,13 +66,18 @@ export default {
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
       return (await handleReceipts(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
     }
+    if (url.pathname === "/api/works") {
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleWorks(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
     if (url.pathname === "/api/onboarding") {
       const user = await requireUser(request, env);
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
       return (await handleOnboarding(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
     }
-    // Omise signs its webhook (Omise-Signature); the charge is re-read from Omise before use.
-    if (url.pathname === "/webhook/omise") return handleOmiseWebhook(request, env);
+    // Stripe signs its webhook (Stripe-Signature); the session is re-read from Stripe before use.
+    if (url.pathname === "/webhook/stripe") return handleStripeWebhook(request, env);
     // Meta authenticates with X-Hub-Signature-256, not a session.
     if (url.pathname === "/webhook/meta") return handleMetaWebhook(request, env, ctx);
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);
@@ -79,14 +94,16 @@ export default {
       return new Response(request.method === "HEAD" ? null : compressed.body, { status: compressed.status, headers });
     }
     if (url.pathname.startsWith("/api/admin/")) {
-      const auth = request.headers.get("Authorization");
-      if (!env.ADMIN_TOKEN || auth !== `Bearer ${env.ADMIN_TOKEN}`) return json({ error: "unauthorized" }, 401);
+      const auth = request.headers.get("Authorization") ?? "";
+      if (!env.ADMIN_TOKEN || !constantTimeEqual(auth, `Bearer ${env.ADMIN_TOKEN}`)) return json({ error: "unauthorized" }, 401);
       if (url.pathname === "/api/admin/studio") return handleStudio(request, env);
       try {
+        const customerResponse = await handleAdminCustomers(request, env, url);
+        if (customerResponse) return customerResponse;
         return await handleAdmin(request, env, url);
       } catch (err) {
         console.error("admin error", err);
-        return json({ error: String(err) }, 500);
+        return json({ error: "internal error" }, 500);
       }
     }
     return env.ASSETS.fetch(request);

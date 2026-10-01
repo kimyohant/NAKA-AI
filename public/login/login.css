@@ -84,6 +84,16 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 }
 .provider-button:hover { background: #fff; transform: translateY(-1px); }
 .provider-button svg { width: 19px; height: 19px; flex-shrink: 0; }
+.provider-button[hidden], .divider[hidden], #otp-form[hidden], #password-form[hidden], .field[hidden] { display: none; }
+#password-form { display: grid; gap: 14px; }
+#otp-form { margin-top: 18px; }
+.pw-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 999px; background: #ffffff12; }
+.pw-tabs button { border: 0; border-radius: 999px; padding: 9px 12px; background: none; color: #b9cdec; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.pw-tabs button[aria-selected="true"] { background: #eaf4ff; color: #0e2350; }
+.optional { color: #8ba2c6; font-weight: 500; }
+.line-button { margin-bottom: 10px; border-color: #06c755; background: #06c755; color: #fff; }
+.line-button:hover { background: #05b94e; }
+.line-mark { font-family: Arial, sans-serif; font-size: 11px; font-weight: 800; letter-spacing: -.04em; }
 
 .divider { display: flex; align-items: center; gap: 14px; margin: 20px 0; color: #8ba2c6; font-size: 12px; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #ffffff26; }

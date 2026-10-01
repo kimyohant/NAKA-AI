@@ -99,9 +99,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid #87d9fa; outline-offs
   .greeting-mascot { width: 88px; }
 }
 @media (max-width: 560px) {
-  .app-topbar { padding: 0 18px; gap: 12px; }
+  /* Two rows on phones: brand + account menu, then the nav, so nothing overflows 360px. */
+  .app-topbar { height: auto; flex-wrap: wrap; padding: 10px 18px 0; gap: 0 12px; }
   .header-divider, .topbar-label { display: none; }
-  .topbar-nav { gap: 16px; font-size: 12.5px; }
+  .app-topbar [data-account-menu] { margin-left: auto; }
+  .topbar-nav { order: 1; width: 100%; margin-left: 0; justify-content: space-between; gap: 12px; font-size: 12.5px; overflow-x: auto; }
   .workflow-cards { grid-template-columns: 1fr; }
   .greeting { flex-direction: column-reverse; }
   .greeting-mascot { align-self: flex-end; }

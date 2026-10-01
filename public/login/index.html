@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#091736">
   <title>เข้าสู่ระบบ — naka-ai</title>
-  <meta name="description" content="เข้าสู่ระบบ naka-ai ด้วยเบอร์โทรหรือบัญชี Google เพื่อเริ่มทำคลิปขาย ละครสั้น AI ไลฟ์ และบอตตอบลูกค้าของร้านคุณ">
+  <meta name="description" content="เข้าสู่ระบบ naka-ai ด้วย LINE, Google หรือเบอร์โทร เพื่อเริ่มทำคลิปขาย ละครสั้น AI ไลฟ์ และบอตตอบลูกค้าของร้านคุณ">
   <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
   <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,21 +28,47 @@
     <section class="auth-card" aria-labelledby="auth-title">
       <p class="eyebrow">เข้าสู่ระบบ / สมัครใช้งาน</p>
       <h1 id="auth-title">ยินดีต้อนรับสู่ naka-ai</h1>
-      <p class="auth-lead">ใช้เบอร์โทรของร้านหรือบัญชี Google เข้าสู่ระบบ แล้วเริ่มทำคลิปขาย ละครสั้น ไลฟ์ และบอตตอบลูกค้าได้จากที่เดียว</p>
+      <p class="auth-lead">เข้าสู่ระบบด้วยบัญชีของคุณ แล้วเริ่มทำคลิปขาย ละครสั้น ไลฟ์ และบอตตอบลูกค้าได้จากที่เดียว</p>
 
       <p id="mock-note" class="mock-note" hidden>โหมดทดลอง (mock): ข้อมูลอยู่บนเครื่องนี้เท่านั้น — ใส่เบอร์ใดก็ได้ แล้วยืนยันด้วยตัวเลข 6 หลักใดก็ได้</p>
       <p id="form-error" class="form-error" role="status" aria-live="polite"></p>
 
+      <a id="line-button" class="provider-button line-button" href="/api/auth/line/start" hidden>
+        <span class="line-mark" aria-hidden="true">LINE</span>
+        <span>เข้าสู่ระบบด้วย LINE</span>
+      </a>
       <a id="google-button" class="provider-button" href="/api/auth/google/start">
         <svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.32A9 9 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.96H.96a9 9 0 0 0 0 8.08l3.01-2.32Z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.42 0 9 0A9 9 0 0 0 .96 4.96l3.01 2.32C4.68 5.16 6.66 3.58 9 3.58Z"/></svg>
         <span>เข้าสู่ระบบด้วย Google</span>
       </a>
 
-      <div class="divider" aria-hidden="true"><span>หรือ</span></div>
+      <div class="divider" id="login-divider" aria-hidden="true"><span>หรือ</span></div>
+
+      <form id="password-form" novalidate>
+        <div class="pw-tabs" role="tablist" aria-label="เข้าสู่ระบบหรือสมัครสมาชิก">
+          <button type="button" role="tab" id="pw-tab-login" aria-selected="true">เข้าสู่ระบบ</button>
+          <button type="button" role="tab" id="pw-tab-register" aria-selected="false">สมัครสมาชิก</button>
+        </div>
+        <div class="field" id="pw-name-field" hidden>
+          <label for="pw-name">ชื่อร้าน <span class="optional">(ไม่บังคับ)</span></label>
+          <input id="pw-name" name="name" type="text" autocomplete="organization" maxlength="160" placeholder="เช่น ร้านนาคาของฝาก">
+        </div>
+        <div class="field">
+          <label for="pw-email">อีเมล</label>
+          <input id="pw-email" name="email" type="email" inputmode="email" autocomplete="username" maxlength="254" placeholder="you@example.com" required>
+        </div>
+        <div class="field">
+          <label for="pw-password">รหัสผ่าน</label>
+          <input id="pw-password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required>
+          <p class="field-help" id="pw-help">ลืมรหัสผ่าน? โทร <a href="tel:+66892788587">089-278-8587</a> ให้ทีมงานตั้งรหัสใหม่ให้</p>
+        </div>
+        <button class="primary-button" id="pw-submit" type="submit">เข้าสู่ระบบ</button>
+      </form>
+
+      <!-- Cloudflare Turnstile renders here when /api/auth/config returns a site key -->
+      <div class="turnstile-box" id="turnstile-box" hidden></div>
 
       <form id="otp-form" novalidate>
-        <!-- Cloudflare Turnstile renders here when /api/auth/config returns a site key -->
-        <div class="turnstile-box" id="turnstile-box" hidden></div>
         <div class="field" id="step-phone">
           <label for="phone">เบอร์โทรของร้าน</label>
           <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0812345678" required>
@@ -62,6 +88,7 @@
       </form>
 
       <p class="fine-print">ระบบจะจำการเข้าสู่ระบบบนอุปกรณ์นี้ไว้ราว 30 วัน ก่อนขอให้เข้าสู่ระบบอีกครั้ง</p>
+      <p class="fine-print">การเข้าสู่ระบบถือว่ายอมรับ<a href="/legal/terms/">ข้อกำหนดการใช้บริการ</a>และ<a href="/legal/privacy/">นโยบายความเป็นส่วนตัว</a></p>
     </section>
 
     <aside class="auth-showcase" aria-label="สิ่งที่ร้านจะได้จาก naka-ai">

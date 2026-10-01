@@ -1,0 +1,43 @@
+.works-section {
+  margin: 28px 0 64px;
+  padding: 24px;
+  border: 1px solid #ffffff22;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .055);
+}
+.works-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.works-heading .panel-label { margin-bottom: 4px; }
+.works-heading h2 { margin: 0; font-family: "IBM Plex Sans Thai", sans-serif; font-size: 23px; letter-spacing: -.03em; }
+.works-button {
+  flex: none;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #ffffff40;
+  border-radius: 999px;
+  background: #ffffff08;
+  color: #eaf3ff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.works-button:hover { background: #ffffff16; border-color: #ffffff70; }
+.works-button:disabled { opacity: .6; cursor: wait; }
+.works-message { margin: 20px 0 0; color: #b9cdec; font-size: 14px; line-height: 1.7; }
+.works-message a { color: #a9e2fb; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.works-list { list-style: none; padding: 0; margin: 16px 0 0; }
+.works-list:empty { margin: 0; }
+.works-item { display: flex; align-items: center; gap: 18px; padding: 15px 0; border-top: 1px solid #ffffff1e; }
+.works-info { min-width: 0; flex: 1; }
+.works-name { display: block; overflow-wrap: anywhere; font-size: 15px; font-weight: 700; }
+.works-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; color: #b9cdec; font-size: 12px; }
+.works-status { color: #b7e5f8; }
+.works-status.is-failed { color: #ffb4a6; }
+.works-open { flex: none; min-height: 44px; display: inline-flex; align-items: center; padding: 8px 14px; border: 1px solid #a9e2fb66; border-radius: 999px; color: #a9e2fb; font-size: 13px; font-weight: 700; }
+.works-open:hover { background: #a9e2fb1a; }
+.works-more { display: block; margin: 14px auto 0; }
+.works-more[hidden] { display: none; }
+@media (max-width: 560px) {
+  .works-section { padding: 20px 16px; }
+  .works-heading h2 { font-size: 21px; }
+  .works-item { align-items: flex-start; gap: 8px; }
+  .works-open { padding-inline: 11px; }
+}
