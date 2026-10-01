@@ -203,6 +203,16 @@ test("renewing the same package extends it; the cron tops up monthly and ends ex
   assert.equal((await credits.getPlan(db, "u1")).id, "free");
 });
 
+test("two payments for the same package applied at the same time add up to two periods", async () => {
+  const first = await checkout("pro");
+  const second = await checkout("pro");
+  // Both read the subscription before either writes it, as concurrent webhooks or polls can.
+  assert.deepEqual(await Promise.all([billing.applyPayment(env, first.body.paymentId), billing.applyPayment(env, second.body.paymentId)]), [true, true]);
+  const t = Math.floor(Date.now() / 1000);
+  assert.ok(sub().expires_at >= t + 59 * 86400, "the second payment extends the first");
+  assert.equal(await credits.getBalance(db, "u1"), 80, "only the first payment tops up");
+});
+
 test("a Stripe error fails the checkout; unconfigured, cross-site and too many open checkouts are refused", async () => {
   http.mock.mockImplementation(async () => { throw new TypeError("network down"); });
   assert.equal((await call("/checkout", { method: "POST", user: "u9", body: { planId: "pro", period: "monthly" } })).status, 502);
