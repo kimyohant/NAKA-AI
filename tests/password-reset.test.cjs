@@ -181,6 +181,18 @@ test('a limited request leaves the latest valid token untouched', async t => {
   assert.equal((await f.reset(token)).status, 200);
 });
 
+test('concurrent forgot requests cannot pass the limit together', async t => {
+  const f = setup(t);
+  await f.register();
+  const statuses = (await Promise.all(Array.from({ length: 6 }, () => f.forgot()))).map(r => r.status);
+  await f.flush();
+  assert.deepEqual(statuses.toSorted(), [200, 200, 200, 429, 429, 429]);
+  assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS n FROM auth_password_resets').get().n, 3);
+  assert.equal(f.emails.length, 3, 'only accepted requests send email');
+  assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS n FROM auth_password_resets WHERE used_at IS NULL').get().n, 1,
+    'one live token, the others invalidated');
+});
+
 test('ten invalid tokens are counted per IP; 11th gets 429 and Retry-After', async t => {
   const f = setup(t);
   for (let i = 0; i < 10; i++) assert.equal((await f.reset(`bad-token-${i}`)).status, 400);
