@@ -71,12 +71,29 @@ async function recentCount(env: Env, key: string, kind: 'login' | 'register', si
   return row?.n ?? 0;
 }
 
-async function record(env: Env, kind: 'login' | 'register', ...keys: string[]): Promise<void> {
+/**
+ * Records one attempt per key, but only while every key is under its limit since `since`. The
+ * limits are counted in the statement that writes, so concurrent requests cannot all pass them.
+ * Returns the recorded rows (hand them to releaseAttempts when the attempt succeeds), or null.
+ */
+async function claimAttempts(env: Env, kind: 'login' | 'register', since: number, limits: [key: string, max: number][]) {
   const t = now();
-  await env.DB.batch([
+  const keys = limits.map((_, i) => `SELECT ?${4 + 2 * i} AS key`).join(' UNION ALL ');
+  const under = limits.map((_, i) =>
+    `(SELECT COUNT(*) FROM auth_password_attempts WHERE key = ?${4 + 2 * i} AND kind = ?1 AND created_at > ?3) < ?${5 + 2 * i}`).join(' AND ');
+  const [, claimed] = await env.DB.batch([
     env.DB.prepare('DELETE FROM auth_password_attempts WHERE created_at <= ?').bind(t - 3600),
-    ...keys.map(key => env.DB.prepare('INSERT INTO auth_password_attempts (key, kind, created_at) VALUES (?, ?, ?)').bind(key, kind, t)),
+    env.DB.prepare(`INSERT INTO auth_password_attempts (key, kind, created_at) SELECT key, ?1, ?2 FROM (${keys}) WHERE ${under}`)
+      .bind(kind, t, since, ...limits.flat()),
   ]);
+  if (claimed.meta.changes !== limits.length) return null;
+  // One INSERT inside one transaction takes consecutive ids.
+  return { first: claimed.meta.last_row_id - limits.length + 1, last: claimed.meta.last_row_id };
+}
+
+/** A successful attempt does not count against the limits. */
+async function releaseAttempts(env: Env, rows: { first: number; last: number }): Promise<void> {
+  await env.DB.prepare('DELETE FROM auth_password_attempts WHERE id BETWEEN ? AND ?').bind(rows.first, rows.last).run();
 }
 
 /** Turnstile guards these forms once it is configured; until then the rate limits do. */
@@ -96,10 +113,9 @@ export async function registerWithPassword(request: Request, env: Env): Promise<
   const password = checkPassword(body.password);
   await botCheck(request, env, body.turnstileToken);
   const keys = await limitKeys(request, env, email);
-  if (await recentCount(env, keys.ip, 'register', now() - 3600) >= MAX_SIGNUPS_PER_IP) {
+  if (!await claimAttempts(env, 'register', now() - 3600, [[keys.ip, MAX_SIGNUPS_PER_IP]])) {
     throw new AuthError(429, 'สมัครบ่อยเกินไป กรุณารอสักครู่', 3600);
   }
-  await record(env, 'register', keys.ip);
 
   const userId = crypto.randomUUID();
   const t = now();
@@ -130,21 +146,17 @@ export async function loginWithPassword(request: Request, env: Env): Promise<Res
   if (typeof body.password !== 'string' || !body.password || [...body.password].length > MAX_PASSWORD) throw new AuthError(400, WRONG);
   await botCheck(request, env, body.turnstileToken);
   const keys = await limitKeys(request, env, email);
-  const since = now() - WINDOW;
-  if (await recentCount(env, keys.email, 'login', since) >= MAX_FAILS_PER_EMAIL ||
-      await recentCount(env, keys.ip, 'login', since) >= MAX_FAILS_PER_IP) {
-    throw new AuthError(429, 'ลองรหัสผ่านผิดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่', WINDOW);
-  }
+  // Claimed before the password is checked, so concurrent guesses are counted too.
+  const attempt = await claimAttempts(env, 'login', now() - WINDOW, [[keys.email, MAX_FAILS_PER_EMAIL], [keys.ip, MAX_FAILS_PER_IP]]);
+  if (!attempt) throw new AuthError(429, 'ลองรหัสผ่านผิดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่', WINDOW);
   const row = await env.DB.prepare(`SELECT i.user_id, p.hash FROM auth_identities i JOIN auth_passwords p ON p.user_id = i.user_id
     WHERE i.provider = 'password' AND i.provider_uid = ?`).bind(email).first<{ user_id: string; hash: string }>();
   const ok = await verifyPassword(body.password, row?.hash ?? await timingPadding()) && !!row;
   let user: User | null = null;
   if (ok) user = await getUser(env.DB, row!.user_id);
-  if (!user) {
-    await record(env, 'login', keys.email, keys.ip);
-    // A disabled account gets the same answer as a wrong password.
-    throw new AuthError(401, WRONG);
-  }
+  // A disabled account gets the same answer as a wrong password.
+  if (!user) throw new AuthError(401, WRONG);
+  await releaseAttempts(env, attempt);
   return json({ user }, 200, { 'Set-Cookie': await createSession(request, env, user) });
 }
 
@@ -166,19 +178,17 @@ export async function changePassword(request: Request, env: Env, user: User): Pr
 
   const keys = await limitKeys(request, env, account.email);
   const since = now() - WINDOW;
-  const failures = await recentCount(env, keys.email, 'login', since);
-  if (failures >= MAX_FAILS_PER_EMAIL || await recentCount(env, keys.ip, 'login', since) >= MAX_FAILS_PER_IP) {
-    throw new AuthError(429, 'ลองรหัสผ่านผิดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่', WINDOW);
-  }
+  const attempt = await claimAttempts(env, 'login', since, [[keys.email, MAX_FAILS_PER_EMAIL], [keys.ip, MAX_FAILS_PER_IP]]);
+  if (!attempt) throw new AuthError(429, 'ลองรหัสผ่านผิดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่', WINDOW);
   const current = body.currentPassword;
   if (typeof current !== 'string' || !current || [...current].length > MAX_PASSWORD ||
       !await verifyPassword(current, account.hash)) {
-    await record(env, 'login', keys.email, keys.ip);
-    if (failures + 1 >= MAX_FAILS_PER_EMAIL) {
+    if (await recentCount(env, keys.email, 'login', since) >= MAX_FAILS_PER_EMAIL) {
       throw new AuthError(429, 'ลองรหัสผ่านผิดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่', WINDOW);
     }
     throw new AuthError(400, 'รหัสผ่านปัจจุบันไม่ถูกต้อง');
   }
+  await releaseAttempts(env, attempt);
   const next = checkPassword(body.newPassword);
   if (next === current) throw new AuthError(400, 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม');
 
@@ -263,17 +273,15 @@ export async function resetPassword(request: Request, env: Env): Promise<Respons
   const next = checkPassword(body.newPassword);
   await botCheck(request, env, body.turnstileToken);
   const ip = (await limitKeys(request, env, '')).ip;
-  if (await recentCount(env, ip, 'login', t - WINDOW) >= 10) throw new AuthError(429, RESET_ATTEMPT_LIMIT, WINDOW);
+  const attempt = await claimAttempts(env, 'login', t - WINDOW, [[ip, 10]]);
+  if (!attempt) throw new AuthError(429, RESET_ATTEMPT_LIMIT, WINDOW);
   const token = body.token;
   const digest = typeof token === 'string' && /^[A-Za-z0-9_-]{43}$/.test(token) ? await sha256(token) : '';
   const row = await env.DB.prepare(`SELECT r.user_id FROM auth_password_resets r JOIN users u ON u.id = r.user_id
     JOIN auth_passwords p ON p.user_id = r.user_id
     WHERE r.token_hash = ? AND r.used_at IS NULL AND r.expires_at > ? AND u.status = 'active'`)
     .bind(digest, t).first<{ user_id: string }>();
-  if (!row) {
-    await record(env, 'login', ip);
-    throw new AuthError(400, RESET_INVALID);
-  }
+  if (!row) throw new AuthError(400, RESET_INVALID);
   const hash = await hashPassword(next);
   const [updated] = await env.DB.batch([
     env.DB.prepare(`UPDATE auth_passwords SET hash = ?, updated_at = ? WHERE user_id = ?
@@ -289,10 +297,8 @@ export async function resetPassword(request: Request, env: Env): Promise<Respons
       AND EXISTS (SELECT 1 FROM auth_passwords WHERE user_id = ? AND hash = ?)`)
       .bind(row.user_id, digest, row.user_id, t, row.user_id, hash),
   ]);
-  if (updated.meta.changes !== 1) {
-    await record(env, 'login', ip);
-    throw new AuthError(400, RESET_INVALID);
-  }
+  if (updated.meta.changes !== 1) throw new AuthError(400, RESET_INVALID);
+  await releaseAttempts(env, attempt);
   return json({ ok: true });
 }
 
