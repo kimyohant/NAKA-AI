@@ -5,6 +5,7 @@
  *   npx tsx scripts/test-marketer-e2e.ts                # flow เต็ม (ต้องมี text config ใน DB ก่อน)
  *   npx tsx scripts/test-marketer-e2e.ts --ingest-only  # ทดสอบเฉพาะ URL ingest (ไม่ต้องมี key)
  *   npx tsx scripts/test-marketer-e2e.ts --products=2   # จำกัดจำนวนสินค้า
+ *   flow เต็มต้องตั้ง SQLITE_PATH ไปที่สำเนา DB (ที่มี text config) หรือใส่ --use-default-db เพื่อยอมเขียนลง data/naka.sqlite3
  *
  * - แคมเปญทดสอบตั้งชื่อนำหน้า [E2E] เพื่อให้เจอ/ลบง่ายในหน้า UI
  * - รายงานเขียนที่ data/e2e/marketer-e2e-report-<ts>.json
@@ -30,6 +31,13 @@ const args = process.argv.slice(2)
 const ingestOnly = args.includes('--ingest-only')
 const limitArg = args.find(a => a.startsWith('--products='))
 const productLimit = limitArg ? Number(limitArg.split('=')[1]) : 5
+
+// 完整流程会写入 [E2E] 活动/剧集并调用付费模型：默认库（data/naka.sqlite3）即生产库，须显式确认
+if (!ingestOnly && !process.env.SQLITE_PATH && !args.includes('--use-default-db')) {
+  console.error('Refusing to run the full E2E against the default database (data/naka.sqlite3).')
+  console.error('Point SQLITE_PATH at a copy that has a text model configured, or pass --use-default-db to write [E2E] campaigns into it.')
+  process.exit(2)
+}
 
 /** สินค้าไทยจริง — url ให้ ingest เมื่อทำได้, ฟิลด์มือเป็นค่า fallback (ระบุตามของจริง) */
 const PRODUCTS = [

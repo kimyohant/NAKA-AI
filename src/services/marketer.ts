@@ -328,7 +328,7 @@ interface AgentJobOptions {
 function runCampaignAgentJob(opts: AgentJobOptions): void {
   ;(async () => {
     const agent = mastra.getAgent(opts.agentType)
-    if (!agent) throw new Error(`${opts.agentType} Agent 不可用`)
+    if (!agent) throw new AppError(`${opts.agentType} Agent 不可用`, 'E_AGENT_UNAVAILABLE')
     const requestContext = buildCampaignRequestContext({
       campaignId: opts.campaignId,
       docKinds: opts.docKinds,
@@ -363,7 +363,9 @@ function runCampaignAgentJob(opts: AgentJobOptions): void {
       })
     })
     .catch(async (err: any) => {
-      const msg = err?.message || '任务失败'
+      // 有稳定错误码时以「E_XXX: 原文」落库：契约只有 errorMsg 字符串，前端据此前缀翻译（不展示原始中文）
+      const raw = err?.message || '任务失败'
+      const msg = err?.errorCode && !raw.startsWith(err.errorCode) ? `${err.errorCode}: ${raw}` : raw
       await updateTask(opts.key, { status: 'error', errorMsg: msg, finishedAt: now() })
       await db.update(schema.campaigns)
         .set({ status: 'failed', errorMsg: msg, updatedAt: now() })
@@ -773,7 +775,7 @@ async function ensureProductProp(dramaId: number, episodeId: number, campaign: C
 /** boot 清理：进程重启后 *ing 状态不可能还在跑 → 标记失败（同 failStaleRunningTasks） */
 export async function failStaleCampaigns(): Promise<number> {
   const res = await db.update(schema.campaigns)
-    .set({ status: 'failed', errorMsg: '服务重启，任务中断，请重试', updatedAt: now() })
+    .set({ status: 'failed', errorMsg: 'E_TASK_INTERRUPTED: 服务重启，任务中断，请重试', updatedAt: now() })
     .where(inArray(schema.campaigns.status, ING_STATUSES))
   return res?.changes ?? 0
 }
