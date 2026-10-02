@@ -308,3 +308,98 @@ export const marketerAPI = {
   deleteVisual: (id: number, vid: number) => api.del(`/campaigns/${id}/visuals/${vid}`),
   promoteVisual: (id: number, vid: number) => api.post<Campaign>(`/campaigns/${id}/visuals/${vid}/promote`, {}),
 }
+
+// ===== Product Studio（สตูดิโอสินค้า）— 契约见 docs/product-studio/PLAN.md §4，JSON 为 camelCase =====
+export type StudioLanguage = 'th' | 'en' | 'id' | 'vi' | 'ms' | 'fil' | 'zh' | 'ja' | 'ko' | 'es' | 'pt' | 'ar'
+export type StudioMarket = 'TH' | 'SG' | 'MY' | 'ID' | 'VN' | 'PH' | 'US' | 'UK' | 'EU' | 'JP' | 'KR' | 'CN' | 'LATAM' | 'MENA' | 'GLOBAL'
+export type StudioPlatform = 'tiktok' | 'tiktok_shop' | 'shopee' | 'lazada' | 'facebook' | 'instagram_reels' | 'youtube_shorts' | 'amazon'
+export type StudioAspectRatio = '9:16' | '1:1' | '16:9'
+export type StudioStatus = 'draft' | 'scripting' | 'script_ready' | 'failed'
+export type MediaStatus = 'none' | 'processing' | 'completed' | 'failed'
+
+export interface StudioOptions {
+  languages: StudioLanguage[]
+  markets: { id: StudioMarket; currency: string; defaultLanguage: StudioLanguage }[]
+  platforms: { id: StudioPlatform; defaultAspect: StudioAspectRatio; maxDurationSec: number }[]
+}
+export interface StudioTemplateBeat { role: string; seconds: number }
+export interface StudioTemplate {
+  id: string
+  category: string
+  avatarMode: 'required' | 'optional' | 'hands' | 'none'
+  hasDialogue: boolean
+  defaultDurationSec: number
+  platforms: StudioPlatform[]
+  beats: StudioTemplateBeat[]
+}
+export interface StudioProject {
+  id: number; title: string
+  productName: string; productUrl: string | null; productDescription: string | null
+  productImages: string[]
+  templateId: string
+  language: StudioLanguage; market: StudioMarket; platform: StudioPlatform; aspectRatio: StudioAspectRatio
+  durationSec: number
+  avatarId: number | null
+  tone: string | null; notes: string | null
+  budgetThb: number | null
+  aiDisclosure: boolean
+  status: StudioStatus; errorMsg: string | null
+  dramaId: number | null; episodeId: number | null
+  createdAt: string; updatedAt: string
+}
+export interface StudioShot {
+  id: number                    // = storyboard id
+  number: number; role: string  // role จาก beats ของเทมเพลต
+  durationSec: number
+  dialogue: string | null       // ภาษา = project.language; null = ไม่มีเสียงพูด
+  visual: string
+  onScreenText: string | null
+  keyframeUrl: string | null; keyframeStatus: MediaStatus; keyframeError: string | null
+  videoUrl: string | null; videoStatus: MediaStatus; videoError: string | null
+}
+export interface StudioMerge { id: number; status: 'processing' | 'completed' | 'failed'; videoUrl: string | null; errorMsg: string | null; createdAt: string }
+export interface StudioAvatar {
+  id: number; name: string
+  description: string
+  locale: StudioMarket | null
+  imageUrl: string | null; imageStatus: MediaStatus; imageError: string | null
+  createdAt: string; updatedAt: string
+}
+export type StudioImageKind = 'packshot' | 'lifestyle' | 'on_model' | 'banner'
+export interface StudioImage {
+  id: number; projectId: number; kind: StudioImageKind; platform: StudioPlatform | null
+  sourceImage: string; instruction: string | null; prompt: string
+  taskId: number; status: 'processing' | 'completed' | 'failed'
+  imageUrl: string | null; errorMsg: string | null; promoted: boolean
+  createdAt: string; updatedAt: string
+}
+export type StudioDetail = StudioProject & {
+  shots: StudioShot[]; images: StudioImage[]
+  latestMerge: StudioMerge | null; avatar: StudioAvatar | null
+}
+
+export const studioAPI = {
+  options: () => api.get<StudioOptions>('/studio/options'),
+  templates: () => api.get<StudioTemplate[]>('/studio/templates'),
+  list: () => api.get<StudioProject[]>('/studio/projects'),
+  create: (data: Partial<StudioProject>) => api.post<StudioProject>('/studio/projects', data),
+  ingestUrl: (url: string) => api.post<IngestResult>('/studio/ingest-url', { url }),
+  get: (id: number) => api.get<StudioDetail>(`/studio/projects/${id}`),
+  update: (id: number, data: Partial<StudioProject>) => api.put<StudioProject>(`/studio/projects/${id}`, data),
+  del: (id: number) => api.del(`/studio/projects/${id}`),
+  // 异步（202）— 前端轮询 get 直到 status 不再是 scripting
+  script: (id: number, instruction?: string) => api.post<{ status: StudioStatus }>(`/studio/projects/${id}/script`, instruction ? { instruction } : {}),
+  updateShot: (id: number, shotId: number, data: { dialogue?: string | null; visual?: string; onScreenText?: string | null; durationSec?: number }) =>
+    api.put<StudioShot>(`/studio/projects/${id}/shots/${shotId}`, data),
+  render: (id: number, data: { stage: 'keyframes' | 'videos'; shotIds?: number[] }) => api.post<{ queued: number }>(`/studio/projects/${id}/render`, data),
+  merge: (id: number) => api.post<StudioMerge>(`/studio/projects/${id}/merge`, {}),
+  generateImages: (id: number, data: { kind: StudioImageKind; sourceImage: string; count?: number; platform?: StudioPlatform; instruction?: string }) =>
+    api.post<StudioImage[]>(`/studio/projects/${id}/images/generate`, data),
+  deleteImage: (id: number, imageId: number) => api.del(`/studio/projects/${id}/images/${imageId}`),
+  promoteImage: (id: number, imageId: number) => api.post<StudioProject>(`/studio/projects/${id}/images/${imageId}/promote`, {}),
+  avatars: () => api.get<StudioAvatar[]>('/studio/avatars'),
+  createAvatar: (data: { name: string; description: string; locale?: StudioMarket; imageUrl?: string }) => api.post<StudioAvatar>('/studio/avatars', data),
+  updateAvatar: (id: number, data: Partial<Pick<StudioAvatar, 'name' | 'description' | 'locale' | 'imageUrl'>>) => api.put<StudioAvatar>(`/studio/avatars/${id}`, data),
+  generateAvatarImage: (id: number, instruction?: string) => api.post<StudioAvatar>(`/studio/avatars/${id}/generate-image`, instruction ? { instruction } : {}),
+  deleteAvatar: (id: number) => api.del(`/studio/avatars/${id}`),
+}

@@ -32,6 +32,11 @@ export default defineNuxtConfig({
             path: '/marketer/:id',
             file: fileURLToPath(new URL('./app/views/marketer/campaign.vue', import.meta.url)),
           },
+          {
+            name: 'studio-workspace',
+            path: '/studio/:id',
+            file: fileURLToPath(new URL('./app/views/studio/workspace.vue', import.meta.url)),
+          },
         )
       },
   },

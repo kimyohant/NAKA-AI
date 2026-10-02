@@ -1,0 +1,587 @@
+<template>
+  <div class="page page-enter">
+    <!-- ===== Header ===== -->
+    <header class="ps-head">
+      <div class="ps-head-copy">
+        <p class="eyebrow">{{ t('productStudio.eyebrow') }}</p>
+        <h1 class="ps-title">{{ t('productStudio.title') }}</h1>
+        <p class="ps-sub">{{ t('productStudio.subtitle') }}</p>
+      </div>
+      <button class="btn btn-primary" type="button" @click="openCreate">
+        <Plus :size="15" :stroke-width="2.2" />
+        {{ tab === 'avatars' ? t('productStudio.avatars.create') : t('productStudio.list.new') }}
+      </button>
+    </header>
+
+    <!-- ===== Tabs ===== -->
+    <div class="ps-tabs" role="tablist" :aria-label="t('productStudio.title')">
+      <button type="button" role="tab" :aria-selected="tab === 'projects'" :class="['ps-tab', { on: tab === 'projects' }]" @click="switchTab('projects')">
+        <ShoppingBag :size="14" :stroke-width="2" />
+        {{ t('productStudio.tabs.projects') }}
+      </button>
+      <button type="button" role="tab" :aria-selected="tab === 'avatars'" :class="['ps-tab', { on: tab === 'avatars' }]" @click="switchTab('avatars')">
+        <UserRound :size="14" :stroke-width="2" />
+        {{ t('productStudio.tabs.avatars') }}
+      </button>
+    </div>
+
+    <!-- ===== Projects ===== -->
+    <template v-if="tab === 'projects'">
+      <div v-if="loading" class="ps-grid" aria-hidden="true">
+        <div v-for="i in 3" :key="i" class="ps-card skeleton-card">
+          <div class="skeleton-line w-60"></div>
+          <div class="skeleton-line w-40"></div>
+          <div class="skeleton-line w-80"></div>
+        </div>
+      </div>
+
+      <div v-else-if="projects.length" class="ps-grid">
+        <article
+          v-for="(p, i) in projects"
+          :key="p.id"
+          class="ps-card"
+          :style="{ animationDelay: `${i * 0.04}s` }"
+          tabindex="0"
+          role="button"
+          :aria-label="t('productStudio.list.openAria', { title: p.title })"
+          @click="open(p)"
+          @keydown.enter.self.prevent="open(p)"
+          @keydown.space.self.prevent="open(p)"
+        >
+          <div class="ps-card-top">
+            <div class="ps-thumb" aria-hidden="true">
+              <img v-if="p.productImages?.[0]" :src="p.productImages[0]" alt="" loading="lazy" />
+              <Package v-else :size="16" :stroke-width="1.8" />
+            </div>
+            <div class="ps-card-heading">
+              <h3 class="ps-card-title truncate">{{ p.title }}</h3>
+              <p v-if="p.productName && p.productName !== p.title" class="ps-card-product truncate">{{ p.productName }}</p>
+            </div>
+            <AppMenu :open="menuId === p.id" placement="bottom-end" :min-width="120" @update:open="(v) => { menuId = v ? p.id : null }">
+              <template #trigger>
+                <button class="ps-more" type="button" :title="t('common.more')" :aria-label="t('common.more')" @click.stop>
+                  <MoreHorizontal :size="16" :stroke-width="2" />
+                </button>
+              </template>
+              <AppMenuItem danger @click="menuId = null; toDelete = p">{{ t('productStudio.list.delete') }}</AppMenuItem>
+            </AppMenu>
+          </div>
+          <div class="ps-card-tags">
+            <span class="tag" :class="statusTagClass(p.status)">
+              <Loader2 v-if="p.status === 'scripting'" :size="10" class="animate-spin" />
+              {{ t(`productStudio.status.${p.status}`) }}
+            </span>
+            <span v-if="templateName(p.templateId)" class="tag">{{ templateName(p.templateId) }}</span>
+            <span class="tag">{{ t(`productStudio.languages.${p.language}`) }}</span>
+            <span class="tag">{{ t(`productStudio.platforms.${p.platform}`) }}</span>
+          </div>
+          <div class="ps-card-foot">
+            <Clock :size="11" :stroke-width="1.8" />
+            {{ fmtDate(p.updatedAt) }}
+          </div>
+        </article>
+      </div>
+
+      <div v-else class="ps-empty">
+        <ShoppingBag :size="26" :stroke-width="1.5" />
+        <p class="ps-empty-title">{{ t('productStudio.list.emptyTitle') }}</p>
+        <p class="ps-empty-desc">{{ t('productStudio.list.emptyDesc') }}</p>
+        <button class="btn btn-primary" type="button" @click="openCreate">
+          <Plus :size="15" :stroke-width="2.2" />
+          {{ t('productStudio.list.new') }}
+        </button>
+      </div>
+    </template>
+
+    <!-- ===== Avatars ===== -->
+    <template v-else>
+      <div v-if="avatarsLoading" class="ps-grid" aria-hidden="true">
+        <div v-for="i in 3" :key="i" class="ps-card skeleton-card">
+          <div class="skeleton-line w-60"></div>
+          <div class="skeleton-line w-40"></div>
+          <div class="skeleton-line w-80"></div>
+        </div>
+      </div>
+      <div v-else-if="avatars.length" class="ps-grid ps-avatars-grid">
+        <StudioAvatarCard
+          v-for="(a, i) in avatars"
+          :key="a.id"
+          :avatar="a"
+          :markets="markets"
+          :style="{ animationDelay: `${i * 0.04}s` }"
+          @updated="onAvatarUpdated"
+          @delete="(a) => avatarToDelete = a"
+        />
+      </div>
+      <div v-else class="ps-empty">
+        <UserRound :size="26" :stroke-width="1.5" />
+        <p class="ps-empty-title">{{ t('productStudio.avatars.emptyTitle') }}</p>
+        <p class="ps-empty-desc">{{ t('productStudio.avatars.emptyDesc') }}</p>
+        <button class="btn btn-primary" type="button" @click="openCreate">
+          <Plus :size="15" :stroke-width="2.2" />
+          {{ t('productStudio.avatars.create') }}
+        </button>
+      </div>
+    </template>
+
+    <!-- ===== New dialog (project / avatar) ===== -->
+    <div v-if="showCreate" class="overlay" @click.self="closeCreate">
+      <div class="dialog ps-dialog" role="dialog" aria-modal="true" :aria-label="createTitle">
+        <div class="dialog-head">
+          <div class="ps-dialog-icon">
+            <ShoppingBag v-if="tab === 'projects'" :size="18" :stroke-width="1.8" />
+            <UserRound v-else :size="18" :stroke-width="1.8" />
+          </div>
+          <div class="dialog-head-copy">
+            <h2 class="dialog-title">{{ createTitle }}</h2>
+            <p class="dialog-desc">{{ tab === 'avatars' ? t('productStudio.avatars.createDesc') : t('productStudio.create.desc') }}</p>
+          </div>
+        </div>
+        <form class="ps-create-form" @submit.prevent="create">
+          <div class="dialog-body">
+            <template v-if="tab === 'projects'">
+              <label class="field">
+                <span class="field-label">{{ t('productStudio.product.name') }} <span class="ps-required">*</span></span>
+                <input v-model="projectForm.productName" class="input" :placeholder="t('productStudio.product.namePlaceholder')" />
+              </label>
+              <label class="field">
+                <span class="field-label">{{ t('productStudio.product.url') }}</span>
+                <input v-model="projectForm.productUrl" class="input" type="url" :placeholder="t('productStudio.product.urlPlaceholder')" />
+              </label>
+              <label class="field">
+                <span class="field-label">{{ t('productStudio.create.template') }}</span>
+                <select v-model="projectForm.templateId" class="input">
+                  <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">{{ t(`productStudio.templates.${tpl.id}.name`) }}</option>
+                </select>
+                <span v-if="createTemplate" class="field-hint">{{ t(`productStudio.templates.${projectForm.templateId}.description`) }}</span>
+              </label>
+            </template>
+            <template v-else>
+              <label class="field">
+                <span class="field-label">{{ t('productStudio.avatars.name') }} <span class="ps-required">*</span></span>
+                <input v-model="avatarForm.name" class="input" :placeholder="t('productStudio.avatars.namePlaceholder')" />
+              </label>
+              <label class="field">
+                <span class="field-label">{{ t('productStudio.avatars.description') }} <span class="ps-required">*</span></span>
+                <textarea v-model="avatarForm.description" class="textarea" rows="3" :placeholder="t('productStudio.avatars.descriptionPlaceholder')" />
+                <span class="field-hint">{{ t('productStudio.avatars.descriptionHint') }}</span>
+              </label>
+              <label class="field">
+                <span class="field-label">{{ t('productStudio.avatars.locale') }}</span>
+                <select v-model="avatarForm.locale" class="input">
+                  <option value="">{{ t('productStudio.avatars.localeAny') }}</option>
+                  <option v-for="m in markets" :key="m" :value="m">{{ t(`productStudio.markets.${m}`) }}</option>
+                </select>
+              </label>
+              <div class="field">
+                <span class="field-label">{{ t('productStudio.avatars.image') }}</span>
+                <div class="ps-upload-row">
+                  <input ref="avatarFileEl" type="file" accept="image/*" hidden @change="uploadAvatarImage" />
+                  <button type="button" class="btn btn-sm" :disabled="avatarUploading" @click="avatarFileEl?.click()">
+                    <Loader2 v-if="avatarUploading" :size="12" class="animate-spin" />
+                    <ImagePlus v-else :size="12" :stroke-width="2" />
+                    {{ avatarForm.imageUrl ? t('productStudio.avatars.changeImage') : t('productStudio.avatars.uploadImage') }}
+                  </button>
+                  <img v-if="avatarForm.imageUrl" :src="avatarForm.imageUrl" alt="" class="ps-upload-thumb" />
+                  <span v-else class="field-hint">{{ t('productStudio.avatars.uploadHint') }}</span>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div class="dialog-foot">
+            <span v-if="!canCreate" class="ps-foot-hint">{{ tab === 'avatars' ? t('productStudio.avatars.needFields') : t('productStudio.create.needProduct') }}</span>
+            <button type="button" class="btn" :disabled="creating" @click="closeCreate">{{ t('common.cancel') }}</button>
+            <button type="submit" class="btn btn-primary" :disabled="creating || !canCreate">
+              <Loader2 v-if="creating" :size="13" class="animate-spin" />
+              {{ creating ? t('productStudio.creating') : t('productStudio.create.submit') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <ConfirmDialog
+      :open="!!toDelete"
+      :title="t('productStudio.delete.title')"
+      :message="t('productStudio.delete.message', { title: toDelete?.title || '' })"
+      :confirm-text="t('common.delete')"
+      :loading-text="t('common.deleteLoading')"
+      :loading="deleting"
+      @confirm="removeProject"
+      @cancel="toDelete = null"
+    />
+    <ConfirmDialog
+      :open="!!avatarToDelete"
+      :title="t('productStudio.avatars.deleteTitle')"
+      :message="t('productStudio.avatars.deleteMessage', { name: avatarToDelete?.name || '' })"
+      :confirm-text="t('common.delete')"
+      :loading-text="t('common.deleteLoading')"
+      :loading="avatarDeleting"
+      @confirm="removeAvatar"
+      @cancel="avatarToDelete = null"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import { Clock, ImagePlus, Loader2, MoreHorizontal, Package, Plus, ShoppingBag, UserRound } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
+import { studioAPI, uploadAPI, type StudioAvatar, type StudioProject, type StudioTemplate } from '~/composables/useApi'
+import { toastError } from '~/composables/useToast'
+import { SCRIPT_POLL_INTERVAL_MS } from '~/utils/studioFlow'
+
+type Tab = 'projects' | 'avatars'
+
+const { t, locale } = useI18n()
+const route = useRoute()
+
+const tab = ref<Tab>(route.query.tab === 'avatars' ? 'avatars' : 'projects')
+function switchTab(v: Tab) {
+  tab.value = v
+}
+watch(() => route.query.tab, (v) => { if (v === 'avatars' || v === 'projects') tab.value = v })
+
+// ===== data =====
+const projects = ref<StudioProject[]>([])
+const templates = ref<StudioTemplate[]>([])
+const avatars = ref<StudioAvatar[]>([])
+const options = ref<any>(null)
+const markets = computed(() => (options.value?.markets || []).map((m: any) => m.id))
+const loading = ref(true)
+const avatarsLoading = ref(false)
+const menuId = ref<number | null>(null)
+
+const templateName = (id: string) => (templates.value.some(tpl => tpl.id === id) ? t(`productStudio.templates.${id}.name`) : id)
+
+function statusTagClass(status: string) {
+  if (status === 'failed') return 'tag-error'
+  if (status === 'scripting') return 'tag-info'
+  if (status === 'script_ready') return 'tag-success'
+  return ''
+}
+
+function fmtDate(v?: string) {
+  if (!v) return ''
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString(locale.value === 'th' ? 'th-TH' : 'en-US', { dateStyle: 'medium' })
+}
+
+function open(p: StudioProject) {
+  navigateTo(`/studio/${p.id}`)
+}
+
+// ===== create dialog (ใช้ร่วมสองแท็บ) =====
+const showCreate = ref(false)
+const creating = ref(false)
+const projectForm = ref({ productName: '', productUrl: '', templateId: '' })
+const avatarForm = ref({ name: '', description: '', locale: '', imageUrl: '' })
+const avatarFileEl = ref<HTMLInputElement | null>(null)
+const avatarUploading = ref(false)
+
+const createTitle = computed(() => (tab.value === 'avatars' ? t('productStudio.avatars.create') : t('productStudio.create.title')))
+const createTemplate = computed(() => templates.value.find(tpl => tpl.id === projectForm.value.templateId))
+const canCreate = computed(() => tab.value === 'avatars'
+  ? !!(avatarForm.value.name.trim() && avatarForm.value.description.trim())
+  : !!(projectForm.value.productName.trim() || projectForm.value.productUrl.trim()))
+
+function openCreate() {
+  projectForm.value = { productName: '', productUrl: '', templateId: templates.value[0]?.id || '' }
+  avatarForm.value = { name: '', description: '', locale: '', imageUrl: '' }
+  showCreate.value = true
+}
+function closeCreate() {
+  if (!creating.value) showCreate.value = false
+}
+
+async function uploadAvatarImage(ev: Event) {
+  const file = (ev.target as HTMLInputElement).files?.[0]
+  if (!file || avatarUploading.value) return
+  avatarUploading.value = true
+  try {
+    const res = await uploadAPI.image(file)
+    avatarForm.value.imageUrl = res.url
+  } catch (e) {
+    toastError(e)
+  } finally {
+    avatarUploading.value = false
+    if (avatarFileEl.value) avatarFileEl.value.value = ''
+  }
+}
+
+async function create() {
+  if (!canCreate.value || creating.value) return
+  creating.value = true
+  try {
+    if (tab.value === 'avatars') {
+      const a = await studioAPI.createAvatar({
+        name: avatarForm.value.name.trim(),
+        description: avatarForm.value.description.trim(),
+        ...(avatarForm.value.locale ? { locale: avatarForm.value.locale as any } : {}),
+        ...(avatarForm.value.imageUrl ? { imageUrl: avatarForm.value.imageUrl } : {}),
+      })
+      toast.success(t('productStudio.avatars.created'))
+      avatars.value = [a, ...avatars.value]
+    } else {
+      const p = await studioAPI.create({
+        productName: projectForm.value.productName.trim() || projectForm.value.productUrl.trim(),
+        productUrl: projectForm.value.productUrl.trim() || null,
+        templateId: projectForm.value.templateId,
+      })
+      toast.success(t('productStudio.create.created'))
+      navigateTo(`/studio/${p.id}`)
+      return
+    }
+    showCreate.value = false
+  } catch (e) {
+    toastError(e)
+  } finally {
+    creating.value = false
+  }
+}
+
+// ===== delete =====
+const toDelete = ref<StudioProject | null>(null)
+const deleting = ref(false)
+async function removeProject() {
+  if (!toDelete.value) return
+  deleting.value = true
+  try {
+    await studioAPI.del(toDelete.value.id)
+    toast.success(t('productStudio.delete.deleted'))
+    toDelete.value = null
+    await load(true)
+  } catch (e) {
+    toastError(e)
+  } finally {
+    deleting.value = false
+  }
+}
+const avatarToDelete = ref<StudioAvatar | null>(null)
+const avatarDeleting = ref(false)
+async function removeAvatar() {
+  const target = avatarToDelete.value
+  if (!target) return
+  avatarDeleting.value = true
+  try {
+    await studioAPI.deleteAvatar(target.id)
+    toast.success(t('productStudio.avatars.deleted'))
+    avatarToDelete.value = null
+    avatars.value = avatars.value.filter(a => a.id !== target.id)
+  } catch (e) {
+    toastError(e)
+  } finally {
+    avatarDeleting.value = false
+  }
+}
+
+function onAvatarUpdated(a: StudioAvatar) {
+  avatars.value = avatars.value.map(x => x.id === a.id ? a : x)
+}
+
+// ===== load + poll (โปรเจกต์ scripting / avatar กำลังสร้างรูป) =====
+let pollTimer: ReturnType<typeof setTimeout> | null = null
+function schedulePoll() {
+  if (pollTimer) clearTimeout(pollTimer)
+  const busyProjects = tab.value === 'projects' && projects.value.some(p => p.status === 'scripting')
+  const busyAvatars = tab.value === 'avatars' && avatars.value.some(a => a.imageStatus === 'processing')
+  pollTimer = (busyProjects || busyAvatars) ? setTimeout(() => load(true), SCRIPT_POLL_INTERVAL_MS) : null
+}
+
+async function load(silent = false) {
+  if (tab.value === 'avatars') {
+    if (!silent) avatarsLoading.value = true
+    try {
+      avatars.value = await studioAPI.avatars() || []
+    } catch (e) {
+      if (!silent) toastError(e)
+    } finally {
+      avatarsLoading.value = false
+      schedulePoll()
+    }
+    return
+  }
+  if (!silent) loading.value = true
+  try {
+    projects.value = await studioAPI.list() || []
+  } catch (e) {
+    if (!silent) toastError(e)
+  } finally {
+    loading.value = false
+    schedulePoll()
+  }
+}
+
+async function loadOptions() {
+  try {
+    options.value = await studioAPI.options()
+  } catch {
+    // options โหลดไม่ได้ไม่บล็อกหน้า — ฟอร์มแก้ค่าใน workspace แทน
+  }
+}
+
+watch(tab, () => {
+  if (tab.value === 'avatars' && !avatars.value.length) load()
+  else schedulePoll()
+})
+
+onMounted(() => {
+  load()
+  loadOptions()
+})
+onBeforeUnmount(() => {
+  if (pollTimer) clearTimeout(pollTimer)
+})
+</script>
+
+<style scoped>
+.page {
+  padding: 32px 40px 48px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* === Header === */
+.ps-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.eyebrow { margin-bottom: 6px; }
+.ps-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-0);
+}
+.ps-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-2);
+  max-width: 560px;
+}
+
+/* === Tabs === */
+.ps-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+.ps-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface-raised);
+  font: 600 13px var(--font-body); color: var(--text-2); cursor: pointer;
+  transition: border-color 0.15s var(--ease-out), color 0.15s var(--ease-out);
+}
+.ps-tab:hover { border-color: var(--border-strong); color: var(--text-0); }
+.ps-tab.on { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-text); }
+.ps-tab:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--button-focus); }
+
+/* === Grid & cards === */
+.ps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.ps-avatars-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.ps-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-soft);
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease-out), transform 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+  animation: fadeUp 0.24s var(--ease-out) both;
+}
+.ps-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+.ps-card:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--button-focus);
+}
+.ps-card-top { display: flex; align-items: center; gap: 10px; }
+.ps-thumb {
+  width: 40px; height: 40px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--border); background: var(--bg-2); color: var(--text-3);
+}
+.ps-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ps-card-heading { flex: 1; min-width: 0; }
+.ps-card-title { margin: 0; font-size: 14.5px; font-weight: 700; color: var(--text-0); }
+.ps-card-product { margin: 2px 0 0; font-size: 11.5px; color: var(--text-3); }
+.ps-more {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; flex-shrink: 0;
+  border: none; border-radius: 8px; background: transparent;
+  color: var(--text-3); cursor: pointer;
+}
+.ps-more:hover { background: var(--bg-hover); color: var(--text-0); }
+.ps-more:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--button-focus); }
+.ps-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ps-card-tags .tag { display: inline-flex; align-items: center; gap: 4px; }
+.ps-card-foot {
+  display: flex; align-items: center; gap: 5px;
+  margin-top: auto; font-size: 11px; color: var(--text-3);
+}
+
+/* === Empty === */
+.ps-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 72px 24px;
+  border: 1px dashed var(--border); border-radius: var(--radius-lg);
+  color: var(--text-3); text-align: center;
+}
+.ps-empty-title { margin: 8px 0 0; font-size: 15px; font-weight: 700; color: var(--text-1); }
+.ps-empty-desc { margin: 0 0 14px; font-size: 12.5px; max-width: 380px; }
+
+/* === Create dialog === */
+.ps-dialog { width: 560px; max-width: calc(100vw - 32px); }
+.ps-create-form { display: flex; flex-direction: column; min-height: 0; }
+.ps-create-form .field { margin-bottom: 12px; }
+.ps-create-form .textarea { resize: vertical; }
+.ps-dialog-icon {
+  width: 38px; height: 38px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 11px; background: var(--accent-bg); color: var(--accent-text);
+}
+.ps-foot-hint { margin-right: auto; align-self: center; font-size: 11.5px; color: var(--text-3); }
+.ps-upload-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ps-upload-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+.ps-required { color: var(--accent-text); }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field-label { font-size: 11.5px; font-weight: 600; color: var(--text-1); }
+.field-hint { font-size: 11px; color: var(--text-3); line-height: 1.5; }
+
+/* === Skeleton === */
+.skeleton-card { cursor: default; animation: none; }
+.skeleton-line {
+  height: 12px; border-radius: 6px;
+  background: var(--bg-hover);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.skeleton-line.w-40 { width: 40%; }
+.skeleton-line.w-60 { width: 60%; }
+.skeleton-line.w-80 { width: 80%; }
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@media (max-width: 860px) {
+  .page { padding: 20px 16px 32px; }
+  .ps-head { flex-direction: column; align-items: stretch; }
+}
+</style>

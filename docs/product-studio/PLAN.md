@@ -191,4 +191,22 @@ _(Agent A เขียนที่นี่)_
 
 ## Notes from Agent B (frontend)
 
-_(Agent B เขียนที่นี่)_
+**เสร็จครบ 7 tasks — branch `feat/studio-frontend`, base `origin/master @ 5a70cda`**
+
+ไฟล์ที่แก้/เพิ่ม:
+- `app/composables/useApi.ts` — types ตาม PLAN §4 ครบ (`StudioProject/StudioShot/StudioMerge/StudioAvatar/StudioImage/StudioTemplate/StudioOptions` + enum types) และ `studioAPI` ครบทั้ง 20 endpoints
+- `app/utils/studioFlow.js` (ใหม่) — logic ล้วน: `STUDIO_STEPS` (6 ขั้น), `isStepDone`, `nextIncompleteStep`, `clampStudioDuration` (10–60 + ceiling ตาม platform), `speechSeconds`/`dialogueTooLong` (นับคำ 2.5 คำ/วินาที สำหรับภาษาเว้นวรรค · นับตัวอักษร 4.5 ตัว/วินาที สำหรับ th/zh/ja/ko), `beatBars` (timeline สัดส่วน %), `applyPlatformDefaults`, `studioErrorCodeOf`
+- `app/components/` (ใหม่ 6 ตัว): `StudioTemplateCard` (ไอคอนตามหมวด + badge avatar/มือ/ไม่มีบทพูด + timeline beat), `StudioTemplateGallery` (กรองหมวด/แพลตฟอร์ม/ต้องใช้ avatar), `StudioShotCard` (โหมด script: แก้บทพูดพร้อมนับเวลาพูดเตือนเกิน / โหมด render: keyframe+video พร้อมสร้างใหม่รายช็อต), `StudioAvatarCard` (อัปโหลด/AI สร้าง/แก้/ลบ), `StudioImageCard` (ภาพสินค้า packshot/lifestyle/on_model/banner + promote), `StudioProductImages` (แผงรองภาพสินค้าในขั้นสินค้า)
+- `app/views/studio/workspace.vue` — stepper 6 ขั้น (sidebar + rail มือถือ แบบ marketer), poll timer เดียว (scripting 2s / งานสื่อ+merge 3s), โหมด "สร้างทั้งหมด" ทำ keyframes → รอครบ → videos ต่อเอง (มี banner เตือนต้องเปิดหน้าไว้), error banner แยก `E_AVATAR_REQUIRED` (ปุ่มพาไปเลือก avatar) และ `E_NO_*_MODEL` (ลิงก์ Settings)
+- `app/pages/studio.vue` — แท็บ Projects/Avatars (tab ผ่าน `?tab=avatars`), New dialog รวมสองโหมด (โปรเจกต์: ชื่อ/ลิงก์/เทมเพลตเริ่มต้น · avatar: ชื่อ/คำบรรยาย/locale/อัปโหลดรูปด้วย `uploadAPI`), poll ระหว่าง scripting/สร้างรูป avatar
+- `app/layouts/default.vue` — เมนู "สตูดิโอสินค้า" ถัดจาก AI Marketer (`isProductStudioRoute`), `nuxt.config.ts` — route `studio-workspace` → `/studio/:id`
+- i18n th+en: `layout.nav.studio`, `studio.*` 27 กลุ่ม (รวม templates 12 แบบ × name/description/beats, languages 12, markets 15, platforms 8, imageKinds, mediaStatus, steps 6 ขั้น) + `errors.codes` 6 ตัวใหม่
+- `tests/studio-structure.test.mjs` (ใหม่, 14 tests): endpoint ครบตามตาราง PLAN §4 (parse จาก PLAN เทียบ client ทุกตัว), routes/เมนู, i18n parity + ครบ 12 เทมเพลต, logic studioFlow รันจริง, no-mock/no-hardcode
+
+**⚠️ เบี่ยงเปื้อนจากสัญญา 1 จุด (additive — ตามกติกาข้อ จึงบันทึกที่นี่):** i18n keys ใช้ prefix **`productStudio.*`** แทนที่ PLAN เขียนไว้เป็น `studio.*` — เพราะ key `studio.*` ระดับบนสุด **ถูกหน้าแรก (Drama Studio) ใช้อยู่ก่อนแล้ว** ใน th.json/en.json ใช้ร่วมกันไม่ได้ ถ้าผู้ประสานงานต้องการคีย์ `studio.*` ตาม PLAN เป๊ะ ต้องย้าย key ของหน้าแรกก่อน (นอกขอบเขต frontend ของงานนี้)
+
+**beat roles — สิ่งที่ต้องการจาก backend:** ชื่อ `role` ใน `beats` ของเทมเพลต (PLAN §3 ไม่ได้ fix ค่า string) ฝั่ง frontend กำหนดและแปลผ่าน `productStudio.templates.<id>.beats.<role>` ดังนี้ — `ugc_review`: hook/problem/use_product/result/cta · `unboxing`: hook/unbox/reveal/details/cta · `before_after`: hook/during/after/cta · `problem_solution`: problem/intro/solve/cta · `how_to_use`: hook/step1/step2/step3/cta · `three_reasons`: hook/reason1/reason2/reason3/cta · `comparison`: hook/generic/ours/cta · `try_on`: hook/try/show/cta · `creator_story`: story/turning_point/result/cta · `lifestyle_showcase`: scene1/scene2/scene3/packshot · `asmr_closeup`: macro/texture/sound/packshot · `flash_deal`: hook/show/offer/cta — **Agent A ใช้ role strings เหล่านี้ใน `services/studio-templates.ts` ให้ตรงกัน** (ถ้าต่าง UI จะแสดง role ดิบเป็น fallback ไม่พัง) · หมวดเทมเพลต (category): `review/demo/fashion_beauty/showcase/promo`
+
+**ยังไม่ได้ทดสอบ:** ยิง API จริง (backend Phase Studio ของ Agent A อยู่บน `feat/studio-backend`, ยังไม่ merge) — ตรวจสัญญาด้วย test โครงสร้างเทียบตาราง PLAN เท่านั้น ไม่มี mock หลงเหลือ · environment เครื่อง B (Mac): ใช้ symlink `node_modules` แทน `npm ci` (npm เครื่องนี้บล็อก install scripts; package.json ระหว่าง base เดิมไม่ต่างกัน)
+
+ผลตรวจ: `node --test tests/*.test.mjs` = **83/83 ผ่าน** · `npm run generate` ผ่าน (ไม่มี warning duplicated imports — เปลี่ยนชื่อ exports ฝั่ง studioFlow ที่ชนกับ marketerFlow: `SCRIPT_POLL_INTERVAL_MS`/`isStepDone`/`nextIncompleteStep`/`studioErrorCodeOf`)
