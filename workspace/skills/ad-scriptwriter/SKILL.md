@@ -39,3 +39,11 @@ description: 广告创意（creatives）与 formatted script 的撰写规范—�
 - **总时长对齐 durationSec**：所有场景台词+动作时长合计 ≈ durationSec
 - **CTA**：最后一场最后一行落在 cta 上（对白或旁白）
 - 只写可拍摄的内容；不要在脚本中出现「此处展示产品卖点」等元描述
+
+## Recreate 模式（基于参考广告改写）
+
+用户消息含【Reference ad structure】时进入 recreate 模式：
+- **沿用骨架**：beat 顺序（hook/problem/demo/proof/offer/CTA）、每个 beat 的时长占比、hook 类型、整体 pacing 必须与分析一致
+- **内容换血**：卖点/台词全部换成我们的产品（以 read_campaign 的 Evidence 为准），**照搬原广告措辞超过一句即违规**
+- **隔离来源**：原广告的品牌名、竞品名不得出现在脚本里
+- formatted script 全部硬约束不变（场景数、hook 0-3 秒、产品=道具、CTA 收尾）

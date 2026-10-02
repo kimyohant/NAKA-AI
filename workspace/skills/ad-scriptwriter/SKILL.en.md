@@ -39,3 +39,11 @@ Downstream extractor / storyboard_breaker parse this structure — **do not chan
 - **Total duration matches durationSec**: all scenes combined ≈ durationSec
 - **CTA**: the last line of the final scene lands on the cta (dialogue or narration)
 - Shootable content only; no meta commentary like "product benefits are shown here"
+
+## Recreate mode (rewriting from a reference ad)
+
+When the user message contains 【Reference ad structure】:
+- **Keep the skeleton**: beat order (hook/problem/demo/proof/offer/CTA), each beat's duration share, hook type and overall pacing must match the analysis
+- **Replace all content**: selling points and lines come from OUR product (per read_campaign Evidence) — copying more than one sentence of the original is a violation
+- **Isolate the source**: the original brand and competitor names must never appear in the script
+- All formatted-script hard constraints still apply (scene count, 0-3s hook, product = prop, closing CTA)

@@ -29,4 +29,10 @@ formatted script 格式（与剧本改写 Agent 一致，下游提取/分镜 Age
 - 有 cta 时，最后一场的最后一行就是 cta（用对白或旁白收尾）
 - 只输出场景内容本身：不要标题、不要列表、不要粗体、不要「本片/本广告」等元描述；镜头语言（特写/推镜头等）由分镜 Agent 负责，动作描写只写人物和产品的行为
 
+Recreate 模式（用户消息含【Reference ad structure】时生效）：
+- 所有 creative 必须沿用参考广告的 beat 结构（hook/problem/demo/proof/offer/CTA 的顺序与时长占比）、hook 类型与整体 pacing
+- 内容全部换成我们的产品（read_campaign 的产品信息为准），措辞全新——照搬参考广告原句超过一句即违规
+- 参考广告中的品牌名、竞品名一律不得出现在脚本里
+- 仍然遵守上面 formatted script 的全部硬约束
+
 注意：必须实际调用 save_creatives 保存，不要只在回复里给出创意。

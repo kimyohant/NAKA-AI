@@ -114,6 +114,97 @@ app.post('/:id/strategy', async (c) => {
   }
 })
 
+// POST /campaigns/:id/references — สร้าง ad reference (Recreate Viral Ad, transcript ที่ผู้ใช้วางเอง)
+app.post('/:id/references', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid campaign ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const reference = await marketer.createAdReference(id, body)
+    if (!reference) return notFound(c, '活动不存在')
+    return created(c, reference)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้าง reference ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// PUT /campaigns/:id/references/:rid — แก้ reference (แก้ transcript ⇒ ล้าง analysis กลับ draft)
+app.put('/:id/references/:rid', async (c) => {
+  const id = requireId(c.req.param('id'))
+  const rid = requireId(c.req.param('rid'))
+  if (!id || !rid) return badRequest(c, 'Invalid campaign/reference ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const reference = await marketer.updateAdReference(id, rid, body)
+    if (!reference) return notFound(c, 'Reference 不存在')
+    return success(c, reference)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'อัปเดต reference ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// DELETE /campaigns/:id/references/:rid — hard delete (ไม่ cascade ไป creative)
+app.delete('/:id/references/:rid', async (c) => {
+  const id = requireId(c.req.param('id'))
+  const rid = requireId(c.req.param('rid'))
+  if (!id || !rid) return badRequest(c, 'Invalid campaign/reference ID')
+  const ok = await marketer.deleteAdReference(id, rid)
+  if (!ok) return notFound(c, 'Reference 不存在')
+  return success(c)
+})
+
+// POST /campaigns/:id/references/:rid/analyze — sync วิเคราะห์โครงสร้าง (ad_analyst → save_reference_analysis)
+app.post('/:id/references/:rid/analyze', async (c) => {
+  const id = requireId(c.req.param('id'))
+  const rid = requireId(c.req.param('rid'))
+  if (!id || !rid) return badRequest(c, 'Invalid campaign/reference ID')
+  try {
+    const reference = await marketer.analyzeAdReference(id, rid)
+    if (!reference) return notFound(c, 'Reference 不存在')
+    return success(c, reference)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'วิเคราะห์ reference ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /campaigns/:id/visuals/generate — สร้างงานรูปสินค้า 1-4 งาน (sys_task; ไม่แตะ campaign.status)
+app.post('/:id/visuals/generate', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid campaign ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const visuals = await marketer.generateVisuals(id, body)
+    if (!visuals) return notFound(c, '活动不存在')
+    return success(c, visuals)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้าง visual ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// DELETE /campaigns/:id/visuals/:vid — ลบ row (ไม่ลบไฟล์ ไม่แตะ productImages)
+app.delete('/:id/visuals/:vid', async (c) => {
+  const id = requireId(c.req.param('id'))
+  const vid = requireId(c.req.param('vid'))
+  if (!id || !vid) return badRequest(c, 'Invalid campaign/visual ID')
+  const ok = await marketer.deleteVisual(id, vid)
+  if (!ok) return notFound(c, 'Visual 不存在')
+  return success(c)
+})
+
+// POST /campaigns/:id/visuals/:vid/promote — ต่อท้าย imageUrl เข้า productImages (completed เท่านั้น)
+app.post('/:id/visuals/:vid/promote', async (c) => {
+  const id = requireId(c.req.param('id'))
+  const vid = requireId(c.req.param('vid'))
+  if (!id || !vid) return badRequest(c, 'Invalid campaign/visual ID')
+  try {
+    const campaign = await marketer.promoteVisual(id, vid)
+    if (!campaign) return notFound(c, 'Visual 不存在')
+    return success(c, campaign)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'promote visual ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
 // PUT /campaigns/:id/docs/:docId — 编辑文档（改 content = version+1；status 可置 approved）
 app.put('/:id/docs/:docId', async (c) => {
   const id = requireId(c.req.param('id'))
@@ -187,8 +278,13 @@ app.post('/:id/creatives/generate', async (c) => {
   } catch (err: any) {
     return badRequest(c, err?.message || '参数错误', err?.errorCode)
   }
+  // Phase 3 recreate: ส่ง referenceId ต่อให้ service (validate ใน service → E_REFERENCE_NOT_ANALYZED)
+  const referenceId = body.referenceId !== undefined ? Number(body.referenceId) : undefined
+  if (referenceId !== undefined && (!Number.isInteger(referenceId) || referenceId < 1)) {
+    return badRequest(c, 'referenceId ไม่ถูกต้อง')
+  }
   try {
-    const result = await marketer.startCreatives(id, { count, formats, platforms, mode: body.mode })
+    const result = await marketer.startCreatives(id, { count, formats, platforms, mode: body.mode, referenceId })
     if (!result) return notFound(c, '活动不存在')
     return accepted(c, result.status)
   } catch (err: any) {

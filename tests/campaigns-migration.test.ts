@@ -19,7 +19,7 @@ test('migration v6 creates campaign tables and stays idempotent', () => {
     initSqliteSchema(sqlite)
     initSqliteSchema(sqlite) // 幂等重放
     const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8])
+    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     const campaignCols = (sqlite.pragma('table_info(campaigns)') as Array<{ name: string }>).map(r => r.name)
     for (const col of ['product_url', 'product_name', 'product_images', 'brand_notes', 'market', 'platforms',
@@ -46,6 +46,18 @@ test('migration v6 creates campaign tables and stays idempotent', () => {
     for (const col of ['doc_id', 'version', 'content', 'source', 'created_at']) {
       assert.ok(revCols.includes(col), `campaign_doc_revisions missing column ${col}`)
     }
+
+    // v9 (Phase 3): campaign_ad_references + campaign_visuals + campaign_creatives.reference_id
+    const refCols = (sqlite.pragma('table_info(campaign_ad_references)') as Array<{ name: string }>).map(r => r.name)
+    for (const col of ['campaign_id', 'title', 'source_url', 'transcript', 'notes', 'analysis']) {
+      assert.ok(refCols.includes(col), `campaign_ad_references missing column ${col}`)
+    }
+    const visCols = (sqlite.pragma('table_info(campaign_visuals)') as Array<{ name: string }>).map(r => r.name)
+    for (const col of ['campaign_id', 'kind', 'source_image', 'instruction', 'prompt', 'task_id']) {
+      assert.ok(visCols.includes(col), `campaign_visuals missing column ${col}`)
+    }
+    const creativeCols2 = (sqlite.pragma('table_info(campaign_creatives)') as Array<{ name: string }>).map(r => r.name)
+    assert.ok(creativeCols2.includes('reference_id'), 'campaign_creatives missing column reference_id')
 
     // 约束可用：插入/更新/JSON 数组存取
     const ts = '2026-01-01T00:00:00.000Z'

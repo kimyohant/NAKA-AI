@@ -8,8 +8,9 @@
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { db, getInsertId, schema } from '../db/index.js'
 import { AppError, now } from '../utils/response.js'
-import { getTextConfig, getActiveConfigId } from './ai.js'
+import { getTextConfig, getActiveConfigId, getActiveConfig } from './ai.js'
 import { ingestProductUrl, type IngestedProduct } from './product-ingest.js'
+import { generateImage } from './generation.js'
 import { mastra } from '../mastra/index.js'
 import { buildCampaignRequestContext } from '../agents/context.js'
 import { startTask, updateTask, type PipelineTaskKind } from './pipeline-tasks.js'
@@ -24,6 +25,11 @@ import {
 export const DOC_KINDS = MARKETER_DOC_KINDS
 export const PLATFORMS = MARKETER_PLATFORMS
 export const CREATIVE_FORMATS = MARKETER_CREATIVE_FORMATS
+// Phase 3: Product Visuals
+export const VISUAL_KINDS = ['packshot', 'on_model', 'lifestyle'] as const
+export type VisualKind = typeof VISUAL_KINDS[number]
+export const MAX_TRANSCRIPT_LENGTH = 20_000
+export const DEFAULT_VISUALS_COUNT = 2
 
 export type DocKind = typeof DOC_KINDS[number]
 export type Platform = typeof PLATFORMS[number]
@@ -104,6 +110,8 @@ function toCreativeJson(row: CreativeRow) {
     status: row.status,
     episodeId: row.episodeId,
     episodeNumber: row.episodeNumber,
+    // Phase 3 recreate mode: creative สร้างตามโครงของ reference ใด
+    referenceId: row.referenceId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
@@ -173,10 +181,20 @@ export async function getCampaignDetail(id: number) {
   const creatives = await db.select().from(schema.campaignCreatives)
     .where(eq(schema.campaignCreatives.campaignId, id))
     .orderBy(schema.campaignCreatives.id)
+  // Phase 3: references + visuals (ใหม่→เก่า) — visuals อ่านสดจาก sys_task
+  const references = await db.select().from(schema.campaignAdReferences)
+    .where(eq(schema.campaignAdReferences.campaignId, id))
+    .orderBy(desc(schema.campaignAdReferences.id))
+  const visualRows = await db.select().from(schema.campaignVisuals)
+    .where(eq(schema.campaignVisuals.campaignId, id))
+    .orderBy(desc(schema.campaignVisuals.id))
+  const visuals = await Promise.all(visualRows.map(v => toVisualJson(v, parseJsonArray(row.productImages))))
   return {
     ...toCampaignJson(row),
     docs: docs.map(toDocJson),
     creatives: creatives.map(toCreativeJson),
+    references: references.map(toAdReferenceJson),
+    visuals,
   }
 }
 
@@ -320,6 +338,8 @@ interface AgentJobOptions {
   docKinds?: string[]
   creativeQuota?: number
   creativeMode?: 'replace' | 'append'
+  /** Phase 3 recreate: creative ที่ save ทั้งหมดจะผูกกับ reference นี้ */
+  referenceId?: number
   maxSteps?: number
   label: string
 }
@@ -334,6 +354,7 @@ function runCampaignAgentJob(opts: AgentJobOptions): void {
       docKinds: opts.docKinds,
       creativeQuota: opts.creativeQuota,
       creativeMode: opts.creativeMode,
+      referenceId: opts.referenceId,
     })
     return agent.generate([{ role: 'user', content: opts.message }], {
       maxSteps: opts.maxSteps ?? 24,
@@ -447,6 +468,7 @@ export async function startCreatives(campaignId: number, opts: {
   formats?: string[]
   platforms?: string[]
   mode?: 'replace' | 'append'
+  referenceId?: number
 } = {}) {
   const row = await getCampaignRow(campaignId)
   if (!row) return null
@@ -455,6 +477,14 @@ export async function startCreatives(campaignId: number, opts: {
     .where(eq(schema.campaignDocs.campaignId, campaignId))
   if (!docs.some(d => d.kind === 'content_brief')) {
     throw new AppError('需要先完成策略（content_brief）才能生成创意', 'E_CREATIVES_NEED_STRATEGY')
+  }
+  // Phase 3 recreate: referenceId ต้องเป็นของ campaign นี้และ analyzed แล้ว
+  let reference: AdReferenceRow | null = null
+  if (opts.referenceId !== undefined) {
+    reference = await getAdReferenceRow(campaignId, opts.referenceId)
+    if (!reference || !reference.analysis) {
+      throw new AppError('reference นี้ยังไม่ถูกวิเคราะห์ (analyze ก่อนใช้สร้าง creative)', 'E_REFERENCE_NOT_ANALYZED')
+    }
   }
   await requireTextModel()
   const count = opts.count ?? DEFAULT_CREATIVES_COUNT
@@ -482,11 +512,21 @@ export async function startCreatives(campaignId: number, opts: {
   const instruction = mode === 'append'
     ? `这是追加模式（append）：不要重复、修改或删除已有创意，新增 ${count} 个与现有创意明显不同的创意，写完整 formatted script，最后调用一次 save_creatives 保存（数量不得超过 ${count}）。`
     : `请构思 ${count} 个差异化创意（不同 angle），每个写完整 formatted script，最后调用一次 save_creatives 保存全部（数量不得超过 ${count}）。`
+  // Phase 3 recreate: แนบ analysis ของ reference ให้ ad_scriptwriter ใช้เป็นโครง
+  const referenceBlock = reference && reference.analysis
+    ? [
+        '【Reference ad structure】(recreate mode)',
+        `- Reference: ${reference.title}${reference.sourceUrl ? ` (${reference.sourceUrl})` : ''}`,
+        'Every creative below must follow this beat structure, hook type and pacing exactly — but sell OUR product, with entirely new wording. Never copy more than one sentence from the reference; never mention the reference brand or competitor names.',
+        `【Analysis】\n${reference.analysis}`,
+      ].join('\n\n')
+    : ''
   const message = [
     campaignSummaryBlock(row),
     await docsBlock(campaignId),
     existingBlock,
-    ['【This run】', `- Mode: ${mode}`, ...lines].join('\n'),
+    referenceBlock,
+    ['【This run】', `- Mode: ${mode}${reference ? ` (recreate from reference #${reference.id})` : ''}`, ...lines].join('\n'),
     instruction,
   ].filter(Boolean).join('\n\n')
   runCampaignAgentJob({
@@ -498,6 +538,7 @@ export async function startCreatives(campaignId: number, opts: {
     docKinds: [],
     creativeQuota: count,
     creativeMode: mode,
+    referenceId: reference?.id,
     maxSteps: 16,
     label: 'creatives',
   })
@@ -770,6 +811,291 @@ async function ensureProductProp(dramaId: number, episodeId: number, campaign: C
   if (!links.length) {
     await db.insert(schema.episodeProps).values({ episodeId, propId, createdAt: ts })
   }
+}
+
+// ---------- Phase 3: Ad references (Recreate Viral Ad) ----------
+
+type AdReferenceRow = typeof schema.campaignAdReferences.$inferSelect
+
+function toAdReferenceJson(row: AdReferenceRow) {
+  return {
+    id: row.id,
+    campaignId: row.campaignId,
+    title: row.title,
+    sourceUrl: row.sourceUrl,
+    transcript: row.transcript,
+    notes: row.notes,
+    analysis: row.analysis,
+    // status เป็น derived: analysis ไม่ว่าง = analyzed
+    status: row.analysis ? 'analyzed' : 'draft',
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }
+}
+
+async function getAdReferenceRow(campaignId: number, referenceId: number): Promise<AdReferenceRow | null> {
+  const [row] = await db.select().from(schema.campaignAdReferences)
+    .where(and(eq(schema.campaignAdReferences.id, referenceId), eq(schema.campaignAdReferences.campaignId, campaignId)))
+  return row ?? null
+}
+
+export async function createAdReference(campaignId: number, body: any) {
+  const campaign = await getCampaignRow(campaignId)
+  if (!campaign) return null
+  const transcript = typeof body.transcript === 'string' ? body.transcript.trim() : ''
+  if (!transcript) throw new AppError('transcript 必填', 'E_INVALID_FIELD')
+  if (transcript.length > MAX_TRANSCRIPT_LENGTH) {
+    throw new AppError(`transcript ยาวเกิน ${MAX_TRANSCRIPT_LENGTH} ตัวอักษร`, 'E_INVALID_FIELD')
+  }
+  let sourceUrl: string | null = null
+  if (body.sourceUrl !== undefined && body.sourceUrl !== null && isNonEmptyString(body.sourceUrl)) {
+    const url = body.sourceUrl.trim()
+    // เก็บอ้างอิงเท่านั้น — ห้ามดึงเนื้อหาจาก URL นี้; validate protocol กันข้อมูลมั่ว
+    try {
+      const parsed = new URL(url)
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error()
+      sourceUrl = url
+    } catch {
+      throw new AppError('sourceUrl ต้องเป็น http/https', 'E_INVALID_FIELD')
+    }
+  }
+  // title default: โดเมนของ sourceUrl หรือ Reference #n (n = ลำดับใน campaign)
+  let title = isNonEmptyString(body.title) ? body.title.trim() : ''
+  if (!title && sourceUrl) {
+    try { title = new URL(sourceUrl).hostname } catch { /* fallback ด้านล่าง */ }
+  }
+  if (!title) {
+    const existing = await db.select().from(schema.campaignAdReferences)
+      .where(eq(schema.campaignAdReferences.campaignId, campaignId))
+    title = `Reference #${existing.length + 1}`
+  }
+  const ts = now()
+  const res = await db.insert(schema.campaignAdReferences).values({
+    campaignId,
+    title,
+    sourceUrl,
+    transcript,
+    notes: isNonEmptyString(body.notes) ? body.notes : null,
+    analysis: null,
+    createdAt: ts,
+    updatedAt: ts,
+  })
+  const row = await getAdReferenceRow(campaignId, getInsertId(res))
+  return row ? toAdReferenceJson(row) : null
+}
+
+export async function updateAdReference(campaignId: number, referenceId: number, body: any) {
+  const row = await getAdReferenceRow(campaignId, referenceId)
+  if (!row) return null
+  const updates: Partial<typeof schema.campaignAdReferences.$inferInsert> = { updatedAt: now() }
+  if (body.title !== undefined) {
+    if (!isNonEmptyString(body.title)) throw new AppError('title 不能为空', 'E_INVALID_FIELD')
+    updates.title = body.title.trim()
+  }
+  if (body.sourceUrl !== undefined) {
+    if (body.sourceUrl === null || body.sourceUrl === '') updates.sourceUrl = null
+    else {
+      const url = String(body.sourceUrl).trim()
+      try {
+        const parsed = new URL(url)
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error()
+        updates.sourceUrl = url
+      } catch {
+        throw new AppError('sourceUrl ต้องเป็น http/https', 'E_INVALID_FIELD')
+      }
+    }
+  }
+  const transcriptChanged = body.transcript !== undefined
+  if (transcriptChanged) {
+    const transcript = typeof body.transcript === 'string' ? body.transcript.trim() : ''
+    if (!transcript) throw new AppError('transcript 必填', 'E_INVALID_FIELD')
+    if (transcript.length > MAX_TRANSCRIPT_LENGTH) {
+      throw new AppError(`transcript ยาวเกิน ${MAX_TRANSCRIPT_LENGTH} ตัวอักษร`, 'E_INVALID_FIELD')
+    }
+    updates.transcript = transcript
+  }
+  if (body.notes !== undefined) updates.notes = isNonEmptyString(body.notes) ? body.notes : null
+  if (body.analysis !== undefined) updates.analysis = isNonEmptyString(body.analysis) ? body.analysis : null
+  // แก้ transcript ⇒ analysis เดิมใช้ไม่ได้อีก → ล้างกลับเป็น draft
+  if (transcriptChanged) updates.analysis = null
+  await db.update(schema.campaignAdReferences).set(updates).where(eq(schema.campaignAdReferences.id, referenceId))
+  const updated = await getAdReferenceRow(campaignId, referenceId)
+  return updated ? toAdReferenceJson(updated) : null
+}
+
+export async function deleteAdReference(campaignId: number, referenceId: number): Promise<boolean> {
+  const row = await getAdReferenceRow(campaignId, referenceId)
+  if (!row) return false
+  // hard delete; creative ที่อ้าง reference นี้คง referenceId เดิมไว้ (ไม่ cascade)
+  await db.delete(schema.campaignAdReferences).where(eq(schema.campaignAdReferences.id, referenceId))
+  return true
+}
+
+/** sync 分析：ad_analyst อ่าน transcript จาก user message → save_reference_analysis บันทึกลง DB */
+export async function analyzeAdReference(campaignId: number, referenceId: number) {
+  const campaign = await getCampaignRow(campaignId)
+  if (!campaign) return null
+  assertNotBusy(campaign) // analyze ระหว่าง campaign *ing → E_CAMPAIGN_BUSY
+  const reference = await getAdReferenceRow(campaignId, referenceId)
+  if (!reference) return null
+  await requireTextModel()
+  const agent = mastra.getAgent('ad_analyst')
+  if (!agent) throw new AppError('ad_analyst Agent 不可用', 'E_AGENT_UNAVAILABLE')
+
+  const requestContext = buildCampaignRequestContext({ campaignId, referenceId })
+  const message = [
+    campaignSummaryBlock(campaign),
+    `【Reference ad】\n- Title: ${reference.title}`,
+    reference.sourceUrl ? `- Source URL: ${reference.sourceUrl} (reference only — never fetch this URL)` : '',
+    reference.notes ? `- User notes: ${reference.notes}` : '',
+    `【Transcript】\n${reference.transcript}`,
+    'Analyze this reference ad\'s full structure and call save_reference_analysis ONCE with the complete Markdown (the six section headings verbatim). Never fetch anything from the source URL. If the transcript lacks information for a section, state that instead of guessing. After saving, summarize in one or two sentences.',
+  ].filter(Boolean).join('\n\n')
+
+  logTaskStart('Marketer', 'analyze-reference', { campaignId, referenceId })
+  await agent.generate([{ role: 'user', content: message }], { maxSteps: 8, requestContext })
+  const updated = await getAdReferenceRow(campaignId, referenceId)
+  return updated ? toAdReferenceJson(updated) : null
+}
+
+// ---------- Phase 3: Product visuals (งานรูป แยกจาก agent pipeline — ไม่แตะ campaign.status) ----------
+
+type VisualRow = typeof schema.campaignVisuals.$inferSelect
+
+/** sys_task.status → VisualStatus（unknown = provider ทำหาย → failed, 前端按契约展示） */
+function visualStatusFromTask(taskStatus: string | null | undefined): 'processing' | 'completed' | 'failed' {
+  if (taskStatus === 'completed') return 'completed'
+  if (taskStatus === 'failed' || taskStatus === 'unknown') return 'failed'
+  return 'processing'
+}
+
+async function toVisualJson(row: VisualRow, productImages: string[]) {
+  const [task] = await db.select().from(schema.sysTask).where(eq(schema.sysTask.id, row.taskId))
+  const status = visualStatusFromTask(task?.status)
+  // localPath ('static/images/x.png') คือไฟล์ถาวร — resultUrl เป็น URL provider ที่อาจหมดอายุ
+  const rawImage = status === 'completed' ? (task?.localPath || task?.resultUrl || null) : null
+  const imageUrl = rawImage ? (rawImage.startsWith('/') ? rawImage : `/${rawImage}`) : null
+  const promoted = !!imageUrl && productImages.some(img => img.replace(/^\//, '') === imageUrl.replace(/^\//, ''))
+  return {
+    id: row.id,
+    campaignId: row.campaignId,
+    kind: row.kind,
+    sourceImage: row.sourceImage,
+    instruction: row.instruction,
+    prompt: row.prompt,
+    taskId: row.taskId,
+    status,
+    imageUrl,
+    errorMsg: status === 'failed' ? (task?.errorMsg || 'image generation failed') : null,
+    promoted,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }
+}
+
+/** prompt template ต่อ kind (อังกฤษ) — ทุกแบบย้ำ "keep the exact product design" */
+function buildVisualPrompt(kind: VisualKind, instruction: string | null): string {
+  const keep = 'Keep the exact product design, label, text layout, colors and proportions from the reference image — the product must stay recognizable as the same item.'
+  const extra = instruction ? ` Additional direction from the user: ${instruction}.` : ''
+  if (kind === 'packshot') {
+    return `Professional e-commerce packshot photograph of the exact product shown in the reference image, on a pure white seamless background, even studio lighting, centered composition, sharp focus, subtle soft shadow. No props, no people, no added text or graphics. ${keep}${extra}`
+  }
+  if (kind === 'on_model') {
+    return `Advertising photograph of a person naturally holding or using the exact product shown in the reference image, product clearly visible, well-lit and unaltered, believable hands and posture. ${keep}${extra}`
+  }
+  return `Lifestyle advertising photograph of the exact product shown in the reference image in a realistic usage context, product sharp and clearly visible in the foreground. ${keep}${extra}`
+}
+
+/** ขนาดภาพ: packshot สี่เหลี่ยมจัตุรัสเสมอ; อื่นตาม campaign.aspectRatio */
+function visualSizeFor(aspectRatio: string | null, kind: VisualKind): string {
+  if (kind === 'packshot') return '1024x1024'
+  if (aspectRatio === '16:9') return '1820x1024'
+  if (aspectRatio === '1:1') return '1024x1024'
+  return '1024x1820' // 9:16 default
+}
+
+export async function generateVisuals(campaignId: number, body: any) {
+  const campaign = await getCampaignRow(campaignId)
+  if (!campaign) return null
+  const kind = body.kind
+  if (typeof kind !== 'string' || !VISUAL_KINDS.includes(kind as VisualKind)) {
+    throw new AppError(`kind 只支持 ${VISUAL_KINDS.join(' / ')}`, 'E_INVALID_FIELD')
+  }
+  const count = body.count ?? DEFAULT_VISUALS_COUNT
+  if (!Number.isInteger(count) || count < 1 || count > 4) {
+    throw new AppError('count 必须是 1-4 的整数', 'E_INVALID_FIELD')
+  }
+  const sourceImage = typeof body.sourceImage === 'string' ? body.sourceImage.trim() : ''
+  const productImages = parseJsonArray(campaign.productImages)
+  if (!sourceImage || !productImages.includes(sourceImage)) {
+    throw new AppError('sourceImage 必须是 campaign.productImages 中的一张图', 'E_INVALID_FIELD')
+  }
+  const instruction = isNonEmptyString(body.instruction) ? body.instruction : null
+  // งานรูปไม่ผ่าน pipeline_tasks / ไม่แตะ campaign.status — แต่ต้องมี image config
+  const imageConfig = await getActiveConfig('image')
+  if (!imageConfig) throw new AppError('未配置图片模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_IMAGE_MODEL')
+
+  const prompt = buildVisualPrompt(kind as VisualKind, instruction)
+  const size = visualSizeFor(campaign.aspectRatio, kind as VisualKind)
+  logTaskStart('Marketer', 'visuals', { campaignId, kind, count, size })
+
+  const rows: Awaited<ReturnType<typeof toVisualJson>>[] = []
+  for (let i = 0; i < count; i++) {
+    // dramaId มี ⇒ budget guard เดิมทำงาน; ไม่มี drama ⇒ ยังไม่มี budget guard (ค่าใช้จ่ายนับเมื่อ produce)
+    const taskId = await generateImage({
+      dramaId: campaign.dramaId ?? undefined,
+      prompt,
+      size,
+      referenceImages: [sourceImage],
+    })
+    const ts = now()
+    const res = await db.insert(schema.campaignVisuals).values({
+      campaignId,
+      kind: kind as VisualKind,
+      sourceImage,
+      instruction,
+      prompt,
+      taskId,
+      createdAt: ts,
+      updatedAt: ts,
+    })
+    const [row] = await db.select().from(schema.campaignVisuals).where(eq(schema.campaignVisuals.id, getInsertId(res)))
+    if (row) rows.push(await toVisualJson(row, productImages))
+  }
+  logTaskSuccess('Marketer', 'visuals', { campaignId, created: rows.length })
+  return rows
+}
+
+export async function deleteVisual(campaignId: number, visualId: number): Promise<boolean> {
+  const [row] = await db.select().from(schema.campaignVisuals)
+    .where(and(eq(schema.campaignVisuals.id, visualId), eq(schema.campaignVisuals.campaignId, campaignId)))
+  if (!row) return false
+  // ลบเฉพาะ row — ไม่ลบไฟล์ ไม่ถอดออกจาก productImages
+  await db.delete(schema.campaignVisuals).where(eq(schema.campaignVisuals.id, visualId))
+  return true
+}
+
+export async function promoteVisual(campaignId: number, visualId: number) {
+  const campaign = await getCampaignRow(campaignId)
+  if (!campaign) return null
+  const [row] = await db.select().from(schema.campaignVisuals)
+    .where(and(eq(schema.campaignVisuals.id, visualId), eq(schema.campaignVisuals.campaignId, campaignId)))
+  if (!row) return null
+  const productImages = parseJsonArray(campaign.productImages)
+  const visual = await toVisualJson(row, productImages)
+  if (visual.status !== 'completed' || !visual.imageUrl) {
+    throw new AppError('visual ยังสร้างไม่เสร็จ (completed เท่านั้น)', 'E_VISUAL_NOT_READY')
+  }
+  if (!visual.promoted) {
+    const next = [...productImages, visual.imageUrl]
+    await db.update(schema.campaigns).set({ productImages: JSON.stringify(next), updatedAt: now() })
+      .where(eq(schema.campaigns.id, campaignId))
+    // promoted คำนวณจาก productImages — อ่านใหม่เพื่อ reflect ค่าล่าสุด
+    const updated = await getCampaignRow(campaignId)
+    const refreshed = await toVisualJson(row, parseJsonArray(updated!.productImages))
+    return toCampaignJson(updated!)
+  }
+  return toCampaignJson(campaign)
 }
 
 /** boot 清理：进程重启后 *ing 状态不可能还在跑 → 标记失败（同 failStaleRunningTasks） */
