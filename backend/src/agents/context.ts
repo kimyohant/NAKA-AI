@@ -53,6 +53,8 @@ export interface CampaignRequestContextValues {
   creativeQuota?: number
   /** 'replace'（默认）：覆盖旧 draft；'append'：追加，保留全部已有 creative */
   creativeMode?: 'replace' | 'append'
+  /** Phase 3 recreate mode：本次 analyze/save_reference_analysis 作用的 reference，或 creatives/generate 依据的 reference */
+  referenceId?: number
   language?: ContentLanguage
 }
 
@@ -65,6 +67,7 @@ export function buildCampaignRequestContext(values: CampaignRequestContextValues
     rc.set('creativesSaved', 0)
   }
   if (values.creativeMode) rc.set('creativeMode', values.creativeMode)
+  if (values.referenceId !== undefined) rc.set('referenceId', values.referenceId)
   rc.set('language', values.language ?? getContentLanguage())
   return rc
 }

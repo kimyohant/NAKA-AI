@@ -513,6 +513,35 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
   { version: 8, columns: [
     { table: 'campaigns', column: 'budget_thb', ddl: 'ALTER TABLE campaigns ADD COLUMN budget_thb REAL' },
   ] },
+  // AI Marketer Phase 3: Recreate Viral Ad (ad references + analysis) + Product Visuals (งานรูปแยกจาก agent pipeline)
+  { version: 9, columns: [
+    { table: 'campaign_creatives', column: 'reference_id', ddl: 'ALTER TABLE campaign_creatives ADD COLUMN reference_id INTEGER' },
+  ], statements: [
+    `CREATE TABLE IF NOT EXISTS campaign_ad_references (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL,
+      title TEXT NOT NULL DEFAULT '',
+      source_url TEXT,
+      transcript TEXT NOT NULL DEFAULT '',
+      notes TEXT,
+      analysis TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_campaign_ad_references_campaign ON campaign_ad_references (campaign_id)',
+    `CREATE TABLE IF NOT EXISTS campaign_visuals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL,
+      kind TEXT NOT NULL,
+      source_image TEXT NOT NULL,
+      instruction TEXT,
+      prompt TEXT NOT NULL DEFAULT '',
+      task_id INTEGER NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_campaign_visuals_campaign ON campaign_visuals (campaign_id)',
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {

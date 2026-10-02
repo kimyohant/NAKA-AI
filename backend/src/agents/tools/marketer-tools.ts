@@ -183,6 +183,8 @@ const saveCreatives = createTool({
         cta: cr.cta ?? null,
         script: cr.script,
         status: 'draft',
+        // recreate mode: creative นี้สร้างตามโครงของ reference ใด (rc มี referenceId เมื่อ generate ด้วย referenceId)
+        referenceId: (rc?.get('referenceId' as never) as number | undefined) ?? null,
         createdAt: ts,
         updatedAt: ts,
       })
@@ -192,4 +194,24 @@ const saveCreatives = createTool({
   },
 })
 
-export const marketerTools = { readCampaign, readCampaignDocs, saveCampaignDoc, saveCreatives }
+const saveReferenceAnalysis = createTool({
+  id: 'save_reference_analysis',
+  description: 'Save the structural analysis of the ad reference (Markdown with the required sections) for the current run.',
+  inputSchema: z.object({
+    analysis: z.string().min(1).describe('Full analysis Markdown: Hook (0-3s) / Structure / Pacing & Format / Persuasion Levers / CTA / Reuse Template'),
+  }),
+  execute: async ({ analysis }, context) => {
+    const rc = context?.requestContext
+    const referenceId = rc?.get('referenceId' as never)
+    if (typeof referenceId !== 'number') return { error: 'Missing referenceId in request context' }
+    const [existing] = await db.select().from(schema.campaignAdReferences)
+      .where(eq(schema.campaignAdReferences.id, referenceId))
+    if (!existing) return { error: `Reference not found (id=${referenceId})` }
+    await db.update(schema.campaignAdReferences)
+      .set({ analysis, updatedAt: now() })
+      .where(eq(schema.campaignAdReferences.id, referenceId))
+    return { message: 'Reference analysis saved', reference_id: referenceId, length: analysis.length }
+  },
+})
+
+export const marketerTools = { readCampaign, readCampaignDocs, saveCampaignDoc, saveCreatives, saveReferenceAnalysis }

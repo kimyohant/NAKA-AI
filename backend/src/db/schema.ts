@@ -393,6 +393,8 @@ export const campaignCreatives = sqliteTable('campaign_creatives', {
   status: text('status').notNull().default('draft'),
   episodeId: integer('episode_id'),
   episodeNumber: integer('episode_number'),
+  // v9: creative ที่สร้างจากโหมด recreate — อ้าง campaign_ad_references.id
+  referenceId: integer('reference_id'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })
@@ -405,4 +407,30 @@ export const campaignDocRevisions = sqliteTable('campaign_doc_revisions', {
   content: text('content').notNull().default(''),
   source: text('source').notNull().default('agent'),
   createdAt: text('created_at').notNull(),
+})
+
+// v9 (Phase 3): Recreate Viral Ad — ผู้ใช้วาง transcript เอง (backend ไม่ดึงวิดีโอ); analysis ว่าง = draft
+export const campaignAdReferences = sqliteTable('campaign_ad_references', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  campaignId: integer('campaign_id').notNull(),
+  title: text('title').notNull().default(''),
+  sourceUrl: text('source_url'),
+  transcript: text('transcript').notNull().default(''),
+  notes: text('notes'),
+  analysis: text('analysis'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+// v9 (Phase 3): Product Visuals — งานรูปแยกจาก agent pipeline; status/imageUrl/errorMsg อ่านสดจาก sys_task
+export const campaignVisuals = sqliteTable('campaign_visuals', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  campaignId: integer('campaign_id').notNull(),
+  kind: text('kind').notNull(),
+  sourceImage: text('source_image').notNull(),
+  instruction: text('instruction'),
+  prompt: text('prompt').notNull().default(''),
+  taskId: integer('task_id').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
 })

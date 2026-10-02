@@ -117,7 +117,30 @@ Guards / error codes ใหม่ (frontend แปลใน `errors.codes.*`):
 
 ## Notes from Agent A (backend)
 
-_(Agent A เขียนที่นี่)_
+### สิ่งที่ทำ (branch `feat/p3-backend`)
+
+**ไฟล์ที่แก้/เพิ่ม:**
+- `backend/src/db/sqlite-schema.ts` — migration v9: ตาราง `campaign_ad_references` + `campaign_visuals` + คอลัมน์ `campaign_creatives.reference_id`
+- `backend/src/db/schema.ts` — Drizzle: `campaignAdReferences`, `campaignVisuals`, `campaignCreatives.referenceId`
+- `backend/src/services/marketer.ts` — references CRUD/analyze, visuals generate/delete/promote, `startCreatives` รับ `referenceId`
+- `backend/src/routes/campaigns.ts` — endpoints ใหม่ 8 เส้นตาม PHASE3 ข้อ 2
+- `backend/src/agents/tools/marketer-tools.ts` — tool `save_reference_analysis` + `save_creatives` บันทึก `reference_id` จาก request context
+- `backend/src/agents/context.ts` — `CampaignRequestContextValues.referenceId`
+- `backend/src/agents/index.ts` + `skills.ts` — agent `ad_analyst` (DEFAULT_PROMPTS + AGENT_TOOLS + AGENT_SKILL_MAP)
+- `backend/workspace/prompts/ad_analyst{,.en}.md`, `workspace/skills/ad-analyst/SKILL{,.en}.md` — หัวข้อบังคับ 6 อัน + กฎห้ามลอกเกิน 1 ประโยค + ห้ามเดาเมื่อ transcript ไม่พอ
+- `backend/workspace/prompts/ad_scriptwriter{,.en}.md` + `workspace/skills/ad-scriptwriter/SKILL{,.en}.md` — เพิ่มหัวข้อ Recreate mode
+- `backend/tests/campaigns-migration.test.ts`, `tests/sqlite-migration-backup.test.ts` — expected migrations [1..9] + assert ตาราง/คอลัมน์ v9
+- `backend/tests/campaigns-phase3-structure.test.mjs` (ใหม่) — 4 tests ครอบ routes/error codes/ad_analyst/visuals
+
+**Endpoints ที่ทดสอบด้วย curl จริง (PORT=5680 + scratch DB):**
+- references: create (title default = โดเมน ✓, transcript ว่าง → E_INVALID_FIELD ✓, >20,000 ตัวอักษร → E_INVALID_FIELD ✓, sourceUrl ftp → E_INVALID_FIELD ✓), PUT (แก้ transcript ⇒ analysis ล้างกลับ draft ✓), DELETE ✓ (analyze ของ id ที่ลบแล้ว → 404 ✓)
+- analyze: E_NO_TEXT_MODEL ✓, ระหว่าง campaign *ing → E_CAMPAIGN_BUSY ✓, sync error path คืน 400 พร้อม message และไม่มี analysis ค้าง ✓
+- visuals: E_NO_IMAGE_MODEL ✓, kind ผิด → E_INVALID_FIELD ✓, sourceImage ไม่อยู่ใน productImages → E_INVALID_FIELD ✓, generate กับ dummy image config สร้าง sys_task 2 งาน (status processing → failed อ่านสดจาก sys_task ✓, imageUrl/errorMsg/promoted ถูกต้อง ✓), promote ก่อน completed → E_VISUAL_NOT_READY ✓, DELETE row ✓
+- creatives/generate: referenceId ยังไม่ analyzed → E_REFERENCE_NOT_ANALYZED ✓, analyzed แล้ว → 202 (message มีบล็อก 【Reference ad structure】 + referenceId ถูกส่งเข้า RC ให้ save_creatives บันทึก)
+
+**ข้อแตกต่างจาก contract: ไม่มี** (ส่วนเพิ่มเติมเชิงอธิบาย: `visual.imageUrl` ใช้ `sys_task.localPath` ปรับ leading-slash ให้ตรงรูปแบบ `/static/...` ของ productImages เพราะ `resultUrl` เป็น URL ผู้ให้บริการที่อาจหมดอายุ; `promoted` เทียบแบบ insensitive ต่อ leading slash)
+
+**ยังไม่ได้ทดสอบกับของจริง:** agent analyze จริง + การ gen รูปจริง (ต้องมี text/image key — ทดสอบถึง error path ด้วย dummy config เช่นเดิม)
 
 ## Notes from Agent B (frontend)
 
