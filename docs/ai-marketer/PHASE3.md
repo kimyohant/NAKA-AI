@@ -144,4 +144,23 @@ Guards / error codes ใหม่ (frontend แปลใน `errors.codes.*`):
 
 ## Notes from Agent B (frontend)
 
-_(Agent B เขียนที่นี่)_
+**เสร็จครบ 6 tasks — branch `feat/p3-frontend`, base `origin/master @ 3e7d0c6`**
+
+ไฟล์ที่แก้/เพิ่ม:
+- `app/composables/useApi.ts` — types ใหม่ `AdReference` / `CampaignVisual` (+ `AdReferenceStatus` / `VisualKind` / `VisualStatus`), `Creative.referenceId`, `CampaignDetail.references/visuals`; `marketerAPI` เพิ่ม `addReference` / `updateReference` / `deleteReference` / `analyzeReference` / `generateVisuals` / `deleteVisual` / `promoteVisual` และ `generateCreatives` รับ `referenceId?`
+- `app/components/MarketerReferencePanel.vue` (ใหม่) — ฟอร์มเพิ่ม reference (transcript required, ช่องใหญ่, มีคำอธิบาย + ข้อความชัดว่าไม่ดึงวิดีโอจากลิงก์), ConfirmDialog ตอนลบ
+- `app/components/MarketerReferenceCard.vue` (ใหม่) — สถานะ draft/analyzed, ปุ่ม "วิเคราะห์โครงสร้าง" (spinner ระหว่าง sync call), analysis render ด้วย `marketerMarkdown.js` (collapsible), แก้ไข (แก้ transcript → เตือนว่า analysis จะถูกล้าง), ลบ, "สร้าง creative ตามโครงนี้" (เฉพาะ analyzed)
+- `app/components/MarketerVisualCard.vue` (ใหม่) — processing = skeleton, completed = ภาพ + "ใช้เป็นรูปสินค้า" (promote) / badge "ใช้แล้ว", failed = errorMsg + สร้างใหม่ด้วยค่าเดิม, ลบได้, ดู prompt ได้
+- `app/components/MarketerCreativeCard.vue` — creative ที่มี `referenceId` แสดง badge "ตามโครง: <title>" (title ส่งเป็น prop `referenceTitle`)
+- `app/views/marketer/campaign.vue` — ขั้น `visuals` แทรกถัดจาก brief (thumbnail grid เลือก `productImages` → kind → count 1–4 → instruction placeholder ต่อ kind + หมายเหตุ packshot/ค่าใช้จ่าย); gen-box แสดง chip preset "ตามโครง: …" (พร้อมปุ่มเคลียร์) เมื่อมาจากการ์ด reference — โหมดถูก force เป็น `append` และปุ่ม regenerate (replace) ถูกซ่อนชั่วขณะ; poll รวม timer เดียว: agent job ใช้ 2s (`POLL_INTERVAL_MS`) มาก่อน, มี visual `processing` ใช้ 3s (`VISUAL_POLL_INTERVAL_MS`) — ไม่มี poll ซ้อนกัน
+- `app/utils/marketerFlow.js` — `MARKETER_STEPS` แทรก `visuals`, เพิ่ม `VISUALS_STEP` / `VISUAL_KINDS` / `VISUAL_POLL_INTERVAL_MS` / `VISUAL_COUNT_MIN/MAX`, `stepDone('visuals')` = มี promoted ≥ 1, เพิ่ม `suggestionSteps()` และ `suggestedStep` ข้าม visuals (ไม่พาผู้ใช้ไปค้าง); `busyStep`/`retryTarget` ไม่แตะ (visuals ไม่ใช่ campaign status)
+- `app/locales/th.json` + `en.json` — `marketer.references.*` (31 keys) / `marketer.visuals.*` (27 keys + placeholder ต่อ kind) / `marketer.referenceStatus.*` / `marketer.visualKinds.*` / `marketer.visualStatus.*` / `marketer.steps.visuals(+Sub)` / `marketer.creatives.presetReference+presetSet+fromReference` / `errors.codes.E_REFERENCE_NOT_ANALYZED` + `E_VISUAL_NOT_READY`
+- `tests/ai-marketer-structure.test.mjs` — เพิ่ม 3 components ใหม่เข้าชุดตรวจ, เพิ่ม 2 error codes, cross-check endpoint นับ routes ในตาราง PHASE3.md §2 รวมด้วย (backend Phase 3 ยังไม่อยู่บน master — พอ A merge แล้วการตรวจจับกลายเป็นของจริงเต็ม ๆ)
+- `tests/marketer-phase3-structure.test.mjs` (ใหม่, 13 tests) — import `marketerFlow.js` มารันจริง (visuals ตาม brief / suggestedStep ไม่ติง visuals), ครบทุก method/type, i18n parity, no-mock/no-hardcode
+
+ผลตรวจ: `node --test tests/*.test.mjs` = **69/69 ผ่าน** (56 เดิม + 13 ใหม่) · `npm run generate` ผ่าน
+
+สิ่งที่ต้องการจาก backend / ที่ยังไม่ได้ทดสอบ:
+- ยังไม่ได้ยิง API จริงเลย (backend Phase 3 ของ Agent A อยู่บน `feat/p3-backend`, ยังไม่ merge) — ตรวจ contract ด้วย test โครงสร้างกับตาราง PHASE3.md เท่านั้น ไม่มี mock หลงเหลือในโค้ด
+- คาดหวังจาก backend ตามสัญญา: `generateVisuals` คืน **array ของ rows ที่สร้าง** (frontend นำไป prepend), `promoteVisual` คืน `Campaign` เต็ม, `GET /:id` คืน `references`/`visuals` เรียงใหม่→เก่า และ status ของ visual อ่านสดจาก sys_task — ถ้า shape ต่างจากนี้แจ้งกลับมาได้ที่ branch นี้
+- หมายเหตุ environment เครื่อง B (Mac): `npm ci` ติดนโยบาย npm ที่บล็อก install scripts ของเครื่องนี้ จึง symlink `node_modules` จาก main checkout แทน (package.json + package-lock ระหว่าง master เดิมกับ origin/master ไบต์เดียวกัน — dep tree เท่ากัน) และ `npm run generate` ผ่านยืนยันแล้ว

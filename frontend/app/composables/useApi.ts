@@ -230,11 +230,44 @@ export interface Creative {
   script: string
   status: 'draft' | 'approved' | 'in_production'
   episodeId: number | null; episodeNumber: number | null
+  referenceId: number | null
   createdAt: string; updatedAt: string
 }
-export type CampaignDetail = Campaign & { docs: CampaignDoc[]; creatives: Creative[] }
+// Phase 3（docs/ai-marketer/PHASE3.md §2）：GET /:id 追加返回 references（新→旧）与 visuals（新→旧）
+export type CampaignDetail = Campaign & {
+  docs: CampaignDoc[]; creatives: Creative[]
+  references: AdReference[]; visuals: CampaignVisual[]
+}
 export interface CampaignDocRevision { id: number; docId: number; version: number; content: string; source: 'agent' | 'manual'; createdAt: string }
 export interface IngestResult { productName: string; productDescription: string; price: string | null; brand: string | null; images: string[] }
+
+// ===== Phase 3 — Recreate Viral Ad + Product Visuals =====
+export type AdReferenceStatus = 'draft' | 'analyzed'
+export interface AdReference {
+  id: number; campaignId: number
+  title: string
+  sourceUrl: string | null        // 仅存引用，backend 不抓取视频内容
+  transcript: string              // 用户粘贴的口播/旁白（必填，≤ 20,000 字符）
+  notes: string | null
+  analysis: string | null         // agent 产出的 markdown
+  status: AdReferenceStatus       // analysis 非空即 analyzed
+  createdAt: string; updatedAt: string
+}
+export type VisualKind = 'packshot' | 'on_model' | 'lifestyle'
+export type VisualStatus = 'processing' | 'completed' | 'failed'
+export interface CampaignVisual {
+  id: number; campaignId: number
+  kind: VisualKind
+  sourceImage: string             // /static/...，下单时必须是 campaign.productImages 之一
+  instruction: string | null
+  prompt: string                  // 实际发给模型的 prompt（可展示）
+  taskId: number                  // sys_task.id — status/imageUrl/errorMsg 从 sys_task 现读
+  status: VisualStatus
+  imageUrl: string | null
+  errorMsg: string | null
+  promoted: boolean               // imageUrl 已进入 campaign.productImages
+  createdAt: string; updatedAt: string
+}
 
 export const marketerAPI = {
   list: (params?: { status?: CampaignStatus; dramaId?: number }) => {
@@ -257,8 +290,21 @@ export const marketerAPI = {
   docRevisions: (id: number, docId: number) => api.get<CampaignDocRevision[]>(`/campaigns/${id}/docs/${docId}/revisions`),
   restoreDocRevision: (id: number, docId: number, revId: number) => api.post<CampaignDoc>(`/campaigns/${id}/docs/${docId}/revisions/${revId}/restore`, {}),
   // mode: replace（默认，覆盖仍为 draft 的创意）/ append（保留全部，追加 N 条新角度）
-  generateCreatives: (id: number, data: { count: number; formats?: CreativeFormat[]; platforms?: Platform[]; mode?: 'replace' | 'append' }) => api.post<{ status: CampaignStatus }>(`/campaigns/${id}/creatives/generate`, data),
+  // referenceId: 传了则 ad_scriptwriter 按该 reference 的分析结构写每条 creative，并回填 creative.referenceId
+  generateCreatives: (id: number, data: { count: number; formats?: CreativeFormat[]; platforms?: Platform[]; mode?: 'replace' | 'append'; referenceId?: number }) => api.post<{ status: CampaignStatus }>(`/campaigns/${id}/creatives/generate`, data),
   updateCreative: (id: number, cid: number, data: Partial<Creative>) => api.put<Creative>(`/campaigns/${id}/creatives/${cid}`, data),
   deleteCreative: (id: number, cid: number) => api.del(`/campaigns/${id}/creatives/${cid}`),
   produceCreative: (id: number, cid: number) => api.post<{ dramaId: number; episodeNumber: number }>(`/campaigns/${id}/creatives/${cid}/produce`, {}),
+  // ===== Phase 3 — 广告参考（Recreate Viral Ad）：analyze 为同步调用 =====
+  addReference: (id: number, data: { transcript: string; sourceUrl?: string; title?: string; notes?: string }) =>
+    api.post<AdReference>(`/campaigns/${id}/references`, data),
+  updateReference: (id: number, refId: number, data: Partial<Pick<AdReference, 'title' | 'sourceUrl' | 'transcript' | 'notes' | 'analysis'>>) =>
+    api.put<AdReference>(`/campaigns/${id}/references/${refId}`, data),
+  deleteReference: (id: number, refId: number) => api.del(`/campaigns/${id}/references/${refId}`),
+  analyzeReference: (id: number, refId: number) => api.post<AdReference>(`/campaigns/${id}/references/${refId}/analyze`, {}),
+  // ===== Phase 3 — 产品视觉：不改 campaign.status，也不触发 E_CAMPAIGN_BUSY；前端 poll GET /:id =====
+  generateVisuals: (id: number, data: { kind: VisualKind; sourceImage: string; count?: number; instruction?: string }) =>
+    api.post<CampaignVisual[]>(`/campaigns/${id}/visuals/generate`, data),
+  deleteVisual: (id: number, vid: number) => api.del(`/campaigns/${id}/visuals/${vid}`),
+  promoteVisual: (id: number, vid: number) => api.post<Campaign>(`/campaigns/${id}/visuals/${vid}/promote`, {}),
 }

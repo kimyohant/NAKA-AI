@@ -15,7 +15,7 @@ const read = (path) => readFileSync(new URL(path, root), 'utf8')
 const useApi = read('app/composables/useApi.ts')
 const listPage = read('app/pages/marketer.vue')
 const workbench = read('app/views/marketer/campaign.vue')
-const components = ['MarketerBriefForm', 'MarketerDocCard', 'MarketerCreativeCard']
+const components = ['MarketerBriefForm', 'MarketerDocCard', 'MarketerCreativeCard', 'MarketerReferencePanel', 'MarketerReferenceCard', 'MarketerVisualCard']
   .map((n) => [`components/${n}.vue`, read(`app/components/${n}.vue`)])
 const nuxtConfig = read('nuxt.config.ts')
 const layout = read('app/layouts/default.vue')
@@ -24,6 +24,16 @@ const en = JSON.parse(read('app/locales/en.json'))
 const uiFiles = [['pages/marketer.vue', listPage], ['views/marketer/campaign.vue', workbench], ...components]
 
 const backendRoutesUrl = new URL('../backend/src/routes/campaigns.ts', root)
+const phase3DocUrl = new URL('../docs/ai-marketer/PHASE3.md', root)
+
+/** Phase 3 contract (PHASE3.md §2) — backend อยู่บน feat/p3-backend ซึ่งทำขนานกันอยู่
+ *  ฝั่ง frontend ยิงตามสัญญา จึงนับ endpoint ในตารางของ PHASE3.md เป็น "served" ชั่วคราวด้วย */
+function phase3ContractRoutes() {
+  if (!existsSync(phase3DocUrl)) return []
+  const doc = readFileSync(phase3DocUrl, 'utf8')
+  return [...doc.matchAll(/\|\s*(POST|PUT|DELETE)\s*\|\s*`(\/:id\/[^`]*)`\s*\|/g)]
+    .map((m) => `${m[1]} ${normalize(`/campaigns${m[2]}`.replace(/:\w+/g, ':'))}`)
+}
 
 const marketerBlock = useApi.slice(useApi.indexOf('export const marketerAPI'))
 /** `/campaigns/${id}/docs/${docId}` → `/campaigns/:/docs/:` เพื่อเทียบกับ route ฝั่ง backend */
@@ -39,10 +49,11 @@ function frontendCalls() {
 
 test('marketerAPI only calls endpoints that the backend actually serves', { skip: !existsSync(backendRoutesUrl) && 'backend not present' }, () => {
   const routes = readFileSync(backendRoutesUrl, 'utf8')
-  const served = new Set(
-    [...routes.matchAll(/app\.(get|post|put|delete)\('([^']*)'/g)]
+  const served = new Set([
+    ...[...routes.matchAll(/app\.(get|post|put|delete)\('([^']*)'/g)]
       .map((m) => `${m[1].toUpperCase()} ${normalize(`/campaigns${m[2]}`.replace(/:\w+/g, ':'))}`),
-  )
+    ...phase3ContractRoutes(),
+  ])
   const calls = frontendCalls()
   assert.ok(calls.length >= 15, `expected the full campaign client, got ${calls.length} calls`)
   for (const c of calls) assert.ok(served.has(c), `frontend calls ${c} but backend has no such route`)
@@ -167,6 +178,7 @@ test('campaign error codes sent by the backend are localized', () => {
   const codes = [
     'E_CAMPAIGN_BUSY', 'E_INGEST_FAILED', 'E_STRATEGY_NEEDS_RESEARCH', 'E_CREATIVES_NEED_STRATEGY',
     'E_CREATIVE_IN_PRODUCTION', 'E_INVALID_FIELD', 'E_AGENT_UNAVAILABLE', 'E_NO_TEXT_MODEL', 'E_TASK_INTERRUPTED',
+    'E_REFERENCE_NOT_ANALYZED', 'E_VISUAL_NOT_READY',
   ]
   for (const c of codes) {
     assert.equal(typeof en.errors.codes[c], 'string', `en errors.codes.${c} missing`)

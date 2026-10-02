@@ -1,7 +1,14 @@
 // AI Marketer 流程状态（纯函数，workspace 与测试共用）
 // 流程参考 Topview AI Marketer：Brief → Research → Strategy(4 docs) → Creatives → Production
 
-export const MARKETER_STEPS = ['brief', 'research', 'strategy', 'creatives', 'production']
+export const MARKETER_STEPS = ['brief', 'visuals', 'research', 'strategy', 'creatives', 'production']
+
+/** Phase 3 Product Visuals：可选步骤，不阻塞其它步骤 */
+export const VISUALS_STEP = 'visuals'
+export const VISUAL_KINDS = ['packshot', 'on_model', 'lifestyle']
+export const VISUAL_POLL_INTERVAL_MS = 3000
+export const VISUAL_COUNT_MIN = 1
+export const VISUAL_COUNT_MAX = 4
 
 export const RESEARCH_DOC_KINDS = ['product_brief', 'market_research']
 export const STRATEGY_DOC_KINDS = ['audience_insight', 'message_map', 'campaign_plan', 'content_brief']
@@ -47,12 +54,18 @@ export function stepDone(step, detail) {
   const creatives = detail.creatives || []
   switch (step) {
     case 'brief': return !!(detail.productName || detail.productUrl)
+    case 'visuals': return (detail.visuals || []).some(v => v.promoted)
     case 'research': return hasDocs(docs, ['market_research'])
     case 'strategy': return hasDocs(docs, STRATEGY_DOC_KINDS)
     case 'creatives': return creatives.length > 0
     case 'production': return creatives.some(c => c.status === 'in_production')
     default: return false
   }
+}
+
+/** visuals 不是 agent 任务，也不该是建议落点——建议跳过它，别把用户困在这一步 */
+export function suggestionSteps() {
+  return MARKETER_STEPS.filter(s => s !== VISUALS_STEP)
 }
 
 /** 打开 workspace 时默认落在哪一步：进行中的任务优先，否则第一个未完成步骤 */
@@ -62,7 +75,7 @@ export function suggestedStep(detail) {
   if (!detail) return 'brief'
   const creatives = detail.creatives || []
   if (creatives.some(c => c.status === 'approved' || c.status === 'in_production')) return 'production'
-  for (const step of MARKETER_STEPS.slice(1)) {
+  for (const step of suggestionSteps().slice(1)) {
     if (!stepDone(step, detail)) return step
   }
   return 'production'
