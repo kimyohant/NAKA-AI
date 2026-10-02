@@ -405,7 +405,7 @@ import {
   marketerAPI, stylePresetAPI,
   type Campaign, type CampaignDetail, type CampaignDoc, type Creative, type CreativeFormat, type Platform,
 } from '~/composables/useApi'
-import { toastError } from '~/composables/useToast'
+import { mapError, toastError } from '~/composables/useToast'
 import {
   MARKETER_STEPS, RESEARCH_DOC_KINDS, STRATEGY_DOC_KINDS, PLATFORMS, CREATIVE_FORMATS, POLL_INTERVAL_MS,
   isBusyStatus, busyStep, latestDocs, hasDocs, stepDone, suggestedStep, retryTarget, errorCodeOf, clampCount,
@@ -579,7 +579,8 @@ const failedText = computed(() => {
   const msg = detail.value?.errorMsg || ''
   const code = errorCodeOf(msg)
   if (code && te(`errors.codes.${code}`)) return t(`errors.codes.${code}`)
-  return msg || t('errors.unknown')
+  // 无错误码（上游/模型原文）：走全站统一映射，不直接展示原始技术信息
+  return mapError(new Error(msg))
 })
 function retry() {
   goStep(retryStep.value)

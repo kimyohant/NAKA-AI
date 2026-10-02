@@ -87,6 +87,9 @@ test('workspace implements the 5-step flow and polls the campaign while busy', (
   assert.match(workbench, /POLL_INTERVAL_MS/)
   assert.match(workbench, /isBusyStatus/)
   assert.match(workbench, /clearTimeout\(pollTimer\)/)
+  // 失败信息：E_XXX 前缀翻译；无码时走 mapError，不展示原始后端文本
+  assert.match(workbench, /errorCodeOf\(msg\)/)
+  assert.match(workbench, /return mapError\(new Error\(msg\)\)/)
   // production hand-off → episode workbench
   assert.match(workbench, /marketerAPI\.produceCreative/)
   assert.match(workbench, /navigateTo\(`\/drama\/\$\{res\.dramaId\}\/episode\/\$\{res\.episodeNumber\}`\)/)
@@ -163,7 +166,7 @@ test('marketer.* i18n keys exist in both locales with full parity', () => {
 test('campaign error codes sent by the backend are localized', () => {
   const codes = [
     'E_CAMPAIGN_BUSY', 'E_INGEST_FAILED', 'E_STRATEGY_NEEDS_RESEARCH', 'E_CREATIVES_NEED_STRATEGY',
-    'E_CREATIVE_IN_PRODUCTION', 'E_INVALID_FIELD', 'E_AGENT_UNAVAILABLE', 'E_NO_TEXT_MODEL',
+    'E_CREATIVE_IN_PRODUCTION', 'E_INVALID_FIELD', 'E_AGENT_UNAVAILABLE', 'E_NO_TEXT_MODEL', 'E_TASK_INTERRUPTED',
   ]
   for (const c of codes) {
     assert.equal(typeof en.errors.codes[c], 'string', `en errors.codes.${c} missing`)

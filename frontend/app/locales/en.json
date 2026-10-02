@@ -1063,7 +1063,8 @@
       "E_STRATEGY_NEEDS_RESEARCH": "Run market research before generating the strategy.",
       "E_CREATIVES_NEED_STRATEGY": "Generate the strategy (content brief) before writing creatives.",
       "E_CREATIVE_IN_PRODUCTION": "This creative is already in production and cannot be deleted.",
-      "E_INVALID_FIELD": "Some fields are invalid. Check your input and try again."
+      "E_INVALID_FIELD": "Some fields are invalid. Check your input and try again.",
+      "E_TASK_INTERRUPTED": "The server restarted and this AI step was interrupted. Run it again."
     }
   },
   "tour": {
