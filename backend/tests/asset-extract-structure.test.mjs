@@ -11,19 +11,20 @@ test('extraction service runs per-target async tasks', () => {
   // 三类资产目标
   assert.match(svc, /'characters' \| 'scenes' \| 'props'/)
   assert.match(svc, /EXTRACT_TARGETS.*characters.*scenes.*props/s)
-  // 按 集×类型 键控的内存任务表
-  assert.match(svc, /`\$\{episodeId\}:\$\{target\}`/)
+  // 按 集×类型 键控，状态存 pipeline_tasks 表（重启可恢复，boot 清理 running 行）
+  assert.match(svc, /extractKey\(episodeId, target\)/)
+  assert.match(svc, /startTask\(\{ kind: 'extract', key/)
   assert.match(svc, /status: 'running' \| 'done' \| 'error'/)
-  // 同集同类型运行中不重复启动
-  assert.match(svc, /tasks\.get\(key\)\?\.status === 'running'\)\s*return false/)
+  // 同集同类型运行中不重复启动（pipeline_tasks 已有 running 行时 startTask 返回 null）
+  assert.match(svc, /if \(!task\) return false/)
   // 每类资产限定只提取该类型
   assert.match(svc, /本次只提取角色/)
   assert.match(svc, /本次只提取场景/)
   assert.match(svc, /本次只提取道具/)
   // fire-and-forget 异步执行 extractor Agent
   assert.match(svc, /mastra\.getAgent\('extractor'\)/)
-  assert.match(svc, /\.then\(\(result[^)]*\) => \{[\s\S]*status = 'done'/)
-  assert.match(svc, /\.catch\(\(err/)
+  assert.match(svc, /\.then\(async \(result[^)]*\) => \{[\s\S]*status: 'done'/)
+  assert.match(svc, /\.catch\(async \(err/)
   // 逐步打印 Agent 进展（工具调用 + 文本），完成时打印汇总
   assert.match(svc, /onStepFinish/)
   assert.match(svc, /-step/)

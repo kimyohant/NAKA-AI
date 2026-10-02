@@ -7,7 +7,7 @@ import { eq, and, inArray } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 import { now } from '../utils/response.js'
 
-export type PipelineTaskKind = 'extract' | 'video_prompts'
+export type PipelineTaskKind = 'extract' | 'video_prompts' | 'campaign_research' | 'campaign_strategy' | 'campaign_creatives'
 export type PipelineTaskStatus = 'running' | 'done' | 'error' | 'cancelled'
 
 export interface PipelineTaskRow {

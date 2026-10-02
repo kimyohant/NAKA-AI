@@ -41,3 +41,35 @@ export function getContentLanguageFromRC(requestContext: RequestContext | undefi
   const v = requestContext?.get('language' as never)
   return typeof v === 'string' && v ? (v as ContentLanguage) : null
 }
+
+/**
+ * AI Marketer Agent 上下文（market_researcher / strategist / ad_scriptwriter）
+ * 与剧集链路不同：按 campaignId 定位；docKinds 限定本次允许写入的文档类型（revise 时只放行目标文档），
+ * creativeQuota 限定本次最多新增的 creative 数量（工具内计数，超出即拒绝）
+ */
+export interface CampaignRequestContextValues {
+  campaignId: number
+  docKinds?: string[]
+  creativeQuota?: number
+  /** 'replace'（默认）：覆盖旧 draft；'append'：追加，保留全部已有 creative */
+  creativeMode?: 'replace' | 'append'
+  language?: ContentLanguage
+}
+
+export function buildCampaignRequestContext(values: CampaignRequestContextValues): RequestContext {
+  const rc = new RequestContext()
+  rc.set('campaignId', values.campaignId)
+  if (values.docKinds) rc.set('docKinds', values.docKinds)
+  if (values.creativeQuota !== undefined) {
+    rc.set('creativeQuota', values.creativeQuota)
+    rc.set('creativesSaved', 0)
+  }
+  if (values.creativeMode) rc.set('creativeMode', values.creativeMode)
+  rc.set('language', values.language ?? getContentLanguage())
+  return rc
+}
+
+export function getCampaignId(requestContext: RequestContext | undefined): number | null {
+  const v = requestContext?.get('campaignId' as never)
+  return typeof v === 'number' ? v : null
+}
