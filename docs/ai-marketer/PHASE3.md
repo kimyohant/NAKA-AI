@@ -1,0 +1,124 @@
+# AI Marketer — Phase 3: Recreate Viral Ad + Product Visuals
+
+อ่านคู่กับ [`PLAN.md`](PLAN.md) (contract Phase 1–2 ยังใช้ทั้งหมด — Phase 3 เป็นของ **เพิ่ม** เท่านั้น ห้ามเปลี่ยน shape/endpoint เดิม)
+Base: `master` @ `8de5861` (migration ล่าสุด = v8)
+
+## 1. เป้าหมาย
+
+| ฟีเจอร์ | ผู้ใช้ทำอะไร | ได้อะไร |
+|---|---|---|
+| **A. Recreate Viral Ad** | วางโฆษณาที่กำลังดัง (ลิงก์ + บทพูด/คำบรรยายฉาก ที่ผู้ใช้ถอดเอง) | AI แยกโครงสร้าง (hook → beats → CTA, จังหวะ, เหตุผลที่ได้ผล) แล้วเขียน creative ใหม่ให้สินค้าเรา **ตามโครงเดียวกัน** (ไม่ลอกถ้อยคำ) |
+| **B. Product Visuals** | เลือกรูปสินค้าจริง 1 รูป → เลือกชนิดภาพ | ภาพสินค้าใหม่ 1–4 ภาพ: packshot พื้นขาว, นายแบบ/นางแบบถือ/ใช้สินค้า, ภาพ lifestyle — เลือกภาพที่ชอบ "ใช้เป็นรูปสินค้า" → ไหลเข้า prop reference ตอน produce อัตโนมัติ (กลไกเดิม) |
+
+ข้อจำกัดที่ต้องรู้ (เขียนไว้ใน UI ด้วย):
+- **ไม่มีการดึงวิดีโอจาก TikTok/IG/YouTube** — ลิงก์เก็บไว้อ้างอิงเท่านั้น เนื้อหาที่ AI วิเคราะห์มาจาก `transcript` ที่ผู้ใช้วาง
+- **"ลบพื้นหลัง" = ให้โมเดลรูปสร้าง packshot พื้นขาวใหม่โดยใช้รูปจริงเป็น reference** ไม่ใช่การตัดภาพระดับพิกเซล (ไม่มี matting model ในระบบ) — UI ใช้คำว่า "Packshot พื้นขาว" ไม่ใช้ "ลบพื้นหลัง"
+- ไม่มี TTS/เสียง (ระบบเสียงถูกถอดออกโดยตั้งใจ — มี test `remove-audio-tts-structure` กันอยู่ ห้ามแตะ)
+
+## 2. API Contract (เพิ่มจาก PLAN.md ข้อ 4)
+
+Response helper เดิม `{ code, data, message }` / error `{ code, message, errorCode? }` · JSON camelCase · base `/api/v1/campaigns`
+
+### Data shapes ใหม่
+
+```ts
+type AdReferenceStatus = 'draft' | 'analyzed'
+interface AdReference {
+  id: number; campaignId: number
+  title: string                    // ชื่อสั้นๆ ให้ผู้ใช้จำได้ (default: โดเมนของ sourceUrl หรือ "Reference #n")
+  sourceUrl: string | null         // เก็บอ้างอิงเท่านั้น — backend ไม่ดึงเนื้อหาวิดีโอ
+  transcript: string               // บทพูด/คำบรรยายฉากที่ผู้ใช้วาง (ต้องไม่ว่าง, ≤ 20,000 ตัวอักษร)
+  notes: string | null             // ทำไมชอบชิ้นนี้ / ยอดวิว ฯลฯ
+  analysis: string | null          // markdown จาก agent (ดูหัวข้อบังคับข้อ 3)
+  status: AdReferenceStatus        // analyzed เมื่อ analysis ไม่ว่าง
+  createdAt: string; updatedAt: string
+}
+
+type VisualKind = 'packshot' | 'on_model' | 'lifestyle'
+type VisualStatus = 'processing' | 'completed' | 'failed'
+interface CampaignVisual {
+  id: number; campaignId: number
+  kind: VisualKind
+  sourceImage: string              // /static/... ต้องเป็นหนึ่งใน campaign.productImages ตอนสั่ง
+  instruction: string | null       // คำสั่งเพิ่มของผู้ใช้ เช่น "ผู้หญิงไทยวัย 25 ในคาเฟ่"
+  prompt: string                   // prompt จริงที่ส่งโมเดล (แสดงให้ดูได้)
+  taskId: number                   // sys_task.id
+  status: VisualStatus             // อ่านสดจาก sys_task (queued/processing → processing; unknown → failed)
+  imageUrl: string | null          // /static/... เมื่อ completed
+  errorMsg: string | null
+  promoted: boolean                // imageUrl อยู่ใน campaign.productImages แล้วหรือยัง
+  createdAt: string; updatedAt: string
+}
+```
+
+ส่วนขยายของ shape เดิม (additive):
+- `GET /:id` คืนเพิ่ม `references: AdReference[]` (ใหม่→เก่า) และ `visuals: CampaignVisual[]` (ใหม่→เก่า)
+- `Creative` เพิ่ม `referenceId: number | null` — creative ที่สร้างจากโหมด recreate
+
+### Endpoints ใหม่
+
+| Method | Path | Body | Returns |
+|---|---|---|---|
+| POST | `/:id/references` | `{ transcript, sourceUrl?, title?, notes? }` | `AdReference` (`draft`) |
+| PUT | `/:id/references/:rid` | `Partial<{ title, sourceUrl, transcript, notes, analysis }>` | `AdReference` — แก้ `transcript` ⇒ ล้าง `analysis` กลับเป็น `draft` |
+| DELETE | `/:id/references/:rid` | — | hard delete · creative ที่อ้างถึงคง `referenceId` เดิมไว้ได้ (ไม่ cascade) |
+| POST | `/:id/references/:rid/analyze` | — | `AdReference` (`analyzed`) — **sync** แบบเดียวกับ `docs/:docId/revise` |
+| POST | `/:id/creatives/generate` | เดิม + `referenceId?: number` | `202` เหมือนเดิม — มี `referenceId` ⇒ ad_scriptwriter เขียนทุก creative ตามโครงของ reference นั้น และบันทึก `referenceId` ลง creative |
+| POST | `/:id/visuals/generate` | `{ kind, sourceImage, count?: 1–4 (default 2), instruction? }` | `CampaignVisual[]` (สถานะ `processing`) — สร้าง sys_task image `count` งาน |
+| DELETE | `/:id/visuals/:vid` | — | ลบ row (ไม่ลบไฟล์, ไม่ลบออกจาก productImages) |
+| POST | `/:id/visuals/:vid/promote` | — | `Campaign` — ต่อท้าย `imageUrl` เข้า `productImages` (ไม่ซ้ำ) |
+
+Guards / error codes ใหม่ (frontend แปลใน `errors.codes.*`):
+- `E_REFERENCE_NOT_ANALYZED` — generate ด้วย `referenceId` ที่ยังไม่ `analyzed` (หรือไม่ใช่ของ campaign นี้)
+- `E_VISUAL_NOT_READY` — promote visual ที่ยังไม่ `completed`
+- ใช้รหัสเดิม: `E_INVALID_FIELD` (kind/count/sourceImage ไม่อยู่ใน productImages/transcript ว่างหรือยาวเกิน), `E_NO_TEXT_MODEL` (analyze), `E_NO_IMAGE_MODEL` (visuals), `E_CAMPAIGN_BUSY` (analyze ระหว่าง campaign `*ing`), `E_CREATIVES_NEED_STRATEGY` (guard เดิมของ generate ยังอยู่)
+
+พฤติกรรม async:
+- `analyze` sync — frontend แสดง spinner บนการ์ด reference
+- visuals **ไม่** เปลี่ยน `campaign.status` และ **ไม่** ติด `E_CAMPAIGN_BUSY` (เป็นงานรูป แยกจากงาน agent) — frontend poll `GET /:id` ทุก 3s ตราบที่มี visual `processing`
+- งบ: ถ้า campaign มี `dramaId` แล้ว ส่ง `dramaId` ให้ `generateImage` เพื่อให้ budget guard เดิมทำงาน; ถ้ายังไม่มี drama ไม่มี budget guard (ระบุใน UI ว่าค่าใช้จ่ายนับเมื่อ produce แล้วเท่านั้น)
+
+## 3. รูปแบบ `analysis` (บังคับหัวข้อ — frontend render ด้วย renderer markdown เดิม)
+
+```
+## Hook (0–3s)          ประเภท hook + ถ้อยคำ/ภาพที่ใช้
+## Structure            ตาราง beat: เวลา | หน้าที่ (hook/problem/demo/proof/offer/CTA) | สิ่งที่เกิดขึ้น
+## Pacing & Format      ความยาว, จำนวนช็อต/ฉากโดยประมาณ, UGC/สตูดิโอ, มีคนพูดกล้องไหม
+## Persuasion Levers    เหตุผลที่ได้ผล (social proof, scarcity, before/after ...)
+## CTA                  รูปแบบ CTA
+## Reuse Template       โครงที่เอาไปใช้กับสินค้าอื่นได้ เขียนเป็นช่องว่างให้เติม — ห้ามคัดลอกถ้อยคำต้นฉบับยาวเกิน 1 ประโยค
+```
+
+## 4. DB — migration v9 (Agent A)
+
+- ตาราง `campaign_ad_references` (id, campaign_id, title, source_url, transcript, notes, analysis, created_at, updated_at)
+- ตาราง `campaign_visuals` (id, campaign_id, kind, source_image, instruction, prompt, task_id, created_at, updated_at) — status/imageUrl/errorMsg **อ่านจาก sys_task** ไม่เก็บซ้ำ
+- `campaign_creatives.reference_id INTEGER NULL`
+
+## 5. การแบ่งงาน
+
+| | Agent A — Backend | Agent B — Frontend |
+|---|---|---|
+| เจ้าของไฟล์ | `backend/**` + `docs/ai-marketer/PHASE3.md` ส่วน "Notes from Agent A" | `frontend/**` + ส่วน "Notes from Agent B" |
+| ห้ามแตะ | `frontend/**` | `backend/**` |
+| Branch | `feat/p3-backend` | `feat/p3-frontend` |
+| Brief | [`AGENT-A-phase3.md`](AGENT-A-phase3.md) | [`AGENT-B-phase3.md`](AGENT-B-phase3.md) |
+
+กติการ่วม (เปลี่ยนจาก Phase 1 — อ่านให้ครบ):
+- **แยก worktree ของตัวเองเสมอ** — ห้ามสลับ branch ในโฟลเดอร์ที่ agent อื่นใช้อยู่:
+  `git fetch origin && git worktree add ../naka-p3-<a|b> -b feat/p3-<backend|frontend> origin/master`
+- commit เป็นระยะได้ และ **push branch ของตัวเอง** เมื่อเสร็จ — ห้าม push/merge เข้า `master` (ผู้ประสานงานจะ integrate เอง)
+- Contract ข้อ 2–3 คือสัญญา — ถ้าจำเป็นต้องเปลี่ยน ให้เขียนลงส่วน Notes ของตัวเองใน PHASE3.md พร้อมเหตุผล (additive เท่านั้น) อย่าแก้ข้อ 2–3 โดยตรง
+- ห้าม kill server ที่ `127.0.0.1:5679` · backend dev ใช้ `PORT=5680` · ห้ามรัน workflow ที่ใช้ key จริงกับ `data/naka.sqlite3` (ใช้ `SQLITE_PATH` ชี้ DB ทดสอบ)
+- เขียนให้เหมือนโค้ดรอบข้าง (comment จีน/อังกฤษ/ไทยแบบไฟล์นั้นๆ, ไม่มี UI framework, ไม่เพิ่ม dependency)
+- error ทุกตัวต้องมี `errorCode` และ async failure ใช้รูปแบบ `"E_CODE: message"` เดิม
+
+---
+
+## Notes from Agent A (backend)
+
+_(Agent A เขียนที่นี่)_
+
+## Notes from Agent B (frontend)
+
+_(Agent B เขียนที่นี่)_
