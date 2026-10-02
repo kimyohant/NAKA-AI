@@ -127,7 +127,93 @@
           </div>
         </section>
 
-        <!-- ========== 2 RESEARCH ========== -->
+        <!-- ========== 2 VISUALS (Phase 3 — optional，不阻塞其它步骤) ========== -->
+        <section v-else-if="step === 'visuals'" class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">{{ t('marketer.visuals.title') }}</h2>
+            <p class="panel-desc">{{ t('marketer.visuals.desc') }}</p>
+          </div>
+
+          <template v-if="detail.productImages.length">
+            <div class="mk-vis-gen">
+              <span class="gen-label">{{ t('marketer.visuals.source') }}</span>
+              <div class="mk-vis-src-grid" role="radiogroup" :aria-label="t('marketer.visuals.source')">
+                <button
+                  v-for="img in detail.productImages"
+                  :key="img"
+                  type="button"
+                  role="radio"
+                  :aria-checked="visSource === img"
+                  :class="['mk-vis-src', { on: visSource === img }]"
+                  @click="visSource = img"
+                >
+                  <img :src="img" :alt="t('marketer.visuals.source')" loading="lazy" />
+                </button>
+              </div>
+
+              <span class="gen-label">{{ t('marketer.visuals.kind') }}</span>
+              <div class="gen-chips">
+                <button
+                  v-for="k in VISUAL_KINDS"
+                  :key="k"
+                  type="button"
+                  :class="['filter-chip', { on: visKind === k }]"
+                  :aria-pressed="visKind === k"
+                  @click="visKind = k"
+                >{{ t(`marketer.visualKinds.${k}`) }}</button>
+              </div>
+
+              <div class="mk-vis-row">
+                <label class="gen-count">
+                  <span>{{ t('marketer.visuals.count') }}</span>
+                  <input v-model.number="visCount" class="input" type="number" :min="VISUAL_COUNT_MIN" :max="VISUAL_COUNT_MAX" step="1" @blur="clampVisualCount()" />
+                </label>
+                <label class="field mk-vis-instruction">
+                  <span class="field-label">{{ t('marketer.visuals.instruction') }}</span>
+                  <input v-model="visInstruction" class="input" :placeholder="t(`marketer.visuals.instructionPlaceholder.${visKind}`)" />
+                </label>
+              </div>
+
+              <div class="mk-run-row">
+                <button class="btn btn-primary" type="button" :disabled="!visSource || generatingVisuals" @click="generateVisuals">
+                  <Loader2 v-if="generatingVisuals" :size="13" class="animate-spin" />
+                  <ImagePlus v-else :size="13" :stroke-width="2" />
+                  {{ t('marketer.visuals.generate') }}
+                </button>
+                <span v-if="!visSource" class="empty-guard">{{ t('marketer.visuals.needSource') }}</span>
+              </div>
+              <p class="field-hint">{{ t('marketer.visuals.note') }}</p>
+              <p class="field-hint">{{ t('marketer.visuals.costNote') }}</p>
+            </div>
+
+            <div v-if="visuals.length" class="mk-vis-grid">
+              <MarketerVisualCard
+                v-for="v in visuals"
+                :key="v.id"
+                :campaign-id="campaignId"
+                :visual="v"
+                @updated="onVisualUpdated"
+                @promoted="onVisualPromoted"
+                @deleted="onVisualDeleted"
+                @retry="retryVisual"
+              />
+            </div>
+            <p v-else class="mk-vis-empty">{{ t('marketer.visuals.empty') }}</p>
+          </template>
+          <div v-else class="step-empty compact">
+            <p class="empty-note">{{ t('marketer.visuals.needBrief') }}</p>
+            <button class="btn" type="button" @click="goStep('brief')">{{ t('marketer.visuals.toBrief') }}</button>
+          </div>
+
+          <div class="stage-next">
+            <button class="btn btn-primary" type="button" @click="goStep('research')">
+              {{ t('marketer.visuals.next') }}
+              <ArrowRight :size="13" :stroke-width="2" />
+            </button>
+          </div>
+        </section>
+
+        <!-- ========== 3 RESEARCH ========== -->
         <section v-else-if="step === 'research'" class="panel">
           <div class="panel-head">
             <h2 class="panel-title">{{ t('marketer.research.title') }}</h2>
@@ -169,7 +255,7 @@
           </div>
         </section>
 
-        <!-- ========== 3 STRATEGY (4 docs) ========== -->
+        <!-- ========== 4 STRATEGY (4 docs) ========== -->
         <section v-else-if="step === 'strategy'" class="panel">
           <div class="panel-head">
             <h2 class="panel-title">{{ t('marketer.strategy.title') }}</h2>
@@ -218,14 +304,33 @@
           </div>
         </section>
 
-        <!-- ========== 4 CREATIVES ========== -->
+        <!-- ========== 5 CREATIVES ========== -->
         <section v-else-if="step === 'creatives'" class="panel panel-wide">
           <div class="panel-head">
             <h2 class="panel-title">{{ t('marketer.creatives.title') }}</h2>
             <p class="panel-desc">{{ t('marketer.creatives.desc') }}</p>
           </div>
 
+          <!-- Phase 3: Recreate Viral Ad — 参考广告结构，重写给自己的产品 -->
+          <MarketerReferencePanel
+            :campaign-id="campaignId"
+            :references="references"
+            :disabled="busy"
+            @updated="onReferenceUpdated"
+            @refresh="refreshQuiet"
+            @generate="presetReference"
+          />
+
           <div class="gen-box">
+            <div v-if="genReference" class="gen-ref-row">
+              <span class="tag tag-info gen-ref-chip">
+                <Wand2 :size="10" :stroke-width="2" />
+                {{ t('marketer.creatives.presetReference', { title: genReference.title }) }}
+                <button type="button" class="gen-ref-clear" :aria-label="t('common.cancel')" @click="clearPresetReference">
+                  <X :size="11" :stroke-width="2" />
+                </button>
+              </span>
+            </div>
             <div class="gen-row">
               <span class="gen-label">{{ t('marketer.creatives.formats') }}</span>
               <div class="gen-chips">
@@ -259,18 +364,18 @@
                 <input v-model.number="genCount" class="input" type="number" min="1" max="10" step="1" @blur="genCount = clampCount(genCount)" />
               </label>
               <div class="mk-actions">
-                <button
-                  v-if="creatives.length"
-                  class="btn"
-                  type="button"
-                  :disabled="busy || starting || !hasContentBrief"
-                  :title="t('marketer.creatives.replaceHint')"
-                  @click="runCreatives('replace')"
-                >
-                  <RotateCcw :size="13" :stroke-width="2" />
-                  {{ t('marketer.creatives.regenerate') }}
-                </button>
-                <button class="btn btn-primary" type="button" :disabled="busy || starting || !hasContentBrief" @click="runCreatives(creatives.length ? 'append' : 'replace')">
+            <button
+              v-if="creatives.length && !genReference"
+              class="btn"
+              type="button"
+              :disabled="busy || starting || !hasContentBrief"
+              :title="t('marketer.creatives.replaceHint')"
+              @click="runCreatives('replace')"
+            >
+              <RotateCcw :size="13" :stroke-width="2" />
+              {{ t('marketer.creatives.regenerate') }}
+            </button>
+            <button class="btn btn-primary" type="button" :disabled="busy || starting || !hasContentBrief" @click="runCreatives(creatives.length && !genReference ? 'append' : 'replace')">
                   <Loader2 v-if="starting || detail.status === 'writing'" :size="13" class="animate-spin" />
                   <Sparkles v-else :size="13" :stroke-width="2" />
                   {{ creatives.length ? t('marketer.creatives.generateMore') : t('marketer.creatives.generate') }}
@@ -306,7 +411,7 @@
           </div>
         </section>
 
-        <!-- ========== 5 PRODUCTION ========== -->
+        <!-- ========== 6 PRODUCTION ========== -->
         <section v-else class="panel">
           <div class="panel-head">
             <h2 class="panel-title">{{ t('marketer.production.title') }}</h2>
@@ -398,20 +503,22 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import {
   ArrowLeft, ArrowRight, Check, CircleAlert, Clapperboard, Copy, ExternalLink, Film,
-  Loader2, Megaphone, RefreshCw, RotateCcw, Sparkles,
+  ImagePlus, Loader2, Megaphone, RefreshCw, RotateCcw, Sparkles, Wand2, X,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import {
   marketerAPI, stylePresetAPI,
-  type Campaign, type CampaignDetail, type CampaignDoc, type Creative, type CreativeFormat, type Platform,
+  type AdReference, type Campaign, type CampaignDetail, type CampaignDoc, type CampaignVisual,
+  type Creative, type CreativeFormat, type Platform, type VisualKind,
 } from '~/composables/useApi'
 import { mapError, toastError } from '~/composables/useToast'
 import {
   MARKETER_STEPS, RESEARCH_DOC_KINDS, STRATEGY_DOC_KINDS, PLATFORMS, CREATIVE_FORMATS, POLL_INTERVAL_MS,
+  VISUALS_STEP, VISUAL_KINDS, VISUAL_POLL_INTERVAL_MS, VISUAL_COUNT_MIN, VISUAL_COUNT_MAX,
   isBusyStatus, busyStep, latestDocs, hasDocs, stepDone, suggestedStep, retryTarget, errorCodeOf, clampCount,
 } from '~/utils/marketerFlow'
 
-type StepId = 'brief' | 'research' | 'strategy' | 'creatives' | 'production'
+type StepId = 'brief' | typeof VISUALS_STEP | 'research' | 'strategy' | 'creatives' | 'production'
 type JobStep = 'research' | 'strategy' | 'creatives'
 
 const { t, te } = useI18n()
@@ -433,6 +540,22 @@ const hasResearch = computed(() => hasDocs(detail.value?.docs, ['market_research
 const hasContentBrief = computed(() => hasDocs(detail.value?.docs, ['content_brief']))
 const hasStrategyAny = computed(() => STRATEGY_DOC_KINDS.some(k => !!docMap.value[k]))
 const approvedStrategyCount = computed(() => STRATEGY_DOC_KINDS.filter(k => docMap.value[k]?.status === 'approved').length)
+
+// ===== Phase 3 — references & visuals =====
+const references = computed<AdReference[]>(() => detail.value?.references || [])
+const visuals = computed<CampaignVisual[]>(() => detail.value?.visuals || [])
+const referenceTitleMap = computed<Record<number, string>>(() =>
+  Object.fromEntries(references.value.map(r => [r.id, r.title])))
+const hasProcessingVisual = computed(() => visuals.value.some(v => v.status === 'processing'))
+
+function onReferenceUpdated(refDoc: AdReference) {
+  if (!detail.value || !refDoc) return
+  detail.value = { ...detail.value, references: detail.value.references.map(r => r.id === refDoc.id ? refDoc : r) }
+}
+
+function refreshQuiet() {
+  return refresh(true)
+}
 
 // ===== steps =====
 const step = ref<StepId>('brief')
@@ -524,7 +647,7 @@ async function saveBrief(silent = false): Promise<boolean> {
 
 async function briefNext() {
   if (briefDirty.value && !(await saveBrief(true))) return
-  goStep('research')
+  goStep('visuals')
 }
 
 // ===== async jobs（202 受理后轮询 GET /campaigns/:id，直到 status 不再以 -ing 结尾） =====
@@ -566,12 +689,93 @@ function toggle<T>(list: T[], v: T) {
 }
 function runCreatives(mode: 'replace' | 'append') {
   genCount.value = clampCount(genCount.value)
+  const referenceId = genReference.value?.id
   return startJob('creatives', () => marketerAPI.generateCreatives(campaignId, {
     count: genCount.value,
     ...(genFormats.value.length ? { formats: genFormats.value } : {}),
     ...(genPlatforms.value.length ? { platforms: genPlatforms.value } : {}),
-    mode,
+    // preset จาก reference → force append เพื่อไม่ทับ creative เดิม
+    mode: referenceId ? 'append' : mode,
+    ...(referenceId ? { referenceId } : {}),
   }))
+}
+
+// ===== Phase 3 — Recreate Viral Ad: preset reference → generate form =====
+const genReference = ref<AdReference | null>(null)
+function presetReference(r: AdReference) {
+  genReference.value = r
+  toast.info(t('marketer.creatives.presetSet', { title: r.title }))
+}
+function clearPresetReference() {
+  genReference.value = null
+}
+
+// ===== Phase 3 — Product Visuals：独立于 agent 任务的图片生成 =====
+const visSource = ref('')
+const visKind = ref<VisualKind>('packshot')
+const visCount = ref(2)
+const visInstruction = ref('')
+const generatingVisuals = ref(false)
+
+function clampVisualCount() {
+  const v = Math.round(Number(visCount.value))
+  visCount.value = Number.isFinite(v) ? Math.min(VISUAL_COUNT_MAX, Math.max(VISUAL_COUNT_MIN, v)) : 2
+}
+
+async function generateVisuals() {
+  if (!detail.value || !visSource.value || generatingVisuals.value) return
+  clampVisualCount()
+  generatingVisuals.value = true
+  try {
+    const created = await marketerAPI.generateVisuals(campaignId, {
+      kind: visKind.value,
+      sourceImage: visSource.value,
+      count: visCount.value,
+      ...(visInstruction.value.trim() ? { instruction: visInstruction.value.trim() } : {}),
+    })
+    // 契约：GET /:id 的 visuals 新→旧，本地同样插到最前
+    detail.value = { ...detail.value, visuals: [...created, ...detail.value.visuals] }
+    toast.success(t('marketer.visuals.generated', { n: created.length }))
+    schedulePoll()
+  } catch (e) {
+    toastError(e)
+  } finally {
+    generatingVisuals.value = false
+  }
+}
+
+function retryVisual(v: CampaignVisual) {
+  // 重试 = 用原参数再下一单（旧 failed 行保留，用户可自行删除）
+  visKind.value = v.kind
+  visInstruction.value = v.instruction || ''
+  return marketerAPI.generateVisuals(campaignId, {
+    kind: v.kind,
+    sourceImage: v.sourceImage,
+    count: 1,
+    ...(v.instruction ? { instruction: v.instruction } : {}),
+  }).then((created) => {
+    detail.value = { ...detail.value!, visuals: [...created, ...detail.value!.visuals] }
+    schedulePoll()
+  }).catch((e) => { toastError(e) })
+}
+
+function onVisualUpdated(v: CampaignVisual) {
+  if (!detail.value || !v) return
+  detail.value = { ...detail.value, visuals: detail.value.visuals.map(x => x.id === v.id ? v : x) }
+}
+
+function onVisualDeleted(id: number) {
+  if (!detail.value) return
+  detail.value = { ...detail.value, visuals: detail.value.visuals.filter(x => x.id !== id) }
+}
+
+function onVisualPromoted({ campaign, visual }: { campaign: Campaign; visual: CampaignVisual }) {
+  if (!detail.value) return
+  detail.value = {
+    ...detail.value,
+    ...campaign,
+    visuals: detail.value.visuals.map(x => x.id === visual.id ? { ...x, promoted: true } : x),
+  }
 }
 
 const retryStep = computed<JobStep>(() => retryTarget(detail.value, lastAction.value))
@@ -592,7 +796,10 @@ function retry() {
 let pollTimer: ReturnType<typeof setTimeout> | null = null
 function schedulePoll() {
   if (pollTimer) clearTimeout(pollTimer)
-  pollTimer = busy.value ? setTimeout(poll, POLL_INTERVAL_MS) : null
+  // 定时器只有一个：agent 任务 2s 优先；有 visuals 生成中时退到 3s 兜底轮询（visuals 不改 campaign.status）
+  if (busy.value) pollTimer = setTimeout(poll, POLL_INTERVAL_MS)
+  else if (hasProcessingVisual.value) pollTimer = setTimeout(poll, VISUAL_POLL_INTERVAL_MS)
+  else pollTimer = null
 }
 
 async function poll() {
@@ -603,6 +810,7 @@ async function poll() {
     const kind = busyStep(prev) as JobStep
     // 任务可能在别处/上次会话发起：以实际在跑的步骤作为重试目标
     lastAction.value = kind
+    if (kind === 'creatives') genReference.value = null
     if (now === 'failed') {
       toast.error(t('marketer.job.failed', { step: t(`marketer.steps.${kind}`) }))
     } else {
@@ -1065,6 +1273,42 @@ onBeforeUnmount(() => {
 }
 .mk-export-title { margin: 0 0 2px; font-size: 13px; font-weight: 700; color: var(--text-1); }
 
+/* === Phase 3 — visuals & reference preset === */
+.gen-ref-row { display: flex; }
+.gen-ref-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; }
+.gen-ref-clear {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; padding: 0;
+  border: none; border-radius: 50%;
+  background: transparent; color: inherit; cursor: pointer; flex-shrink: 0;
+}
+.gen-ref-clear:hover { background: var(--bg-hover); }
+.gen-ref-clear:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--button-focus); }
+.mk-vis-gen { display: flex; flex-direction: column; gap: 8px; }
+.mk-vis-src-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.mk-vis-src {
+  padding: 0; border: 2px solid var(--border); border-radius: var(--radius);
+  background: var(--surface-soft); cursor: pointer; overflow: hidden;
+  aspect-ratio: 1 / 1;
+  transition: border-color 0.15s var(--ease-out), transform 0.15s var(--ease-out);
+}
+.mk-vis-src:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.mk-vis-src.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--button-focus); }
+.mk-vis-src:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--button-focus); }
+.mk-vis-src img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mk-vis-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.mk-vis-instruction { flex: 1; min-width: 220px; }
+.mk-vis-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px; margin-top: 4px;
+}
+.mk-vis-empty { margin: 0; font-size: 12.5px; color: var(--text-3); }
+.mk-vis-gen .gen-count { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-1); }
+.mk-vis-gen .gen-count .input { width: 76px; }
+
 @media (max-width: 860px) {
   .mk-topbar { flex-wrap: wrap; padding: 10px 14px; }
   .studio-body { flex-direction: column; }
@@ -1078,5 +1322,8 @@ onBeforeUnmount(() => {
   .prod-row { flex-direction: column; align-items: stretch; }
   .mk-export { flex-direction: column; align-items: stretch; }
   .creative-grid { grid-template-columns: 1fr; }
+  .mk-vis-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .mk-vis-row { flex-direction: column; align-items: stretch; }
+  .mk-vis-instruction { min-width: 0; }
 }
 </style>

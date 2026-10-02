@@ -4,6 +4,10 @@
       <span class="tag tag-accent">{{ formatLabel(creative.format) }}</span>
       <span class="tag">{{ platformLabel(creative.platform) }}</span>
       <span class="tag mono">{{ t('marketer.creatives.duration', { n: creative.durationSec || 0 }) }}</span>
+      <span v-if="creative.referenceId && referenceTitle" class="tag tag-info" :title="referenceTitle">
+        <Wand2 :size="10" :stroke-width="2" />
+        {{ t('marketer.creatives.fromReference', { title: referenceTitle }) }}
+      </span>
       <span class="tag mk-status" :class="statusTagClass">{{ t(`marketer.creativeStatus.${creative.status}`) }}</span>
     </div>
 
@@ -92,7 +96,7 @@
 </template>
 
 <script setup>
-import { Check, ChevronRight, ExternalLink, Loader2, Pencil, Trash2, Undo2 } from 'lucide-vue-next'
+import { Check, ChevronRight, ExternalLink, Loader2, Pencil, Trash2, Undo2, Wand2 } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import { marketerAPI } from '~/composables/useApi'
@@ -104,6 +108,7 @@ const props = defineProps({
   creative: { type: Object, required: true },
   dramaId: { type: Number, default: null },
   disabled: { type: Boolean, default: false },
+  referenceTitle: { type: String, default: '' },
 })
 const emit = defineEmits(['updated', 'delete'])
 

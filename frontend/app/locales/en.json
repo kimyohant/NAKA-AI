@@ -1064,7 +1064,9 @@
       "E_CREATIVES_NEED_STRATEGY": "Generate the strategy (content brief) before writing creatives.",
       "E_CREATIVE_IN_PRODUCTION": "This creative is already in production and cannot be deleted.",
       "E_INVALID_FIELD": "Some fields are invalid. Check your input and try again.",
-      "E_TASK_INTERRUPTED": "The server restarted and this AI step was interrupted. Run it again."
+      "E_TASK_INTERRUPTED": "The server restarted and this AI step was interrupted. Run it again.",
+      "E_REFERENCE_NOT_ANALYZED": "This ad reference hasn't been analyzed yet — hit “Analyze structure” before creating creatives",
+      "E_VISUAL_NOT_READY": "This image isn't finished yet — wait for “Ready” status before using it as a product photo"
     }
   },
   "tour": {
@@ -1275,6 +1277,8 @@
     "steps": {
       "brief": "Brief",
       "briefSub": "Product & goal",
+      "visuals": "Product visuals",
+      "visualsSub": "Generate from real photos (optional)",
       "research": "Research",
       "researchSub": "Product brief, market",
       "strategy": "Strategy",
@@ -1382,6 +1386,9 @@
       "formats": "Formats",
       "platforms": "Platforms",
       "anyHint": "Nothing selected = let AI choose from the strategy.",
+      "presetReference": "From structure: {title}",
+      "presetSet": "Creatives will follow the structure of “{title}” and be appended to existing ones",
+      "fromReference": "From structure: {title}",
       "count": "How many",
       "generate": "Generate creatives",
       "generateMore": "Add more",
@@ -1422,6 +1429,84 @@
       "draft": "Draft",
       "approved": "Approved",
       "in_production": "In production"
+    },
+    "referenceStatus": {
+      "draft": "Not analyzed",
+      "analyzed": "Analyzed"
+    },
+    "visualKinds": {
+      "packshot": "White-background packshot",
+      "on_model": "Model holding/using product",
+      "lifestyle": "Lifestyle shot"
+    },
+    "visualStatus": {
+      "processing": "Generating",
+      "completed": "Ready",
+      "failed": "Failed"
+    },
+    "references": {
+      "title": "Ad references (Recreate Viral Ad)",
+      "desc": "Paste a viral ad plus the transcript you typed out yourself. AI breaks down its structure and rewrites a fresh creative for your product on the same skeleton — no copied wording.",
+      "add": "Add a favorite ad",
+      "name": "Nickname",
+      "namePlaceholder": "e.g. that viral serum ad",
+      "link": "Ad link (optional)",
+      "linkPlaceholder": "https://…",
+      "transcript": "Transcript / scene narration",
+      "transcriptPlaceholder": "Type out the spoken lines and what is shown, moment by moment, e.g. 0-3s shows oily skin problem…",
+      "transcriptHint": "The more detailed, the better AI captures the structure",
+      "noVideoNote": "The system never downloads video from the link — the link is stored for reference only. AI analyzes the transcript you paste.",
+      "notes": "Extra notes",
+      "notesPlaceholder": "Why you like it, view counts, etc.",
+      "submit": "Save this ad",
+      "created": "Ad reference added",
+      "empty": "No favorite ads yet. Add one you want AI to learn the structure from.",
+      "showTranscript": "Show transcript",
+      "hideTranscript": "Hide transcript",
+      "showAnalysis": "Show structure analysis",
+      "hideAnalysis": "Hide structure analysis",
+      "analyze": "Analyze structure",
+      "analyzed": "Structure analyzed",
+      "saved": "Saved",
+      "generateFrom": "Create creatives from this",
+      "edit": "Edit",
+      "delete": "Delete reference",
+      "deleteTitle": "Delete this ad reference?",
+      "deleteMessage": "This permanently removes “{title}”. Creatives already created from it stay.",
+      "deleted": "Ad reference deleted",
+      "transcriptChangeWarn": "Editing the transcript clears the existing structure analysis — you will need to analyze again."
+    },
+    "visuals": {
+      "title": "Product visuals",
+      "desc": "Generate fresh product images from a real photo — white-background packshot, model holding/using the product, or lifestyle shots.",
+      "source": "Source product photo",
+      "kind": "Visual type",
+      "count": "Number of images",
+      "instruction": "Extra instruction (optional)",
+      "instructionPlaceholder": {
+        "packshot": "e.g. clean white background with a soft shadow",
+        "on_model": "e.g. Thai woman in her 20s holding the product in a café",
+        "lifestyle": "e.g. on a wooden table by a big window, morning light"
+      },
+      "generate": "Generate images",
+      "generated": "{n} images queued for generation",
+      "needSource": "Pick a source product photo first",
+      "needBrief": "Add product photos in the Brief step first to generate visuals",
+      "toBrief": "Go to Brief",
+      "note": "“White-background packshot” means the model creates a new image using your real photo as reference — not pixel-level background removal",
+      "costNote": "Costs count toward the project budget only after you send work to production",
+      "empty": "No generated visuals yet",
+      "processing": "Generating image",
+      "failedHint": "Image generation failed. Hit retry to try again.",
+      "viewPrompt": "View prompt",
+      "hidePrompt": "Hide prompt",
+      "promote": "Use as product photo",
+      "promoted": "This image is now a product photo",
+      "promotedBadge": "In use",
+      "retry": "Retry",
+      "delete": "Delete image",
+      "deleted": "Image deleted",
+      "next": "Next: Research"
     },
     "production": {
       "title": "Production",
