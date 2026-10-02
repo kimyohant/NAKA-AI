@@ -60,3 +60,4 @@ desktop/dist/
 desktop/release/
 desktop/resources/
 data/imports/
+*.log.err
