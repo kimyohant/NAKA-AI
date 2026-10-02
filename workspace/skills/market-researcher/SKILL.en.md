@@ -9,6 +9,7 @@ description: Writing standards for market research docs (product_brief / market_
 
 Distilled from the campaign info returned by `read_campaign`, in Markdown:
 
+- **Product Facts (Evidence)** (fixed first section): product name, appearance (material/color/shape/size from the product description), price & brand when known, key selling points, asset index
 - **Product overview**: what it is, what problem it solves (Evidence first)
 - **Key selling points**: 3-5 items ranked by persuasiveness; label the source of each (product description / brand notes / user notes)
 - **Price band**: known price or range; if unknown write "TBD" plus a hypothesized range (labeled Assumption)

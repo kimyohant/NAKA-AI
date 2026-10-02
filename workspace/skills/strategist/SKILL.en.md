@@ -28,6 +28,7 @@ General: everything in Markdown; conclusions must be directly actionable; keep t
 
 ## content_brief — the execution brief for the ad scriptwriter agent
 
+- **Product name (verbatim)**: restate the product name returned by read_campaign word-for-word — the ad scriptwriter writes it verbatim into scene headers and the prop name; even a one-character rewrite breaks the real-product photo attachment
 - **Hook guidance**: the first 0-3 seconds must land the hook; give 3-5 reusable hook templates (pain question / result first / identity call / counter-intuitive / price shock)
 - **Formats**: which formats to use this run and the angle each fits
 - **Do / Don't**: explicit lists (e.g. Do: product-in-use shot within the first 3 seconds; Don't: opening logo B-roll)
