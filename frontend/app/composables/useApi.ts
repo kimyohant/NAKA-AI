@@ -194,3 +194,71 @@ export const serverUpdateAPI = {
   check: () => api.post('/server-update/check'),
   apply: () => api.post('/server-update/apply'),
 }
+
+// ===== AI Marketer（campaigns）— 契约见 docs/ai-marketer/PLAN.md §4，JSON 为 camelCase =====
+export type CampaignStatus = 'draft' | 'researching' | 'research_ready' | 'strategizing' | 'strategy_ready'
+  | 'writing' | 'creatives_ready' | 'failed'
+export type DocKind = 'product_brief' | 'market_research' | 'audience_insight' | 'message_map' | 'campaign_plan' | 'content_brief'
+export type Platform = 'tiktok' | 'reels' | 'youtube_shorts' | 'facebook' | 'shopee' | 'lazada'
+export type CreativeFormat = 'ugc' | 'product_demo' | 'problem_solution' | 'before_after' | 'testimonial' | 'unboxing'
+export type CampaignAspectRatio = '9:16' | '16:9' | '1:1'
+
+export interface Campaign {
+  id: number; title: string
+  productUrl: string | null; productName: string; productDescription: string | null
+  productImages: string[]
+  brandNotes: string | null
+  market: string
+  platforms: Platform[]; audience: string | null; goal: string | null
+  style: string; aspectRatio: CampaignAspectRatio
+  status: CampaignStatus; errorMsg: string | null
+  dramaId: number | null
+  researchNotes: string | null
+  budgetThb: number | null
+  createdAt: string; updatedAt: string
+}
+export interface CampaignDoc {
+  id: number; campaignId: number; kind: DocKind
+  content: string
+  status: 'draft' | 'approved'; version: number
+  createdAt: string; updatedAt: string
+}
+export interface Creative {
+  id: number; campaignId: number
+  angle: string; hook: string; format: CreativeFormat; platform: Platform
+  durationSec: number; cta: string | null
+  script: string
+  status: 'draft' | 'approved' | 'in_production'
+  episodeId: number | null; episodeNumber: number | null
+  createdAt: string; updatedAt: string
+}
+export type CampaignDetail = Campaign & { docs: CampaignDoc[]; creatives: Creative[] }
+export interface CampaignDocRevision { id: number; docId: number; version: number; content: string; source: 'agent' | 'manual'; createdAt: string }
+export interface IngestResult { productName: string; productDescription: string; price: string | null; brand: string | null; images: string[] }
+
+export const marketerAPI = {
+  list: (params?: { status?: CampaignStatus; dramaId?: number }) => {
+    const query = new URLSearchParams()
+    if (params?.status) query.set('status', params.status)
+    if (params?.dramaId) query.set('drama_id', String(params.dramaId))
+    const qs = query.toString()
+    return api.get<Campaign[]>(`/campaigns${qs ? `?${qs}` : ''}`)
+  },
+  create: (data: Partial<Campaign>) => api.post<Campaign>('/campaigns', data),
+  get: (id: number) => api.get<CampaignDetail>(`/campaigns/${id}`),
+  update: (id: number, data: Partial<Campaign>) => api.put<Campaign>(`/campaigns/${id}`, data),
+  del: (id: number) => api.del(`/campaigns/${id}`),
+  ingestUrl: (url: string) => api.post<IngestResult>('/campaigns/ingest-url', { url }),
+  // 以下三个为异步任务（202），前端轮询 get 直到 status 不再以 -ing 结尾
+  research: (id: number, notes?: string) => api.post<{ status: CampaignStatus }>(`/campaigns/${id}/research`, notes ? { notes } : {}),
+  strategy: (id: number) => api.post<{ status: CampaignStatus }>(`/campaigns/${id}/strategy`, {}),
+  updateDoc: (id: number, docId: number, data: { content?: string; status?: CampaignDoc['status'] }) => api.put<CampaignDoc>(`/campaigns/${id}/docs/${docId}`, data),
+  reviseDoc: (id: number, docId: number, instruction: string) => api.post<CampaignDoc>(`/campaigns/${id}/docs/${docId}/revise`, { instruction }),
+  docRevisions: (id: number, docId: number) => api.get<CampaignDocRevision[]>(`/campaigns/${id}/docs/${docId}/revisions`),
+  restoreDocRevision: (id: number, docId: number, revId: number) => api.post<CampaignDoc>(`/campaigns/${id}/docs/${docId}/revisions/${revId}/restore`, {}),
+  // mode: replace（默认，覆盖仍为 draft 的创意）/ append（保留全部，追加 N 条新角度）
+  generateCreatives: (id: number, data: { count: number; formats?: CreativeFormat[]; platforms?: Platform[]; mode?: 'replace' | 'append' }) => api.post<{ status: CampaignStatus }>(`/campaigns/${id}/creatives/generate`, data),
+  updateCreative: (id: number, cid: number, data: Partial<Creative>) => api.put<Creative>(`/campaigns/${id}/creatives/${cid}`, data),
+  deleteCreative: (id: number, cid: number) => api.del(`/campaigns/${id}/creatives/${cid}`),
+  produceCreative: (id: number, cid: number) => api.post<{ dramaId: number; episodeNumber: number }>(`/campaigns/${id}/creatives/${cid}/produce`, {}),
+}

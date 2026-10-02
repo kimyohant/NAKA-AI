@@ -38,7 +38,8 @@
       "home": "Drama Studio",
       "setup": "Setup",
       "openMenu": "Open menu",
-      "closeMenu": "Close menu"
+      "closeMenu": "Close menu",
+      "marketer": "AI Marketer"
     },
     "banner": {
       "missing": "{types} model not configured yet. AI features are unavailable.",
@@ -1056,7 +1057,13 @@
       "E_NO_VIDEO_CONFIG": "No active video service — add one in Settings → AI Services first",
       "E_EPISODE_NO_SCRIPT": "This episode has no script yet — write or paste one before the next step",
       "E_AGENT_UNAVAILABLE": "This agent is not available yet",
-      "E_AGENT_EMPTY_RESULT": "AI returned an empty result — try again"
+      "E_AGENT_EMPTY_RESULT": "AI returned an empty result — try again",
+      "E_CAMPAIGN_BUSY": "This campaign already has an AI step running — wait for it to finish.",
+      "E_INGEST_FAILED": "Could not read that product page. Fill in the details manually.",
+      "E_STRATEGY_NEEDS_RESEARCH": "Run market research before generating the strategy.",
+      "E_CREATIVES_NEED_STRATEGY": "Generate the strategy (content brief) before writing creatives.",
+      "E_CREATIVE_IN_PRODUCTION": "This creative is already in production and cannot be deleted.",
+      "E_INVALID_FIELD": "Some fields are invalid. Check your input and try again."
     }
   },
   "tour": {
@@ -1166,5 +1173,270 @@
     "needEpisode": "At least one episode is required before generating images (configs are locked per episode)",
     "mergedEpisode": "Merged episode video",
     "noVideoYet": "No video for this shot yet"
+  },
+  "marketer": {
+    "eyebrow": "NAKA-AI TECH",
+    "title": "AI Marketer",
+    "subtitle": "Product brief → market research → 4 strategy docs → ad creatives → straight into video production",
+    "list": {
+      "newCampaign": "New campaign",
+      "openAria": "Open campaign {title}",
+      "delete": "Delete campaign",
+      "emptyTitle": "No campaigns yet",
+      "emptyDesc": "Paste a product link or describe your product — AI researches the market, plans the strategy and writes ad scripts ready for production."
+    },
+    "create": {
+      "title": "New marketing campaign",
+      "desc": "Start from a product page link or fill in the product details yourself.",
+      "needProduct": "Enter a product name or a product URL",
+      "creating": "Creating…",
+      "submit": "Create campaign",
+      "created": "Campaign created"
+    },
+    "form": {
+      "sectionProduct": "Product",
+      "sectionCampaign": "Campaign",
+      "productUrl": "Product page URL",
+      "productUrlPlaceholder": "https://shopee.co.th/… or your product page",
+      "productUrlHint": "Fetch pulls the name, description and up to 6 images from the page. You can edit everything afterwards.",
+      "ingest": "Fetch",
+      "ingesting": "Fetching…",
+      "ingested": "Product info fetched — review and edit below",
+      "ingestFailed": "Could not read that page. Fill in the details manually.",
+      "urlInvalid": "Enter a full link starting with http:// or https://",
+      "priceLine": "Price: {price}",
+      "brandLine": "Brand: {brand}",
+      "productName": "Product name",
+      "productNamePlaceholder": "e.g. Hydrating Sunscreen SPF50+",
+      "title": "Campaign name",
+      "titlePlaceholder": "Defaults to the product name",
+      "productDescription": "Product description",
+      "productDescriptionPlaceholder": "Key features, ingredients, price, what makes it different…",
+      "images": "Product images",
+      "imagesHint": "Real product photos are used as references so generated videos show the actual product.",
+      "imageAlt": "Product image {n}",
+      "removeImage": "Remove image",
+      "upload": "Upload",
+      "uploading": "Uploading…",
+      "imageTooBig": "{name} is larger than 10 MB",
+      "brandNotes": "Brand notes",
+      "brandNotesPlaceholder": "Tone of voice, USPs, words or claims to avoid…",
+      "platforms": "Platforms",
+      "audience": "Target audience",
+      "audiencePlaceholder": "e.g. Office workers 22–35 who commute daily",
+      "market": "Market",
+      "goal": "Campaign goal",
+      "goalPlaceholder": "e.g. Drive TikTok Shop sales during the 11.11 sale",
+      "style": "Visual style",
+      "stylePlaceholder": "Choose a style",
+      "aspectRatio": "Aspect ratio",
+      "aspectRatioHint": "Used for every video produced from this campaign.",
+      "aspectRatioLocked": "Locked — this campaign already has a production project."
+    },
+    "platforms": {
+      "tiktok": "TikTok",
+      "reels": "Instagram Reels",
+      "youtube_shorts": "YouTube Shorts",
+      "facebook": "Facebook",
+      "shopee": "Shopee",
+      "lazada": "Lazada"
+    },
+    "markets": {
+      "TH": "Thailand",
+      "SG": "Singapore",
+      "MY": "Malaysia",
+      "ID": "Indonesia",
+      "VN": "Vietnam",
+      "PH": "Philippines",
+      "US": "United States",
+      "GLOBAL": "Global"
+    },
+    "ratios": {
+      "portrait": "9:16 Portrait",
+      "square": "1:1 Square",
+      "landscape": "16:9 Landscape"
+    },
+    "status": {
+      "draft": "Draft",
+      "researching": "Researching",
+      "research_ready": "Research ready",
+      "strategizing": "Planning strategy",
+      "strategy_ready": "Strategy ready",
+      "writing": "Writing creatives",
+      "creatives_ready": "Creatives ready",
+      "failed": "Failed"
+    },
+    "delete": {
+      "title": "Delete campaign",
+      "message": "Delete “{title}” with all its documents and creatives? Projects already sent to production are kept.",
+      "deleted": "Campaign deleted"
+    },
+    "steps": {
+      "brief": "Brief",
+      "briefSub": "Product & goal",
+      "research": "Research",
+      "researchSub": "Product brief, market",
+      "strategy": "Strategy",
+      "strategySub": "4 planning docs",
+      "creatives": "Creatives",
+      "creativesSub": "Hooks & ad scripts",
+      "production": "Production",
+      "productionSub": "Send to video"
+    },
+    "work": {
+      "back": "All campaigns",
+      "backToList": "Back to list",
+      "notFound": "Campaign not found (it may have been deleted)",
+      "steps": "Campaign steps",
+      "openDrama": "Open production project",
+      "failedTitle": "The last AI step failed",
+      "retry": "Retry {step}"
+    },
+    "job": {
+      "running": {
+        "research": "AI is researching the product and market…",
+        "strategy": "AI is writing the 4 strategy docs…",
+        "creatives": "AI is writing ad creatives…"
+      },
+      "done": {
+        "research": "Research is ready",
+        "strategy": "Strategy docs are ready",
+        "creatives": "Creatives are ready"
+      },
+      "failed": "{step} failed",
+      "view": "View"
+    },
+    "brief": {
+      "title": "Product brief",
+      "desc": "Everything the AI knows about your product comes from here. Edit any time — later steps use the saved version.",
+      "budget": "Budget (THB)",
+      "budgetPlaceholder": "Optional",
+      "budgetHint": "Carried over to the production project for cost tracking.",
+      "unsaved": "Unsaved changes",
+      "saved": "Brief saved",
+      "next": "Continue to research"
+    },
+    "research": {
+      "title": "Market research",
+      "desc": "AI writes a product brief and a market research doc. Evidence from your link and notes is kept separate from model assumptions.",
+      "notes": "Your research notes",
+      "notesPlaceholder": "Paste competitor links, customer reviews, pricing you have seen, sales data…",
+      "notesHint": "Optional. Saved with the campaign and reused on the next run.",
+      "run": "Run research",
+      "rerun": "Run research again",
+      "rerunHint": "Updates both docs — previous versions stay in History.",
+      "empty": "Not generated yet",
+      "next": "Continue to strategy"
+    },
+    "strategy": {
+      "title": "Strategy",
+      "desc": "Four docs built from the research. Edit, ask AI to revise, and approve each one.",
+      "run": "Generate strategy",
+      "rerun": "Regenerate strategy",
+      "rerunHint": "Rewrites all 4 docs — previous versions stay in History.",
+      "needResearch": "Run market research first.",
+      "empty": "Not generated yet",
+      "approvedCount": "{n}/{total} approved",
+      "next": "Continue to creatives"
+    },
+    "docKinds": {
+      "product_brief": "Product brief",
+      "market_research": "Market research",
+      "audience_insight": "Audience insight",
+      "message_map": "Message map",
+      "campaign_plan": "Campaign plan",
+      "content_brief": "Content brief"
+    },
+    "docStatus": {
+      "draft": "Draft",
+      "approved": "Approved"
+    },
+    "doc": {
+      "version": "v{n}",
+      "edit": "Edit",
+      "revise": "Ask AI to revise",
+      "revisePlaceholder": "e.g. Focus more on students and make the tone more playful",
+      "reviseHint": "Ctrl + Enter to send",
+      "reviseSubmit": "Revise",
+      "revising": "AI is revising…",
+      "revised": "Document revised",
+      "approve": "Approve",
+      "unapprove": "Unapprove",
+      "editHint": "Markdown supported",
+      "saved": "Document saved",
+      "empty": "Not generated yet",
+      "updated": "Updated {time}",
+      "history": "History",
+      "historyEmpty": "No earlier versions yet",
+      "source": {
+        "agent": "Before AI revision",
+        "manual": "Before manual edit"
+      },
+      "restore": "Restore this version",
+      "restored": "Restored v{n}"
+    },
+    "creatives": {
+      "title": "Creatives",
+      "desc": "Ad angles with a hook, CTA and a production-ready script. Approve the ones you want to produce.",
+      "formats": "Formats",
+      "platforms": "Platforms",
+      "anyHint": "Nothing selected = let AI choose from the strategy.",
+      "count": "How many",
+      "generate": "Generate creatives",
+      "generateMore": "Add more",
+      "regenerate": "Replace drafts",
+      "replaceHint": "Replaces draft creatives only — approved and in-production ones are kept.",
+      "needStrategy": "Generate the strategy (content brief) first.",
+      "empty": "No creatives yet — choose options above and generate.",
+      "approvedCount": "{n} approved",
+      "next": "Continue to production",
+      "hook": "Hook",
+      "angle": "Angle",
+      "cta": "CTA",
+      "none": "—",
+      "duration": "{n}s",
+      "durationLabel": "Length (sec)",
+      "script": "Script",
+      "scriptHint": "Keep the scene headers (## S1 {'|'} …) so the production pipeline can split shots.",
+      "showScript": "Show script",
+      "hideScript": "Hide script",
+      "edit": "Edit",
+      "approve": "Approve",
+      "unapprove": "Unapprove",
+      "delete": "Delete creative",
+      "deleteTitle": "Delete creative",
+      "deleteMessage": "Delete the creative “{hook}”? This cannot be undone.",
+      "deleted": "Creative deleted",
+      "saved": "Creative saved"
+    },
+    "formats": {
+      "ugc": "UGC",
+      "product_demo": "Product demo",
+      "problem_solution": "Problem → solution",
+      "before_after": "Before / after",
+      "testimonial": "Testimonial",
+      "unboxing": "Unboxing"
+    },
+    "creativeStatus": {
+      "draft": "Draft",
+      "approved": "Approved",
+      "in_production": "In production"
+    },
+    "production": {
+      "title": "Production",
+      "desc": "Each approved creative becomes an episode in this campaign’s production project, with the real product photos attached as references.",
+      "ready": "Ready to produce ({n})",
+      "noneApproved": "No approved creatives yet.",
+      "toCreatives": "Go to creatives",
+      "produce": "Produce video",
+      "produced": "Episode {n} created",
+      "inProduction": "In production ({n})",
+      "openEpisode": "Open episode {n}",
+      "exportTitle": "Export the plan",
+      "exportHint": "Copies the research, strategy and creatives as one Markdown document.",
+      "copyPlan": "Copy as Markdown",
+      "copied": "Plan copied",
+      "exportHeading": "Marketing plan — {title}"
+    }
   }
 }

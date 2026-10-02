@@ -27,6 +27,11 @@ export default defineNuxtConfig({
             path: '/drama/:id/episode/:episodeNumber',
             file: fileURLToPath(new URL('./app/views/drama/episode.vue', import.meta.url)),
           },
+          {
+            name: 'marketer-campaign',
+            path: '/marketer/:id',
+            file: fileURLToPath(new URL('./app/views/marketer/campaign.vue', import.meta.url)),
+          },
         )
       },
   },

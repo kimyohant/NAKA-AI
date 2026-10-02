@@ -20,6 +20,10 @@
           <Clapperboard :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.home') }}</span>
         </NuxtLink>
+        <NuxtLink to="/marketer" class="side-link" :class="{ active: isMarketerRoute }" :title="t('layout.nav.marketer')" @click="navOpen = false">
+          <Megaphone :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.marketer') }}</span>
+        </NuxtLink>
       </nav>
 
       <div class="side-divider"></div>
@@ -74,7 +78,7 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI } from '~/composables/useApi'
 import brandLogo from '~/assets/brand-logo.svg'
@@ -85,6 +89,7 @@ const showBrandImage = ref(true)
 const navOpen = ref(false)
 
 const isStudioRoute = computed(() => route.path === '/' || route.path.startsWith('/drama/'))
+const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.startsWith('/marketer/'))
 const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))
 
 const settingsItems = computed(() => [

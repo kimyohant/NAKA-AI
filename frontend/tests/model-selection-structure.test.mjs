@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
-const page = read('app/pages/drama/[id]/episode/[episodeNumber].vue')
+const page = read('app/views/drama/episode.vue')
 const useAgent = read('app/composables/useAgent.ts')
 const useApi = read('app/composables/useApi.ts')
 
@@ -25,23 +25,24 @@ test('workbench offers model selectors for rewrite, image and video generation',
   assert.match(page, /aiConfigAPI\.list\('text'\)/)
 })
 
-test('model select dropdown is a custom designed popover', () => {
+test('model select dropdown is a custom popover built on AppMenu', () => {
   const component = read('app/components/ModelSelect.vue')
+  const appMenu = read('app/components/AppMenu.vue')
 
-  assert.match(component, /Teleport to="body"/)
-  assert.match(component, /model-select-menu/)
-  assert.match(component, /model-select-option/)
-  assert.match(component, /Check :size="12"/)
-  assert.match(component, /model-select-backdrop/)
+  // Teleport + positioning กลางอยู่ที่ AppMenu (ModelSelect ใช้ AppMenu เป็นแท่น popup)
+  assert.match(appMenu, /Teleport to="body"/)
+  assert.match(component, /<AppMenu/)
+  assert.match(component, /model-select-trigger/)
+  assert.match(component, /<AppMenuItem/)
+  assert.match(component, /:selected="modelValue ===/)
   assert.match(component, /emit\('update:modelValue', model\)/)
   // 多配置时展示来源配置名
   assert.match(component, /showConfig/)
-  assert.match(component, /opt-config/)
 })
 
 test('selected models are sent with rewrite, image and video generation requests', () => {
   // 选中模型时连同其所属配置一起调用
-  assert.match(page, /function ownerConfigId\(options, model\)/)
+  assert.match(page, /function ownerConfigId\(options, key\)/)
   // 改写（Agent）透传模型与配置
   assert.match(useAgent, /model: model \|\| undefined/)
   assert.match(useAgent, /config_id: configId \|\| undefined/)
@@ -52,10 +53,10 @@ test('selected models are sent with rewrite, image and video generation requests
   assert.match(useApi, /text_model: textModel \|\| undefined/)
   assert.match(useApi, /text_config_id: textConfigId \|\| undefined/)
   assert.match(useApi, /config_id: configId \|\| undefined/)
-  assert.match(page, /characterAPI\.generateImage\(id, epId\.value, imageModel\.value \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
-  assert.match(page, /sceneAPI\.generateImage\(id, epId\.value, imageModel\.value \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
-  assert.match(page, /characterAPI\.batchImages\(ids, epId\.value, imageModel\.value \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
+  assert.match(page, /characterAPI\.generateImage\(id, epId\.value, bareModelName\(imageModel\.value\) \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
+  assert.match(page, /sceneAPI\.generateImage\(id, epId\.value, bareModelName\(imageModel\.value\) \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
+  assert.match(page, /characterAPI\.batchImages\(ids, epId\.value, bareModelName\(imageModel\.value\) \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
   // 视频生成透传模型与配置
-  assert.match(page, /model: videoModel\.value \|\| undefined/)
+  assert.match(page, /model: bareModelName\(videoModel\.value\) \|\| undefined/)
   assert.match(page, /config_id: ownerConfigId\(videoModelOptions\.value, videoModel\.value\)/)
 })
