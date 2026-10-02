@@ -442,6 +442,77 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     { table: 'sys_task', column: 'estimated_cost_thb', ddl: 'ALTER TABLE sys_task ADD COLUMN estimated_cost_thb REAL' },
     { table: 'sys_task', column: 'source_snapshot', ddl: 'ALTER TABLE sys_task ADD COLUMN source_snapshot TEXT' },
   ] },
+  // AI Marketer：campaign（brief）→ docs（research/strategy markdown）→ creatives（广告脚本，produce 后成为 episode）
+  // 数组字段（product_images / platforms）存 JSON TEXT，时间戳 ISO TEXT
+  { version: 6, columns: [], statements: [
+    `CREATE TABLE IF NOT EXISTS campaigns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      product_url TEXT,
+      product_name TEXT NOT NULL DEFAULT '',
+      product_description TEXT,
+      product_images TEXT,
+      brand_notes TEXT,
+      market TEXT NOT NULL DEFAULT 'TH',
+      platforms TEXT,
+      audience TEXT,
+      goal TEXT,
+      style TEXT DEFAULT '3d',
+      aspect_ratio TEXT DEFAULT '9:16',
+      status TEXT NOT NULL DEFAULT 'draft',
+      error_msg TEXT,
+      drama_id INTEGER,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS campaign_docs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL,
+      kind TEXT NOT NULL,
+      content TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'draft',
+      version INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      UNIQUE (campaign_id, kind)
+    )`,
+    `CREATE TABLE IF NOT EXISTS campaign_creatives (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL,
+      angle TEXT NOT NULL DEFAULT '',
+      hook TEXT NOT NULL DEFAULT '',
+      format TEXT NOT NULL DEFAULT 'ugc',
+      platform TEXT NOT NULL DEFAULT 'tiktok',
+      duration_sec INTEGER NOT NULL DEFAULT 30,
+      cta TEXT,
+      script TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'draft',
+      episode_id INTEGER,
+      episode_number INTEGER,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_campaign_creatives_campaign ON campaign_creatives (campaign_id)',
+  ] },
+  // AI Marketer เพิ่มเติม: เก็บ research notes (Evidence ที่ผู้ใช้วาง) + ประวัติการแก้ไขเอกสาร (revise/manual ทับแล้วย้อนดูได้)
+  { version: 7, columns: [
+    { table: 'campaigns', column: 'research_notes', ddl: 'ALTER TABLE campaigns ADD COLUMN research_notes TEXT' },
+  ], statements: [
+    `CREATE TABLE IF NOT EXISTS campaign_doc_revisions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      doc_id INTEGER NOT NULL,
+      version INTEGER NOT NULL,
+      content TEXT NOT NULL DEFAULT '',
+      source TEXT NOT NULL DEFAULT 'agent',
+      created_at TEXT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_campaign_doc_revisions_doc ON campaign_doc_revisions (doc_id)',
+  ] },
+  // AI Marketer: งบประมาณแคมเปญ (THB) — produce จะส่งต่อให้ dramas.budget_thb
+  { version: 8, columns: [
+    { table: 'campaigns', column: 'budget_thb', ddl: 'ALTER TABLE campaigns ADD COLUMN budget_thb REAL' },
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {

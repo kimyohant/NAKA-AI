@@ -341,3 +341,68 @@ export const appSettings = sqliteTable('app_settings', {
   value: text('value').notNull(),
   updatedAt: text('updated_at').notNull(),
 })
+
+// AI Marketer（迁移 version 6）— 数组字段存 JSON TEXT，对外由 services/marketer.ts 统一转 camelCase 结构
+export const campaigns = sqliteTable('campaigns', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull(),
+  productUrl: text('product_url'),
+  productName: text('product_name').notNull().default(''),
+  productDescription: text('product_description'),
+  productImages: text('product_images'),
+  brandNotes: text('brand_notes'),
+  market: text('market').notNull().default('TH'),
+  platforms: text('platforms'),
+  audience: text('audience'),
+  goal: text('goal'),
+  style: text('style').default('3d'),
+  aspectRatio: text('aspect_ratio').default('9:16'),
+  status: text('status').notNull().default('draft'),
+  errorMsg: text('error_msg'),
+  dramaId: integer('drama_id'),
+  // v7: Evidence จากผู้ใช้ (คู่แข่ง/รีวิว) ที่กรอกตอนสั่ง research — เก็บไว้ดูย้อนหลัง
+  researchNotes: text('research_notes'),
+  // v8: งบประมาณแคมเปญ (THB) — produce ส่งต่อให้ dramas.budget_thb
+  budgetThb: real('budget_thb'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  deletedAt: text('deleted_at'),
+})
+
+export const campaignDocs = sqliteTable('campaign_docs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  campaignId: integer('campaign_id').notNull(),
+  kind: text('kind').notNull(),
+  content: text('content').notNull().default(''),
+  status: text('status').notNull().default('draft'),
+  version: integer('version').notNull().default(1),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+export const campaignCreatives = sqliteTable('campaign_creatives', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  campaignId: integer('campaign_id').notNull(),
+  angle: text('angle').notNull().default(''),
+  hook: text('hook').notNull().default(''),
+  format: text('format').notNull().default('ugc'),
+  platform: text('platform').notNull().default('tiktok'),
+  durationSec: integer('duration_sec').notNull().default(30),
+  cta: text('cta'),
+  script: text('script').notNull().default(''),
+  status: text('status').notNull().default('draft'),
+  episodeId: integer('episode_id'),
+  episodeNumber: integer('episode_number'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+// v7: ประวัติเนื้อหาเอกสารก่อนถูกทับ (revise โดย agent = 'agent', แก้มือผ่าน PUT = 'manual')
+export const campaignDocRevisions = sqliteTable('campaign_doc_revisions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  docId: integer('doc_id').notNull(),
+  version: integer('version').notNull(),
+  content: text('content').notNull().default(''),
+  source: text('source').notNull().default('agent'),
+  createdAt: text('created_at').notNull(),
+})

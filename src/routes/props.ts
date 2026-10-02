@@ -114,9 +114,16 @@ app.post('/:id/generate-image', async (c) => {
   const stylePrompt = await getDramaStylePrompt(prop.dramaId)
   const finalPrompt = await ensurePropFinalPrompt(prop, ep.id, false, { model: body.text_model, configId: body.text_config_id ?? undefined })
   const prompt = finalPrompt || propImagePrompt(prop, stylePrompt)
+  // 真实商品参考图（AI Marketer ingest 落盘的 /static/... 存于 props.reference_images）：随任务传给适配器，
+  // 让白底单品图贴合实际商品外观；脏数据（非法 JSON）忽略不阻断
+  let referenceImages: string[] | undefined
   try {
-    logTaskStart('PropImage', 'generate', { propId: id, episodeId: ep.id, dramaId: prop.dramaId })
-    const genId = await generateImage({ propId: id, dramaId: prop.dramaId, prompt, model: body.model, size: PROP_IMAGE_SIZE, configId: body.config_id ?? ep.imageConfigId ?? undefined })
+    const parsed = prop.referenceImages ? JSON.parse(prop.referenceImages) : null
+    if (Array.isArray(parsed) && parsed.length) referenceImages = parsed.map(String)
+  } catch { /* ignore */ }
+  try {
+    logTaskStart('PropImage', 'generate', { propId: id, episodeId: ep.id, dramaId: prop.dramaId, references: referenceImages?.length || 0 })
+    const genId = await generateImage({ propId: id, dramaId: prop.dramaId, prompt, model: body.model, size: PROP_IMAGE_SIZE, configId: body.config_id ?? ep.imageConfigId ?? undefined, referenceImages })
     logTaskSuccess('PropImage', 'generate', { propId: id, generationId: genId })
     return success(c, { image_generation_id: genId })
   } catch (err: any) {

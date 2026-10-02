@@ -46,6 +46,9 @@ const AGENT_SKILL_MAP: Record<string, string[]> = {
     'prompt-generator/prop-prompt',
     'prompt-generator/video-prompt',
   ],
+  market_researcher: ['market-researcher'],
+  strategist: ['strategist'],
+  ad_scriptwriter: ['ad-scriptwriter'],
 }
 
 /** 每个 Agent 的 Workspace（filesystem 工作目录 + 原生技能注册）
