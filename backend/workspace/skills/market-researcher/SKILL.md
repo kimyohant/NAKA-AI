@@ -9,6 +9,7 @@ description: 市场调研文档的撰写规范（product_brief / market_research
 
 从 `read_campaign` 返回的活动信息提炼，Markdown 结构：
 
+- **Product Facts (Evidence)**（固定第一节）：产品名称、外观（材质/颜色/形状/大小，取自产品描述）、价格与品牌（若已知）、核心卖点、商品图索引
 - **产品概览**：产品是什么、解决什么问题（Evidence 优先）
 - **核心卖点**：3-5 条，按说服力排序；每条标注来源（产品描述 / 品牌笔记 / 用户 notes）
 - **价格带**：已知价格或价格区间；没有就写「待确认」并给出假设区间（标注 Assumption）

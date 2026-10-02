@@ -169,3 +169,8 @@ Contract ข้อ 4 ถูก implement ครบตามตัวสัญญ
   - Campaign รับ `budgetThb` (THB, 0-100,000,000, ปัด 2 ตำแหน่ง — เกณฑ์เดียวกับ dramas) และตอน produce สร้าง drama ใหม่จะส่ง `budget_thb` ให้โปรเจกต์ด้วย → งบเดิมจับใช้ได้ทันทีในหน้า budget
   - `GET /campaigns` รับ `?status=` และ `?drama_id=` filter ได้
   - Migration v8: คอลัมน์ `campaigns.budget_thb` (apply อัตโนมัติตอน boot)
+- **ปรับ prompt/skill + สคริปต์ทดสอบ (round 5):**
+  - ปรับ workspace prompts/skills ทั้ง 3 agents ให้ผูกกับ pipeline จริง: ad_scriptwriter (จำนวนฉากตาม durationSec: ≤40s=1 ฉาก, 45-60s=2 ฉาก · ห้าม markdown นอกจากหัวฉาก · เวลาเฉพาะ 白天/傍晚/夜晚 · ตัวละคร 1-2 คน · CTA ปิดท้าย · ห้าม camera language), market_researcher (product_brief ต้องมีหัวข้อแรก "Product Facts (Evidence)" · ตัวเลขคู่แข่งให้เป็นช่วง+Assumption), strategist (content_brief ต้องระบุชื่อสินค้าแบบคำต่อคำ · แนะนำ format ต่อ platform) — sync ทั้ง zh/en/SKILL/DEFAULT_PROMPTS
+  - เพิ่ม `backend/scripts/test-marketer-e2e.ts`: ทดสอบ E2E สินค้าไทยจริง 5 ตัว (ingest → research → strategy → creatives → produce → extract props/characters → storyboard) ตรวจ formatted script + prop ชื่อตรงสินค้า + reference images ไม่หาย + storyboard ผูก prop; รายงานลง data/e2e/*.json · รัน `npx tsx scripts/test-marketer-e2e.ts` (ต้องมี text config ก่อน), `--ingest-only` ทดสอบเฉพาะ ingest, `--products=N` จำกัดจำนวน
+  - ทดสอบ ingest จริงแล้ว (ไม่ต้องใช้ key): NaRaYa 3 รายการ parse ได้ (ชื่อไทย/ราคา THB/brand/รูป 2-3 รูป, URL slug ภาษาไทยผ่าน), Watsons 403 → E_INGEST_FAILED ตามออกแบบ (fallback กรอกมือ)
+  - **สถานะ: รอ API key** — production redeploy แล้ว (migration 1-8 ครบ) แต่ยังไม่มี text config ใน DB; ผู้ใช้เพิ่ม key ใน Settings แล้วรันสคริปต์ด้านบนได้ทันที

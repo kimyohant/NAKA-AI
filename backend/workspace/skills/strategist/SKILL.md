@@ -28,6 +28,7 @@ description: 策略四文档（audience_insight / message_map / campaign_plan / 
 
 ## content_brief（内容简报）— 交给广告脚本 Agent 的执行规范
 
+- **产品名（逐字使用）**：必须原样复述 read_campaign 返回的产品名——广告脚本 Agent 会逐字写进场景头与道具名，改写一个字真实商品参考图就挂不上
 - **Hook 写法**：0-3 秒内必须完成「钩子」，给出 3-5 个可复用的 hook 模板（痛点质问/结果前置/身份召唤/反常识/价格冲击）
 - **Formats**：列出本次要用的 formats 及各自适合的 angle
 - **Do / Don't**：明确的清单（如 Do: 前 3 秒出现产品使用画面；Don't: 开头出现 logo 空镜）
