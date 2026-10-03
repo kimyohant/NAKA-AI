@@ -542,6 +542,69 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     )`,
     'CREATE INDEX IF NOT EXISTS idx_campaign_visuals_campaign ON campaign_visuals (campaign_id)',
   ] },
+  // Product Studio (docs/product-studio/PLAN.md ข้อ 6): โปรเจกต์วิดีโอรีวิวสินค้า 1 ชิ้น + เทมเพลต
+  // 1 โปรเจกต์ = 1 drama + episode ที่ระบบสร้างให้; ช็อต = storyboards เดิม (studio_shots เก็บเฉพาะส่วนเสริม)
+  { version: 10, columns: [], statements: [
+    `CREATE TABLE IF NOT EXISTS studio_projects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      product_name TEXT NOT NULL DEFAULT '',
+      product_url TEXT,
+      product_description TEXT,
+      product_images TEXT,
+      template_id TEXT NOT NULL,
+      language TEXT NOT NULL DEFAULT 'th',
+      market TEXT NOT NULL DEFAULT 'TH',
+      platform TEXT NOT NULL DEFAULT 'tiktok',
+      aspect_ratio TEXT NOT NULL DEFAULT '9:16',
+      duration_sec INTEGER NOT NULL DEFAULT 24,
+      avatar_id INTEGER,
+      tone TEXT,
+      notes TEXT,
+      budget_thb REAL,
+      ai_disclosure INTEGER NOT NULL DEFAULT 1,
+      status TEXT NOT NULL DEFAULT 'draft',
+      error_msg TEXT,
+      drama_id INTEGER,
+      episode_id INTEGER,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_studio_projects_drama ON studio_projects (drama_id)`,
+    `CREATE TABLE IF NOT EXISTS studio_shots (
+      storyboard_id INTEGER NOT NULL UNIQUE,
+      project_id INTEGER NOT NULL,
+      role TEXT NOT NULL DEFAULT '',
+      dialogue TEXT,
+      on_screen_text TEXT
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_studio_shots_project ON studio_shots (project_id)`,
+    `CREATE TABLE IF NOT EXISTS studio_avatars (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      locale TEXT,
+      image_url TEXT,
+      image_task_id INTEGER,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS studio_images (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      kind TEXT NOT NULL,
+      platform TEXT,
+      source_image TEXT NOT NULL,
+      instruction TEXT,
+      prompt TEXT NOT NULL DEFAULT '',
+      task_id INTEGER NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_studio_images_project ON studio_images (project_id)`,
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {

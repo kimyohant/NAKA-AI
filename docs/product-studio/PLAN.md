@@ -187,7 +187,34 @@ Error codes ใหม่ (frontend แปลใน `errors.codes.*`):
 
 ## Notes from Agent A (backend)
 
-_(Agent A เขียนที่นี่)_
+### สิ่งที่ทำ (branch `feat/studio-backend`)
+
+**ไฟล์ที่แก้/เพิ่ม:**
+- `backend/src/services/task-prep.ts` (ใหม่) — refactor จาก routes/tasks.ts: `resolveTaskContext` / `prepareVideoTask` / `normalizeVideoRequest` / `validateVideoRequest` — route เดิมเรียกผ่าน service, POST /tasks กับ /preflight พฤติกรรมเหมือนเดิมทุกกรณี
+- `backend/src/services/product-visuals.ts` (ใหม่) — `buildVisualPrompt` / `visualSizeFor` / `VISUAL_KINDS` ย้ายจาก marketer.ts (output เหมือนเดิมทุกตัวอักษร — snapshot test กันไว้) + เพิ่ม kind `banner`
+- `backend/src/services/marketer.ts` — เรียก builder จากที่ใหม่ (re-export VISUAL_KINDS ให้ backward compatible)
+- `backend/src/db/sqlite-schema.ts` + `schema.ts` — migration v10: `studio_projects`, `studio_shots`, `studio_avatars` (+`image_url` สำหรับรูปที่อัปโหลด), `studio_images`, `campaign_creatives` ไม่แตะ
+- `backend/src/services/studio-templates.ts` (ใหม่) — 12 เทมเพลต **role strings ตรงรายการของ Agent B ทุกตัว** (hook/problem/use_product/…), options (12 languages, 15 markets, 8 platforms), `scaleBeats` (largest-remainder, ผลรวม = durationSec, ≥2s, cap 15s เมื่อทำได้)
+- `backend/src/services/studio.ts` + `studio-shots.ts` + `src/routes/studio.ts` — ครบ 20 endpoints ตาม PLAN ข้อ 4, mount `/api/v1/studio`, boot cleanup `failStaleStudioProjects`
+- `backend/src/agents/index.ts` + `skills.ts` + `context.ts` — agent `review_director` (DEFAULT_PROMPTS/AGENT_TOOLS/AGENT_SKILL_MAP), `buildStudioRequestContext`
+- `backend/src/agents/tools/studio-tools.ts` (ใหม่) — tool `save_studio_shots` (quota = จำนวน beats, prompts deterministic จาก builder เดียวกับ PUT shots)
+- `backend/workspace/prompts/review_director{,.en}.md` + `workspace/skills/review-director/SKILL{,.en}.md`
+- Tests: `tests/studio-templates.test.ts` (role list เทียบ Agent B, scaleBeats, options), `tests/studio-backend-structure.test.mjs` (routes/error codes/register/refactor ไม่แตะ writeBackImageAssets), `tests/product-visuals-snapshot.test.ts`, migration tests [1..10]
+
+**Endpoints ที่ทดสอบด้วย curl จริง (PORT=5680 + scratch DB):**
+- options/templates ✓ (12 เทมเพลต, ugc_review roles = hook/problem/use_product/result/cta, asmr_closeup hasDialogue=false)
+- projects: create (E_TEMPLATE_UNKNOWN ✓, ขาด productName/productUrl → E_INVALID_FIELD ✓, default ตาม platform/market ✓), GET/PUT/DELETE ✓ (soft delete → 404 ✓)
+- ingest-url: loopback → E_INGEST_FAILED ✓ (service เดียวกับ Marketer)
+- script: E_AVATAR_REQUIRED ✓ (เทมเพลต required ไม่มี avatar มีรูป), E_NO_TEXT_MODEL ✓, 202 → drama+episode ถูกสร้าง ✓, dummy endpoint → failed + "message" ✓
+- shots: PUT แก้ visual/dialogue/durationSec → prompts สร้างใหม่ deterministic ✓
+- render: E_STUDIO_NEEDS_SCRIPT ✓, keyframes queued ผ่าน generateImage (frameType first_frame, reference = รูปสินค้า 3 ใบแรก + avatar) ✓, videos: **E_STUDIO_NEEDS_KEYFRAMES ตรวจก่อน model guard** (สอดคล้องลำดับสัญญา), E_NO_VIDEO_MODEL ✓, ผ่าน resolveTaskContext/prepareVideoTask (task-prep) — ไม่ก๊อป logic
+- merge: E_STUDIO_NO_VIDEOS ✓ (mergeEpisodeVideos เดิม)
+- images: E_NO_IMAGE_MODEL ✓, banner + platform size ✓, failed อ่านสดจาก sys_task ✓, promote → E_VISUAL_NOT_READY ✓, DELETE ✓
+- avatars: create (imageUrl อัปโหลดเอง ✓) / PUT / list / DELETE ✓
+
+**ข้อแตกต่างจากสัญญา: ไม่มี** (หมายเหตุเชิงอธิบาย: `studio_avatars` เพิ่มคอลัมน์ `image_url` เก็บรูปที่ผู้ใช้อัปโหลดผ่าน uploadAPI — PLAN ข้อ 6 ไม่ได้ระบุคอลัมน์นี้แต่ข้อ 4 ให้ POST รับ `imageUrl` มา; โดยรูปอัปโหลด override รูปจาก AI)
+
+**ยังไม่ได้ทดสอบกับของจริง:** script ผ่านโมเดลจริง, keyframe/video จริง, merge จริง (ไม่มี key — ทดสอบถึง error path ด้วย dummy config ทุกเส้น)
 
 ## Notes from Agent B (frontend)
 

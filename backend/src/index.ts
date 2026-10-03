@@ -23,11 +23,13 @@ import skills from './routes/skills.js'
 import props from './routes/props.js'
 import settings from './routes/settings.js'
 import campaigns from './routes/campaigns.js'
+import studio from './routes/studio.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
 import { failStaleRunningTasks } from './services/pipeline-tasks.js'
 import { failStaleCampaigns } from './services/marketer.js'
+import { failStaleStudioProjects } from './services/studio.js'
 import { recoverGenerationTasks } from './services/generation.js'
 import { DATA_ROOT } from './utils/paths.js'
 
@@ -103,6 +105,7 @@ api.route('/props', props)
 api.route('/storage', storage)
 api.route('/settings', settings)
 api.route('/campaigns', campaigns)
+api.route('/studio', studio)
 api.route('/server-update', serverUpdate)
 
 app.route('/api/v1', api)
@@ -144,6 +147,14 @@ try {
   if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 campaign 任务`)
 } catch (err: any) {
   console.error('清理中断 campaign 任务失败:', err?.message)
+}
+
+// 同理：Product Studio scripting ค้างหลัง restart
+try {
+  const n = await failStaleStudioProjects()
+  if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 studio 任务`)
+} catch (err: any) {
+  console.error('清理中断 studio 任务失败:', err?.message)
 }
 
 serve({ fetch: app.fetch, port, hostname })

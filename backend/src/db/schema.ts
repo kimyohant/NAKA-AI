@@ -434,3 +434,69 @@ export const campaignVisuals = sqliteTable('campaign_visuals', {
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })
+
+
+// v10 (Product Studio): โปรเจกต์วิดีโอรีวิวสินค้า — 1 โปรเจกต์ = 1 drama + episode (metadata.studioProjectId)
+export const studioProjects = sqliteTable('studio_projects', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull(),
+  productName: text('product_name').notNull().default(''),
+  productUrl: text('product_url'),
+  productDescription: text('product_description'),
+  productImages: text('product_images'),
+  templateId: text('template_id').notNull(),
+  language: text('language').notNull().default('th'),
+  market: text('market').notNull().default('TH'),
+  platform: text('platform').notNull().default('tiktok'),
+  aspectRatio: text('aspect_ratio').notNull().default('9:16'),
+  durationSec: integer('duration_sec').notNull().default(24),
+  avatarId: integer('avatar_id'),
+  tone: text('tone'),
+  notes: text('notes'),
+  budgetThb: real('budget_thb'),
+  aiDisclosure: integer('ai_disclosure', { mode: 'boolean' }).default(true),
+  status: text('status').notNull().default('draft'),
+  errorMsg: text('error_msg'),
+  dramaId: integer('drama_id'),
+  episodeId: integer('episode_id'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  deletedAt: text('deleted_at'),
+})
+
+// v10: ส่วนเสริมของช็อต (storyboard_id เดิมเก็บภาพ/ความยาว/prompt ตามปกติ)
+export const studioShots = sqliteTable('studio_shots', {
+  storyboardId: integer('storyboard_id').notNull().unique(),
+  projectId: integer('project_id').notNull(),
+  role: text('role').notNull().default(''),
+  dialogue: text('dialogue'),
+  onScreenText: text('on_screen_text'),
+})
+
+// v10: คลัง avatar ของผู้ใช้ (imageUrl อ่านจาก sys_task ผ่าน image_task_id เมื่อ AI สร้าง)
+export const studioAvatars = sqliteTable('studio_avatars', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  description: text('description').notNull().default(''),
+  locale: text('locale'),
+  // รูปจาก uploadAPI เดิม (ผู้ใช้อัปโหลดเอง) — AI-generated อ่านจาก sys_task ผ่าน imageTaskId
+  imageUrl: text('image_url'),
+  imageTaskId: integer('image_task_id'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  deletedAt: text('deleted_at'),
+})
+
+// v10: ภาพสินค้าในโปรเจกต์ (เหมือน campaign_visuals + platform)
+export const studioImages = sqliteTable('studio_images', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  projectId: integer('project_id').notNull(),
+  kind: text('kind').notNull(),
+  platform: text('platform'),
+  sourceImage: text('source_image').notNull(),
+  instruction: text('instruction'),
+  prompt: text('prompt').notNull().default(''),
+  taskId: integer('task_id').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
