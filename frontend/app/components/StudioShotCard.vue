@@ -4,6 +4,9 @@
       <span class="ps-shot-num mono">{{ shot.number }}</span>
       <h3 class="ps-shot-role">{{ roleLabel }}</h3>
       <span class="tag mono">{{ t('productStudio.shots.durationSec', { n: shot.durationSec }) }}</span>
+      <span v-if="mode === 'script' && !hasCaption" class="tag" :title="t('productStudio.captions.noCaptionHint')">
+        {{ t('productStudio.captions.noCaptionBadge') }}
+      </span>
     </header>
 
     <!-- แก้บท: บทพูด (นับเวลาพูดเทียบความยาวช็อต) / ภาพ / ข้อความบนจอ -->
@@ -98,7 +101,7 @@ import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import { studioAPI } from '~/composables/useApi'
 import { toastError } from '~/composables/useToast'
-import { dialogueTooLong, speechSeconds } from '~/utils/studioFlow'
+import { captionSourceOf, dialogueTooLong, speechSeconds } from '~/utils/studioFlow'
 
 /** StudioShotCard — ช็อตเดียว: โหมด script (แก้บทพูด/ภาพ/ข้อความบนจอ) หรือโหมด render (keyframe/video) */
 const props = defineProps({
@@ -131,6 +134,7 @@ const dirty = computed(() =>
   || (draft.onScreenText || '') !== (props.shot.onScreenText || '')
   || Number(draft.durationSec) !== Number(props.shot.durationSec))
 
+const hasCaption = computed(() => !!captionSourceOf(props.shot))
 const estSeconds = computed(() => speechSeconds(draft.dialogue, props.language))
 const tooLong = computed(() => dialogueTooLong(draft.dialogue, props.language, draft.durationSec))
 const speechHint = computed(() => {

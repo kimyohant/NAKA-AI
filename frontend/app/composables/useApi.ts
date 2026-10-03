@@ -343,9 +343,22 @@ export interface StudioProject {
   tone: string | null; notes: string | null
   budgetThb: number | null
   aiDisclosure: boolean
+  // Phase 2 (docs/product-studio/PHASE2.md §2)
+  captions: boolean
+  captionStyle: 'clean' | 'bold' | 'boxed'
+  aiLabelBurnIn: boolean
+  autoRender: StudioAutoRender
+  sourceCampaignId: number | null
   status: StudioStatus; errorMsg: string | null
   dramaId: number | null; episodeId: number | null
   createdAt: string; updatedAt: string
+}
+export type AutoRenderStage = 'idle' | 'keyframes' | 'videos' | 'merging' | 'done' | 'failed' | 'cancelled'
+export interface StudioAutoRender {
+  stage: AutoRenderStage
+  total: number; done: number; failed: number   // นับช็อตของ stage ปัจจุบัน (merging: total=1)
+  errorMsg: string | null                        // รูปแบบ "E_CODE: message"
+  startedAt: string | null; finishedAt: string | null
 }
 export interface StudioShot {
   id: number                    // = storyboard id
@@ -357,7 +370,12 @@ export interface StudioShot {
   keyframeUrl: string | null; keyframeStatus: MediaStatus; keyframeError: string | null
   videoUrl: string | null; videoStatus: MediaStatus; videoError: string | null
 }
-export interface StudioMerge { id: number; status: 'processing' | 'completed' | 'failed'; videoUrl: string | null; errorMsg: string | null; createdAt: string }
+export interface StudioMerge {
+  id: number; status: 'processing' | 'completed' | 'failed'; videoUrl: string | null; errorMsg: string | null; createdAt: string
+  // Phase 2
+  captioned: boolean
+  subtitleUrl: string | null   // /static/... ไฟล์ .srt (เมื่อมีบทพูด/ข้อความอย่างน้อย 1 ช็อต)
+}
 export interface StudioAvatar {
   id: number; name: string
   description: string
@@ -392,7 +410,13 @@ export const studioAPI = {
   updateShot: (id: number, shotId: number, data: { dialogue?: string | null; visual?: string; onScreenText?: string | null; durationSec?: number }) =>
     api.put<StudioShot>(`/studio/projects/${id}/shots/${shotId}`, data),
   render: (id: number, data: { stage: 'keyframes' | 'videos'; shotIds?: number[] }) => api.post<{ queued: number }>(`/studio/projects/${id}/render`, data),
-  merge: (id: number) => api.post<StudioMerge>(`/studio/projects/${id}/merge`, {}),
+  // Phase 2 — merge: ไม่ส่ง captions = ใช้ค่า project.captions
+  merge: (id: number, data: { captions?: boolean } = {}) => api.post<StudioMerge>(`/studio/projects/${id}/merge`, data),
+  // Phase 2 — auto-render: server ทำ keyframes → videos → merge จนจบเอง (poll get ทุก 3s ระหว่าง stage วิ่ง)
+  autoRender: (id: number, data: { force?: boolean } = {}) => api.post<StudioProject>(`/studio/projects/${id}/auto-render`, data),
+  cancelAutoRender: (id: number) => api.post<StudioProject>(`/studio/projects/${id}/auto-render/cancel`, {}),
+  // Phase 2 — สร้างโปรเจกต์จากแคมเปญ Marketer (+ creative ที่เลือก)
+  fromCampaign: (data: { campaignId: number; creativeId?: number; templateId: string }) => api.post<StudioProject>('/studio/projects/from-campaign', data),
   generateImages: (id: number, data: { kind: StudioImageKind; sourceImage: string; count?: number; platform?: StudioPlatform; instruction?: string }) =>
     api.post<StudioImage[]>(`/studio/projects/${id}/images/generate`, data),
   deleteImage: (id: number, imageId: number) => api.del(`/studio/projects/${id}/images/${imageId}`),

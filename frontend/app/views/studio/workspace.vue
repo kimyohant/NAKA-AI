@@ -19,6 +19,10 @@
         </div>
       </div>
       <div class="ps-topbar-side">
+        <NuxtLink v-if="detail.sourceCampaignId" :to="`/marketer/${detail.sourceCampaignId}`" class="btn">
+          <Megaphone :size="13" :stroke-width="1.9" />
+          {{ t('productStudio.fromCampaign.backToCampaign') }}
+        </NuxtLink>
         <NuxtLink v-if="detail.dramaId" :to="`/drama/${detail.dramaId}/episode/1`" class="btn">
           <Clapperboard :size="13" :stroke-width="1.9" />
           {{ t('productStudio.export.openEpisode') }}
@@ -298,6 +302,38 @@
             </label>
           </div>
 
+          <!-- Phase 2: captions -->
+          <div class="ps-captions">
+            <label class="ps-check">
+              <input v-model="settingsDraft.captions" type="checkbox" />
+              <span>{{ t('productStudio.captions.enable') }}</span>
+            </label>
+            <template v-if="settingsDraft.captions">
+              <span class="field-label">{{ t('productStudio.captions.style') }}</span>
+              <div class="ps-cap-styles" role="radiogroup" :aria-label="t('productStudio.captions.style')">
+                <button
+                  v-for="st in CAPTION_STYLES"
+                  :key="st"
+                  type="button"
+                  role="radio"
+                  :aria-checked="settingsDraft.captionStyle === st"
+                  :class="['ps-cap-style', { on: settingsDraft.captionStyle === st }]"
+                  @click="settingsDraft.captionStyle = st"
+                >
+                  <span class="ps-cap-frame" :data-aspect="settingsDraft.aspectRatio">
+                    <span class="ps-cap-preview" :class="`cap-${st}`">{{ t('productStudio.captions.previewText') }}</span>
+                  </span>
+                  <span>{{ t(`productStudio.captions.styles.${st}`) }}</span>
+                </button>
+              </div>
+              <label class="ps-check">
+                <input v-model="settingsDraft.aiLabelBurnIn" type="checkbox" />
+                <span>{{ t('productStudio.captions.burnIn') }}</span>
+              </label>
+              <p class="field-hint">{{ t('productStudio.captions.burnInHint') }}</p>
+            </template>
+          </div>
+
           <div class="ps-split">
             <span class="ps-hint">{{ settingsDirty ? t('productStudio.product.unsaved') : '' }}</span>
             <div class="ps-actions">
@@ -329,6 +365,8 @@
             </button>
           </div>
           <p v-if="shots.length" class="ps-warn-note">{{ t('productStudio.script.regenerateWarn') }}</p>
+
+          <p v-if="noCaptionCount" class="ps-warn-note" role="status">{{ t('productStudio.captions.shotsNoCaption', { n: noCaptionCount }) }}</p>
 
           <div v-if="shots.length" class="ps-shots-grid">
             <StudioShotCard
@@ -372,15 +410,47 @@
               <Film :size="13" :stroke-width="2" />
               {{ t('productStudio.render.videosAll') }}
             </button>
-            <button class="btn btn-primary" type="button" :disabled="renderBlock || avatarMissing || !shots.length" @click="renderAll">
-              <Loader2 v-if="renderBlock" :size="13" class="animate-spin" />
-              <Sparkles v-else :size="13" :stroke-width="2" />
-              {{ t('productStudio.render.all') }}
+            <button class="btn btn-primary" type="button" :disabled="renderBlock || avatarMissing || !shots.length" @click="startAutoRender(false)">
+              <Sparkles :size="13" :stroke-width="2" />
+              {{ t('productStudio.autoRender.start') }}
+            </button>
+            <button v-if="anyMediaDone" class="btn" type="button" :disabled="renderBlock || avatarMissing || !shots.length" :title="t('productStudio.autoRender.forceHint')" @click="startAutoRender(true)">
+              <RotateCcw :size="13" :stroke-width="2" />
+              {{ t('productStudio.autoRender.force') }}
             </button>
           </div>
-          <div v-if="renderBlock || autoVideosPending" class="ps-keep-open" role="status">
-            <Loader2 :size="13" class="animate-spin" />
-            <span>{{ t('productStudio.render.keepOpenWarn') }}</span>
+
+          <!-- server-side pipeline: ปิดหน้าได้ server ทำต่อเอง -->
+          <div v-if="autoRenderActive" class="ps-auto" role="status">
+            <Loader2 :size="15" class="animate-spin" />
+            <div class="ps-auto-copy">
+              <div class="ps-auto-line">
+                <strong>{{ t(`productStudio.autoRender.stage.${autoRenderInfo.stage}`) }}</strong>
+                <span class="mono">{{ autoRenderProgress.done }}/{{ autoRenderProgress.total }}</span>
+                <span v-if="autoRenderProgress.failed" class="tag tag-error">{{ t('productStudio.autoRender.failedCount', { n: autoRenderProgress.failed }) }}</span>
+              </div>
+              <div class="ps-auto-bar"><span class="ps-auto-fill" :style="{ width: `${autoRenderProgress.percent}%` }" /></div>
+            </div>
+            <button class="btn btn-sm" type="button" @click="stopAutoRender">
+              <Ban :size="12" :stroke-width="2" />
+              {{ t('productStudio.autoRender.cancel') }}
+            </button>
+          </div>
+          <div v-else-if="autoRenderInfo?.stage === 'done'" class="ps-auto ps-auto-done" role="status">
+            <Check :size="15" :stroke-width="2.4" />
+            <span class="ps-auto-copy">{{ t('productStudio.autoRender.done') }}</span>
+            <button class="btn btn-sm btn-primary" type="button" @click="goStep('export')">
+              {{ t('productStudio.render.next') }}
+              <ArrowRight :size="12" :stroke-width="2" />
+            </button>
+          </div>
+          <div v-else-if="autoRenderInfo?.stage === 'failed'" class="ps-alert" role="alert">
+            <CircleAlert :size="16" :stroke-width="1.9" />
+            <div class="ps-alert-copy">
+              <strong>{{ t('productStudio.autoRender.failed') }}</strong>
+              <span>{{ autoRenderFailedText }}</span>
+            </div>
+            <button class="btn btn-sm" type="button" :disabled="!shots.length" @click="startAutoRender(false)">{{ t('productStudio.autoRender.retry') }}</button>
           </div>
 
           <div v-if="shots.length" class="ps-shots-grid">
@@ -418,6 +488,10 @@
           </div>
 
           <div class="ps-export-box">
+            <label class="ps-check ps-captions-switch">
+              <input v-model="mergeCaptions" type="checkbox" :disabled="merging" />
+              <span>{{ t('productStudio.captions.exportSwitch') }}</span>
+            </label>
             <div class="ps-run-row">
               <button class="btn btn-primary" type="button" :disabled="merging || !anyVideoDone" @click="merge">
                 <Loader2 v-if="merging" :size="13" class="animate-spin" />
@@ -437,10 +511,17 @@
                 <CircleAlert :size="16" :stroke-width="1.8" />
                 <span>{{ latestMerge.errorMsg || t('productStudio.mediaStatus.failed') }}</span>
               </div>
-              <a v-if="latestMerge.status === 'completed' && latestMerge.videoUrl" :href="latestMerge.videoUrl" download class="btn btn-sm">
-                <Download :size="12" :stroke-width="2" />
-                {{ t('productStudio.export.download') }}
-              </a>
+              <div v-if="latestMerge.status === 'completed'" class="ps-run-row">
+                <a v-if="latestMerge.videoUrl" :href="latestMerge.videoUrl" download class="btn btn-sm">
+                  <Download :size="12" :stroke-width="2" />
+                  {{ t('productStudio.export.download') }}
+                </a>
+                <a v-if="latestMerge.subtitleUrl" :href="latestMerge.subtitleUrl" download class="btn btn-sm">
+                  <Captions :size="12" :stroke-width="2" />
+                  {{ t('productStudio.captions.downloadSrt') }}
+                </a>
+                <span v-if="latestMerge.captioned" class="tag tag-success">{{ t('productStudio.captions.hasSubs') }}</span>
+              </div>
             </div>
           </div>
 
@@ -473,8 +554,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import {
-  ArrowLeft, ArrowRight, Ban, Check, ChevronDown, ChevronUp, CircleAlert, Clapperboard,
-  Download, Film, ImageIcon, ImagePlus, Link2, Loader2, RefreshCw, ScrollText, Sparkles, UserRound,
+  ArrowLeft, ArrowRight, Ban, Captions, Check, ChevronDown, ChevronUp, CircleAlert, Clapperboard,
+  Download, Film, ImageIcon, ImagePlus, Link2, Loader2, Megaphone, RefreshCw, ScrollText, Sparkles, UserRound,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import {
@@ -486,6 +567,7 @@ import {
   STUDIO_STEPS, STUDIO_IMAGE_KINDS, STUDIO_DURATION_MIN,
   SCRIPT_POLL_INTERVAL_MS, RENDER_POLL_INTERVAL_MS,
   isScripting, isStepDone, nextIncompleteStep, clampStudioDuration, applyPlatformDefaults, studioErrorCodeOf,
+  isAutoRenderActive, autoRenderProgress, shotsWithoutCaptions,
 } from '~/utils/studioFlow'
 
 type StepId = typeof STUDIO_STEPS[number]
@@ -512,7 +594,7 @@ const avatar = computed(() => detail.value?.avatar || null)
 const avatarMissing = computed(() => template.value?.avatarMode === 'required' && !(avatar.value && avatar.value.imageUrl))
 const processingMedia = computed(() => shots.value.some(s => s.keyframeStatus === 'processing' || s.videoStatus === 'processing'))
 const mergeProcessing = computed(() => latestMerge.value?.status === 'processing')
-const renderBlock = computed(() => processingMedia.value || mergeProcessing.value)
+const renderBlock = computed(() => processingMedia.value || mergeProcessing.value || autoRenderActive.value)
 const allKeyframesDone = computed(() => shots.value.length > 0 && shots.value.every(s => s.keyframeStatus === 'completed'))
 const anyVideoDone = computed(() => shots.value.some(s => s.videoStatus === 'completed'))
 const audioQualityWarn = computed(() => settingsDraft.value.language && !['en', 'zh'].includes(settingsDraft.value.language))
@@ -521,12 +603,28 @@ const durationMax = computed(() => {
   return opt ? Math.min(60, opt.maxDurationSec) : 60
 })
 
+const CAPTION_STYLES = ['clean', 'bold', 'boxed'] as const
+
 const statusTagClass = computed(() => {
   const s = detail.value?.status
   if (s === 'failed') return 'tag-error'
   if (scripting.value) return 'tag-info'
   if (s === 'script_ready') return 'tag-success'
   return ''
+})
+
+// ===== Phase 2: auto-render + captions =====
+const autoRenderInfo = computed(() => detail.value?.autoRender || null)
+const autoRenderActive = computed(() => isAutoRenderActive(detail.value))
+const autoRenderProgress = computed(() => autoRenderProgress(detail.value))
+const anyMediaDone = computed(() => shots.value.some(s => s.keyframeStatus === 'completed' || s.videoStatus === 'completed'))
+const noCaptionCount = computed(() => shotsWithoutCaptions(shots.value).length)
+const mergeCaptions = ref(true)
+const autoRenderFailedText = computed(() => {
+  const msg = autoRenderInfo.value?.errorMsg || ''
+  const code = studioErrorCodeOf(msg)
+  if (code && te(`errors.codes.${code}`)) return t(`errors.codes.${code}`)
+  return mapError(new Error(msg))
 })
 
 const modelBanner = ref('')
@@ -551,38 +649,40 @@ function goStep(id: StepId | null) {
 
 // ===== poll (timer เดียว: scripting 2s / มีงานสื่อ 3s) =====
 let pollTimer: ReturnType<typeof setTimeout> | null = null
-let autoVideosArmed = false
 let disposed = false
 function schedulePoll() {
   if (pollTimer) clearTimeout(pollTimer)
   // refresh ที่ค้างอยู่ตอนออกจากหน้าจะเรียกมาที่นี่อีก — ห้ามตั้ง timer ใหม่หลัง unmount
   if (disposed) pollTimer = null
   else if (scripting.value) pollTimer = setTimeout(poll, SCRIPT_POLL_INTERVAL_MS)
-  else if (processingMedia.value || mergeProcessing.value) pollTimer = setTimeout(poll, RENDER_POLL_INTERVAL_MS)
+  else if (processingMedia.value || mergeProcessing.value || autoRenderActive.value) pollTimer = setTimeout(poll, RENDER_POLL_INTERVAL_MS)
   else pollTimer = null
 }
 
 async function poll() {
   const prev = detail.value?.status
+  const prevAutoStage = detail.value?.autoRender?.stage
   await refresh(true)
   const now = detail.value?.status
   if (prev === 'scripting' && now !== 'scripting') {
     if (now === 'failed') toast.error(t('productStudio.workspace.scriptFailed'))
-    else {
-      toast.success(t('productStudio.workspace.scriptDone'))
-      autoVideosArmed = false
+    else toast.success(t('productStudio.workspace.scriptDone'))
+  }
+  // auto-render: stage เปลี่ยนจากกำลังวิ่ง → done/failed/cancelled
+  const nowAutoStage = detail.value?.autoRender?.stage
+  if (prevAutoStage && ['keyframes', 'videos', 'merging'].includes(prevAutoStage)) {
+    if (nowAutoStage === 'done') {
+      toast.success(t('productStudio.autoRender.doneToast'))
+      goStep('export')
+    } else if (nowAutoStage === 'failed') {
+      toast.error(t('productStudio.autoRender.failedToast'))
+    } else if (nowAutoStage === 'cancelled') {
+      toast.info(t('productStudio.autoRender.cancelledToast'))
     }
   }
-  continueRenderAll()
 }
 
-// โหมด "สร้างทั้งหมด": รอ keyframe หยุดวิ่งแล้วไปต่อวิดีโอเอง — ช็อตที่ keyframe ล้มเหลว backend ข้ามให้
-// (ถ้ารอ allKeyframesDone อย่างเดียว keyframe ล้มเหลวช็อตเดียวจะค้างโหมดนี้ไว้เงียบ ๆ ตลอดไป)
-function continueRenderAll() {
-  if (!autoVideosArmed || processingMedia.value) return
-  autoVideosArmed = false
-  if (shots.value.some(s => s.keyframeStatus === 'completed' && s.videoStatus !== 'completed')) renderStage('videos')
-}
+
 
 async function refresh(silent = false) {
   if (!silent) refreshing.value = true
@@ -653,12 +753,16 @@ function resetSettings(d: StudioDetail) {
     notes: d.notes || '',
     budgetThb: d.budgetThb == null ? '' : String(d.budgetThb),
     aiDisclosure: d.aiDisclosure !== false,
+    captions: d.captions !== false,
+    captionStyle: d.captionStyle || 'bold',
+    aiLabelBurnIn: !!d.aiLabelBurnIn,
   }
 }
 const settingsDraft = ref({
   language: 'th', market: 'TH', platform: 'tiktok', aspectRatio: '9:16',
   durationSec: 30, avatarId: null as number | null,
   tone: '', notes: '', budgetThb: '', aiDisclosure: true,
+  captions: true, captionStyle: 'bold' as 'clean' | 'bold' | 'boxed', aiLabelBurnIn: false,
 })
 const settingsSnapshot = ref('')
 const settingsDirty = computed(() => JSON.stringify(settingsDraft.value) !== settingsSnapshot.value)
@@ -773,6 +877,9 @@ async function saveSettings(silent = false): Promise<boolean> {
       notes: s.notes.trim() || null,
       budgetThb: budgetRaw === '' ? null : Number(budgetRaw),
       aiDisclosure: s.aiDisclosure,
+      captions: s.captions,
+      captionStyle: s.captionStyle,
+      aiLabelBurnIn: s.aiLabelBurnIn,
     })
     detail.value = { ...detail.value, ...updated }
     resetSettings(detail.value!)
@@ -825,12 +932,26 @@ async function renderStage(stage: 'keyframes' | 'videos', shotIds?: number[]) {
     handleErr(e)
   }
 }
-async function renderAll() {
-  if (!shots.value.length || avatarMissing.value) return
-  autoVideosArmed = true
-  // keyframe ครบอยู่แล้ว → render keyframes ได้ queued 0 ไม่มีงานวิ่ง ไม่มี poll มาต่อวิดีโอ จึงต้องเช็กเองทันที
-  if (allKeyframesDone.value) continueRenderAll()
-  else await renderStage('keyframes')
+async function startAutoRender(force = false) {
+  if (renderBlock.value || avatarMissing.value || !shots.value.length) return
+  try {
+    const updated = await studioAPI.autoRender(projectId, { force })
+    detail.value = { ...detail.value!, ...updated }
+    toast.success(t('productStudio.autoRender.started'))
+    schedulePoll()
+  } catch (e) {
+    handleErr(e)
+  }
+}
+
+async function stopAutoRender() {
+  try {
+    const updated = await studioAPI.cancelAutoRender(projectId)
+    detail.value = { ...detail.value!, ...updated }
+    toast.info(t('productStudio.autoRender.cancelledToast'))
+  } catch (e) {
+    handleErr(e)
+  }
 }
 
 // ===== 6 ส่งออก =====
@@ -839,7 +960,7 @@ async function merge() {
   if (merging.value || !anyVideoDone.value) return
   merging.value = true
   try {
-    const m = await studioAPI.merge(projectId)
+    const m = await studioAPI.merge(projectId, { captions: mergeCaptions.value })
     detail.value = { ...detail.value!, latestMerge: m }
     toast.success(t('productStudio.export.merging'))
     schedulePoll()

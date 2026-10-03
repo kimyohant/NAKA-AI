@@ -75,7 +75,11 @@
         </NuxtLink>
       </template>
       <template v-else>
-        <button type="button" class="btn btn-sm btn-icon mk-del" :title="t('marketer.creatives.delete')" :aria-label="t('marketer.creatives.delete')" :disabled="disabled || busy" @click="emit('delete', creative)">
+        <button type="button" class="btn btn-sm" :title="t('marketer.creatives.toStudio')" :disabled="disabled || busy" @click="emit('toStudio', creative)">
+          <ShoppingBag :size="12" :stroke-width="2" />
+          {{ t('marketer.creatives.toStudio') }}
+        </button>
+                <button type="button" class="btn btn-sm btn-icon mk-del" :title="t('marketer.creatives.delete')" :aria-label="t('marketer.creatives.delete')" :disabled="disabled || busy" @click="emit('delete', creative)">
           <Trash2 :size="13" :stroke-width="1.9" />
         </button>
         <button type="button" class="btn btn-sm" :disabled="disabled || busy" @click="startEdit">
@@ -96,7 +100,7 @@
 </template>
 
 <script setup>
-import { Check, ChevronRight, ExternalLink, Loader2, Pencil, Trash2, Undo2, Wand2 } from 'lucide-vue-next'
+import { Check, ChevronRight, ExternalLink, Loader2, Pencil, ShoppingBag, Trash2, Undo2, Wand2 } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import { marketerAPI } from '~/composables/useApi'
@@ -110,7 +114,7 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   referenceTitle: { type: String, default: '' },
 })
-const emit = defineEmits(['updated', 'delete'])
+const emit = defineEmits(['updated', 'delete', 'toStudio'])
 
 const { t, te } = useI18n()
 

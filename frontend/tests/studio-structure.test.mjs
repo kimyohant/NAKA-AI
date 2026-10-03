@@ -28,6 +28,15 @@ const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
 const uiFiles = [['pages/studio.vue', listPage], ['views/studio/workspace.vue', workspace], ...components]
 
+const phase2DocUrl = new URL('../docs/product-studio/PHASE2.md', root)
+
+/** Phase 2 contract (PHASE2.md §2) — backend อยู่บน feat/studio2-backend ซึ่งทำขนานกันอยู่ */
+function phase2ContractRoutes() {
+  const doc = readFileSync(phase2DocUrl, 'utf8')
+  return [...doc.matchAll(/\|\s*(POST|PUT|DELETE)\s*\|\s*`(\/studio\/[^`]*)`\s*\|/g)]
+    .map((m) => `${m[1]} ${normalize(m[2].replace(/:\w+/g, ':'))}`)
+}
+
 const studioBlock = useApi.slice(useApi.indexOf('export const studioAPI'))
 const normalize = (p) => p.replace(/\$\{[^}]*$/, '').replace(/\$\{[^}]+\}/g, ':').replace(/\?.*$/, '').replace(/\/$/, '')
 
@@ -39,12 +48,15 @@ function frontendCalls() {
   return calls
 }
 
-test('studioAPI implements every endpoint in PLAN.md §4', () => {
-  const contract = [...plan.matchAll(/\|\s*(GET|POST|PUT|DELETE)\s*\|\s*`(\/[^`]*)`\s*\|/g)]
-    .filter((m) => !m[2].startsWith('/campaigns'))
-    .map((m) => `${m[1]} ${normalize(`/studio${m[2]}`.replace(/:\w+/g, ':'))}`)
+test('studioAPI implements every endpoint in PLAN.md §4 + PHASE2.md §2', () => {
+  const contract = [
+    ...[...plan.matchAll(/\|\s*(GET|POST|PUT|DELETE)\s*\|\s*`(\/[^`]*)`\s*\|/g)]
+      .filter((m) => !m[2].startsWith('/campaigns'))
+      .map((m) => `${m[1]} ${normalize(`/studio${m[2]}`.replace(/:\w+/g, ':'))}`),
+    ...phase2ContractRoutes(),
+  ]
   const calls = frontendCalls()
-  assert.equal(contract.length, 20, `expected 20 contract endpoints, parsed ${contract.length}`)
+  assert.equal(contract.length, 24, `expected 24 contract endpoints (20 + 4 phase 2), parsed ${contract.length}`)
   for (const c of contract) assert.ok(calls.includes(c), `studioAPI missing contract endpoint ${c}`)
   for (const c of calls) assert.ok(contract.includes(c), `studioAPI calls ${c} which is not in the contract`)
 })
@@ -130,8 +142,9 @@ test('dynamic i18n keys use the productStudio prefix (studio.* belongs to the ho
 })
 
 test('render-all continues to videos even when keyframes are already done or some failed', () => {
-  assert.match(workspace, /if \(allKeyframesDone\.value\) continueRenderAll\(\)/)
-  assert.match(workspace, /function continueRenderAll\(\)[\s\S]*?processingMedia\.value/)
+  // Phase 2: pipeline ย้ายไป server — ไม่มี chain ฝั่ง browser เหลืออยู่
+  assert.match(workspace, /studioAPI\.autoRender/)
+  assert.doesNotMatch(workspace, /autoVideosArmed|continueRenderAll/)
   assert.match(workspace, /disposed = true/)
 })
 
@@ -151,7 +164,7 @@ test('workspace implements the 6-step flow with a single poll timer', () => {
   assert.match(workspace, /<StudioTemplateGallery/)
   assert.match(workspace, /<StudioShotCard/)
   assert.match(workspace, /<StudioProductImages/)
-  assert.match(workspace, /autoVideosArmed/)
+  assert.match(workspace, /autoRenderActive/)
 })
 
 test('studioFlow: steps complete in order and suggestions never point past render', () => {
