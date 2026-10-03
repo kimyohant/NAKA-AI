@@ -11,6 +11,7 @@ import { AppError, now } from '../utils/response.js'
 import { getTextConfig, getActiveConfigId, getActiveConfig } from './ai.js'
 import { ingestProductUrl, type IngestedProduct } from './product-ingest.js'
 import { generateImage } from './generation.js'
+import { buildVisualPrompt, visualSizeFor, VISUAL_KINDS, type VisualKind } from './product-visuals.js'
 import { mastra } from '../mastra/index.js'
 import { buildCampaignRequestContext } from '../agents/context.js'
 import { startTask, updateTask, type PipelineTaskKind } from './pipeline-tasks.js'
@@ -26,8 +27,8 @@ export const DOC_KINDS = MARKETER_DOC_KINDS
 export const PLATFORMS = MARKETER_PLATFORMS
 export const CREATIVE_FORMATS = MARKETER_CREATIVE_FORMATS
 // Phase 3: Product Visuals
-export const VISUAL_KINDS = ['packshot', 'on_model', 'lifestyle'] as const
-export type VisualKind = typeof VISUAL_KINDS[number]
+// VISUAL_KINDS / VisualKind / buildVisualPrompt / visualSizeFor ย้ายไป services/product-visuals.ts (ใช้ร่วมกับ Studio)
+export { VISUAL_KINDS, type VisualKind } from './product-visuals.js'
 export const MAX_TRANSCRIPT_LENGTH = 20_000
 export const DEFAULT_VISUALS_COUNT = 2
 
@@ -991,27 +992,6 @@ async function toVisualJson(row: VisualRow, productImages: string[]) {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
-}
-
-/** prompt template ต่อ kind (อังกฤษ) — ทุกแบบย้ำ "keep the exact product design" */
-function buildVisualPrompt(kind: VisualKind, instruction: string | null): string {
-  const keep = 'Keep the exact product design, label, text layout, colors and proportions from the reference image — the product must stay recognizable as the same item.'
-  const extra = instruction ? ` Additional direction from the user: ${instruction}.` : ''
-  if (kind === 'packshot') {
-    return `Professional e-commerce packshot photograph of the exact product shown in the reference image, on a pure white seamless background, even studio lighting, centered composition, sharp focus, subtle soft shadow. No props, no people, no added text or graphics. ${keep}${extra}`
-  }
-  if (kind === 'on_model') {
-    return `Advertising photograph of a person naturally holding or using the exact product shown in the reference image, product clearly visible, well-lit and unaltered, believable hands and posture. ${keep}${extra}`
-  }
-  return `Lifestyle advertising photograph of the exact product shown in the reference image in a realistic usage context, product sharp and clearly visible in the foreground. ${keep}${extra}`
-}
-
-/** ขนาดภาพ: packshot สี่เหลี่ยมจัตุรัสเสมอ; อื่นตาม campaign.aspectRatio */
-function visualSizeFor(aspectRatio: string | null, kind: VisualKind): string {
-  if (kind === 'packshot') return '1024x1024'
-  if (aspectRatio === '16:9') return '1820x1024'
-  if (aspectRatio === '1:1') return '1024x1024'
-  return '1024x1820' // 9:16 default
 }
 
 export async function generateVisuals(campaignId: number, body: any) {
