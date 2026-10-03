@@ -50,6 +50,7 @@ const AGENT_SKILL_MAP: Record<string, string[]> = {
   strategist: ['strategist'],
   ad_scriptwriter: ['ad-scriptwriter'],
   ad_analyst: ['ad-analyst'],
+  review_director: ['review-director'],
 }
 
 /** 每个 Agent 的 Workspace（filesystem 工作目录 + 原生技能注册）
