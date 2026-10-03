@@ -94,9 +94,12 @@ test('product visuals อ่านสดจาก sys_task และไม่แ
   assert.match(service, /generateImage\(\{/)
   assert.match(service, /dramaId: campaign\.dramaId \?\? undefined/)
   assert.match(service, /referenceImages: \[sourceImage\]/)
-  // packshot สี่เหลี่ยมจัตุรัส / ขนาดตาม aspectRatio
-  assert.match(service, /visualSizeFor/)
-  assert.match(service, /'1024x1024'/)
+  // packshot สี่เหลี่ยมจัตุรัส / ขนาดตาม aspectRatio — builder อยู่ใน services/product-visuals.ts (ใช้ร่วมกับ Studio)
+  assert.match(service, /visualSizeFor\(/) // เรียกผ่าน builder ที่ย้ายไป
+  const productVisuals = read('src/services/product-visuals.ts')
+  assert.match(productVisuals, /export function buildVisualPrompt/)
+  assert.match(productVisuals, /export function visualSizeFor/)
+  assert.match(productVisuals, /'1024x1024'/)
   // ห้ามแตะ writeBackImageAssets / createTask ใน generation.ts (งาน visual ไม่มี prop/character ให้ write-back)
   assert.doesNotMatch(service, /writeBackImageAssets/)
   const generation = read('src/services/generation.ts')
