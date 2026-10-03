@@ -605,6 +605,16 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     )`,
     `CREATE INDEX IF NOT EXISTS idx_studio_images_project ON studio_images (project_id)`,
   ] },
+  // Product Studio Phase 2 (docs/product-studio/PHASE2.md ข้อ 3): captions + auto-render + Marketer bridge
+  { version: 11, columns: [
+    { table: 'studio_projects', column: 'captions', ddl: 'ALTER TABLE studio_projects ADD COLUMN captions INTEGER DEFAULT 1' },
+    { table: 'studio_projects', column: 'caption_style', ddl: "ALTER TABLE studio_projects ADD COLUMN caption_style TEXT DEFAULT 'bold'" },
+    { table: 'studio_projects', column: 'ai_label_burn_in', ddl: 'ALTER TABLE studio_projects ADD COLUMN ai_label_burn_in INTEGER DEFAULT 0' },
+    { table: 'studio_projects', column: 'auto_render', ddl: 'ALTER TABLE studio_projects ADD COLUMN auto_render TEXT' },
+    { table: 'studio_projects', column: 'source_campaign_id', ddl: 'ALTER TABLE studio_projects ADD COLUMN source_campaign_id INTEGER' },
+    { table: 'video_merges', column: 'captioned', ddl: 'ALTER TABLE video_merges ADD COLUMN captioned INTEGER DEFAULT 0' },
+    { table: 'video_merges', column: 'subtitle_url', ddl: 'ALTER TABLE video_merges ADD COLUMN subtitle_url TEXT' },
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {

@@ -182,6 +182,8 @@ function startBackend(): void {
     const exe = process.platform === 'win32' ? '.exe' : ''
     env.FFMPEG_BIN = path.join(resources, 'bin', `ffmpeg${exe}`)
     env.FFPROBE_BIN = path.join(resources, 'bin', `ffprobe${exe}`)
+    // caption fonts (OFL Noto) — backend captions.ts ใช้ fontsdir จาก env นี้
+    env.CAPTION_FONT_DIR = path.join(resources, 'fonts')
   }
 
   backend = utilityProcess.fork(BACKEND_BUNDLE, [], {

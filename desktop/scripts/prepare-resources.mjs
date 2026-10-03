@@ -37,6 +37,17 @@ console.log('resources/workspace-template ✓')
 //    Windows 交叉打包：ffmpeg.exe 从 ffmpeg-static GitHub release 获取（本地缓存），
 //    ffprobe.exe 直接用 ffprobe-static 自带的 win32/x64 产物）
 const req = createRequire(import.meta.url)
+// 4. caption fonts (OFL Noto) ← backend/assets/fonts (CAPTION_FONT_DIR)
+const fontsSrc = path.join(REPO, 'backend', 'assets', 'fonts')
+const fontsDst = path.join(RES, 'fonts')
+fs.rmSync(fontsDst, { recursive: true, force: true })
+fs.mkdirSync(fontsDst, { recursive: true })
+if (fs.existsSync(fontsSrc)) {
+  for (const file of fs.readdirSync(fontsSrc)) {
+    if (/\.(ttf|otf|txt)$/i.test(file)) fs.copyFileSync(path.join(fontsSrc, file), path.join(fontsDst, file))
+  }
+}
+
 const binMac = path.join(RES, 'bin-mac')
 const binWin = path.join(RES, 'bin-win')
 fs.mkdirSync(binMac, { recursive: true })

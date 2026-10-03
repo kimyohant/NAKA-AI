@@ -34,6 +34,11 @@ if (ffprobePath) ffmpeg.setFfprobePath(ffprobePath)
 
 export { ffmpeg }
 
+/** binary paths สำหรับ spawn ตรง ๆ (เช่น burn-in ซับด้วย filter subtitles/ass) */
+export function getFfmpegBinPaths(): { ffmpegPath: string | null; ffprobePath: string | null } {
+  return { ffmpegPath, ffprobePath }
+}
+
 /** spawn 一次 -version 验证二进制真实可执行（含同步 EFTYPE 兜底） */
 function probeBinary(binPath: string | null): Promise<boolean> {
   if (!binPath || !fs.existsSync(binPath)) return Promise.resolve(false)

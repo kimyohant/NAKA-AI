@@ -89,7 +89,32 @@ Error codes ใหม่ (frontend แปลใน `errors.codes.*`): `E_STUDIO_
 
 ## Notes from Agent A (backend)
 
-_(Agent A เขียนที่นี่)_
+### สิ่งที่ทำ (branch `feat/studio2-backend` — 2 commits: refactor + feature)
+
+**ไฟล์ที่แก้/เพิ่ม:**
+- `backend/src/db/sqlite-schema.ts` + `schema.ts` — migration v11: `studio_projects` เพิ่ม `captions`/`caption_style`/`ai_label_burn_in`/`auto_render`/`source_campaign_id`, `video_merges` เพิ่ม `captioned`/`subtitle_url` (drama merge ปกติไม่กระทบ — default 0/null)
+- `backend/src/services/studio-autorender.ts` (ใหม่) — pipeline keyframes → videos → merging → done: ใช้ `pipeline_tasks` kind `studio_render` (เพิ่มใน PipelineTaskKind) · submit ผ่าน `submitRenderStage` ของ studio.ts (ไม่ก๊อป logic) · poll sys_task ทุก 5s (บังคับ `Math.max(..., 5000)`) · ช็อตล้มไม่หยุด (นับ done/failed ระหว่างทาง) · cancel = cancel_requested (cooperative — หยุดก่อนส่งงาน stage ถัดไป, งานที่ส่งแล้วปล่อยจบเอง) · `resumeStaleAutoRenders()` ต่อ stage ค้างตอน boot (resume ไม่ได้ → failed + `E_TASK_INTERRUPTED`) · stage 'merging' รอ concat + captions เสร็จก่อนปิด done
+- `backend/src/services/studio.ts` — `toProjectJson` คืน `captions`/`captionStyle`/`aiLabelBurnIn`/`autoRender`/`sourceCampaignId`, merge JSON คืน `captioned`/`subtitleUrl` (default ถูกต้องสำหรับแถวเก่า) · แยก `submitRenderStage` ออกจาก route (คืน `taskIds` ให้ pipeline monitor) · `assertNoAutoRender` บังคับ E_STUDIO_BUSY ระหว่าง auto-render (script/render/merge/ซ้ำ) · `mergeProject(id, { captions?, fromAutoRender? })` — ฝังซับหลัง concat เสร็จ (waitForMergeCompletion → burnCaptionsAfterMerge → อัปเดต mergedUrl/captioned/subtitleUrl) · `createProjectFromCampaign` (map platform: tiktok→tiktok, reels→instagram_reels, youtube_shorts→, facebook→, shopee→, lazada→ · market + ภาษาเริ่มต้นของตลาด · notes = Hook/Angle/CTA จาก creative · campaign soft-delete / creative ไม่ใช่ของกัน → `E_STUDIO_CAMPAIGN_NOT_FOUND`)
+- `backend/src/services/captions.ts` (ใหม่) — cues จาก dialogue ?? onScreenText ต่อช็อต, **เวลาจาก ffprobe ของคลิปจริงสะสม (ห้ามใช้ durationSec)** · ตัดบรรทัด `Intl.Segmenter` word-granularity (ไทย/จีน/ญี่ปุ่นเชื่อมคำไม่เติมช่องว่าง, ≤2 บรรทัด/cue, ความยาวบรรทัดตาม aspect 18/24/32, ยาวเกินแบ่งหลาย cue ตามสัดส่วนตัวอักษร) · .srt + .ass สไตล์ clean/bold/boxed (วางล่างกลาง MarginV = 15% PlayResY) · ป้าย AI-generated มุมขวาบนตามภาษา (aiLabelBurnIn) · burn ด้วย ffmpeg filter `ass` + `fontsdir` re-encode CRF 18 · `assertCaptionFontAvailable` → `E_CAPTION_FONT_MISSING`
+- `backend/src/utils/ffmpeg.ts` — export `getFfmpegBinPaths()` (burnSubtitles spawn ตรง)
+- `backend/assets/fonts/` — ฟอนต์ OFL Noto + OFL.txt: NotoSans-{Regular,Bold}.ttf (1.2MB), NotoSansThai-{Regular,Bold}.ttf (74KB), NotoSansArabic-Regular.ttf (230KB), NotoSansSC-Variable.ttf (17.4MB), NotoSansJP-Variable.ttf (9.4MB), NotoSansKR-Variable.ttf (10.2MB) — **รวม ~38.7MB** (CJK เป็น variable font ไฟล์เดียวครอบทุกน้ำหนัก)
+- `backend/scripts/caption-burn-e2e.ts` — สคริปต์ทดสอบ burn ซับจริง
+- `backend/src/routes/studio.ts` — `POST /:id/auto-render` (202), `POST /:id/auto-render/cancel`, `POST /projects/from-campaign`
+- Tests: `tests/studio2-pipeline.test.ts` (migration v11, cues ตัดบรรทัด th/en/zh/ja/ko/ar/vi, เวลาสะสม inject-probe, srt format, from-campaign mapping + guard, pipeline เดิน stage ครบ + ช็อตล้มไม่หยุด + cancel + **loop หยุดจริง** (เทียบ auto_render JSON หลัง pipeline จบ)), `tests/studio2-structure.test.mjs` (routes, error codes, submit ผ่าน studio.ts, drama merge ไม่กระทบ, desktop wiring) — migration tests เป็น [1..11]
+- `desktop/electron-builder.yml` (extraResources fonts) + `desktop/scripts/prepare-resources.mjs` (copy backend/assets/fonts → resources/fonts) + `desktop/src/main.ts` (ฉีด `CAPTION_FONT_DIR` เฉพาะบรรทัด env)
+
+**Endpoints ที่ทดสอบด้วย curl จริง (PORT=5680 + scratch DB):**
+- `POST /:id/auto-render`: ไม่มีช็อต → E_STUDIO_NEEDS_SCRIPT ✓ · เทมเพลต required ไม่มี avatar → E_AVATAR_REQUIRED ✓ · ไม่มี image/video model → E_NO_IMAGE_MODEL / E_NO_VIDEO_MODEL ✓ · 202 + pipeline วิ่งจริง (ส่ง keyframe 2 งาน → dummy endpoint fail → videos → ไม่มี keyframe → **failed + E_STUDIO_NEEDS_KEYFRAMES** ✓) · budget error เดิมโผล่ถูกต้อง ("Set a price for this AI configuration...") · `POST /:id/auto-render/cancel` ✓
+- `POST /projects/from-campaign`: mapping platform shopee ✓, market TH → language th ✓, sourceCampaignId/captions/captionStyle/autoRender ใน JSON ✓, campaign ไม่พบ → E_STUDIO_CAMPAIGN_NOT_FOUND ✓
+- merge ระหว่าง auto-render → E_STUDIO_BUSY ✓ (ผ่าน test + code path)
+
+**merge จริงพร้อมซับไทย (Done-when):**
+- สคริปต์ `backend/scripts/caption-burn-e2e.ts`: สร้างคลิปทดสอบ ffmpeg testsrc (2s และ 3s) → cues ไทยจาก ffprobe จริง → burn-in ด้วยฟอนต์ Noto Sans Thai → ffprobe ยืนยัน
+- ผลลัพธ์: `C:\Users\natta\AppData\Local\Temp\naka-caption-e2e-1kNvG9\final-captioned.mp4` (duration 2.0s, h264, มี audio) · ซับ: `...\captions.srt` · `...\captions.ass`
+
+**ข้อแตกต่างจากสัญญา: ไม่มี** (หมายเหตุ: submission error ระดับ pipeline เช่น budget guard ทำ pipeline failed ทั้ง stage พร้อม "E_CODE: message" — ส่วนช็อตที่ provider fail รายช็อตไม่หยุด pipeline ตามสัญญา; ฟอนต์ CJK ใช้ variable TTF ไฟล์เดียว ประหยัดขนาด และ libass synthetic-bold เมื่อ style bold)
+
+**ยังไม่ได้ทดสอบกับของจริง:** auto-render ผ่านโมเดลจริง (keyframe/video จริง) — ทดสอบด้วย dummy config ครอบถึง error path ทุกเส้น; burn ซับทดสอบกับคลิปจริงที่สร้างด้วย ffmpeg testsrc แล้ว (ผ่าน)
 
 ## Notes from Agent B (frontend)
 
