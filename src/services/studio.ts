@@ -23,6 +23,13 @@ import { buildShotPrompts, clearEpisodeStoryboards, writeStudioShot } from './st
 import { mastra } from '../mastra/index.js'
 import { buildStudioRequestContext } from '../agents/context.js'
 import { startTask, updateTask } from './pipeline-tasks.js'
+import {
+  assertCaptionFontAvailable, buildCaptionCues, burnSubtitles, toAss, toSrt, aiLabelText,
+} from './captions.js'
+import { STORAGE_ROOT } from '../utils/paths.js'
+import fs from 'fs'
+import path from 'path'
+import { v4 as uuid } from 'uuid'
 import { logTaskError, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
 
 export const STUDIO_PROJECT_ING_STATUSES = ['scripting']
@@ -46,7 +53,35 @@ function parseJsonArray(raw: string | null): string[] {
   }
 }
 
-function toProjectJson(row: ProjectRow) {
+export interface AutoRenderState {
+  stage: 'idle' | 'keyframes' | 'videos' | 'merging' | 'done' | 'failed' | 'cancelled'
+  total: number
+  done: number
+  failed: number
+  errorMsg: string | null
+  startedAt: string | null
+  finishedAt: string | null
+  /** ภายใน: task ids ที่ส่งใน stage ปัจจุบัน (frontend ไม่ใช้) */
+  stageTaskIds?: number[]
+}
+
+export function parseAutoRender(raw: string | null): AutoRenderState {
+  const idle: AutoRenderState = { stage: 'idle', total: 0, done: 0, failed: 0, errorMsg: null, startedAt: null, finishedAt: null }
+  if (!raw) return idle
+  try {
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return idle
+    return { ...idle, ...parsed }
+  } catch {
+    return idle
+  }
+}
+
+export function isAutoRenderRunning(row: ProjectRow): boolean {
+  return ['keyframes', 'videos', 'merging'].includes(parseAutoRender(row.autoRender).stage)
+}
+
+export function toProjectJson(row: ProjectRow) {
   return {
     id: row.id,
     title: row.title,
@@ -69,6 +104,12 @@ function toProjectJson(row: ProjectRow) {
     errorMsg: row.errorMsg,
     dramaId: row.dramaId,
     episodeId: row.episodeId,
+    // v11 (Phase 2)
+    captions: row.captions === null || row.captions === undefined ? true : !!row.captions,
+    captionStyle: row.captionStyle ?? 'bold',
+    aiLabelBurnIn: row.aiLabelBurnIn === null || row.aiLabelBurnIn === undefined ? false : !!row.aiLabelBurnIn,
+    autoRender: parseAutoRender(row.autoRender),
+    sourceCampaignId: row.sourceCampaignId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
@@ -212,7 +253,7 @@ function parseBudgetThb(raw: unknown): number | null {
 
 // ---------- CRUD ----------
 
-async function getProjectRow(id: number): Promise<ProjectRow | null> {
+export async function getProjectRow(id: number): Promise<ProjectRow | null> {
   const [row] = await db.select().from(schema.studioProjects)
     .where(and(eq(schema.studioProjects.id, id), isNull(schema.studioProjects.deletedAt)))
   return row ?? null
@@ -273,7 +314,7 @@ export async function getProjectDetail(id: number) {
 }
 
 /** ช็อตของโปรเจกต์ = storyboards ที่ยังไม่ลบของ episode + studio_shots + สถานะจาก sys_task ล่าสุดต่อชนิด */
-async function getProjectShots(row: ProjectRow) {
+export async function getProjectShots(row: ProjectRow) {
   if (!row.episodeId) return []
   const storyboards = await db.select().from(schema.storyboards)
     .where(and(eq(schema.storyboards.episodeId, row.episodeId), isNull(schema.storyboards.deletedAt)))
@@ -353,6 +394,11 @@ export async function createProject(body: any) {
   if (body.tone !== undefined) values.tone = isNonEmptyString(body.tone) ? body.tone : null
   if (body.notes !== undefined) values.notes = isNonEmptyString(body.notes) ? body.notes : null
   if (body.budgetThb !== undefined) values.budgetThb = parseBudgetThb(body.budgetThb)
+  // v11 (Phase 2)
+  if (body.captions !== undefined) values.captions = !!body.captions
+  if (body.captionStyle !== undefined) values.captionStyle = requireEnum(body.captionStyle, ['clean', 'bold', 'boxed'] as const, 'captionStyle')
+  if (body.aiLabelBurnIn !== undefined) values.aiLabelBurnIn = !!body.aiLabelBurnIn
+  if (body.sourceCampaignId !== undefined && body.sourceCampaignId !== null) values.sourceCampaignId = Number(body.sourceCampaignId)
 
   const res = await db.insert(schema.studioProjects).values(values)
   const row = await getProjectRow(getInsertId(res))
@@ -407,6 +453,10 @@ export async function updateProject(id: number, body: any) {
   if (body.notes !== undefined) updates.notes = isNonEmptyString(body.notes) ? body.notes : null
   if (body.budgetThb !== undefined) updates.budgetThb = parseBudgetThb(body.budgetThb)
   if (body.aiDisclosure !== undefined) updates.aiDisclosure = !!body.aiDisclosure
+  // v11 (Phase 2)
+  if (body.captions !== undefined) updates.captions = !!body.captions
+  if (body.captionStyle !== undefined) updates.captionStyle = requireEnum(body.captionStyle, ['clean', 'bold', 'boxed'] as const, 'captionStyle')
+  if (body.aiLabelBurnIn !== undefined) updates.aiLabelBurnIn = !!body.aiLabelBurnIn
 
   await db.update(schema.studioProjects).set(updates).where(eq(schema.studioProjects.id, id))
   const updated = await getProjectRow(id)
@@ -434,8 +484,15 @@ function assertNotScripting(row: ProjectRow) {
   }
 }
 
+/** auto-render กำลังวิ่ง → script/render/merge/manual auto-render ซ้ำ ⇒ E_STUDIO_BUSY */
+function assertNoAutoRender(row: ProjectRow) {
+  if (isAutoRenderRunning(row)) {
+    throw new AppError('โปรเจกต์กำลัง auto-render อยู่ กรุณารอจนจบหรือยกเลิก', 'E_STUDIO_BUSY')
+  }
+}
+
 /** เทมเพลต avatarMode: required แต่ไม่มี avatar ที่มีรูป → E_AVATAR_REQUIRED (เช็กตอน script และ render keyframes) */
-async function requireAvatarIfTemplateNeeds(row: ProjectRow) {
+export async function requireAvatarIfTemplateNeeds(row: ProjectRow) {
   const template = getStudioTemplate(row.templateId)
   if (!template || template.avatarMode !== 'required') return null
   const avatar = await getAvatarWithTask(row.avatarId)
@@ -503,6 +560,7 @@ export async function startStudioScript(projectId: number, opts: { instruction?:
   const row = await getProjectRow(projectId)
   if (!row) return null
   assertNotScripting(row)
+  assertNoAutoRender(row)
   await requireAvatarIfTemplateNeeds(row)
   const template = getStudioTemplate(row.templateId)
   if (!template) throw new AppError(`ไม่รู้จัก template: ${row.templateId}`, 'E_TEMPLATE_UNKNOWN')
@@ -638,7 +696,7 @@ export async function updateShot(projectId: number, shotId: number, body: any) {
 }
 
 /** ช็อตเป้าหมายของ render — ไม่ระบุ shotIds = ทุกช็อตที่ยังไม่ completed ตาม stage */
-async function renderTargets(project: ProjectRow, stage: 'keyframes' | 'videos', shotIds: number[] | undefined) {
+export async function renderTargets(project: ProjectRow, stage: 'keyframes' | 'videos', shotIds: number[] | undefined) {
   const all = await getProjectShots(project)
   let shots = all
   if (shotIds?.length) {
@@ -650,19 +708,20 @@ async function renderTargets(project: ProjectRow, stage: 'keyframes' | 'videos',
   return { all, shots }
 }
 
-export async function renderStage(projectId: number, body: { stage?: unknown; shotIds?: unknown }) {
-  const project = await getProjectRow(projectId)
-  if (!project) return null
-  const stage = requireEnum(body.stage, ['keyframes', 'videos'] as const, 'stage')
-  const shotIds = Array.isArray(body.shotIds) ? body.shotIds.map(Number).filter(n => Number.isInteger(n) && n > 0) : undefined
-
-  const { all, shots } = await renderTargets(project, stage, shotIds)
-  if (!all.length) throw new AppError('ยังไม่มีบท/ช็อต — สั่งเขียนบทก่อน', 'E_STUDIO_NEEDS_SCRIPT')
-
+/** งานส่งจริงต่อ stage — render route กับ auto-render ใช้ร่วมกัน (ห้ามก๊อป logic) */
+export async function submitRenderStage(
+  project: ProjectRow,
+  stage: 'keyframes' | 'videos',
+  shots: Awaited<ReturnType<typeof getProjectShots>>,
+  allShots: Awaited<ReturnType<typeof getProjectShots>>,
+  opts: { force?: boolean } = {},
+): Promise<{ queued: number; taskIds: number[] }> {
   if (stage === 'keyframes') {
     await requireAvatarIfTemplateNeeds(project)
     const imageConfig = await getActiveConfig('image')
     if (!imageConfig) throw new AppError('未配置图片模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_IMAGE_MODEL')
+    const targets = opts.force ? shots : shots.filter(s => s.keyframeStatus !== 'completed')
+    if (!targets.length) return { queued: 0, taskIds: [] }
     const productImages = parseJsonArray(project.productImages)
     const avatar = await getAvatarWithTask(project.avatarId)
     const references = [
@@ -670,8 +729,9 @@ export async function renderStage(projectId: number, body: { stage?: unknown; sh
       ...(avatar?.json.imageUrl ? [avatar.json.imageUrl] : []),
     ]
     let queued = 0
-    for (const shot of shots) {
-      await generateImage({
+    const taskIds: number[] = []
+    for (const shot of targets) {
+      const taskId = await generateImage({
         storyboardId: shot.id,
         dramaId: project.dramaId ?? undefined,
         prompt: (await db.select().from(schema.storyboards).where(eq(schema.storyboards.id, shot.id)))[0].imagePrompt || shot.visual,
@@ -680,22 +740,26 @@ export async function renderStage(projectId: number, body: { stage?: unknown; sh
         frameType: 'first_frame',
         configId: (await db.select().from(schema.episodes).where(eq(schema.episodes.id, project.episodeId ?? -1)))[0]?.imageConfigId ?? undefined,
       })
+      taskIds.push(taskId)
       queued += 1
     }
-    logTaskStart('Studio', 'render-keyframes', { projectId, queued })
-    return { queued }
+    return { queued, taskIds }
   }
 
   // videos: state check มาก่อน model guard — ต้องมี keyframe completed ของช็อตนั้น
   // (ไม่มี ⇒ ข้ามช็อตนั้น; ไม่มีสักช็อต ⇒ E_STUDIO_NEEDS_KEYFRAMES)
-  const withKeyframe = shots.filter(s => s.keyframeStatus === 'completed' && s.keyframeUrl)
-  if (!withKeyframe.length) {
+  const hasAnyKeyframe = allShots.some(s => s.keyframeStatus === 'completed' && s.keyframeUrl)
+  if (!hasAnyKeyframe) {
     throw new AppError('ยังไม่มี keyframe ที่เสร็จแล้ว — สร้าง keyframe ก่อนสร้างวิดีโอ', 'E_STUDIO_NEEDS_KEYFRAMES')
   }
   const videoConfig = await getActiveConfig('video')
   if (!videoConfig) throw new AppError('未配置视频模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_VIDEO_MODEL')
+  const targets = opts.force
+    ? shots.filter(s => s.keyframeStatus === 'completed' && s.keyframeUrl)
+    : shots.filter(s => s.keyframeStatus === 'completed' && s.keyframeUrl && s.videoStatus !== 'completed')
   let queued = 0
-  for (const shot of withKeyframe) {
+  const taskIds: number[] = []
+  for (const shot of targets) {
     const [sb] = await db.select().from(schema.storyboards).where(eq(schema.storyboards.id, shot.id))
     const body = {
       storyboard_id: shot.id,
@@ -711,7 +775,7 @@ export async function renderStage(projectId: number, body: { stage?: unknown; sh
     // ผ่าน service จาก task 1 (resolveTaskContext + prepareVideoTask) — ไม่ก๊อป logic แยก
     const context = await resolveTaskContext(body, 'video')
     const prepared = await prepareVideoTask(body, context)
-    await generateVideo({
+    const id = await generateVideo({
       storyboardId: shot.id,
       dramaId: project.dramaId ?? undefined,
       prompt: prepared.prompt,
@@ -733,15 +797,90 @@ export async function renderStage(projectId: number, body: { stage?: unknown; sh
       watermark: prepared.videoBody.watermark,
       configId: context.configId,
     })
+    taskIds.push(id)
     queued += 1
   }
-  logTaskStart('Studio', 'render-videos', { projectId, queued })
+  return { queued, taskIds }
+}
+
+export async function renderStage(projectId: number, body: { stage?: unknown; shotIds?: unknown }) {
+  const project = await getProjectRow(projectId)
+  if (!project) return null
+  assertNoAutoRender(project)
+  const stage = requireEnum(body.stage, ['keyframes', 'videos'] as const, 'stage')
+  const shotIds = Array.isArray(body.shotIds) ? body.shotIds.map(Number).filter(n => Number.isInteger(n) && n > 0) : undefined
+
+  const { all, shots } = await renderTargets(project, stage, shotIds)
+  if (!all.length) throw new AppError('ยังไม่มีบท/ช็อต — สั่งเขียนบทก่อน', 'E_STUDIO_NEEDS_SCRIPT')
+
+  const { queued } = await submitRenderStage(project, stage, shots, all)
+  logTaskStart('Studio', `render-${stage}`, { projectId, queued })
   return { queued }
 }
 
-export async function mergeProject(projectId: number) {
+/** รอ video_merges จบ (concat ทำงานหลังบ้าน) — auto-render ต้องรอก่อน burn ซับ */
+export async function waitForMergeCompletion(mergeId: number, timeoutMs = 30 * 60_000): Promise<typeof schema.videoMerges.$inferSelect> {
+  const start = Date.now()
+  for (;;) {
+    const [row] = await db.select().from(schema.videoMerges).where(eq(schema.videoMerges.id, mergeId))
+    if (row?.status === 'completed') return row
+    if (row?.status === 'failed') throw new Error(row.errorMsg || 'merge failed')
+    if (Date.now() - start > timeoutMs) throw new Error('merge timeout')
+    await new Promise(r => setTimeout(r, 2000))
+  }
+}
+
+/** ฝังซับ: cues จากบทพูด/onScreenText + เวลาจริง (ffprobe) → .srt/.ass → burn-in → อัปเดต video_merges */
+async function burnCaptionsAfterMerge(project: ProjectRow, mergeId: number): Promise<void> {
+  assertCaptionFontAvailable(project.language)
+  const [mergeRow] = await db.select().from(schema.videoMerges).where(eq(schema.videoMerges.id, mergeId))
+  if (!mergeRow?.mergedUrl) throw new Error('merge output missing')
+  const sbs = await db.select().from(schema.storyboards)
+    .where(and(eq(schema.storyboards.episodeId, project.episodeId ?? -1), isNull(schema.storyboards.deletedAt)))
+    .orderBy(schema.storyboards.storyboardNumber)
+  const shotRows = await db.select().from(schema.studioShots)
+    .where(eq(schema.studioShots.projectId, project.id))
+  const shotByStoryboard = new Map(shotRows.map(s => [s.storyboardId, s]))
+  const toAbs = (rel: string | null) => !rel ? null : (path.isAbsolute(rel) ? rel : rel.startsWith('static/') ? path.join(STORAGE_ROOT, '..', rel) : path.join(STORAGE_ROOT, rel))
+  const inputs = sbs.map(sb => ({
+    text: shotByStoryboard.get(sb.id)?.dialogue ?? shotByStoryboard.get(sb.id)?.onScreenText ?? null,
+    clipPath: toAbs(sb.videoUrl),
+  }))
+  const cues = await buildCaptionCues(inputs, project.language, project.aspectRatio)
+  const mergedAbs = toAbs(mergeRow.mergedUrl)!
+
+  // ไม่มีข้อความเลย → ไม่ burn, ไม่มี .srt (captioned = false)
+  if (!cues.length) {
+    await db.update(schema.videoMerges).set({ captioned: false, subtitleUrl: null }).where(eq(schema.videoMerges.id, mergeId))
+    return
+  }
+
+  const outputDir = path.join(STORAGE_ROOT, 'merged')
+  fs.mkdirSync(outputDir, { recursive: true })
+  const srtRel = `static/merged/${uuid()}.srt`
+  const assRel = `static/merged/${uuid()}.ass`
+  fs.writeFileSync(path.join(STORAGE_ROOT, '..', srtRel), toSrt(cues), 'utf-8')
+  const totalDuration = cues[cues.length - 1].end
+  fs.writeFileSync(path.join(STORAGE_ROOT, '..', assRel), toAss(cues, {
+    style: (project.captionStyle ?? 'bold') as 'clean' | 'bold' | 'boxed',
+    language: project.language,
+    aspectRatio: project.aspectRatio,
+    aiLabelText: project.aiLabelBurnIn ? aiLabelText(project.language) : null,
+    totalDurationSec: totalDuration,
+  }), 'utf-8')
+
+  const outputRel = `static/merged/${uuid()}.mp4`
+  await burnSubtitles(mergedAbs, path.join(STORAGE_ROOT, '..', assRel), toAbs(outputRel)!)
+
+  await db.update(schema.videoMerges)
+    .set({ mergedUrl: outputRel, captioned: true, subtitleUrl: srtRel })
+    .where(eq(schema.videoMerges.id, mergeId))
+}
+
+export async function mergeProject(projectId: number, opts: { captions?: boolean; fromAutoRender?: boolean } = {}) {
   const project = await getProjectRow(projectId)
   if (!project) return null
+  if (!opts.fromAutoRender) assertNoAutoRender(project)
   if (!project.episodeId || !project.dramaId) throw new AppError('ยังไม่มีบท/ช็อต — สั่งเขียนบทก่อน', 'E_STUDIO_NEEDS_SCRIPT')
   const sbs = await db.select().from(schema.storyboards)
     .where(and(eq(schema.storyboards.episodeId, project.episodeId), isNull(schema.storyboards.deletedAt)))
@@ -750,13 +889,30 @@ export async function mergeProject(projectId: number) {
   // ต่อเฉพาะช็อตที่มีวิดีโอ เรียงตามลำดับ (mergeEpisodeVideos จัดการเอง)
   const mergeId = await mergeEpisodeVideos(project.episodeId, project.dramaId)
   const [row] = await db.select().from(schema.videoMerges).where(eq(schema.videoMerges.id, mergeId))
-  return {
+  const immediate = {
     id: row?.id ?? mergeId,
     status: row?.status === 'completed' ? 'completed' : row?.status === 'failed' ? 'failed' : 'processing',
     videoUrl: slashPath(row?.mergedUrl ?? null),
     errorMsg: row?.errorMsg ?? null,
+    // v11 (Phase 2)
+    captioned: !!row?.captioned,
+    subtitleUrl: slashPath(row?.subtitleUrl ?? null),
     createdAt: row?.createdAt ?? now(),
   }
+  // captions: ฝังหลัง concat เสร็จ (งานหลังบ้าน — frontend รอผ่าน poll ของ merge เดิม)
+  const captionsEnabled = opts.captions ?? (project.captions === null || project.captions === undefined ? true : !!project.captions)
+  if (captionsEnabled) {
+    ;(async () => {
+      try {
+        const finalRow = await waitForMergeCompletion(mergeId)
+        await burnCaptionsAfterMerge(project, finalRow.id)
+        logTaskSuccess('Studio', 'captions', { projectId, mergeId })
+      } catch (err: any) {
+        logTaskError('Studio', 'captions', { projectId, mergeId, error: err?.message })
+      }
+    })()
+  }
+  return immediate
 }
 
 // ---------- Project images (packshot/lifestyle/on_model/banner) ----------
@@ -847,6 +1003,71 @@ export async function promoteProjectImage(projectId: number, imageId: number) {
   }
   const updated = await getProjectRow(projectId)
   return updated ? toProjectJson(updated) : null
+}
+
+// ---------- Marketer → Studio bridge (PHASE2 ข้อ 2) ----------
+
+const MARKETER_PLATFORM_TO_STUDIO: Record<string, StudioPlatform> = {
+  tiktok: 'tiktok',
+  reels: 'instagram_reels',
+  youtube_shorts: 'youtube_shorts',
+  facebook: 'facebook',
+  shopee: 'shopee',
+  lazada: 'lazada',
+}
+
+/**
+ * สร้างโปรเจกต์ Studio จาก campaign (+ creative ที่เลือก):
+ * คัด productName/Url/Description/Images, market (+ภาษาเริ่มต้นของตลาด),
+ * platform แรกของ campaign ที่ map ได้, budgetThb · notes = hook + angle + CTA ของ creative
+ */
+export async function createProjectFromCampaign(body: any) {
+  const campaignId = Number(body.campaignId)
+  if (!Number.isInteger(campaignId) || campaignId < 1) throw new AppError('campaignId 必填', 'E_INVALID_FIELD')
+  const templateId = isNonEmptyString(body.templateId) ? body.templateId : ''
+  const template = getStudioTemplate(templateId)
+  if (!template) throw new AppError(`ไม่รู้จัก template: ${templateId}`, 'E_TEMPLATE_UNKNOWN')
+
+  const [campaign] = await db.select().from(schema.campaigns)
+    .where(and(eq(schema.campaigns.id, campaignId), isNull(schema.campaigns.deletedAt)))
+  if (!campaign) throw new AppError('ไม่พบ campaign (หรือถูกลบไปแล้ว)', 'E_STUDIO_CAMPAIGN_NOT_FOUND')
+
+  let notes: string | null = null
+  if (body.creativeId !== undefined && body.creativeId !== null) {
+    const cid = Number(body.creativeId)
+    if (!Number.isInteger(cid) || cid < 1) throw new AppError('creativeId ไม่ถูกต้อง', 'E_INVALID_FIELD')
+    const [creative] = await db.select().from(schema.campaignCreatives)
+      .where(and(eq(schema.campaignCreatives.id, cid), eq(schema.campaignCreatives.campaignId, campaignId)))
+    if (!creative) throw new AppError('ไม่พบ creative หรือ creative ไม่ใช่ของ campaign นี้', 'E_STUDIO_CAMPAIGN_NOT_FOUND')
+    notes = [
+      `Hook: ${creative.hook}`,
+      `Angle: ${creative.angle}`,
+      creative.cta ? `CTA: ${creative.cta}` : '',
+    ].filter(Boolean).join('\n')
+  }
+
+  // platform แรกของ campaign ที่ map ได้; ไม่มี → tiktok default
+  let platform: StudioPlatform | undefined
+  for (const p of parseJsonArray(campaign.platforms)) {
+    const mapped = MARKETER_PLATFORM_TO_STUDIO[p]
+    if (mapped) { platform = mapped; break }
+  }
+  // market ของ campaign ต้องเป็น StudioMarket — ไม่ตรงใช้ TH default (ภาษาเริ่มต้นตาม market)
+  const market = STUDIO_MARKETS.some(m => m.id === campaign.market) ? campaign.market as StudioMarket : 'TH'
+
+  return createProject({
+    title: `[Studio] ${campaign.title}`,
+    productName: campaign.productName,
+    productUrl: campaign.productUrl ?? undefined,
+    productDescription: campaign.productDescription ?? undefined,
+    productImages: parseJsonArray(campaign.productImages),
+    templateId: template.id,
+    market,
+    platform,
+    notes,
+    budgetThb: campaign.budgetThb ?? undefined,
+    sourceCampaignId: campaign.id,
+  })
 }
 
 // ---------- Avatars ----------

@@ -287,6 +287,9 @@ export const videoMerges = sqliteTable('video_merges', {
   duration: integer('duration'),
   taskId: text('task_id'),
   errorMsg: text('error_msg'),
+  // v11 (Phase 2): Studio captions (drama merge ปกติไม่กระทบ — default)
+  captioned: integer('captioned', { mode: 'boolean' }).default(false),
+  subtitleUrl: text('subtitle_url'),
   createdAt: text('created_at').notNull(),
   completedAt: text('completed_at'),
   deletedAt: text('deleted_at'),
@@ -459,6 +462,12 @@ export const studioProjects = sqliteTable('studio_projects', {
   errorMsg: text('error_msg'),
   dramaId: integer('drama_id'),
   episodeId: integer('episode_id'),
+  // v11 (Phase 2): captions + auto-render + Marketer bridge
+  captions: integer('captions', { mode: 'boolean' }).default(true),
+  captionStyle: text('caption_style').default('bold'),
+  aiLabelBurnIn: integer('ai_label_burn_in', { mode: 'boolean' }).default(false),
+  autoRender: text('auto_render'),
+  sourceCampaignId: integer('source_campaign_id'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   deletedAt: text('deleted_at'),

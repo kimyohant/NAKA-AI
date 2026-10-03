@@ -30,6 +30,7 @@ import { requestLogger, errorHandler } from './middleware/logger.js'
 import { failStaleRunningTasks } from './services/pipeline-tasks.js'
 import { failStaleCampaigns } from './services/marketer.js'
 import { failStaleStudioProjects } from './services/studio.js'
+import { resumeStaleAutoRenders } from './services/studio-autorender.js'
 import { recoverGenerationTasks } from './services/generation.js'
 import { DATA_ROOT } from './utils/paths.js'
 
@@ -155,6 +156,14 @@ try {
   if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 studio 任务`)
 } catch (err: any) {
   console.error('清理中断 studio 任务失败:', err?.message)
+}
+
+// Phase 2: auto-render pipeline ค้างหลัง restart — วิ่งต่อจาก stage เดิม (recover งาน provider แล้ว)
+try {
+  const n = await resumeStaleAutoRenders()
+  if (n > 0) console.log(`🔁 resumed ${n} studio auto-render pipelines`)
+} catch (err: any) {
+  console.error('resume studio auto-render failed:', err?.message)
 }
 
 serve({ fetch: app.fetch, port, hostname })

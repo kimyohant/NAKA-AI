@@ -5,6 +5,7 @@
 import { Hono } from 'hono'
 import { success, created, badRequest, notFound } from '../utils/response.js'
 import * as studio from '../services/studio.js'
+import { startAutoRender, cancelAutoRender } from '../services/studio-autorender.js'
 
 const app = new Hono()
 
@@ -49,6 +50,41 @@ app.post('/ingest-url', async (c) => {
   } catch (err: any) {
     return badRequest(c, err?.message || '产品页抓取失败', err?.errorCode || 'E_INGEST_FAILED')
   }
+})
+
+// POST /studio/projects/from-campaign — Marketer → Studio bridge
+app.post('/projects/from-campaign', async (c) => {
+  const body = await c.req.json()
+  try {
+    const project = await studio.createProjectFromCampaign(body)
+    if (!project) return badRequest(c, 'สร้างโปรเจกต์ไม่สำเร็จ')
+    return created(c, project)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้างโปรเจกต์จาก campaign ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /studio/projects/:id/auto-render — เริ่ม pipeline keyframes → videos → merge (202)
+app.post('/projects/:id/auto-render', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid project ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const project = await startAutoRender(id, { force: !!body.force })
+    if (!project) return notFound(c, 'โปรเจกต์ไม่พบ')
+    return c.json({ code: 202, data: project, message: 'accepted' }, 202)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'เริ่ม auto-render ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /studio/projects/:id/auto-render/cancel — งานที่ส่งแล้วปล่อยจบเอง ไม่ส่งเพิ่ม
+app.post('/projects/:id/auto-render/cancel', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid project ID')
+  const project = await cancelAutoRender(id)
+  if (!project) return notFound(c, 'โปรเจกต์ไม่พบ')
+  return success(c, project)
 })
 
 // GET /studio/projects/:id — project + shots + images + latestMerge + avatar
