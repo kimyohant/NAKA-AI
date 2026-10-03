@@ -60,9 +60,10 @@ test('video resolution is fixed per episode, editable, and locked into video tas
   // PUT 可修改，白名单校验
   assert.match(episodes, /'status', 'resolution', 'hook'\]/)
   assert.match(episodes, /resolution 只支持 480p \/ 720p \/ 1080p/)
-  // 视频任务锁定集的分辨率（优先于请求体）
-  assert.match(tasks, /episodeResolution = ep\.resolution/)
-  assert.match(tasks, /resolution: context\.episodeResolution \|\| prepared\.videoBody\.resolution/)
+  // 视频任务锁定集的分辨率（优先于请求体）— logic อยู่ใน services/task-prep.ts แล้ว (refactor Product Studio)
+  const taskPrep = read('src/services/task-prep.ts')
+  assert.match(taskPrep, /episodeResolution = ep\.resolution/)
+  assert.match(tasks, /resolution: episodeResolution \|\| videoBody!\.resolution/)
   // 服务落入 params 并传给适配器
   assert.match(service, /resolution: normalizeStoredVideoResolution\(params\.resolution\)/)
   assert.match(service, /resolution: params\.resolution,/)
@@ -93,10 +94,12 @@ test('tasks route validates reference-mode requirements for video tasks', () => 
   assert.doesNotMatch(route, /首尾帧模式必须同时提供/)
   // Wan 3.0 官方入参兼容层会把 input.media 归一到 first_frame_url/last_frame_url 等扁平字段
 
-  // 多模态参考校验并固定 reference 模式
-  assert.match(route, /参考素材超限：图片≤9、视频≤3、音频≤3/)
-  assert.match(route, /参考音频需要至少 1 个参考图片或视频/)
-  assert.match(route, /视频生成需要至少一个参考素材或 prompt/)
+  // 多模态参考校验并固定 reference 模式（校验 logic อยู่ใน services/task-prep.ts แล้ว — route เรียกผ่าน service）
+  const taskPrep2 = read('src/services/task-prep.ts')
+  assert.match(taskPrep2, /参考素材超限：图片≤9、视频≤3、音频≤3/)
+  assert.match(taskPrep2, /参考音频需要至少 1 个参考图片或视频/)
+  assert.match(taskPrep2, /视频生成需要至少一个参考素材或 prompt/)
+  assert.match(route, /prepareVideoTask\(body, context\)/)
   assert.match(route, /referenceMode: 'reference'/)
   assert.match(route, /referenceVideoUrls: videoBody!\.reference_video_urls/)
   assert.match(route, /referenceAudioUrls: videoBody!\.reference_audio_urls/)

@@ -19,7 +19,7 @@ test('migration v6 creates campaign tables and stays idempotent', () => {
     initSqliteSchema(sqlite)
     initSqliteSchema(sqlite) // 幂等重放
     const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9])
+    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
     const campaignCols = (sqlite.pragma('table_info(campaigns)') as Array<{ name: string }>).map(r => r.name)
     for (const col of ['product_url', 'product_name', 'product_images', 'brand_notes', 'market', 'platforms',
@@ -58,6 +58,20 @@ test('migration v6 creates campaign tables and stays idempotent', () => {
     }
     const creativeCols2 = (sqlite.pragma('table_info(campaign_creatives)') as Array<{ name: string }>).map(r => r.name)
     assert.ok(creativeCols2.includes('reference_id'), 'campaign_creatives missing column reference_id')
+
+    // v10 (Product Studio)
+    for (const table of ['studio_projects', 'studio_shots', 'studio_avatars', 'studio_images']) {
+      const cols = (sqlite.pragma(`table_info(${table})`) as Array<{ name: string }>).map(r => r.name)
+      assert.ok(cols.length > 0, `${table} table missing`)
+    }
+    const spCols = (sqlite.pragma('table_info(studio_projects)') as Array<{ name: string }>).map(r => r.name)
+    for (const col of ['template_id', 'language', 'market', 'platform', 'aspect_ratio', 'duration_sec', 'avatar_id', 'ai_disclosure', 'drama_id', 'episode_id', 'deleted_at']) {
+      assert.ok(spCols.includes(col), `studio_projects missing column ${col}`)
+    }
+    const ssCols = (sqlite.pragma('table_info(studio_shots)') as Array<{ name: string }>).map(r => r.name)
+    for (const col of ['storyboard_id', 'project_id', 'role', 'dialogue', 'on_screen_text']) {
+      assert.ok(ssCols.includes(col), `studio_shots missing column ${col}`)
+    }
 
     // 约束可用：插入/更新/JSON 数组存取
     const ts = '2026-01-01T00:00:00.000Z'

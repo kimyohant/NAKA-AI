@@ -1,0 +1,233 @@
+/**
+ * Product Studio 路由 — /api/v1/studio (docs/product-studio/PLAN.md ข้อ 4)
+ * Response helper เดิม; ความผิดพลาดทางธุรกิจส่ง errorCode (E_STUDIO_*, E_AVATAR_REQUIRED, ...)
+ */
+import { Hono } from 'hono'
+import { success, created, badRequest, notFound } from '../utils/response.js'
+import * as studio from '../services/studio.js'
+
+const app = new Hono()
+
+function requireId(raw: string): number | null {
+  const id = Number(raw)
+  return Number.isInteger(id) && id >= 1 ? id : null
+}
+
+// GET /studio/options — languages / markets / platforms (frontend ห้าม hardcode ซ้ำ)
+app.get('/options', (c) => {
+  return success(c, studio.getStudioOptions())
+})
+
+// GET /studio/templates — Creative Gallery (12 เทมเพลต)
+app.get('/templates', (c) => {
+  return success(c, studio.getStudioTemplates())
+})
+
+// GET /studio/projects — list (ใหม่→เก่า)
+app.get('/projects', async (c) => {
+  return success(c, await studio.listProjects())
+})
+
+// POST /studio/projects — สร้าง (ต้องมี productName/productUrl + templateId)
+app.post('/projects', async (c) => {
+  const body = await c.req.json()
+  try {
+    const project = await studio.createProject(body)
+    if (!project) return badRequest(c, 'สร้างโปรเจกต์ไม่สำเร็จ')
+    return created(c, project)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้างโปรเจกต์ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /studio/ingest-url — SSRF-safe product ingest (service เดียวกับ Marketer)
+app.post('/ingest-url', async (c) => {
+  const body = await c.req.json().catch(() => ({}))
+  if (typeof body.url !== 'string' || !body.url.trim()) return badRequest(c, 'url 必填')
+  try {
+    return success(c, await studio.ingestStudioUrl(body.url.trim()))
+  } catch (err: any) {
+    return badRequest(c, err?.message || '产品页抓取失败', err?.errorCode || 'E_INGEST_FAILED')
+  }
+})
+
+// GET /studio/projects/:id — project + shots + images + latestMerge + avatar
+app.get('/projects/:id', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid project ID')
+  const detail = await studio.getProjectDetail(id)
+  if (!detail) return notFound(c, 'โปรเจกต์ไม่พบ')
+  return success(c, detail)
+})
+
+// PUT /studio/projects/:id
+app.put('/projects/:id', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid project ID')
+  const body = await c.req.json()
+  try {
+    const project = await studio.updateProject(id, body)
+    if (!project) return notFound(c, 'โปรเจกต์ไม่พบ')
+    return success(c, project)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'อัปเดตโปรเจกต์ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// DELETE /studio/projects/:id — soft delete (drama ที่ผูกไว้ไม่ลบ)
+app.delete('/projects/:id', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid project ID')
+  const ok = await studio.deleteProject(id)
+  if (!ok) return notFound(c, 'โปรเจกต์ไม่พบ')
+  return success(c)
+})
+
+// POST /studio/projects/:id/script — async เขียน shot list (review_director) → script_ready
+app.post('/projects/:id/script', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid project ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const result = await studio.startStudioScript(id, { instruction: typeof body.instruction === 'string' ? body.instruction : undefined })
+    if (!result) return notFound(c, 'โปรเจกต์ไม่พบ')
+    return c.json({ code: 202, data: { status: result.status }, message: 'accepted' }, 202)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'เริ่มเขียนบทไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// PUT /studio/projects/:id/shots/:shotId — แก้บทพูด/ภาพ/ความยาว (prompts สร้างใหม่ deterministic)
+app.put('/projects/:id/shots/:shotId', async (c) => {
+  const id = requireId(c.req.param('id'))
+  const shotId = requireId(c.req.param('shotId'))
+  if (!id || !shotId) return badRequest(c, 'Invalid project/shot ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const shot = await studio.updateShot(id, shotId, body)
+    if (!shot) return notFound(c, 'ช็อตไม่พบ')
+    return success(c, shot)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'อัปเดตช็อตไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /studio/projects/:id/render — { stage: 'keyframes' | 'videos', shotIds? } → { queued }
+app.post('/projects/:id/render', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid project ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const result = await studio.renderStage(id, body)
+    if (!result) return notFound(c, 'โปรเจกต์ไม่พบ')
+    return success(c, result)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้างสื่อไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /studio/projects/:id/merge — ต่อวิดีโอทุกช็อต (FFmpeg เดิม)
+app.post('/projects/:id/merge', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid project ID')
+  try {
+    const merge = await studio.mergeProject(id)
+    if (!merge) return notFound(c, 'โปรเจกต์ไม่พบ')
+    return success(c, merge)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'ต่อวิดีโอไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /studio/projects/:id/images/generate — ภาพสินค้า packshot/lifestyle/on_model/banner
+app.post('/projects/:id/images/generate', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid project ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const images = await studio.generateProjectImages(id, body)
+    if (!images) return notFound(c, 'โปรเจกต์ไม่พบ')
+    return success(c, images)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้างภาพไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// DELETE /studio/projects/:id/images/:imageId
+app.delete('/projects/:id/images/:imageId', async (c) => {
+  const id = requireId(c.req.param('id'))
+  const imageId = requireId(c.req.param('imageId'))
+  if (!id || !imageId) return badRequest(c, 'Invalid project/image ID')
+  const ok = await studio.deleteProjectImage(id, imageId)
+  if (!ok) return notFound(c, 'ภาพไม่พบ')
+  return success(c)
+})
+
+// POST /studio/projects/:id/images/:imageId/promote — ต่อท้าย productImages
+app.post('/projects/:id/images/:imageId/promote', async (c) => {
+  const id = requireId(c.req.param('id'))
+  const imageId = requireId(c.req.param('imageId'))
+  if (!id || !imageId) return badRequest(c, 'Invalid project/image ID')
+  try {
+    const project = await studio.promoteProjectImage(id, imageId)
+    if (!project) return notFound(c, 'ภาพไม่พบ')
+    return success(c, project)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'promote ภาพไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// GET /studio/avatars — คลัง avatar
+app.get('/avatars', async (c) => {
+  return success(c, await studio.listAvatars())
+})
+
+// POST /studio/avatars — สร้าง (imageUrl จาก uploadAPI เดิม หรือให้ AI สร้างภายหลัง)
+app.post('/avatars', async (c) => {
+  const body = await c.req.json()
+  try {
+    const avatar = await studio.createAvatar(body)
+    return created(c, avatar)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้าง avatar ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// PUT /studio/avatars/:id
+app.put('/avatars/:id', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid avatar ID')
+  const body = await c.req.json()
+  try {
+    const avatar = await studio.updateAvatar(id, body)
+    if (!avatar) return notFound(c, 'Avatar ไม่พบ')
+    return success(c, avatar)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'อัปเดต avatar ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /studio/avatars/:id/generate-image — AI สร้างภาพ avatar (portrait ครึ่งตัว)
+app.post('/avatars/:id/generate-image', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid avatar ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const avatar = await studio.generateAvatarImage(id, body)
+    if (!avatar) return notFound(c, 'Avatar ไม่พบ')
+    return success(c, avatar)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้างภาพ avatar ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// DELETE /studio/avatars/:id — soft delete (โปรเจกต์ที่ใช้อยู่เก็บ id เดิม GET คืน null)
+app.delete('/avatars/:id', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid avatar ID')
+  const ok = await studio.deleteAvatar(id)
+  if (!ok) return notFound(c, 'Avatar ไม่พบ')
+  return success(c)
+})
+
+export default app

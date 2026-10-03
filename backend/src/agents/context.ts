@@ -76,3 +76,31 @@ export function getCampaignId(requestContext: RequestContext | undefined): numbe
   const v = requestContext?.get('campaignId' as never)
   return typeof v === 'number' ? v : null
 }
+
+/**
+ * Product Studio Agent 上下文 (review_director) — 按 studioProjectId 定位；
+ * studioEpisodeId/studioDramaId 由服务层在创建 drama+episode 后注入，
+ * expectedShots 限定 save_studio_shots 的数量（超出即拒绝）
+ */
+export interface StudioRequestContextValues {
+  studioProjectId: number
+  studioDramaId?: number
+  studioEpisodeId?: number
+  expectedShots?: number
+  language?: ContentLanguage
+}
+
+export function buildStudioRequestContext(values: StudioRequestContextValues): RequestContext {
+  const rc = new RequestContext()
+  rc.set('studioProjectId', values.studioProjectId)
+  if (values.studioDramaId !== undefined) rc.set('studioDramaId', values.studioDramaId)
+  if (values.studioEpisodeId !== undefined) rc.set('studioEpisodeId', values.studioEpisodeId)
+  if (values.expectedShots !== undefined) rc.set('expectedShots', values.expectedShots)
+  rc.set('language', values.language ?? getContentLanguage())
+  return rc
+}
+
+export function getStudioProjectId(requestContext: RequestContext | undefined): number | null {
+  const v = requestContext?.get('studioProjectId' as never)
+  return typeof v === 'number' ? v : null
+}
