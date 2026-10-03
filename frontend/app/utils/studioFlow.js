@@ -8,8 +8,12 @@ export const STUDIO_DURATION_MAX = 60
 export const SCRIPT_POLL_INTERVAL_MS = 2000 // scripting
 export const RENDER_POLL_INTERVAL_MS = 3000 // keyframes / videos
 
-/** ภาษาที่ไม่เว้นวรรคระหว่างคำ (นับตัวอักษรแทนคำ) */
-export const NO_SPACE_LANGUAGES = ['th', 'zh', 'ja', 'ko']
+/**
+ * ภาษาที่ไม่เว้นวรรคระหว่างคำ (นับตัวอักษรแทนคำ) → ตัวอักษร/วินาทีโดยประมาณ
+ * ไทยนับสระ/วรรณยุกต์เป็น code unit แยก (~2 ตัวต่อพยางค์ × ~6 พยางค์/วินาที) จึงสูงกว่าจีนมาก
+ */
+export const CHARS_PER_SECOND = { th: 12, zh: 4.5, ja: 7, ko: 6 }
+export const NO_SPACE_LANGUAGES = Object.keys(CHARS_PER_SECOND)
 
 export function isScripting(status) {
   return status === 'scripting'
@@ -47,11 +51,12 @@ export function clampStudioDuration(n, maxDurationSec = STUDIO_DURATION_MAX) {
   return Math.min(ceiling, Math.max(STUDIO_DURATION_MIN, v))
 }
 
-/** เวลาพูดโดยประมาณ: ภาษาเว้นวรรค ~2.5 คำ/วินาที · ไทย/จีน/ญี่ปุ่น/เกาหลี ~4.5 ตัวอักษร/วินาที */
+/** เวลาพูดโดยประมาณ: ภาษาเว้นวรรค ~2.5 คำ/วินาที · ไทย/จีน/ญี่ปุ่น/เกาหลี ตาม CHARS_PER_SECOND */
 export function speechSeconds(text, language) {
   const t = String(text || '').trim()
   if (!t) return 0
-  if (NO_SPACE_LANGUAGES.includes(String(language || ''))) return t.length / 4.5
+  const cps = CHARS_PER_SECOND[String(language || '')]
+  if (cps) return t.length / cps
   const words = t.split(/\s+/).filter(Boolean).length
   return words / 2.5
 }

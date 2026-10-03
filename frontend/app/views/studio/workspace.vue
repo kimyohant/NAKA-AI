@@ -552,9 +552,12 @@ function goStep(id: StepId | null) {
 // ===== poll (timer เดียว: scripting 2s / มีงานสื่อ 3s) =====
 let pollTimer: ReturnType<typeof setTimeout> | null = null
 let autoVideosArmed = false
+let disposed = false
 function schedulePoll() {
   if (pollTimer) clearTimeout(pollTimer)
-  if (scripting.value) pollTimer = setTimeout(poll, SCRIPT_POLL_INTERVAL_MS)
+  // refresh ที่ค้างอยู่ตอนออกจากหน้าจะเรียกมาที่นี่อีก — ห้ามตั้ง timer ใหม่หลัง unmount
+  if (disposed) pollTimer = null
+  else if (scripting.value) pollTimer = setTimeout(poll, SCRIPT_POLL_INTERVAL_MS)
   else if (processingMedia.value || mergeProcessing.value) pollTimer = setTimeout(poll, RENDER_POLL_INTERVAL_MS)
   else pollTimer = null
 }
@@ -570,11 +573,15 @@ async function poll() {
       autoVideosArmed = false
     }
   }
-  // โหมด "สร้างทั้งหมด": keyframes ครบแล้วไปต่อวิดีโอเอง
-  if (autoVideosArmed && allKeyframesDone.value && shots.value.some(s => s.videoStatus !== 'completed')) {
-    autoVideosArmed = false
-    renderStage('videos')
-  }
+  continueRenderAll()
+}
+
+// โหมด "สร้างทั้งหมด": รอ keyframe หยุดวิ่งแล้วไปต่อวิดีโอเอง — ช็อตที่ keyframe ล้มเหลว backend ข้ามให้
+// (ถ้ารอ allKeyframesDone อย่างเดียว keyframe ล้มเหลวช็อตเดียวจะค้างโหมดนี้ไว้เงียบ ๆ ตลอดไป)
+function continueRenderAll() {
+  if (!autoVideosArmed || processingMedia.value) return
+  autoVideosArmed = false
+  if (shots.value.some(s => s.keyframeStatus === 'completed' && s.videoStatus !== 'completed')) renderStage('videos')
 }
 
 async function refresh(silent = false) {
@@ -583,14 +590,10 @@ async function refresh(silent = false) {
     const d = await studioAPI.get(projectId)
     const first = !detail.value
     detail.value = d
-    if (first) {
-      resetProduct(d)
-      resetSettings(d)
-      step.value = nextIncompleteStep(d)
-    } else {
-      if (!productDirty.value) resetProduct(d)
-      if (!settingsDirty.value) resetSettings(d)
-    }
+    // reset draft ต้อง reset snapshot ด้วย ไม่งั้น draft ≠ snapshot → ขึ้น "ยังไม่บันทึก" ทั้งที่ไม่ได้แก้
+    if (first || !productDirty.value) { resetProduct(d); resetProductSnapshot() }
+    if (first || !settingsDirty.value) { resetSettings(d); resetSettingsSnapshot() }
+    if (first) step.value = nextIncompleteStep(d)
     loadFailed.value = false
   } catch (e: any) {
     if (!detail.value) loadFailed.value = true
@@ -791,7 +794,7 @@ function settingsNext() {
 // ===== 4 บท =====
 const scriptInstruction = ref('')
 function beatLabel(role: string) {
-  const key = detail.value?.templateId ? `studio.templates.${detail.value.templateId}.beats.${role}` : ''
+  const key = detail.value?.templateId ? `productStudio.templates.${detail.value.templateId}.beats.${role}` : ''
   return key && te(key) ? t(key) : role
 }
 
@@ -822,10 +825,12 @@ async function renderStage(stage: 'keyframes' | 'videos', shotIds?: number[]) {
     handleErr(e)
   }
 }
-function renderAll() {
+async function renderAll() {
   if (!shots.value.length || avatarMissing.value) return
   autoVideosArmed = true
-  renderStage('keyframes')
+  // keyframe ครบอยู่แล้ว → render keyframes ได้ queued 0 ไม่มีงานวิ่ง ไม่มี poll มาต่อวิดีโอ จึงต้องเช็กเองทันที
+  if (allKeyframesDone.value) continueRenderAll()
+  else await renderStage('keyframes')
 }
 
 // ===== 6 ส่งออก =====
@@ -878,10 +883,9 @@ const failedText = computed(() => {
 onMounted(() => {
   refresh(true)
   loadMeta()
-  resetProductSnapshot()
-  resetSettingsSnapshot()
 })
 onBeforeUnmount(() => {
+  disposed = true
   if (pollTimer) clearTimeout(pollTimer)
 })
 </script>

@@ -384,8 +384,11 @@ function onAvatarUpdated(a: StudioAvatar) {
 
 // ===== load + poll (โปรเจกต์ scripting / avatar กำลังสร้างรูป) =====
 let pollTimer: ReturnType<typeof setTimeout> | null = null
+let disposed = false
 function schedulePoll() {
   if (pollTimer) clearTimeout(pollTimer)
+  // load ที่ค้างอยู่ตอนออกจากหน้าจะเรียกมาที่นี่อีก — ห้ามตั้ง timer ใหม่หลัง unmount
+  if (disposed) { pollTimer = null; return }
   const busyProjects = tab.value === 'projects' && projects.value.some(p => p.status === 'scripting')
   const busyAvatars = tab.value === 'avatars' && avatars.value.some(a => a.imageStatus === 'processing')
   pollTimer = (busyProjects || busyAvatars) ? setTimeout(() => load(true), SCRIPT_POLL_INTERVAL_MS) : null
@@ -433,6 +436,7 @@ onMounted(() => {
   loadOptions()
 })
 onBeforeUnmount(() => {
+  disposed = true
   if (pollTimer) clearTimeout(pollTimer)
 })
 </script>

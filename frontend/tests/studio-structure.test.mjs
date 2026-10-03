@@ -119,6 +119,22 @@ test('every t() key used by studio UI exists in both locales', () => {
   }
 })
 
+test('dynamic i18n keys use the productStudio prefix (studio.* belongs to the home page)', () => {
+  for (const [name, src] of uiFiles) {
+    assert.doesNotMatch(src, /[`'"]studio\.(templates|categories|languages|markets|platforms)\./, `${name} builds a studio.* key`)
+  }
+  const categories = ['review', 'demo', 'fashion_beauty', 'showcase', 'promo']
+  for (const locale of [th, en]) {
+    for (const c of categories) assert.ok(locale.productStudio?.categories?.[c], `missing productStudio.categories.${c}`)
+  }
+})
+
+test('render-all continues to videos even when keyframes are already done or some failed', () => {
+  assert.match(workspace, /if \(allKeyframesDone\.value\) continueRenderAll\(\)/)
+  assert.match(workspace, /function continueRenderAll\(\)[\s\S]*?processingMedia\.value/)
+  assert.match(workspace, /disposed = true/)
+})
+
 test('workspace implements the 6-step flow with a single poll timer', () => {
   assert.match(workspace, /STUDIO_STEPS/)
   for (const step of STUDIO_STEPS) {
@@ -164,9 +180,12 @@ test('studioFlow: duration clamp respects the platform ceiling', () => {
 test('studioFlow: speech estimate uses words for spaced languages, chars for th/zh/ja/ko', () => {
   // 2.5 คำ/วินาที: 10 คำ → 4s
   assert.equal(speechSeconds('one two three four five six seven eight nine ten', 'en'), 4)
-  // 4.5 ตัวอักษร/วินาที: 9 ตัวอักษร → 2s
-  assert.equal(speechSeconds('กกกกกกกกก', 'th'), 2)
+  // ไทย 12 code unit/วินาที (สระ/วรรณยุกต์นับแยก): 24 ตัว → 2s · จีน 4.5 ตัว/วินาที: 9 ตัว → 2s
+  assert.equal(speechSeconds('ก'.repeat(24), 'th'), 2)
+  assert.equal(speechSeconds('好'.repeat(9), 'zh'), 2)
   assert.equal(speechSeconds('', 'en'), 0)
+  // บรรทัดรีวิวไทยปกติ (~3 วินาทีเมื่อพูดจริง) ต้องไม่ถูกเตือนในช็อต 5 วินาที
+  assert.equal(dialogueTooLong('ครีมตัวนี้ทาแล้วผิวชุ่มชื้นทั้งวันเลยค่ะ', 'th', 5), false)
   assert.equal(dialogueTooLong('x'.repeat(1), 'th', 0), false)
   // 15% tolerance: 5s ของ en ≈ 12.5 คำ พอดี; 14 คำ (5.6s) เกิน
   const twelve = Array(12).fill('w').join(' ')

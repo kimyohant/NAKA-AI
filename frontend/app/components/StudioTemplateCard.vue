@@ -70,7 +70,7 @@ const TEMPLATE_ICONS = {
 const icon = computed(() => TEMPLATE_ICONS[props.template.id] || CATEGORY_ICONS[props.template.category] || Sparkles)
 const categoryClass = computed(() => String(props.template.category || '').replace(/[^a-z_]/gi, ''))
 const categoryLabel = computed(() => {
-  const key = `studio.categories.${categoryClass.value}`
+  const key = `productStudio.categories.${categoryClass.value}`
   return te(key) ? t(key) : (props.template.category || '')
 })
 const bars = computed(() => beatBars(props.template))
@@ -78,7 +78,7 @@ const totalSeconds = computed(() => bars.value.reduce((s, b) => s + b.seconds, 0
 const timelineAria = computed(() => bars.value.map(b => `${beatLabel(b.role)} ${b.seconds}s`).join(', '))
 
 function beatLabel(role) {
-  const key = `studio.templates.${props.template.id}.beats.${role}`
+  const key = `productStudio.templates.${props.template.id}.beats.${role}`
   return te(key) ? t(key) : role
 }
 </script>
