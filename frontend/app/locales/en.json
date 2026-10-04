@@ -40,7 +40,8 @@
       "setup": "Setup",
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
-      "marketer": "AI Marketer"
+      "marketer": "AI Marketer",
+      "viralClone": "Viral Clone Studio"
     },
     "banner": {
       "missing": "{types} model not configured yet. AI features are unavailable.",
@@ -1073,6 +1074,8 @@
     "requestFailed": "Request failed ({status})",
     "unknown": "Operation failed. Please try again.",
     "codes": {
+      "E_CLONE_ANALYZE_FAILED": "Failed to analyze the transcript — try again or switch the text model",
+      "E_CLONE_MATRIX_TOO_LARGE": "Too many variants for one batch — select fewer hooks/products/languages",
       "E_STUDIO_BUSY": "A script job is already running — wait for it to finish and try again",
       "E_STUDIO_NEEDS_SCRIPT": "No script yet — generate one in the Script step first",
       "E_STUDIO_NEEDS_KEYFRAMES": "Keyframes are incomplete — generate keyframes before videos",
@@ -2025,6 +2028,132 @@
       "instagram_reels": "Instagram Reels",
       "youtube_shorts": "YouTube Shorts",
       "amazon": "Amazon"
+    }
+  },
+  "viralClone": {
+    "delete": {
+      "title": "Delete clone project",
+      "message": "Delete “{name}”? Its blueprint, variants and rendered videos will all be removed"
+    },
+    "eyebrow": "NAKA-AI TECH",
+    "title": "Viral Clone Studio",
+    "subtitle": "Clone a reference clip's structure into many ad variants — swap the hook, product, presenter and language, then render the whole batch",
+    "languages": {
+      "th": "Thai",
+      "en": "English"
+    },
+    "status": {
+      "draft": "Draft",
+      "analyzing": "Analyzing",
+      "ready": "Ready",
+      "error": "Error",
+      "queued": "Queued",
+      "rendering": "Rendering",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "list": {
+      "new": "New clone project",
+      "emptyTitle": "No clone projects yet",
+      "emptyDesc": "Turn a reference clip's structure into a batch of ad variants in one click",
+      "openAria": "Open project {name}",
+      "delete": "Delete project",
+      "deleted": "Project deleted",
+      "beats": "{n} beats"
+    },
+    "create": {
+      "title": "New clone project",
+      "desc": "Paste the reference clip's transcript and let AI split it into an editable blueprint",
+      "name": "Project name",
+      "namePlaceholder": "e.g. Serum ad clone",
+      "transcript": "Reference transcript",
+      "transcriptPlaceholder": "Paste the reference clip's spoken lines/captions, one sentence per line — the more complete, the better",
+      "language": "Primary language",
+      "reference": "Upload reference clip",
+      "referenceHint": "Optional — kept for side-by-side viewing in the project (the app never downloads from platforms)",
+      "referenceDone": "Reference clip attached",
+      "referenceRemove": "Remove reference clip",
+      "uploading": "Uploading…",
+      "licenseNotice": "Clone the structure, not the assets: only use videos/images/audio you own or are licensed to use, and check the destination platform's rules before publishing",
+      "submit": "Create project",
+      "creating": "Creating…",
+      "created": "Project created",
+      "needTranscript": "Transcript is required"
+    },
+    "work": {
+      "back": "Back",
+      "tabsLabel": "Project sections",
+      "tab_blueprint": "Blueprint",
+      "tab_variants": "Variants",
+      "tab_reference": "Reference",
+      "loadFailed": "Failed to load the project"
+    },
+    "roles": {
+      "hook": "Hook",
+      "demo": "Demo",
+      "proof": "Proof",
+      "offer": "Offer",
+      "cta": "CTA"
+    },
+    "visuals": {
+      "product": "Product",
+      "avatar": "Presenter",
+      "broll": "B-roll",
+      "text": "Text"
+    },
+    "blueprint": {
+      "panelTitle": "Split the clip into beats with AI",
+      "panelDesc": "AI reads the transcript and lays out word-anchored beats, plus spare hooks for A/B testing — everything stays editable afterwards",
+      "analyze": "Analyze transcript",
+      "analyzeStarted": "Analysis started — this page will update when it finishes",
+      "beats": "Beats",
+      "beatLinePlaceholder": "Spoken line / caption for this beat",
+      "beatSeconds": "Duration (seconds)",
+      "beatHintPlaceholder": "Visual description (e.g. app screen B-roll)",
+      "addBeat": "Add beat",
+      "removeBeat": "Remove beat",
+      "hooks": "Spare hooks",
+      "hooksHint": "Alternatives for the opening line — pick per variant",
+      "hookPlaceholder": "Add a new spare hook…",
+      "addHook": "Add",
+      "removeHook": "Remove hook",
+      "total": "Total {n}s",
+      "invalid": "Not ready to save — check every beat's role and duration",
+      "save": "Save blueprint",
+      "saved": "Blueprint saved"
+    },
+    "variants": {
+      "needBlueprint": "A blueprint is required first — open the Blueprint tab and analyze",
+      "hooksLabel": "Hooks (none selected = keep the original)",
+      "productsLabel": "Products (from Product Studio)",
+      "productsEmpty": "No product projects yet — create one in Product Studio first",
+      "avatarsLabel": "Presenters (avatars)",
+      "avatarsEmpty": "No avatars yet — create one in Product Studio first",
+      "languagesLabel": "Languages (none selected = project's primary language)",
+      "countWill": "Will create {n} variants",
+      "overCap": "Over the {cap}-variant batch limit",
+      "create": "Create variants",
+      "created": "Created {n} variants",
+      "renderAll": "Render all",
+      "renderAllQueued": "Queued {n} renders",
+      "render": "Render",
+      "queuePosition": "Queue #{n}",
+      "duration": "{n}s",
+      "download": "Download",
+      "hookOriginal": "original hook",
+      "delete": "Delete variant",
+      "deleteTitle": "Delete variant",
+      "deleteMessage": "Delete variant “{label}”? Its rendered video will no longer be reachable here",
+      "deleted": "Variant deleted",
+      "noneYet": "No variants yet — pick hooks/products/languages and create"
+    },
+    "reference": {
+      "transcriptTitle": "Transcript",
+      "transcriptHint": "Edit and save — used when analyzing the blueprint again",
+      "saveTranscript": "Save transcript",
+      "saved": "Transcript saved",
+      "videoTitle": "Reference clip",
+      "noVideo": "No reference clip attached"
     }
   }
 }

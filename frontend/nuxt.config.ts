@@ -37,6 +37,11 @@ export default defineNuxtConfig({
             path: '/studio/:id',
             file: fileURLToPath(new URL('./app/views/studio/workspace.vue', import.meta.url)),
           },
+          {
+            name: 'viralclone-workspace',
+            path: '/viral-clone/:id',
+            file: fileURLToPath(new URL('./app/views/viralclone/workspace.vue', import.meta.url)),
+          },
         )
       },
   },

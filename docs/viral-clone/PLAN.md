@@ -105,4 +105,28 @@ Phase 2 (ภายหลัง — แยก brief): import จาก AdReferenc
 
 ## Notes from Agent B (frontend)
 
-(จะบันทึกเมื่อทำงานจริง)
+**เสร็จครบ 8 tasks — branch `feat/viralclone-frontend`, 109/109 tests ผ่าน, `npm run generate` ผ่าน**
+
+ไฟล์ที่แก้/เพิ่ม:
+- `app/utils/viralCloneFlow.js` (ใหม่ — logic ล้วน): `CLONE_BEAT_ROLES/CLONE_VISUALS/CLONE_LANGUAGES/CLONE_MATRIX_CAP(12)/CLONE_POLL_INTERVAL_MS(3000)`, `isCloneProjectBusy/isCloneVariantBusy`, `cloneErrorCodeOf` (ดึง `E_CODE` จาก "E_CODE: message"), `matrixVariantCount` (Cartesian — มุมว่าง = default นับ 1), `matrixOverCap`, `beatsTotalSeconds`, `usableHooks`, `isValidBlueprint`, `cloneBeatDefaults`
+- `app/composables/useApi.ts` — types `CloneProject/CloneVariant/CloneBeat/CloneBlueprint/CloneVariantOverrides/CloneMatrix/CloneDetail` + `cloneAPI` (list/create/get/update/analyze/saveBlueprint/createVariants/renderVariant/renderAll/del/delVariant — async endpoints ส่ง `{ async: true }` เสมอ)
+- `app/pages/viral-clone.vue` (ใหม่ — รายการโปรเจกต์): การ์ดสถานะ/beats/วันที่ + create dialog (name, transcript บังคับ, language th/en, อัปโหลดคลิปต้นแบบ optional ผ่าน `uploadAPI.video` → ส่ง `referencePath`) + **license notice แสดงบังคับ** (PLAN ข้อ 4) + delete ผ่าน ConfirmDialog + poll รายการเบา ๆ เมื่อมี analyzing
+- `app/views/viralclone/workspace.vue` (ใหม่ — workspace 3 แท็บ): Blueprint (analyze ปุ่มเดียวเมื่อยังไม่มี + แสดง error ผ่าน `errors.codes.*` เมื่อ project status=error) / ตัวแปร (MatrixBuilder + render-all + การ์ดตัวแปร) / อ้างอิง (แก้ transcript + พรีวิวคลิป) · **poll timer เดียว 3s** เมื่อ analyzing หรือมี variant queued/rendering เท่านั้น · โหลด products/avatars จาก `studioAPI` ครั้งเดียวสำหรับ matrix และชิปชื่อ
+- `app/components/ViralCloneBlueprintEditor.vue` (ใหม่): แก้ beats ได้ทุก field + hooks เพิ่ม/ลบ + total seconds + validate ก่อนบันทึก; **draft + dirty flag — poll ระหว่าง render ไม่ทับสิ่งที่กำลังแก้**
+- `app/components/ViralCloneMatrixBuilder.vue` (ใหม่): hooks (ไม่เลือก = ใช้ของเดิม) × สินค้า × avatar × ภาษา, แสดงจำนวนสด + เกิน cap 12 → เตือน + disabled สร้าง
+- `app/components/ViralCloneVariantCard.vue` (ใหม่): สถานะ/คิวที่ n/ชิปสรุป overrides/พรีวิววิดีโอ/error แปลรหัสก่อน/render+download+delete
+- `app/layouts/default.vue` — ลิงก์ `/viral-clone` (ไอคอน lucide `Copy`) + `isViralCloneRoute`
+- `nuxt.config.ts` — route `viralclone-workspace` `/viral-clone/:id` → workspace (ใน `pages:extend` เดิม)
+- i18n th+en: `layout.nav.viralClone`, `viralClone.*` (102 leaf keys, parity ยืนยันด้วย test), `errors.codes.{E_CLONE_ANALYZE_FAILED,E_CLONE_MATRIX_TOO_LARGE}`
+- `tests/viralclone-structure.test.mjs` (ใหม่, 8 tests): nav+route, endpoint surface ตาม PLAN §3, logic รันจริง, **สแกนชื่อ export ซ้ำกับ flow อื่น (กัน auto-import collision)**, wiring, security scan, i18n parity
+
+**ความต่างจากสัญญา/brief (additive):**
+1. **Base ของ branch = `docs/viral-clone-plan` @ 35b03c7** (origin/master efb1060 + เอกสาร 3 ไฟล์) ไม่ใช่ origin/master ตรง ๆ — ตอนเริ่มงาน PLAN/brief ยังไม่ได้ push ขึ้น origin; merge branch นี้จะได้เอกสารมาด้วย
+2. **workspace เป็น dynamic route `/viral-clone/:id` ผ่าน `pages:extend` + `app/views/viralclone/`** ตามสถาปัตยกรรมจริงของแอป (marketer/studio/drama ล้วนทำแบบนี้ — brief เดิมเข้าใจว่า marketer ใช้ state ในหน้าเดียวซึ่งไม่จริง); หน้า list ยังเป็น `pages/viral-clone.vue` ตามสัญญา
+3. **เพิ่ม `DELETE /clone/projects/:id` และ `DELETE /clone/variants/:id`** — PLAN §3 ไม่มีตาราง DELETE แต่ UX รายการ/การ์ดต้องลบได้เหมือน marketer; Agent A ทำตามนี้ได้เลย
+4. **reference อัปโหลดแยกก่อน**: `uploadAPI.video` → `POST /clone/projects` รับ `referencePath` (string path จาก upload) — ไม่ส่ง multipart ตรงตามที่ PLAN เขียนไว้ ("+ไฟล์ reference แบบ multipart ได้"); backend เลือกรับแบบเดียว (referencePath) ก็พอ
+5. i18n เพิ่ม keys ที่งานต้องใช้นอกชุดร่างแรก: `viralClone.delete.{title,message}`, `viralClone.blueprint.analyzeStarted`, `viralClone.work.{tabsLabel,loadFailed}`, `viralClone.variants.{created,renderAllQueued,deleted,duration}`, `viralClone.languages.{th,en}`, `viralClone.roles.*`, `viralClone.visuals.*` — ทุก key อยู่ใต้ `viralClone.*` เท่านั้น
+
+**สิ่งที่คาดหวังจาก backend (Agent A):** JSON camelCase เหมือน marketer/studio · `blueprint` คืนเป็น object · `outputPath` เป็น path แบบ `/static/...` ที่ `<video>`/`<a download>` ใช้ตรง ๆ · `errorCode` + `errorMsg` รูปแบบ `"E_CODE: message"` · variant `queuePosition` (งาน queued ตามคิว unsloth) · `analyze`/`render*` รับ `{ async: true }` → 202 · `GET /clone/projects/:id` คืน project + `variants` · status enums ตาม types ใน useApi.ts
+
+**ยังไม่ได้ทดสอบ:** ยิง API จริง (backend ยังไม่มี — ตรวจสัญญาด้วย test โครงสร้าง) · environment เครื่อง B (Mac): symlink node_modules แทน npm ci (package.json ตรงกับ base)

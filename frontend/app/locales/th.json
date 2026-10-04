@@ -40,7 +40,8 @@
       "setup": "ตั้งค่าระบบ",
       "openMenu": "เปิดเมนู",
       "closeMenu": "ปิดเมนู",
-      "marketer": "นักการตลาด AI"
+      "marketer": "นักการตลาด AI",
+      "viralClone": "สตูดิโอโคลนไวรัล"
     },
     "banner": {
       "missing": "ยังไม่ได้ตั้งค่าโมเดล{types} ฟีเจอร์ AI จึงยังใช้งานไม่ได้",
@@ -1073,6 +1074,8 @@
     "requestFailed": "คำขอไม่สำเร็จ ({status})",
     "unknown": "ดำเนินการไม่สำเร็จ กรุณาลองใหม่",
     "codes": {
+      "E_CLONE_ANALYZE_FAILED": "วิเคราะห์ transcript ไม่สำเร็จ — ลองใหม่หรือเปลี่ยนโมเดลข้อความ",
+      "E_CLONE_MATRIX_TOO_LARGE": "ตัวแปรเกินจำนวนสูงสุดต่อรอบ — เลือก hook/สินค้า/ภาษาให้น้อยลง",
       "E_STUDIO_BUSY": "มีงานเขียนบทกำลังรันอยู่ รอจบก่อนแล้วลองใหม่",
       "E_STUDIO_NEEDS_SCRIPT": "ยังไม่มีบท — กดสร้างบทในขั้น “บท” ก่อน",
       "E_STUDIO_NEEDS_KEYFRAMES": "ยังไม่มี keyframe ครบ — สร้าง keyframe ก่อนแล้วจึงจะสร้างวิดีโอได้",
@@ -2025,6 +2028,132 @@
       "instagram_reels": "Instagram Reels",
       "youtube_shorts": "YouTube Shorts",
       "amazon": "Amazon"
+    }
+  },
+  "viralClone": {
+    "delete": {
+      "title": "ลบโปรเจกต์โคลน",
+      "message": "ลบ “{name}”? Blueprint, ตัวแปร และวิดีโอที่เรนเดอร์แล้วทั้งหมดจะหายไปด้วย"
+    },
+    "eyebrow": "NAKA-AI TECH",
+    "title": "สตูดิโอโคลนไวรัล",
+    "subtitle": "โคลนโครงคลิปต้นแบบเป็นตัวแปรโฆษณาหลายชุด — สลับ hook สินค้า ผู้พูด และภาษา แล้ว render ทั้งชุด",
+    "languages": {
+      "th": "ไทย",
+      "en": "English"
+    },
+    "status": {
+      "draft": "ร่าง",
+      "analyzing": "กำลังวิเคราะห์",
+      "ready": "พร้อม",
+      "error": "ผิดพลาด",
+      "queued": "รอคิว",
+      "rendering": "กำลังเรนเดอร์",
+      "completed": "เสร็จ",
+      "failed": "ล้มเหลว"
+    },
+    "list": {
+      "new": "สร้างโปรเจกต์ใหม่",
+      "emptyTitle": "ยังไม่มีโปรเจกต์โคลน",
+      "emptyDesc": "หยิบโครงคลิปต้นแบบมาทำเป็นตัวแปรโฆษณาหลายชุดในคลิกเดียว",
+      "openAria": "เปิดโปรเจกต์ {name}",
+      "delete": "ลบโปรเจกต์",
+      "deleted": "ลบโปรเจกต์แล้ว",
+      "beats": "{n} beat"
+    },
+    "create": {
+      "title": "สร้างโปรเจกต์โคลน",
+      "desc": "วาง transcript ของคลิปต้นแบบ แล้วให้ AI แยกเป็นโครง (Blueprint) ที่แก้ไขได้",
+      "name": "ชื่อโปรเจกต์",
+      "namePlaceholder": "เช่น โคลนคลิปขายเซรั่ม",
+      "transcript": "Transcript ของคลิปต้นแบบ",
+      "transcriptPlaceholder": "วางบทพูด/ซับของคลิปต้นแบบ ทีละประโยค — ยิ่งครบ โครงยิ่งแม่น",
+      "language": "ภาษาหลัก",
+      "reference": "อัปโหลดคลิปต้นแบบ",
+      "referenceHint": "ไม่บังคับ — เก็บไว้ดูเทียบในหน้าโปรเจกต์ (ระบบไม่ดึงคลิปจากแพลตฟอร์มเอง)",
+      "referenceDone": "แนบคลิปต้นแบบแล้ว",
+      "referenceRemove": "ถอดคลิปต้นแบบ",
+      "uploading": "กำลังอัปโหลด…",
+      "licenseNotice": "โคลน “โครง” ไม่ใช่ทรัพย์สิน: ใช้เฉพาะคลิป/ภาพ/เสียงที่คุณเป็นเจ้าของหรือได้รับสิทธิ์แล้ว และตรวจกฎของแพลตฟอร์มปลายทางก่อนเผยแพร่",
+      "submit": "สร้างโปรเจกต์",
+      "creating": "กำลังสร้าง…",
+      "created": "สร้างโปรเจกต์แล้ว",
+      "needTranscript": "ใส่ transcript ก่อน"
+    },
+    "work": {
+      "back": "กลับ",
+      "tabsLabel": "ส่วนของโปรเจกต์",
+      "tab_blueprint": "Blueprint",
+      "tab_variants": "ตัวแปร",
+      "tab_reference": "อ้างอิง",
+      "loadFailed": "โหลดโปรเจกต์ไม่สำเร็จ"
+    },
+    "roles": {
+      "hook": "Hook",
+      "demo": "สาธิต",
+      "proof": "หลักฐาน",
+      "offer": "ข้อเสนอ",
+      "cta": "เรียกให้ทำ"
+    },
+    "visuals": {
+      "product": "สินค้า",
+      "avatar": "ผู้พูด",
+      "broll": "B-roll",
+      "text": "ข้อความ"
+    },
+    "blueprint": {
+      "panelTitle": "แยกโครงคลิปด้วย AI",
+      "panelDesc": "ให้ AI อ่าน transcript แล้วจัดเป็น beat ที่ยึดกับคำพูด — พร้อม hook สำรองสำหรับทดสอบหลายแบบ แก้ไขได้ทุกส่วนหลังวิเคราะห์",
+      "analyze": "วิเคราะห์ transcript",
+      "analyzeStarted": "เริ่มวิเคราะห์แล้ว — จะอัปเดตเองเมื่อเสร็จ",
+      "beats": "Beats",
+      "beatLinePlaceholder": "ข้อความพูด/ซับของ beat นี้",
+      "beatSeconds": "ความยาว (วินาที)",
+      "beatHintPlaceholder": "คำอธิบายภาพ (เช่น B-roll หน้าจอแอป)",
+      "addBeat": "เพิ่ม beat",
+      "removeBeat": "ลบ beat",
+      "hooks": "Hooks สำรอง",
+      "hooksHint": "ทางเลือกแทนประโยคเปิด — เลือกได้ตอนสร้างตัวแปร",
+      "hookPlaceholder": "ใส่ hook สำรองใหม่…",
+      "addHook": "เพิ่ม",
+      "removeHook": "ลบ hook",
+      "total": "รวม {n}s",
+      "invalid": "ยังสมบูรณ์ไม่พอบันทึก — ตรวจ role/ความยาวของทุก beat",
+      "save": "บันทึก Blueprint",
+      "saved": "บันทึก Blueprint แล้ว"
+    },
+    "variants": {
+      "needBlueprint": "ต้องมี Blueprint ก่อน — ไปแท็บ Blueprint แล้วกดวิเคราะห์",
+      "hooksLabel": "Hook (ไม่เลือก = ใช้ของเดิม)",
+      "productsLabel": "สินค้า (จาก Product Studio)",
+      "productsEmpty": "ยังไม่มีโปรเจกต์สินค้า — สร้างใน Product Studio ก่อน",
+      "avatarsLabel": "ผู้พูด (Avatar)",
+      "avatarsEmpty": "ยังไม่มี avatar — สร้างใน Product Studio ก่อน",
+      "languagesLabel": "ภาษา (ไม่เลือก = ภาษาหลักของโปรเจกต์)",
+      "countWill": "จะสร้าง {n} ตัวแปร",
+      "overCap": "เกินจำนวนสูงสุด {cap} ตัวแปรต่อรอบ",
+      "create": "สร้างตัวแปร",
+      "created": "สร้าง {n} ตัวแปรแล้ว",
+      "renderAll": "เรนเดอร์ทั้งหมด",
+      "renderAllQueued": "เข้าคิว {n} งานแล้ว",
+      "render": "เรนเดอร์",
+      "queuePosition": "คิวที่ {n}",
+      "duration": "{n}s",
+      "download": "ดาวน์โหลด",
+      "hookOriginal": "hook เดิม",
+      "delete": "ลบตัวแปร",
+      "deleteTitle": "ลบตัวแปร",
+      "deleteMessage": "ลบตัวแปร “{label}”? วิดีโอที่เรนเดอร์แล้วจะเรียกดูจากหน้านี้ไม่ได้อีก",
+      "deleted": "ลบตัวแปรแล้ว",
+      "noneYet": "ยังไม่มีตัวแปร — เลือก hook/สินค้า/ภาษา แล้วกดสร้าง"
+    },
+    "reference": {
+      "transcriptTitle": "Transcript",
+      "transcriptHint": "แก้แล้วกดบันทึก — ใช้ทำ Blueprint ใหม่ได้",
+      "saveTranscript": "บันทึก Transcript",
+      "saved": "บันทึก Transcript แล้ว",
+      "videoTitle": "คลิปต้นแบบ",
+      "noVideo": "ไม่ได้แนบคลิปต้นแบบ"
     }
   }
 }
