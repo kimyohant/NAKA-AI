@@ -14,9 +14,12 @@ function requireId(raw: string): number | null {
   return Number.isInteger(id) && id >= 1 ? id : null
 }
 
-// GET /studio/options — languages / markets / platforms (frontend ห้าม hardcode ซ้ำ)
-app.get('/options', (c) => {
-  return success(c, studio.getStudioOptions())
+// GET /studio/options — languages / markets / platforms + videoProvider capabilities (frontend ห้าม hardcode ซ้ำ)
+app.get('/options', async (c) => {
+  return success(c, {
+    ...studio.getStudioOptions(),
+    videoProvider: await studio.getActiveVideoProviderInfo(),
+  })
 })
 
 // GET /studio/templates — Creative Gallery (12 เทมเพลต)

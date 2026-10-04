@@ -86,7 +86,8 @@ function sanitizeValue(value: unknown): unknown {
         lower.includes('base64') ||
         lower.includes('audiohex') ||
         lower.includes('inline') ||
-        raw.startsWith('data:image/')
+        // data URL ทุกชนิด (image/video/audio) — ยาวและเป็นข้อมูลผู้ใช้ ห้ามลง log เต็ม
+        raw.startsWith('data:')
       )) {
         out[key] = truncateString(raw, 48)
         continue

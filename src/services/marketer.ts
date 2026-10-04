@@ -84,7 +84,7 @@ export function toCampaignJson(row: CampaignRow) {
   }
 }
 
-function toDocJson(row: DocRow) {
+function toDocJson(row: DocRow, opts: { revising?: boolean } = {}) {
   return {
     id: row.id,
     campaignId: row.campaignId,
@@ -92,6 +92,8 @@ function toDocJson(row: DocRow) {
     content: row.content,
     status: row.status,
     version: row.version,
+    // async revise (body {async:true}) กำลังรันอยู่ — frontend ใช้ปิดปุ่ม/แสดง spinner
+    revising: !!opts.revising,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
@@ -190,11 +192,16 @@ export async function getCampaignDetail(id: number) {
     .where(eq(schema.campaignVisuals.campaignId, id))
     .orderBy(desc(schema.campaignVisuals.id))
   const visuals = await Promise.all(visualRows.map(v => toVisualJson(v, parseJsonArray(row.productImages))))
+  // งาน async (revise/analyze) ที่กำลังรัน — มาจาก pipeline_tasks (boot แล้ว failStaleRunningTasks เคลียร์ค้าง)
+  const running = await db.select().from(schema.pipelineTasks)
+    .where(eq(schema.pipelineTasks.status, 'running'))
+  const revisingKeys = new Set(running.filter(t => t.kind === 'campaign_doc_revise').map(t => t.key))
+  const analyzingKeys = new Set(running.filter(t => t.kind === 'reference_analyze').map(t => t.key))
   return {
     ...toCampaignJson(row),
-    docs: docs.map(toDocJson),
+    docs: docs.map(d => toDocJson(d, { revising: revisingKeys.has(`doc_revise:${id}:${d.id}`) })),
     creatives: creatives.map(toCreativeJson),
-    references: references.map(toAdReferenceJson),
+    references: references.map(r => toAdReferenceJson(r, { analyzing: analyzingKeys.has(`reference_analyze:${id}:${r.id}`) })),
     visuals,
   }
 }
@@ -616,19 +623,15 @@ export async function restoreDocRevision(campaignId: number, docId: number, revi
   return { doc: updated ? toDocJson(updated) : null }
 }
 
-/** 同步修订：调用文档所属 Agent 按 instruction 修订（docKinds 只放行该文档） */
-export async function reviseDoc(campaignId: number, docId: number, instruction: string) {
-  const campaign = await getCampaignRow(campaignId)
-  if (!campaign) return null
-  const doc = await getDocRow(campaignId, docId)
-  if (!doc) return null
+/** แกน agent ของ revise (ใช้ทั้งโหมด sync และ async — ห้ามก๊อป logic แยก) */
+async function runDocRevision(campaign: CampaignRow, doc: DocRow, instruction: string) {
   await requireTextModel()
   const agentType = agentForDocKind(doc.kind)
   const agent = mastra.getAgent(agentType)
   if (!agent) throw new AppError(`${agentType} Agent 不可用`, 'E_AGENT_UNAVAILABLE')
 
   const requestContext = buildCampaignRequestContext({
-    campaignId,
+    campaignId: campaign.id,
     docKinds: [doc.kind],
   })
   const message = [
@@ -639,8 +642,45 @@ export async function reviseDoc(campaignId: number, docId: number, instruction: 
   ].join('\n\n')
 
   await agent.generate([{ role: 'user', content: message }], { maxSteps: 12, requestContext })
+}
+
+/** 同步修订：调用文档所属 Agent 按 instruction 修订（docKinds 只放行该文档） */
+export async function reviseDoc(campaignId: number, docId: number, instruction: string) {
+  const campaign = await getCampaignRow(campaignId)
+  if (!campaign) return null
+  const doc = await getDocRow(campaignId, docId)
+  if (!doc) return null
+  await runDocRevision(campaign, doc, instruction)
   const updated = await getDocRow(campaignId, docId)
   return updated ? toDocJson(updated) : null
+}
+
+/**
+ * โหมด async ของ revise (body {async:true} — กัน proxy timeout เมื่อใช้โมเดล local/CPU):
+ * 202 + สถานะผ่าน pipeline_tasks (doc.revising), โหมด sync เดิมไม่เปลี่ยน
+ */
+export async function reviseDocAsync(campaignId: number, docId: number, instruction: string) {
+  const campaign = await getCampaignRow(campaignId)
+  if (!campaign) return null
+  const doc = await getDocRow(campaignId, docId)
+  if (!doc) return null
+  const key = `doc_revise:${campaignId}:${docId}`
+  const task = await startTask({ kind: 'campaign_doc_revise', key, dramaId: campaign.dramaId ?? undefined })
+  if (!task) throw new AppError('กำลังปรับแก้เอกสารนี้อยู่ กรุณารอสักครู่', 'E_CAMPAIGN_BUSY')
+  logTaskStart('Marketer', 'doc-revise', { campaignId, docId, docKind: doc.kind })
+  ;(async () => runDocRevision(campaign, doc, instruction))()
+    .then(async () => {
+      await updateTask(key, { status: 'done', finishedAt: now() })
+      logTaskSuccess('Marketer', 'doc-revise', { campaignId, docId })
+    })
+    .catch(async (err: any) => {
+      const raw = err?.message || 'doc revision failed'
+      const msg = err?.errorCode && !raw.startsWith(err.errorCode) ? `${err.errorCode}: ${raw}` : raw
+      await updateTask(key, { status: 'error', errorMsg: msg, finishedAt: now() })
+      logTaskError('Marketer', 'doc-revise', { campaignId, docId, error: msg })
+    })
+  const updated = await getDocRow(campaignId, docId)
+  return updated ? toDocJson(updated, { revising: true }) : null
 }
 
 // ---------- 创意（编辑 / 删除 / produce） ----------
@@ -818,7 +858,7 @@ async function ensureProductProp(dramaId: number, episodeId: number, campaign: C
 
 type AdReferenceRow = typeof schema.campaignAdReferences.$inferSelect
 
-function toAdReferenceJson(row: AdReferenceRow) {
+function toAdReferenceJson(row: AdReferenceRow, opts: { analyzing?: boolean } = {}) {
   return {
     id: row.id,
     campaignId: row.campaignId,
@@ -829,6 +869,8 @@ function toAdReferenceJson(row: AdReferenceRow) {
     analysis: row.analysis,
     // status เป็น derived: analysis ไม่ว่าง = analyzed
     status: row.analysis ? 'analyzed' : 'draft',
+    // async analyze (body {async:true}) กำลังรันอยู่
+    analyzing: !!opts.analyzing,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
@@ -932,18 +974,13 @@ export async function deleteAdReference(campaignId: number, referenceId: number)
   return true
 }
 
-/** sync 分析：ad_analyst อ่าน transcript จาก user message → save_reference_analysis บันทึกลง DB */
-export async function analyzeAdReference(campaignId: number, referenceId: number) {
-  const campaign = await getCampaignRow(campaignId)
-  if (!campaign) return null
-  assertNotBusy(campaign) // analyze ระหว่าง campaign *ing → E_CAMPAIGN_BUSY
-  const reference = await getAdReferenceRow(campaignId, referenceId)
-  if (!reference) return null
+/** แกน agent ของ analyze (ใช้ทั้งโหมด sync และ async — ห้ามก๊อป logic แยก) */
+async function runReferenceAnalysis(campaign: CampaignRow, reference: AdReferenceRow) {
   await requireTextModel()
   const agent = mastra.getAgent('ad_analyst')
   if (!agent) throw new AppError('ad_analyst Agent 不可用', 'E_AGENT_UNAVAILABLE')
 
-  const requestContext = buildCampaignRequestContext({ campaignId, referenceId })
+  const requestContext = buildCampaignRequestContext({ campaignId: campaign.id, referenceId: reference.id })
   const message = [
     campaignSummaryBlock(campaign),
     `【Reference ad】\n- Title: ${reference.title}`,
@@ -953,10 +990,47 @@ export async function analyzeAdReference(campaignId: number, referenceId: number
     'Analyze this reference ad\'s full structure and call save_reference_analysis ONCE with the complete Markdown (the six section headings verbatim). Never fetch anything from the source URL. If the transcript lacks information for a section, state that instead of guessing. After saving, summarize in one or two sentences.',
   ].filter(Boolean).join('\n\n')
 
-  logTaskStart('Marketer', 'analyze-reference', { campaignId, referenceId })
   await agent.generate([{ role: 'user', content: message }], { maxSteps: 8, requestContext })
+}
+
+/** sync 分析：ad_analyst อ่าน transcript จาก user message → save_reference_analysis บันทึกลง DB */
+export async function analyzeAdReference(campaignId: number, referenceId: number) {
+  const campaign = await getCampaignRow(campaignId)
+  if (!campaign) return null
+  assertNotBusy(campaign) // analyze ระหว่าง campaign *ing → E_CAMPAIGN_BUSY
+  const reference = await getAdReferenceRow(campaignId, referenceId)
+  if (!reference) return null
+
+  logTaskStart('Marketer', 'analyze-reference', { campaignId, referenceId })
+  await runReferenceAnalysis(campaign, reference)
   const updated = await getAdReferenceRow(campaignId, referenceId)
   return updated ? toAdReferenceJson(updated) : null
+}
+
+/** โหมด async ของ analyze (body {async:true}) — 202 + สถานะผ่าน pipeline_tasks (reference.analyzing) */
+export async function analyzeAdReferenceAsync(campaignId: number, referenceId: number) {
+  const campaign = await getCampaignRow(campaignId)
+  if (!campaign) return null
+  assertNotBusy(campaign)
+  const reference = await getAdReferenceRow(campaignId, referenceId)
+  if (!reference) return null
+  const key = `reference_analyze:${campaignId}:${referenceId}`
+  const task = await startTask({ kind: 'reference_analyze', key, dramaId: campaign.dramaId ?? undefined })
+  if (!task) throw new AppError('กำลังวิเคราะห์ reference นี้อยู่ กรุณารอสักครู่', 'E_CAMPAIGN_BUSY')
+  logTaskStart('Marketer', 'analyze-reference-async', { campaignId, referenceId })
+  ;(async () => runReferenceAnalysis(campaign, reference))()
+    .then(async () => {
+      await updateTask(key, { status: 'done', finishedAt: now() })
+      logTaskSuccess('Marketer', 'analyze-reference-async', { campaignId, referenceId })
+    })
+    .catch(async (err: any) => {
+      const raw = err?.message || 'reference analysis failed'
+      const msg = err?.errorCode && !raw.startsWith(err.errorCode) ? `${err.errorCode}: ${raw}` : raw
+      await updateTask(key, { status: 'error', errorMsg: msg, finishedAt: now() })
+      logTaskError('Marketer', 'analyze-reference-async', { campaignId, referenceId, error: msg })
+    })
+  const updated = await getAdReferenceRow(campaignId, referenceId)
+  return updated ? toAdReferenceJson(updated, { analyzing: true }) : null
 }
 
 // ---------- Phase 3: Product visuals (งานรูป แยกจาก agent pipeline — ไม่แตะ campaign.status) ----------

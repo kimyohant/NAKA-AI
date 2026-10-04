@@ -10,16 +10,34 @@ import { STORAGE_ROOT } from './paths.js'
 /**
  * 下载远程文件到本地存储
  */
-export async function downloadFile(url: string, subDir: string): Promise<string> {
+/** Content-Type → นามสกุล (เช่น gallery URL ของ unsloth ไม่มีนามสกุลไฟล์ใน path) */
+function getExtFromContentType(contentType: string | null): string {
+  const type = String(contentType || '').split(';')[0].trim().toLowerCase()
+  const map: Record<string, string> = {
+    'video/mp4': '.mp4',
+    'video/webm': '.webm',
+    'video/quicktime': '.mov',
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/webp': '.webp',
+    'image/gif': '.gif',
+    'audio/mpeg': '.mp3',
+    'audio/wav': '.wav',
+  }
+  return map[type] ?? '.bin'
+}
+
+export async function downloadFile(url: string, subDir: string, options: { headers?: Record<string, string> } = {}): Promise<string> {
   const dir = path.join(STORAGE_ROOT, subDir)
   fs.mkdirSync(dir, { recursive: true })
 
-  const ext = getExtFromUrl(url)
+  const resp = await fetch(url, { headers: options.headers })
+  if (!resp.ok) throw new Error(`Download failed: ${resp.status}`)
+  // นามสกุลจาก path ก่อน ไม่มี/เป็น .bin → เดาจาก Content-Type ของ response
+  let ext = getExtFromUrl(url)
+  if (ext === '.bin') ext = getExtFromContentType(resp.headers.get('content-type'))
   const filename = `${uuid()}${ext}`
   const filePath = path.join(dir, filename)
-
-  const resp = await fetch(url)
-  if (!resp.ok) throw new Error(`Download failed: ${resp.status}`)
 
   const buffer = Buffer.from(await resp.arrayBuffer())
   fs.writeFileSync(filePath, buffer)

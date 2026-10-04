@@ -17,6 +17,8 @@ export interface AIConfig {
   model: string
   /** 采样温度，null 表示不设置（跟随服务商默认）。存于 ai_service_configs.settings JSON */
   temperature?: number | null
+  /** ai_service_configs.settings JSON 解析结果（provider 专属设置） */
+  settings?: Record<string, any>
 }
 
 /** 从 settings JSON 解析 temperature；非法值一律视为未设置 */
@@ -30,10 +32,21 @@ export function parseConfigTemperature(settingsRaw: string | null | undefined): 
   }
 }
 
+/** settings JSON → object（非法/非对象一律为空 object） */
+export function parseConfigSettings(settingsRaw: string | null | undefined): Record<string, any> {
+  if (!settingsRaw) return {}
+  try {
+    const parsed = JSON.parse(settingsRaw)
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
 export const officialProviders: Record<ServiceType, readonly string[]> = {
-  text: ['openai', 'gemini', 'volcengine', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai'],
+  text: ['openai', 'gemini', 'volcengine', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'unsloth'],
   image: ['openai', 'gemini', 'volcengine', 'qwencloud', 'wancreate'],
-  video: ['volcengine', 'minimax', 'aliyun', 'wancreate'],
+  video: ['volcengine', 'minimax', 'aliyun', 'wancreate', 'unsloth'],
 }
 
 export function isOfficialProvider(serviceType?: string | null, provider?: string | null): boolean {
@@ -65,6 +78,11 @@ export function getTextProviderBaseUrl(config: AIConfig) {
   }
 
   if (provider === 'moonshot' || provider === 'xai') {
+    return joinProviderUrl(config.baseUrl, '/v1', '')
+  }
+
+  // Unsloth Studio 本地服务器:OpenAI 兼容端点挂 /v1（docs/unsloth/PLAN.md ข้อ 3）
+  if (provider === 'unsloth') {
     return joinProviderUrl(config.baseUrl, '/v1', '')
   }
 
@@ -107,6 +125,7 @@ export async function getActiveConfig(serviceType: ServiceType): Promise<AIConfi
     apiKey: active.apiKey,
     model: models[0] || '',
     temperature: parseConfigTemperature(active.settings),
+    settings: parseConfigSettings(active.settings),
   }
 }
 
@@ -161,6 +180,7 @@ export async function getConfigById(id: number): Promise<AIConfig | null> {
     apiKey: row.apiKey,
     model: models[0] || '',
     temperature: parseConfigTemperature(row.settings),
+    settings: parseConfigSettings(row.settings),
   }
 }
 
@@ -177,5 +197,6 @@ export async function getConfigForRecovery(id: number): Promise<AIConfig | null>
     apiKey: row.apiKey,
     model: models[0] || '',
     temperature: parseConfigTemperature(row.settings),
+    settings: parseConfigSettings(row.settings),
   }
 }

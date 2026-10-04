@@ -3,13 +3,13 @@
  * 创建(processing) → 适配器构建请求 → 同步完成或异步轮询 → 下载落盘 → 回写业务表
  */
 import { db, getInsertId, schema } from '../db/index.js'
-import { and, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { getActiveConfig, getConfigById, getConfigForRecovery } from './ai.js'
 import { now, AppError } from '../utils/response.js'
 import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readImageAsCompressedDataUrl, saveBase64Image } from '../utils/storage.js'
 import { extractVideoPoster } from '../utils/video-poster.js'
-import { getImageAdapter, getVideoAdapter } from './adapters/registry'
-import type { AIConfig, ImageGenerationRecord, VideoGenerationRecord } from './adapters/types'
+import { getImageAdapter, getVideoAdapter, videoAdapters } from './adapters/registry'
+import type { AIConfig, ImageGenerationRecord, VideoCapabilities, VideoGenerationRecord } from './adapters/types'
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess, logTaskWarn, redactUrl } from '../utils/task-logger.js'
 import { taskMediaSlot } from './storyboard-readiness.js'
 import { estimateCostThb } from './generation-cost.js'
@@ -19,6 +19,47 @@ type TaskType = 'image' | 'video'
 
 const taskLabel = (type: TaskType) => (type === 'image' ? 'ImageTask' : 'VideoTask')
 const activeTasks = new Set<number>()
+
+// ─── 每Config任务队列（仅对声明 capabilities.maxConcurrent 的 provider 生效，如 unsloth = 1） ───
+/** taskId → configId：process 已认领的槽位（先于 DB status 变更登记，防止 startTask 期间的竞态多算） */
+const slotClaims = new Map<number, number>()
+const QUEUE_SWEEP_INTERVAL_MS = 60_000
+const DEFAULT_QUEUE_TIMEOUT_MINUTES = 240
+
+function videoCapabilitiesOf(config: AIConfig): VideoCapabilities | null {
+  const adapter = videoAdapters[config.provider.toLowerCase()]
+  return adapter?.capabilities ?? null
+}
+
+/** maxConcurrent：config settings.max_concurrent 优先，回退 capabilities 声明；0 = 不限（旧 provider 行为不变） */
+function maxConcurrentFor(config: AIConfig): number {
+  const caps = videoCapabilitiesOf(config)
+  if (!caps?.maxConcurrent) return 0
+  const fromSettings = Number(config.settings?.max_concurrent)
+  if (Number.isFinite(fromSettings) && fromSettings >= 1) return Math.floor(fromSettings)
+  return caps.maxConcurrent
+}
+
+function queueTimeoutMinutesFor(config: AIConfig): number {
+  const raw = Number(config.settings?.queue_timeout_minutes)
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_QUEUE_TIMEOUT_MINUTES
+}
+
+/** 同一 config 正在占用 provider 的任务数（submitting/processing/unknown + 已认领未落库的槽位） */
+function videoSlotsInUse(configId: number): number {
+  const rows = db.select({ id: schema.sysTask.id, status: schema.sysTask.status })
+    .from(schema.sysTask)
+    .where(and(eq(schema.sysTask.type, 'video'), eq(schema.sysTask.configId, configId)))
+    .all()
+  const ids = new Set<number>()
+  for (const row of rows) {
+    if (['submitting', 'processing', 'unknown'].includes(row.status || '')) ids.add(row.id)
+  }
+  for (const [taskId, cfgId] of slotClaims) {
+    if (cfgId === configId) ids.add(taskId)
+  }
+  return ids.size
+}
 
 // 轮询节奏：图片 5s×120（上限 10 分钟）；视频 10s×300
 /** 提交被厂商以「忙/稍后再试」拒绝时的排队重试：每 15s 一次，最多约 10 分钟 */
@@ -210,9 +251,20 @@ async function createTask(
   return id
 }
 
-function startTask(id: number, config: AIConfig, resumePolling: boolean): boolean {
+function startTask(id: number, config: AIConfig, resumePolling: boolean, taskType?: TaskType): boolean {
   if (activeTasks.has(id)) return false
+  // 队列门槛：仅 video 且 provider 声明 maxConcurrent 时生效——超出槽位的任务保持 queued（不 submit，不占 poll 时间）
+  const maxConcurrent = maxConcurrentFor(config)
+  if (maxConcurrent > 0 && !resumePolling) {
+    let type = taskType
+    if (!type) {
+      const [row] = db.select({ type: schema.sysTask.type }).from(schema.sysTask).where(eq(schema.sysTask.id, id)).all()
+      type = row?.type as TaskType | undefined
+    }
+    if (type === 'video' && videoSlotsInUse(config.id ?? 0) >= maxConcurrent) return false
+  }
   activeTasks.add(id)
+  if (maxConcurrent > 0) slotClaims.set(id, config.id ?? -1)
   const work = resumePolling ? resumePollingTask(id, config) : processTask(id, config)
   void work.catch(async err => {
     logTaskError('SysTask', 'worker-error', { id, error: err?.message })
@@ -222,7 +274,10 @@ function startTask(id: number, config: AIConfig, resumePolling: boolean): boolea
     } catch (persistError) {
       console.error(`Could not persist generation task ${id} failure:`, persistError)
     }
-  }).finally(() => activeTasks.delete(id))
+  }).finally(() => {
+    activeTasks.delete(id)
+    slotClaims.delete(id)
+  })
   return true
 }
 
@@ -251,13 +306,98 @@ export async function recoverGenerationTasks(): Promise<{ resumed: number; queue
     if (record.taskId && config) {
       if (startTask(record.id, config, true)) counts.resumed++
     } else if (record.status === 'queued' && config) {
-      if (startTask(record.id, config, false)) counts.queued++
+      // งาน queued กลับเข้าคิวเดิม — startTask เริ่มทันทีเมื่อมีสล็อตว่าง ไม่งั้นคงสถานะ queued รอ pump
+      counts.queued++
+      startTask(record.id, config, false)
     } else {
       await markUnknown(record.id, config ? 'Submission state is uncertain after restart; check provider history before creating a new task' : 'Original provider configuration unavailable; check provider history')
       counts.unknown++
     }
   }
+  await pumpVideoQueue()
   return counts
+}
+
+let pumpRunning = false
+
+/**
+ * คิวต่อ config (provider ที่ประกาศ maxConcurrent): ส่งงาน queued เก่าสุดก่อนเมื่อมีสล็อตว่าง,
+ * งานรอเกิน queue_timeout_minutes → failed (E_VIDEO_QUEUE_TIMEOUT)
+ */
+export async function pumpVideoQueue(): Promise<void> {
+  if (pumpRunning) return
+  pumpRunning = true
+  try {
+    const queued = db.select().from(schema.sysTask)
+      .where(and(eq(schema.sysTask.type, 'video'), eq(schema.sysTask.status, 'queued')))
+      .orderBy(asc(schema.sysTask.createdAt))
+      .all()
+    for (const record of queued) {
+      const config = await recoveryConfig(record)
+      if (!config) {
+        await markUnknown(record.id, 'Original provider configuration unavailable; check provider history')
+        continue
+      }
+      if (!maxConcurrentFor(config)) continue
+      const createdAtMs = Date.parse(record.createdAt || '')
+      const waitedMs = Number.isFinite(createdAtMs) ? Date.now() - createdAtMs : 0
+      if (waitedMs > queueTimeoutMinutesFor(config) * 60_000) {
+        await failTask(
+          record.id,
+          `E_VIDEO_QUEUE_TIMEOUT: รอคิวของ provider ${config.provider} เกิน ${queueTimeoutMinutesFor(config)} นาที — งานยังไม่ได้ถูกส่งให้ provider (ตรวจงานค้างบนเซิร์ฟเวอร์ หรือเพิ่ม queue_timeout_minutes ใน settings)`,
+          'E_VIDEO_QUEUE_TIMEOUT',
+        )
+        continue
+      }
+      if (videoSlotsInUse(config.id ?? 0) >= maxConcurrentFor(config)) continue
+      startTask(record.id, config, false, 'video')
+    }
+  } finally {
+    pumpRunning = false
+  }
+}
+
+/** sweep คิวตามเวลา: งานค้าง queued เกิน timeout ต้อง fail แม้ไม่มีงานอื่นจบมา trigger pump */
+let queueSweepStarted = false
+function ensureQueueSweep() {
+  if (queueSweepStarted) return
+  queueSweepStarted = true
+  const timer = setInterval(() => { void pumpVideoQueue() }, QUEUE_SWEEP_INTERVAL_MS)
+  timer.unref?.()
+}
+ensureQueueSweep()
+
+/** ตำแหน่งคิว (1-based) สำหรับ UI — นับงาน video queued ของ config เดียวกันที่เก่ากว่า/เท่ากัน; null = ไม่อยู่คิว */
+export function videoQueuePosition(record: {
+  id: number
+  type?: string | null
+  status?: string | null
+  configId?: number | null
+  createdAt?: string | null
+}): number | null {
+  if (!record || record.type !== 'video' || record.status !== 'queued' || !record.configId) return null
+  const [configRow] = db.select().from(schema.aiServiceConfigs)
+    .where(eq(schema.aiServiceConfigs.id, record.configId))
+    .all()
+  if (!configRow) return null
+  const config = { id: configRow.id, provider: configRow.provider || '', baseUrl: configRow.baseUrl, apiKey: configRow.apiKey, model: '', settings: parseSettingsJson(configRow.settings) }
+  if (!maxConcurrentFor(config)) return null
+  const queued = db.select({ id: schema.sysTask.id }).from(schema.sysTask)
+    .where(and(eq(schema.sysTask.type, 'video'), eq(schema.sysTask.configId, record.configId), eq(schema.sysTask.status, 'queued')))
+    .orderBy(asc(schema.sysTask.createdAt))
+    .all()
+  const index = queued.findIndex(q => q.id === record.id)
+  return index >= 0 ? index + 1 : null
+}
+
+function parseSettingsJson(raw: string | null): Record<string, any> {
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+  } catch {
+    return {}
+  }
 }
 
 export async function resumeGenerationTask(id: number): Promise<'resumed' | 'active' | 'unavailable'> {
@@ -297,6 +437,7 @@ async function processTask(id: number, config: AIConfig) {
     })
 
     let url: string, method: string, headers: Record<string, string>, body: unknown
+    let submittedVideoRecord: VideoGenerationRecord | null = null
 
     if (type === 'image') {
       const adapter = getImageAdapter(config.provider)
@@ -344,6 +485,7 @@ async function processTask(id: number, config: AIConfig) {
         watermark: params.watermark,
       }
       if (adapter.prepareRecord) videoRecord = await adapter.prepareRecord(config, videoRecord)
+      submittedVideoRecord = videoRecord
       ;({ url, method, headers, body } = adapter.buildGenerateRequest(config, videoRecord))
     }
 
@@ -377,6 +519,13 @@ async function processTask(id: number, config: AIConfig) {
         signal: AbortSignal.timeout(600_000),
       })
       if (!resp.ok) {
+        // 非 2xx 也让适配器有机会判定为「忙，稍后重试」（如 unsloth 409 = 服务器已有任务在跑）
+        const errorBody = await resp.json().catch(() => null)
+        if (errorBody && attempt < SUBMIT_RETRY_MAX && submitAdapter.isRetryableSubmit?.(errorBody)) {
+          logTaskWarn(label, 'submit-busy-retry', { id, provider: config.provider, attempt: attempt + 1, waitMs: SUBMIT_RETRY_DELAY_MS, httpStatus: resp.status })
+          await new Promise(r => setTimeout(r, SUBMIT_RETRY_DELAY_MS))
+          continue
+        }
         providerRejected = resp.status >= 400 && resp.status < 500
         throw new Error(`Provider HTTP ${resp.status}`)
       }
@@ -418,7 +567,7 @@ async function processTask(id: number, config: AIConfig) {
     }
 
     const adapter = getVideoAdapter(config.provider)
-    const { isAsync, taskId, videoUrl } = adapter.parseGenerateResponse(result)
+    const { isAsync, taskId, videoUrl } = adapter.parseGenerateResponse(result, { config, record: submittedVideoRecord! })
 
     if (!isAsync && videoUrl) {
       logTaskProgress(label, 'sync-complete', { id, videoUrl })
@@ -432,8 +581,10 @@ async function processTask(id: number, config: AIConfig) {
   } catch (err: any) {
     const rawMessage = String(err?.message || err)
     const message = (config.apiKey ? rawMessage.replaceAll(config.apiKey, '[redacted]') : rawMessage).slice(0, 500)
-    if (submitStarted && !providerRejected) await markUnknown(id, message, providerErrorCode)
-    else await failTask(id, message, providerErrorCode)
+    // 适配器抛出「E_XXX: 前缀」的稳定错误码时（如 E_LOCAL_PROVIDER_UNREACHABLE）落库到 errorCode
+    const codeFromMessage = /^\s*([A-Z][A-Z0-9_]{2,})(?:[\s:]|$)/.exec(message)?.[1]
+    if (submitStarted && !providerRejected) await markUnknown(id, message, codeFromMessage ?? providerErrorCode)
+    else await failTask(id, message, codeFromMessage ?? providerErrorCode)
   }
 }
 
@@ -449,6 +600,7 @@ async function failTask(id: number, message: string, code?: string) {
   await db.update(schema.sysTask)
     .set({ status: 'failed', errorMsg: message, errorCode: code || null, updatedAt: now() })
     .where(eq(schema.sysTask.id, id))
+  void pumpVideoQueue()
 }
 
 async function markUnknown(id: number, message: string, code?: string) {
@@ -456,6 +608,7 @@ async function markUnknown(id: number, message: string, code?: string) {
   await db.update(schema.sysTask)
     .set({ status: 'unknown', errorMsg: message.slice(0, 500), errorCode: code || null, updatedAt: now() })
     .where(eq(schema.sysTask.id, id))
+  void pumpVideoQueue()
 }
 
 type SysTaskRecord = typeof schema.sysTask.$inferSelect
@@ -497,7 +650,9 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
       const result = await resp.json() as any
 
       // 图片/视频 PollResponse 结构不同，这里统一按 any 取值后按 type 分支
-      const pollResp: any = adapter.parsePollResponse(result)
+      const pollResp: any = type === 'image'
+        ? adapter.parsePollResponse(result)
+        : adapter.parsePollResponse(result, { config, taskId })
 
       if (pollResp.status === 'completed') {
         if (type === 'image') {
@@ -541,8 +696,20 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
   await markUnknown(record.id, 'Polling attempts exhausted; provider task may still be running')
 }
 
+/** ดาวน์โหลดผลจาก provider: URL ที่ต้องยืนยันตัวตน (เช่น gallery ของ unsloth) ใช้ Authorization ของ config เดิมซ้ำ */
+async function downloadProviderFile(url: string, subDir: string, record: SysTaskRecord): Promise<string> {
+  try {
+    return await downloadFile(url, subDir)
+  } catch (err: any) {
+    if (!/401|403/.test(String(err?.message)) || !record.configId) throw err
+    const config = await getConfigForRecovery(record.configId)
+    if (!config?.apiKey) throw err
+    return downloadFile(url, subDir, { headers: { Authorization: `Bearer ${config.apiKey}` } })
+  }
+}
+
 async function handleImageComplete(record: SysTaskRecord, imageUrl: string) {
-  const localPath = await downloadFile(imageUrl, 'images')
+  const localPath = await downloadProviderFile(imageUrl, 'images', record)
   // 列表页缩略图（前端按命名约定推导地址，失败不影响主流程）
   await generateImageThumb(localPath)
 
@@ -590,7 +757,7 @@ async function writeBackImageAssets(record: SysTaskRecord, localPath: string) {
 }
 
 async function handleVideoComplete(record: SysTaskRecord, videoUrl: string, duration: number | null | undefined) {
-  const localPath = await downloadFile(videoUrl, 'videos')
+  const localPath = await downloadProviderFile(videoUrl, 'videos', record)
   // 海报帧供列表/封面展示，避免前端为显示首帧缓冲整个视频
   await extractVideoPoster(localPath)
   if (record.storyboardId) {
@@ -607,6 +774,8 @@ async function handleVideoComplete(record: SysTaskRecord, videoUrl: string, dura
     .where(eq(schema.sysTask.id, record.id))
 
   logTaskSuccess('VideoTask', 'downloaded', { id: record.id, localPath, storyboardId: record.storyboardId, duration })
+  // สล็อตของ provider แบบ maxConcurrent ว่าง → ดึงงาน queued ถัดไปเข้าทำงาน
+  void pumpVideoQueue()
 }
 
 // ─── 参考素材归一化 ───────────────────────────────────────────────
