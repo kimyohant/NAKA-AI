@@ -509,3 +509,35 @@ export const studioImages = sqliteTable('studio_images', {
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })
+
+// v12: Viral Clone Studio (docs/viral-clone/PLAN.md ข้อ 3) — โคลน "โครง" คลิปไวรัล → ตัวแปรโฆษณา
+export const cloneProjects = sqliteTable('clone_projects', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  status: text('status').notNull().default('draft'),
+  referencePath: text('reference_path'),
+  referenceTranscript: text('reference_transcript').notNull().default(''),
+  language: text('language').notNull().default('th'),
+  blueprintJson: text('blueprint_json'),
+  errorCode: text('error_code'),
+  errorMsg: text('error_msg'),
+  renderState: text('render_state'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+export const cloneVariants = sqliteTable('clone_variants', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  projectId: integer('project_id').notNull(),
+  label: text('label').notNull().default(''),
+  overridesJson: text('overrides_json'),
+  status: text('status').notNull().default('draft'),
+  outputPath: text('output_path'),
+  durationSec: real('duration_sec'),
+  errorCode: text('error_code'),
+  errorMsg: text('error_msg'),
+  pipelineTaskId: integer('pipeline_task_id'),
+  episodeId: integer('episode_id'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})

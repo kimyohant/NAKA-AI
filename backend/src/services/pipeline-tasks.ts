@@ -7,7 +7,7 @@ import { eq, and, inArray, notInArray } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 import { now } from '../utils/response.js'
 
-export type PipelineTaskKind = 'extract' | 'video_prompts' | 'campaign_research' | 'campaign_strategy' | 'campaign_creatives' | 'studio_script' | 'studio_render' | 'campaign_doc_revise' | 'reference_analyze'
+export type PipelineTaskKind = 'extract' | 'video_prompts' | 'campaign_research' | 'campaign_strategy' | 'campaign_creatives' | 'studio_script' | 'studio_render' | 'campaign_doc_revise' | 'reference_analyze' | 'clone_analyze' | 'clone_render'
 export type PipelineTaskStatus = 'running' | 'done' | 'error' | 'cancelled'
 
 export interface PipelineTaskRow {
@@ -153,7 +153,7 @@ export async function isCancelRequested(key: string): Promise<boolean> {
 }
 
 /** boot 时由各自 resume 逻辑接管、不能在这里一刀切标记失败的 kind（studio_render → resumeStaleAutoRenders） */
-export const RESUMABLE_PIPELINE_KINDS: PipelineTaskKind[] = ['studio_render']
+export const RESUMABLE_PIPELINE_KINDS: PipelineTaskKind[] = ['studio_render', 'clone_render']
 
 /** boot 清理：进程重启后所有 running 行不可能还在跑 → 标记失败，避免 UI 永远显示进行中 */
 export async function failStaleRunningTasks(): Promise<number> {

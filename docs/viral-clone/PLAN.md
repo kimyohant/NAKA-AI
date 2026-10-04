@@ -101,7 +101,34 @@ Phase 2 (ภายหลัง — แยก brief): import จาก AdReferenc
 
 ## Notes from Agent A (backend)
 
-(จะบันทึกเมื่อทำงานจริง)
+**สถานะ**: 7 tasks ครบ · branch `feat/viralclone-backend` (base `origin/docs/viral-clone-plan` @ ff22dc4) · typecheck ผ่าน · suite **135/135 ผ่าน** (baseline บน branch นี้ = 116/116 ไม่มี failure — ตัวเลข "~14 failures บน master" ใน brief ไม่ตรงกับเครื่องนี้ อาจมาจาก node_modules ไม่ครบ; ไม่มี regression ใหม่จากงานนี้)
+
+### ไฟล์
+- ใหม่: `services/clone.ts` (service + driver) · `routes/clone.ts` · tests: `clone-blueprint.test.ts` (validate/merge/matrix), `clone-pipeline.test.ts` (scenario ยิง provider จริงผ่าน HTTP stub + media จริง), `clone-structure.test.mjs`
+- แก้: `sqlite-schema.ts` (v12) · `schema.ts` (cloneProjects/cloneVariants) · `pipeline-tasks.ts` (kinds + RESUMABLE) · `agents/index.ts` (agent `viral_cloner` + `viral_translator` — ไม่มี tool, backend parse JSON เอง) · `index.ts` (mount `/api/v1/clone` + boot hooks) · migration tests เดิม 3 จุด (เวอร์ชัน/RESUMABLE regex)
+
+### การตัดสินใจที่ brief ให้เลือก
+1. **`pipeline_tasks.kind = 'clone_render'` (kind ใหม่)** — เหตุผล: boot-resume ของ `studio_render` (`resumeStaleAutoRenders`) ผูกกับ `studioProjects.autoRender` JSON + stage ของ Studio โดยตรง; พา clone ไปใส่ kind เดิมจะต้องแอบแซก branch เงื่อนไขเข้าไปทุกจุด เสี่ยงพัง side ของ Studio · ทำตาม pattern ที่ integrator fix ไว้ (`9daea7b`): เพิ่ม `clone_render` ใน `RESUMABLE_PIPELINE_KINDS` + `resumeStaleCloneRenders()` ตอน boot (driver วนเก็บ variant `queued` ต่อเอง — sys_task ที่ submit แล้วถูก recover โดย `recoverGenerationTasks` เดิม)
+2. **`clone_analyze` (kind ใหม่, ไม่ resume)** — analyze ที่โดน restart ไม่มี state ให้ต่อ → `failStaleRunningTasks` mark row error ตามปกติ + `failStaleCloneAnalyzes()` ตอน boot เปลี่ยน project `analyzing` ค้าง → `error` + `E_CLONE_ANALYZE_FAILED` (กัน spinner ค้าง)
+3. **เก็บผลแปลที่ `overrides_json.translations[<lang>]`** = `{lines: {beatId: text}, hooks: [...]}` — แปลครั้งแรกตอน render (agent `viral_translator`), ครั้งถัดไปอ่าน cache; ตัวแปรภาษาเดียวกับโปรเจกต์ไม่แปล
+
+### Render path (reuse pipeline เดิม — ไม่มี renderer ใหม่)
+variant → drama+episode ของตัวเอง (drama `metadata {cloneProjectId, cloneVariantId}`, ไม่ตั้ง budget → budget guard ไม่บล็อก) → storyboards จาก beats (ผ่าน `mergeShortBeats(beats, minDurationSec)` จาก capabilities ของ video config แล้วปัด integer) → `generateImage` first_frame (size 1024×1820, refs = productImages[0..3] + avatar image) → `generateVideo` (firstFrameUrl, `generateAudio: true`) → `mergeEpisodeVideos` → captions burn (primitives จาก `captions.ts`, cue = beat line, style = `blueprint.captionStyle.style`) → `probeDurationSec` → variant `completed` + `outputPath` + `durationSec`
+- งาน provider ทุกชิ้นผ่าน `generateImage/generateVideo` เดิม ⇒ คิว `maxConcurrent`/queue_position/409-retry ทำงานให้โดยอัตโนมัติ
+- **ตัวแปรล้มไม่หยุด batch** — failed + `error_code`/`errorMsg` ("E_CODE: message") แล้ว driver ไปตัวถัดไป; captions ล้ม (ฟอนต์) → ยัง `completed` ด้วยคลิปไม่มีซับ (log `captions-fallback`)
+
+### ความต่างจากสัญญา (additive — ให้ Agent B sync)
+1. **Error codes เพิ่ม**: `E_CLONE_BUSY` (analyze/blueprint/delete ทับงานที่วิ่งอยู่; delete project ขณะมี variant queued/rendering) · `E_CLONE_TRANSLATE_FAILED` (แปล line/hooks ล้ม) · `E_RENDER_TASK_FAILED` (sys_task/merge ล้ม — ใช้ฝั่ง render) · productId/avatarId ไม่มีจริง → 400 `E_INVALID_FIELD` พร้อม id ในข้อความ (ตาม PLAN "400 ระบุ id" — ไม่เพิ่ม code ใหม่)
+2. `PUT /clone/projects/:id/blueprint` รับทั้ง `{ blueprint }` (แบบที่ B ส่ง) และ blueprint ตรง ๆ · update project รับทั้ง **PUT และ PATCH** (PLAN เขียน PATCH, B ใช้ PUT)
+3. `analyze`/`render*`: `{ async: true }` → 202; ถ้าไม่ส่ง async (curl/ทดสอบ) ทำงานแบบ sync คืนผลจบ
+4. `beat.durationSec` (float) ใช้ตอนคำนวณ merge ก่อน แล้วปัด integer ตอน insert `storyboards.duration` (คอลัมน์เป็น INTEGER) — ความยาวจริงที่รายงานมาจาก ffprobe เสมอ
+5. `hookIndex` ไม่ตรวจกับ `hooks.length` ตอนสร้าง variant (ตรวจช่วง render) → ตัวแปรนั้น `failed` + `E_INVALID_FIELD` โดย batch อื่นยังวิ่ง
+6. label ตัวแปร = `hookN · <product> · <avatar> · <lang>` (N เริ่ม 1; ซ้ำเติม ` #2`); มุมว่างใช้ `noproduct`/`noavatar`
+7. `createCloneProject` รับ `referencePath` อย่างเดียว (ตาม Agent B ข้อ 4 — ไม่รับ multipart)
+
+### การทดสอบ
+- `clone-pipeline.test.ts`: stub HTTP server ในเครื่อง เสิร์ฟ openai-image/volcengine-video รวมถึงไฟล์ mp4 (ffmpeg-static) และ png (sharp) จริง → render 3 variants จบจริงถึง merge+ffprobe (outputPath `/static/merged/*.mp4` + durationSec > 0) + per-variant failure + คำแปล cache + queuePosition + delete guard + boot-resume (RESUMABLE ไม่โดน failStale + re-render สำเร็จ)
+- LLM (analyze/translate) ทดสอบด้วย fake agent (scripted) — ยังไม่ได้ยิง LLM จริง (ไม่มี text key บนเครื่อง) · ASR/TTS ไม่มีตามขอบเขต
 
 ## Notes from Agent B (frontend)
 

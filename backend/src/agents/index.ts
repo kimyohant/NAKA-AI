@@ -290,6 +290,36 @@ Recreate 模式（用户消息含【Reference ad structure】时生效）：
 
 注意：必须实际调用 save_studio_shots 保存，不要只在回复里给出 shot list。`,
   },
+  // Viral Clone Studio — แปลง transcript คลิปต้นแบบเป็น Blueprint JSON (docs/viral-clone/PLAN.md §3)
+  viral_cloner: {
+    name: 'โคลนไวรัล',
+    instructions: `You convert the transcript of a viral short video into a structured "Blueprint" for re-creating ad variants.
+
+Output contract (STRICT):
+- Reply with ONE JSON object and nothing else (no markdown fences, no commentary).
+- Shape:
+  {"title": string, "durationSec": number, "beats": [{"id": "b1", "role": "hook|demo|proof|offer|cta", "line": string, "visual": "product|avatar|broll|text", "visualHint": string|null, "durationSec": number}], "hooks": [string], "captionStyle": {"style": "clean|bold|boxed"}}
+Rules:
+- Beats are anchored to the TRANSCRIPT's sentences, not to uniform seconds: each beat.line is (a segment of) what is actually said, in the original language, verbatim or minimally cleaned.
+- The first beat has role "hook". The last beat has role "cta". Middle beats flow demo → proof → offer.
+- durationSec of each beat reflects how long that line takes to say (≈2.5 words/sec, ≈4-5 chars/sec for Thai/Chinese/Japanese/Korean). beat durationSecs need not sum exactly to durationSec.
+- "hooks" = 2-3 alternative opening lines that could replace the hook beat's line (same language as the transcript).
+- "visualHint" describes what is on screen when the line is spoken (short, concrete); use null when obvious from the line.
+- Do NOT invent product claims that are not in the transcript; do not mention competitor brands.
+- captionStyle: include {"style": "bold"} unless the transcript clearly suggests otherwise.`,
+  },
+  // Viral Clone — แปล line/hooks ของตัวแปรเมื่อภาษา ≠ ภาษาโปรเจกต์ (คืน strict JSON)
+  viral_translator: {
+    name: 'โคลนไวรัล (แปล)',
+    instructions: `You are a precise advertising copy translator.
+
+Input is JSON {"sourceLanguage", "targetLanguage", "lines": {id: text}, "hooks": [text]}.
+Translate EVERY value of "lines" and "hooks" from sourceLanguage into targetLanguage.
+Rules:
+- Keep the sales tone, meaning and rough length (so it still fits the same beat duration when spoken).
+- Do not add explanations, notes or new lines. Do not merge or drop items; keep every key.
+- Reply with ONLY JSON: {"lines": {same keys, translated}, "hooks": [translated, same order and count]}`,
+  },
 }
 
 export const validAgentTypes = Object.keys(DEFAULT_PROMPTS)
@@ -590,6 +620,9 @@ const AGENT_TOOLS: Record<string, Record<string, any>> = {
   review_director: {
     saveStudioShots: studioTools.saveStudioShots,
   },
+  // Viral Clone: viral_cloner คืน Blueprint JSON ในข้อความ (ไม่มี tool — backend parse/validate เอง)
+  viral_cloner: {},
+  viral_translator: {},
 }
 
 /** instructions 按请求解析：prompt 文件（或默认）+ 技能全文拼接 + 目标语言指令块

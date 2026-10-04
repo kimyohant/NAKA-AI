@@ -615,6 +615,40 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     { table: 'video_merges', column: 'captioned', ddl: 'ALTER TABLE video_merges ADD COLUMN captioned INTEGER DEFAULT 0' },
     { table: 'video_merges', column: 'subtitle_url', ddl: 'ALTER TABLE video_merges ADD COLUMN subtitle_url TEXT' },
   ] },
+  // Viral Clone Studio (docs/viral-clone/PLAN.md ข้อ 3): โคลนโครงคลิปไวรัล → ตัวแปรโฆษณา
+  { version: 12, columns: [], statements: [
+    `CREATE TABLE IF NOT EXISTS clone_projects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      reference_path TEXT,
+      reference_transcript TEXT NOT NULL DEFAULT '',
+      language TEXT NOT NULL DEFAULT 'th',
+      blueprint_json TEXT,
+      error_code TEXT,
+      error_msg TEXT,
+      render_state TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_clone_projects_status ON clone_projects (status)`,
+    `CREATE TABLE IF NOT EXISTS clone_variants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      label TEXT NOT NULL DEFAULT '',
+      overrides_json TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      output_path TEXT,
+      duration_sec REAL,
+      error_code TEXT,
+      error_msg TEXT,
+      pipeline_task_id INTEGER,
+      episode_id INTEGER,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_clone_variants_project ON clone_variants (project_id)`,
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {
