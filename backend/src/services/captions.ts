@@ -78,6 +78,32 @@ export function splitCaptionLines(text: string, language: string, maxCharsPerLin
 }
 
 /**
+ * ข้อความยาวเกิน 1 cue → แบ่งเป็น n ก้อนขนาดใกล้เคียงกันตามขอบคำ (n = จำนวน cue ขั้นต่ำที่ต้องใช้)
+ * แทนการเติมก้อนแรกจนเต็ม ซึ่งทำให้ก้อนท้ายเหลือคำเดียวและขึ้นจอแค่เสี้ยววินาที
+ * ก้อนไหนยังเกิน maxLines บรรทัด (ขอบคำไม่เอื้อ) → คืน null ให้ผู้เรียกใช้วิธีเดิม
+ */
+function splitIntoBalancedCues(text: string, language: string, maxCharsPerLine: number, maxLines: number, cueCount: number): string[][] | null {
+  const words = [...new Intl.Segmenter(language, { granularity: 'word' }).segment(text)].map(s => s.segment)
+  const target = text.length / cueCount
+  const chunks: string[] = []
+  let current = ''
+  for (const word of words) {
+    const remainingCues = cueCount - chunks.length
+    if (current.trim() && remainingCues > 1 && (current + word).length > target) {
+      chunks.push(current)
+      current = word.trimStart()
+    } else {
+      current += word
+    }
+  }
+  if (current.trim()) chunks.push(current)
+  // ตัดบรรทัดในก้อนด้วยวิธีเดิม (greedy) — ลองบีบให้บรรทัดยาวเท่ากันแล้วขอบคำมักตกกลางคำทับศัพท์
+  // ที่ ICU ไม่รู้จัก (เช่น "เซ|รั่ม") หรือกลางวลีจีน จึงไม่ทำ
+  const groups = chunks.map(c => splitCaptionLines(c.trim(), language, maxCharsPerLine))
+  return groups.every(g => g.length > 0 && g.length <= maxLines) ? groups : null
+}
+
+/**
  * สร้าง cues จากช็อต: ข้อความ = dialogue ?? onScreenText (ไม่มี ⇒ ข้ามช่วงนั้น)
  * เวลาสะสมจากความยาวจริงของคลิป · ข้อความยาวเกิน 2 บรรทัด → แบ่งหลาย cue กระจายเวลาตามสัดส่วนตัวอักษร
  */
@@ -103,9 +129,13 @@ export async function buildCaptionCues(
       if (lines.length <= maxLines) {
         cues.push({ start: cursor, end: cursor + duration, lines })
       } else {
-        // แบ่งเป็นหลาย cue (กลุ่มละ 2 บรรทัด) กระจายเวลาตามสัดส่วนจำนวนตัวอักษร
-        const groups: string[][] = []
-        for (let i = 0; i < lines.length; i += maxLines) groups.push(lines.slice(i, i + maxLines))
+        // แบ่งเป็นหลาย cue ขนาดใกล้เคียงกัน กระจายเวลาตามสัดส่วนจำนวนตัวอักษร
+        const cueCount = Math.ceil(lines.length / maxLines)
+        let groups = splitIntoBalancedCues(text, language, maxCharsPerLine, maxLines, cueCount)
+        if (!groups) {
+          groups = []
+          for (let i = 0; i < lines.length; i += maxLines) groups.push(lines.slice(i, i + maxLines))
+        }
         const sizes = groups.map(g => g.join('').length)
         const totalChars = sizes.reduce((a, b) => a + b, 0) || 1
         let groupStart = cursor
