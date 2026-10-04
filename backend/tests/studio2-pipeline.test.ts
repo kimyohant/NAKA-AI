@@ -256,6 +256,22 @@ test('auto-render resume: sys_task หายจริง ⇒ E_TASK_INTERRUPTED'
   sqlite.close()
 })
 
+test('boot: failStaleRunningTasks ไม่แตะ studio_render — ปล่อยให้ resumeStaleAutoRenders รับช่วง', async () => {
+  const { failStaleRunningTasks } = await import('../src/services/pipeline-tasks.js')
+  {
+    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
+    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:boot','running',datetime('now'),datetime('now'))").run()
+    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('extract','extract:boot','running',datetime('now'),datetime('now'))").run()
+    sqlite.close()
+  }
+  await failStaleRunningTasks()
+  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
+  const status = (key: string) => sqlite.prepare('SELECT status FROM pipeline_tasks WHERE key=?').get(key).status
+  assert.equal(status('extract:boot'), 'error')         // kind ปกติยังถูกเคลียร์เหมือนเดิม
+  assert.equal(status('studio_render:boot'), 'running') // resume รับช่วงต่อ
+  sqlite.close()
+})
+
 test('drama merge เดิมไม่ถูกเปลี่ยน (mergeEpisodeVideos ยังไม่ผูก captions)', async () => {
   const { readFileSync } = await import('node:fs')
   const src = readFileSync(new URL('../src/services/ffmpeg-merge.ts', import.meta.url), 'utf8')

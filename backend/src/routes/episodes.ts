@@ -10,6 +10,7 @@ import { buildAgentRequestContext } from '../agents/context.js'
 import { buildDramaCreativeContext } from '../services/drama-context.js'
 import { mastra } from '../mastra/index.js'
 import { extractKey, cancelTask, videoPromptsKey } from '../services/pipeline-tasks.js'
+import { videoQueuePosition } from '../services/generation.js'
 
 const app = new Hono()
 
@@ -271,7 +272,8 @@ app.get('/:id/generation-tasks', async (c) => {
     .slice(0, 20)
 
   return success(c, {
-    tasks: toSnakeCaseArray(tasks),
+    // queue_position: งานวิดีโอที่รอคิว provider ทำทีละงาน (เช่น Unsloth H3) — UI แสดง "คิวที่ n"; อื่น ๆ = null
+    tasks: toSnakeCaseArray(tasks.map(t => ({ ...t, queuePosition: videoQueuePosition(t) }))),
     merges: toSnakeCaseArray(merges),
   })
 })

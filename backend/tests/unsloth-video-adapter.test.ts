@@ -10,6 +10,7 @@ import {
   pickSize,
   unslothSettings,
   UnslothVideoAdapter,
+  isConfiguredVideoModelLoaded,
   FRAME_STEP,
   FRAME_OFFSET,
   MIN_FRAMES,
@@ -17,6 +18,17 @@ import {
 } from '../src/services/adapters/unsloth-video.js'
 
 const BASE = { provider: 'unsloth', baseUrl: 'http://127.0.0.1:8888', apiKey: 'test-key', model: 'unsloth/MiniMax-H3-GGUF' }
+
+test('isConfiguredVideoModelLoaded: โมเดลอื่นโหลดอยู่ (เช่น Wan ผ่าน Unsloth UI) ไม่นับว่าพร้อม — ต้อง load H3 ก่อน', () => {
+  const h3 = 'unsloth/MiniMax-H3-GGUF'
+  // สถานะจริงที่เจอบน server ตอนรวมงาน: ผู้ใช้สลับไปโหลด Wan
+  assert.equal(isConfiguredVideoModelLoaded({ loaded: true, repo_id: 'unsloth/Wan2.2-TI2V-5B-GGUF', family: 'wan2.2-ti2v-5b' }, h3), false)
+  assert.equal(isConfiguredVideoModelLoaded({ loaded: false, repo_id: null }, h3), false)
+  // H3 partition ref2va รับ first frame ไม่ได้ → ต้อง load fl2va ใหม่
+  assert.equal(isConfiguredVideoModelLoaded({ loaded: true, repo_id: h3, h3_task: 'ref2va' }, h3), false)
+  assert.equal(isConfiguredVideoModelLoaded({ loaded: true, repo_id: h3, h3_task: 'fl2va' }, h3), true)
+  assert.equal(isConfiguredVideoModelLoaded({ loaded: true, repo_id: 'Unsloth/MiniMax-H3-GGUF', h3_task: 'fl2va' }, h3), true)
+})
 
 test('duration → num_frames อยู่บน lattice 17k+5 (5→124, 6→141, 10→243, 15→345, 20→345+เตือน)', () => {
   assert.deepEqual(durationToNumFrames(5), { numFrames: 124, clamped: true }) // 5s ต่ำกว่าช่วง (5.17s) → ช็อตสั้นสุด
