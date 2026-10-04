@@ -69,7 +69,7 @@
         {{ t('marketer.references.edit') }}
       </button>
       <button type="button" class="btn btn-sm" :disabled="disabled || busy" @click="analyze">
-        <Loader2 v-if="analyzing" :size="12" class="animate-spin" />
+        <Loader2 v-if="isAnalyzing" :size="12" class="animate-spin" />
         <ScanSearch v-else :size="12" :stroke-width="2" />
         {{ t('marketer.references.analyze') }}
       </button>
@@ -104,7 +104,8 @@ const analysisOpen = ref(true)
 const editing = ref(false)
 const saving = ref(false)
 const analyzing = ref(false)
-const busy = computed(() => saving.value || analyzing.value)
+const isAnalyzing = computed(() => analyzing.value || !!props.adRef?.analyzing)
+const busy = computed(() => saving.value || isAnalyzing.value)
 const draft = reactive({ title: '', sourceUrl: '', transcript: '', notes: '' })
 
 const renderedAnalysis = computed(() => renderMarkdown(props.adRef.analysis))
@@ -140,17 +141,16 @@ async function save() {
   }
 }
 
+// Phase Unsloth: analyze แบบ async ({ async: true }) — POST 202 แล้วหน้า poll ตาม reference.analyzing
 async function analyze() {
-  if (analyzing.value) return
+  if (isAnalyzing.value) return
   analyzing.value = true
   try {
-    const updated = await marketerAPI.analyzeReference(props.campaignId, props.adRef.id)
+    await marketerAPI.analyzeReference(props.campaignId, props.adRef.id, true)
     analysisOpen.value = true
-    toast.success(t('marketer.references.analyzed'))
-    emit('updated', updated)
+    emit('async-started')
   } catch (e) {
     toastError(e)
-  } finally {
     analyzing.value = false
   }
 }

@@ -248,6 +248,7 @@
               :disabled="busy"
               :empty-text="t('marketer.research.empty')"
               @updated="onDocUpdated"
+            @async-started="onJobAsyncStarted"
             />
           </div>
 
@@ -321,6 +322,7 @@
             :references="references"
             :disabled="busy"
             @updated="onReferenceUpdated"
+            @async-started="onJobAsyncStarted"
             @refresh="refreshQuiet"
             @generate="presetReference"
           />
@@ -561,6 +563,9 @@ const references = computed<AdReference[]>(() => detail.value?.references || [])
 const visuals = computed<CampaignVisual[]>(() => detail.value?.visuals || [])
 const referenceTitleMap = computed<Record<number, string>>(() =>
   Object.fromEntries(references.value.map(r => [r.id, r.title])))
+// Phase Unsloth: revise/analyze แบบ async — ตาม flag ที่ GET รายงาน
+const anyDocBusy = computed(() =>
+  (detail.value?.docs || []).some(d => d.revising) || (detail.value?.references || []).some(r => r.analyzing))
 const hasProcessingVisual = computed(() => visuals.value.some(v => v.status === 'processing'))
 
 function onReferenceUpdated(refDoc: AdReference) {
@@ -814,13 +819,17 @@ function schedulePoll() {
   // 定时器只有一个：agent 任务 2s 优先；有 visuals 生成中时退到 3s 兜底轮询（visuals 不改 campaign.status）
   if (busy.value) pollTimer = setTimeout(poll, POLL_INTERVAL_MS)
   else if (hasProcessingVisual.value) pollTimer = setTimeout(poll, VISUAL_POLL_INTERVAL_MS)
+  else if (anyDocBusy.value) pollTimer = setTimeout(poll, VISUAL_POLL_INTERVAL_MS)
   else pollTimer = null
 }
 
 async function poll() {
   const prev = detail.value?.status
+  const prevDocBusy = anyDocBusy.value
   await refresh(true)
   const now = detail.value?.status
+  // revise/analyze async จบ → แจ้งครั้งเดียว (revising/analyzing กลับเป็น false หมด)
+  if (prevDocBusy && !anyDocBusy.value) toast.success(t('marketer.doc.revised'))
   if (isBusyStatus(prev) && !isBusyStatus(now)) {
     const kind = busyStep(prev) as JobStep
     // 任务可能在别处/上次会话发起：以实际在跑的步骤作为重试目标
@@ -871,6 +880,11 @@ async function loadPresets() {
 
 // ===== docs / creatives 局部更新 =====
 const docTab = ref<string>(STRATEGY_DOC_KINDS[0])
+function onJobAsyncStarted() {
+  refresh(true)
+  schedulePoll()
+}
+
 function onDocUpdated(doc: CampaignDoc) {
   if (!detail.value || !doc) return
   const docs = detail.value.docs.filter(d => d.id !== doc.id)

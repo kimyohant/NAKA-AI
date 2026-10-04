@@ -46,15 +46,15 @@
         rows="2"
         :placeholder="t('marketer.doc.revisePlaceholder')"
         :aria-label="t('marketer.doc.revise')"
-        :disabled="revising"
+        :disabled="isRevising"
         @keydown.ctrl.enter.prevent="revise"
         @keydown.meta.enter.prevent="revise"
       />
       <div class="mk-revise-foot">
         <span class="mk-hint">{{ t('marketer.doc.reviseHint') }}</span>
-        <button type="button" class="btn btn-sm" :disabled="revising" @click="reviseOpen = false">{{ t('common.cancel') }}</button>
-        <button type="submit" class="btn btn-sm btn-primary" :disabled="revising || !instruction.trim()">
-          <Loader2 v-if="revising" :size="12" class="animate-spin" />
+        <button type="button" class="btn btn-sm" :disabled="isRevising" @click="reviseOpen = false">{{ t('common.cancel') }}</button>
+        <button type="submit" class="btn btn-sm btn-primary" :disabled="isRevising || !instruction.trim()">
+          <Loader2 v-if="isRevising" :size="12" class="animate-spin" />
           {{ revising ? t('marketer.doc.revising') : t('marketer.doc.reviseSubmit') }}
         </button>
       </div>
@@ -140,6 +140,8 @@ const statusSaving = ref(false)
 const reviseOpen = ref(false)
 const instruction = ref('')
 const revising = ref(false)
+// กำลังแก้จริง = local pending (รอ 202) หรือ backend บอก doc.revising (ผล poll)
+const isRevising = computed(() => revising.value || !!props.doc?.revising)
 const historyOpen = ref(false)
 const historyLoading = ref(false)
 const revisions = ref([])
@@ -234,20 +236,20 @@ async function setStatus(status) {
   }
 }
 
+// Phase Unsloth: revise แบบ async ({ async: true }) — POST 202 แล้วหน้า poll ตาม doc.revising
+// (โมเดล local บน CPU ช้ามาก sync จะโดน proxy timeout)
 async function revise() {
   const text = instruction.value.trim()
   if (!props.doc || !text || revising.value) return
   revising.value = true
   try {
-    const updated = await marketerAPI.reviseDoc(props.campaignId, props.doc.id, text)
+    await marketerAPI.reviseDoc(props.campaignId, props.doc.id, text, true)
     instruction.value = ''
     reviseOpen.value = false
-    toast.success(t('marketer.doc.revised'))
-    emit('updated', updated)
+    emit('async-started')
   } catch (e) {
     toastError(e)
     emit('error', e)
-  } finally {
     revising.value = false
   }
 }

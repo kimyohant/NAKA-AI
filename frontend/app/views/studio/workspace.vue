@@ -245,6 +245,12 @@
             <span class="field-label">{{ t('productStudio.settings.duration', { min: STUDIO_DURATION_MIN, max: durationMax }) }}</span>
             <input v-model.number="settingsDraft.durationSec" class="input ps-duration" type="range" :min="STUDIO_DURATION_MIN" :max="durationMax" step="1" />
             <span class="field-hint">{{ t('productStudio.settings.durationValue', { n: settingsDraft.durationSec }) }} · {{ t('productStudio.settings.durationTemplate', { n: template?.defaultDurationSec ?? 0 }) }}</span>
+            <span v-if="videoProvider?.minDurationSec" class="field-hint" :class="{ 'ps-cap-warn': belowMinDuration }">
+              {{ t('productStudio.settings.minDurationHint', { n: videoProvider.minDurationSec.toFixed(2) }) }}<template v-if="belowMinDuration"> — {{ t('productStudio.settings.belowMinWarn', { n: belowMinDuration }) }}</template>
+            </span>
+            <span v-if="isLocalVideoProvider && estimatedRenderMinutes" class="field-hint">
+              {{ t('productStudio.settings.estimateTotal', { n: estimatedRenderMinutes }) }}
+            </span>
           </label>
 
           <div class="field">
@@ -428,6 +434,7 @@
                 <strong>{{ t(`productStudio.autoRender.stage.${autoRenderInfo.stage}`) }}</strong>
                 <span class="mono">{{ autoRenderProgress.done }}/{{ autoRenderProgress.total }}</span>
                 <span v-if="autoRenderProgress.failed" class="tag tag-error">{{ t('productStudio.autoRender.failedCount', { n: autoRenderProgress.failed }) }}</span>
+                <span v-if="queuedVideoCount" class="tag">{{ t('productStudio.settings.queuedCount', { n: queuedVideoCount }) }}</span>
               </div>
               <div class="ps-auto-bar"><span class="ps-auto-fill" :style="{ width: `${autoRenderProgress.percent}%` }" /></div>
             </div>
@@ -563,6 +570,7 @@ import {
   type StudioDetail, type StudioOptions, type StudioProject, type StudioShot, type StudioTemplate,
 } from '~/composables/useApi'
 import { mapError, toastError } from '~/composables/useToast'
+import { UNSLOTH_PROVIDER, estimateRenderMinutes, shotsBelowMinDuration } from '~/utils/unslothFlow'
 import {
   STUDIO_STEPS, STUDIO_IMAGE_KINDS, STUDIO_DURATION_MIN,
   SCRIPT_POLL_INTERVAL_MS, RENDER_POLL_INTERVAL_MS,
@@ -604,6 +612,12 @@ const durationMax = computed(() => {
 })
 
 const CAPTION_STYLES = ['clean', 'bold', 'boxed'] as const
+// Phase Unsloth: ข้อมูลโมเดลวิดีโอ active (เช่น H3 local) — มาจาก GET /studio/options
+const videoProvider = computed(() => options.value?.videoProvider || null)
+const isLocalVideoProvider = computed(() => videoProvider.value?.provider === UNSLOTH_PROVIDER)
+const estimatedRenderMinutes = computed(() => estimateRenderMinutes(shots.value.length, videoProvider.value?.estimatedSecondsPerClip || 0))
+const queuedVideoCount = computed(() => shots.value.filter(s => (s.videoQueuePosition || 0) > 0).length)
+const belowMinDuration = computed(() => shotsBelowMinDuration(shots.value, videoProvider.value?.minDurationSec || 0).length)
 
 const statusTagClass = computed(() => {
   const s = detail.value?.status
