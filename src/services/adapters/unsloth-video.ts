@@ -124,6 +124,17 @@ function rejectUnsupportedReferences(record: VideoGenerationRecord) {
   }
 }
 
+/**
+ * video/status บอกว่าโมเดลที่โหลดอยู่คือตัวที่ config ต้องการไหม (repo ตรง + H3 ต้องเป็น partition fl2va ที่รับ first/last frame)
+ * ใช้ร่วมกับปุ่มทดสอบใน Settings
+ */
+export function isConfiguredVideoModelLoaded(status: any, modelPath: string): boolean {
+  if (!status?.loaded || typeof status.repo_id !== 'string') return false
+  if (status.repo_id.toLowerCase() !== modelPath.toLowerCase()) return false
+  if (/minimax-h3/i.test(modelPath) && status.h3_task && status.h3_task !== 'fl2va') return false
+  return true
+}
+
 export class UnslothVideoAdapter implements VideoProviderAdapter {
   provider = 'unsloth'
 
@@ -144,10 +155,12 @@ export class UnslothVideoAdapter implements VideoProviderAdapter {
     if (statusResp.status === 401) throw new Error('E_LOCAL_PROVIDER_UNREACHABLE: Unsloth server ปฏิเสธ API key (401)')
     if (!statusResp.ok) throw new Error(`E_LOCAL_PROVIDER_UNREACHABLE: video/status HTTP ${statusResp.status}`)
     const status = await statusResp.json() as any
-    if (status?.loaded) return
-
     const settings = unslothSettings(config)
     const modelPath = config.model || DEFAULT_REPO
+    // ต้องเป็นโมเดลที่ตั้งค่าไว้จริง — ผู้ใช้อาจสลับไปโหลดตัวอื่น (เช่น Wan) ผ่าน Unsloth UI;
+    // แค่ `loaded` จะทำให้งานไปวิ่งบนโมเดลผิดตัว (ไม่มีเสียง / frame lattice ไม่ตรง)
+    if (isConfiguredVideoModelLoaded(status, modelPath)) return
+
     const loadUrl = joinProviderUrl(config.baseUrl, '/api/inference', '/video/load')
     const loadResp = await fetch(loadUrl, {
       method: 'POST',

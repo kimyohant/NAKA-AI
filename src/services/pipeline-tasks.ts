@@ -3,7 +3,7 @@
  * （替代原先进程内 Map：重启后状态可恢复，boot 时把遗留 running 行标记失败；
  *  cancel_requested 标志由长循环任务在步骤之间自愿检查，实现协作式取消）
  */
-import { eq, and, inArray } from 'drizzle-orm'
+import { eq, and, inArray, notInArray } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 import { now } from '../utils/response.js'
 
@@ -152,10 +152,18 @@ export async function isCancelRequested(key: string): Promise<boolean> {
   return !!row?.cancelRequested
 }
 
+/** boot 时由各自 resume 逻辑接管、不能在这里一刀切标记失败的 kind（studio_render → resumeStaleAutoRenders） */
+export const RESUMABLE_PIPELINE_KINDS: PipelineTaskKind[] = ['studio_render']
+
 /** boot 清理：进程重启后所有 running 行不可能还在跑 → 标记失败，避免 UI 永远显示进行中 */
 export async function failStaleRunningTasks(): Promise<number> {
   const res = await db.update(schema.pipelineTasks)
     .set({ status: 'error', errorMsg: '服务重启，任务中断，请重试', finishedAt: now(), updatedAt: now() })
-    .where(and(inArray(schema.pipelineTasks.status, ['running']), eq(schema.pipelineTasks.cancelRequested, 0)))
+    .where(and(
+      inArray(schema.pipelineTasks.status, ['running']),
+      eq(schema.pipelineTasks.cancelRequested, 0),
+      // ห้ามแตะ kind ที่ resume ได้ — ไม่งั้น resumeStaleAutoRenders (รันทีหลัง) จะไม่เหลืออะไรให้ resume
+      notInArray(schema.pipelineTasks.kind, RESUMABLE_PIPELINE_KINDS),
+    ))
   return res?.changes ?? 0
 }

@@ -7,6 +7,7 @@ import { joinProviderUrl } from '../services/adapters/url.js'
 import { getTextProviderBaseUrl, isOfficialProvider, parseConfigTemperature } from '../services/ai.js'
 import { redactUrl, logTaskError, logTaskProgress, logTaskSuccess } from '../utils/task-logger.js'
 import { parseUnitPrice } from '../services/generation-cost.js'
+import { isConfiguredVideoModelLoaded } from '../services/adapters/unsloth-video.js'
 
 const app = new Hono()
 
@@ -258,8 +259,10 @@ async function runUnslothTest(serviceType: string, baseUrl: string, apiKey: stri
       ? settings.gguf_filename.trim()
       : 'minimax_h3_fl2va_pruned-Q8_0.gguf'
     let ggufDownloaded: boolean | null = null
+    // เช็กโมเดลที่ "ตั้งค่าไว้" — ไม่ใช่ตัวที่บังเอิญโหลดอยู่บน server (ผู้ใช้อาจสลับไปตัวอื่นผ่าน Unsloth UI)
+    const repo = model || 'unsloth/MiniMax-H3-GGUF'
+    const configuredLoaded = isConfiguredVideoModelLoaded(videoStatus, repo)
     try {
-      const repo = videoStatus?.repo_id || model || 'unsloth/MiniMax-H3-GGUF'
       // joinProviderUrl ใส่ query ใน path ไม่ได้ (pathname setter จะ escape '?') — ต่อ searchParams เอง
       const variantsUrl = new URL(joinProviderUrl(baseUrl, '/api/models', '/gguf-variants'))
       variantsUrl.searchParams.set('repo_id', repo)
@@ -273,14 +276,18 @@ async function runUnslothTest(serviceType: string, baseUrl: string, apiKey: stri
     } catch { /* ตรวจไฟล์ไม่ได้ → null (ไม่ถือว่า fail) */ }
     const defaults = videoStatus?.defaults || {}
     result.ok = true
-    result.model = videoStatus?.repo_id || model || null
-    result.loaded = !!videoStatus?.loaded
+    result.model = repo
+    result.loaded = configuredLoaded
     result.gguf_downloaded = ggufDownloaded
     if (ggufDownloaded === false) result.errorCode = 'E_LOCAL_MODEL_NOT_DOWNLOADED'
-    result.message = videoStatus?.loaded
-      ? `โมเดลวิดีโอโหลดอยู่ (${videoStatus.repo_id}) · ไฟล์ ${ggufFilename} ${ggufDownloaded === false ? 'ยังไม่ถูกดาวน์โหลด' : 'พร้อม'}`
-      : 'เชื่อมต่อสำเร็จ — โมเดลวิดีโอยังไม่โหลด (ระบบจะโหลดให้เองตอนสร้างงานแรก)'
-    result.capabilities = {
+    const fileNote = `ไฟล์ ${ggufFilename} ${ggufDownloaded === false ? 'ยังไม่ถูกดาวน์โหลด' : 'พร้อม'}`
+    result.message = configuredLoaded
+      ? `โมเดลวิดีโอโหลดอยู่ (${repo}) · ${fileNote}`
+      : videoStatus?.loaded
+        ? `ตอนนี้ server โหลด ${videoStatus.repo_id} อยู่ — งานแรกจะสลับไปใช้ ${repo} ให้เอง (ตัวที่โหลดอยู่จะถูกแทนที่) · ${fileNote}`
+        : `เชื่อมต่อสำเร็จ — โมเดลวิดีโอยังไม่โหลด (ระบบจะโหลดให้เองตอนสร้างงานแรก) · ${fileNote}`
+    // ความสามารถอ่านได้เฉพาะเมื่อโหลดตัวที่ตั้งค่าไว้ — ค่าของโมเดลอื่น (เช่น Wan ไม่มีเสียง) ห้ามแสดงเป็นของ H3
+    result.capabilities = !configuredLoaded ? null : {
       family: videoStatus?.family ?? null,
       has_audio: !!videoStatus?.has_audio,
       supports_keyframes: !!videoStatus?.supports_keyframes,
