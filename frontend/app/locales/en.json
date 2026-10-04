@@ -1057,6 +1057,8 @@
       "E_STUDIO_NO_VIDEOS": "No finished shot videos to merge yet",
       "E_AVATAR_REQUIRED": "This template requires an avatar with a photo — pick one in Settings",
       "E_TEMPLATE_UNKNOWN": "Unknown template — refresh the page and pick again",
+      "E_STUDIO_CAMPAIGN_NOT_FOUND": "Campaign or creative not found (it may have been deleted)",
+      "E_CAPTION_FONT_MISSING": "No bundled font for this caption language — captions cannot be burned in",
       "E_NO_TEXT_MODEL": "No text model configured — go to Settings → AI Services",
       "E_NO_IMAGE_MODEL": "No image model configured — go to Settings → AI Services",
       "E_NO_VIDEO_MODEL": "No video model configured — go to Settings → AI Services",
@@ -1301,6 +1303,7 @@
       "notFound": "Campaign not found (it may have been deleted)",
       "steps": "Campaign steps",
       "openDrama": "Open production project",
+      "toStudio": "Make a review video (Product Studio)",
       "failedTitle": "The last AI step failed",
       "retry": "Retry {step}"
     },
@@ -1400,6 +1403,7 @@
       "generate": "Generate creatives",
       "generateMore": "Add more",
       "regenerate": "Replace drafts",
+      "toStudio": "Make a review video",
       "replaceHint": "Replaces draft creatives only — approved and in-production ones are kept.",
       "needStrategy": "Generate the strategy (content brief) first.",
       "empty": "No creatives yet — choose options above and generate.",
@@ -1533,6 +1537,58 @@
     }
   },
   "productStudio": {
+    "autoRender": {
+      "start": "Generate all (auto)",
+      "force": "Regenerate all shots",
+      "forceHint": "Regenerate every keyframe and video, even completed ones",
+      "stage": {
+        "idle": "Not started",
+        "keyframes": "Generating keyframes",
+        "videos": "Generating videos",
+        "merging": "Merging videos",
+        "done": "All done",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      },
+      "failedCount": "{n} shots failed",
+      "cancel": "Cancel",
+      "done": "Every shot is generated",
+      "doneToast": "Auto-render finished — head to Export",
+      "failedToast": "Auto-render failed",
+      "cancelledToast": "Cancelled — tasks already sent to the provider finish normally",
+      "failed": "Auto-render failed",
+      "retry": "Retry",
+      "started": "Auto-render started — you can leave this page, the server continues"
+    },
+    "captions": {
+      "enable": "Burn captions into the video (from dialogue)",
+      "style": "Caption style",
+      "styles": {
+        "clean": "Clean",
+        "bold": "Bold",
+        "boxed": "Boxed"
+      },
+      "previewText": "Sample caption",
+      "burnIn": "Burn in an AI-generated corner label",
+      "burnInHint": "A small corner label in the project language — enable per the platform you post to",
+      "exportSwitch": "Burn captions when merging",
+      "downloadSrt": "Download captions (.srt)",
+      "hasSubs": "Captioned",
+      "noCaptionBadge": "No caption",
+      "noCaptionHint": "No dialogue and no on-screen text — this shot gets no caption",
+      "shotsNoCaption": "{n} shots will have no caption (no dialogue or on-screen text)"
+    },
+    "fromCampaign": {
+      "title": "Make a review video in Product Studio",
+      "desc": "Copies the product, photos and market from this campaign into Product Studio — {creative} Pick a template to start",
+      "noCreative": "no creative selected",
+      "needTemplate": "Pick a template first",
+      "creating": "Creating project",
+      "submit": "Create Studio project",
+      "created": "Studio project created from campaign",
+      "loadFailed": "Failed to load templates",
+      "backToCampaign": "Source campaign"
+    },
     "eyebrow": "NAKA-AI TECH",
     "title": "Product Studio",
     "subtitle": "Turn one product + one template into a ready-to-post review video with spoken audio — for TikTok, Shopee, Lazada and worldwide.",

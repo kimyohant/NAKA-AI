@@ -71,6 +71,10 @@
               <Loader2 v-if="p.status === 'scripting'" :size="10" class="animate-spin" />
               {{ t(`productStudio.status.${p.status}`) }}
             </span>
+            <span v-if="isAutoRenderActive(p)" class="tag tag-info">
+              <Loader2 :size="10" class="animate-spin" />
+              {{ t(`productStudio.autoRender.stage.${p.autoRender.stage}`) }} · {{ autoRenderProgress(p).done }}/{{ autoRenderProgress(p).total }}
+            </span>
             <span v-if="templateName(p.templateId)" class="tag">{{ templateName(p.templateId) }}</span>
             <span class="tag">{{ t(`productStudio.languages.${p.language}`) }}</span>
             <span class="tag">{{ t(`productStudio.platforms.${p.platform}`) }}</span>
@@ -231,7 +235,7 @@ import { Clock, ImagePlus, Loader2, MoreHorizontal, Package, Plus, ShoppingBag, 
 import { toast } from 'vue-sonner'
 import { studioAPI, uploadAPI, type StudioAvatar, type StudioProject, type StudioTemplate } from '~/composables/useApi'
 import { toastError } from '~/composables/useToast'
-import { SCRIPT_POLL_INTERVAL_MS } from '~/utils/studioFlow'
+import { isAutoRenderActive, autoRenderProgress, SCRIPT_POLL_INTERVAL_MS } from '~/utils/studioFlow'
 
 type Tab = 'projects' | 'avatars'
 
@@ -389,7 +393,7 @@ function schedulePoll() {
   if (pollTimer) clearTimeout(pollTimer)
   // load ที่ค้างอยู่ตอนออกจากหน้าจะเรียกมาที่นี่อีก — ห้ามตั้ง timer ใหม่หลัง unmount
   if (disposed) { pollTimer = null; return }
-  const busyProjects = tab.value === 'projects' && projects.value.some(p => p.status === 'scripting')
+  const busyProjects = tab.value === 'projects' && projects.value.some(p => p.status === 'scripting' || isAutoRenderActive(p))
   const busyAvatars = tab.value === 'avatars' && avatars.value.some(a => a.imageStatus === 'processing')
   pollTimer = (busyProjects || busyAvatars) ? setTimeout(() => load(true), SCRIPT_POLL_INTERVAL_MS) : null
 }

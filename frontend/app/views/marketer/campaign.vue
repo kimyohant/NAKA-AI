@@ -19,6 +19,10 @@
         </div>
       </div>
       <div class="mk-topbar-side">
+        <button class="btn" type="button" @click="openStudioDialog()">
+          <ShoppingBag :size="13" :stroke-width="1.9" />
+          {{ t('marketer.work.toStudio') }}
+        </button>
         <NuxtLink v-if="detail.dramaId" :to="`/drama/${detail.dramaId}`" class="btn">
           <Clapperboard :size="13" :stroke-width="1.9" />
           {{ t('marketer.work.openDrama') }}
@@ -395,6 +399,7 @@
               :disabled="busy"
               @updated="onCreativeUpdated"
               @delete="toDeleteCreative = $event"
+              @to-studio="openStudioDialog($event)"
             />
           </div>
           <div v-else class="step-empty">
@@ -484,6 +489,15 @@
       @confirm="removeCreative"
       @cancel="toDeleteCreative = null"
     />
+
+    <!-- Phase 2: ทำวิดีโอรีวิวต่อใน Product Studio -->
+    <StudioFromCampaignDialog
+      :open="studioDialogOpen"
+      :campaign-id="campaignId"
+      :creative="studioCreative"
+      @close="studioDialogOpen = false"
+      @created="goToStudioProject"
+    />
   </div>
 
   <!-- Campaign not found / still loading -->
@@ -512,6 +526,7 @@ import {
   type Creative, type CreativeFormat, type Platform, type VisualKind,
 } from '~/composables/useApi'
 import { mapError, toastError } from '~/composables/useToast'
+import StudioFromCampaignDialog from '~/components/StudioFromCampaignDialog.vue'
 import {
   MARKETER_STEPS, RESEARCH_DOC_KINDS, STRATEGY_DOC_KINDS, PLATFORMS, CREATIVE_FORMATS, POLL_INTERVAL_MS,
   VISUALS_STEP, VISUAL_KINDS, VISUAL_POLL_INTERVAL_MS, VISUAL_COUNT_MIN, VISUAL_COUNT_MAX,
@@ -864,6 +879,18 @@ function onDocUpdated(doc: CampaignDoc) {
 function onCreativeUpdated(cr: Creative) {
   if (!detail.value || !cr) return
   detail.value = { ...detail.value, creatives: detail.value.creatives.map(c => c.id === cr.id ? cr : c) }
+}
+
+// ===== Phase 2: Marketer → Studio bridge =====
+const studioDialogOpen = ref(false)
+const studioCreative = ref<Creative | null>(null)
+function openStudioDialog(creative?: Creative) {
+  studioCreative.value = creative || null
+  studioDialogOpen.value = true
+}
+function goToStudioProject(p: { id: number }) {
+  studioDialogOpen.value = false
+  navigateTo(`/studio/${p.id}`)
 }
 
 const toDeleteCreative = ref<Creative | null>(null)

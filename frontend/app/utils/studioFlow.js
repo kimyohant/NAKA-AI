@@ -98,3 +98,36 @@ export function studioErrorCodeOf(text) {
   const m = String(text || '').match(/\bE_[A-Z0-9_]+\b/)
   return m ? m[0] : ''
 }
+
+// ===== Phase 2: auto-render + captions =====
+
+/** pipeline auto-render กำลังวิ่งไหม (stage ทั้งสามนี้ server ยังทำงานอยู่) */
+export const AUTO_RENDER_ACTIVE_STAGES = ['keyframes', 'videos', 'merging']
+
+export function isAutoRenderActive(project) {
+  const stage = project?.autoRender?.stage
+  return AUTO_RENDER_ACTIVE_STAGES.includes(stage)
+}
+
+/** ความคืบหน้า 0–100 ของ stage ปัจจุบัน (done+failed เทียบ total) */
+export function autoRenderProgress(project) {
+  const ar = project?.autoRender
+  if (!ar || !ar.total) return { percent: 0, done: 0, failed: 0, total: 0, stage: ar?.stage || 'idle' }
+  const finished = (Number(ar.done) || 0) + (Number(ar.failed) || 0)
+  const percent = Math.min(100, Math.round((finished / ar.total) * 100))
+  return { percent, done: Number(ar.done) || 0, failed: Number(ar.failed) || 0, total: Number(ar.total) || 0, stage: ar.stage }
+}
+
+/** ข้อความซับของช็อต: dialogue ก่อน ไม่งั้น onScreenText ไม่งั้น null (ตามกติกา PHASE2 ข้อ 2) */
+export function captionSourceOf(shot) {
+  const dialogue = String(shot?.dialogue || '').trim()
+  if (dialogue) return 'dialogue'
+  const ost = String(shot?.onScreenText || '').trim()
+  if (ost) return 'onScreenText'
+  return null
+}
+
+/** ช็อตที่จะไม่มีซับ (ไม่มีทั้ง dialogue และ onScreenText) */
+export function shotsWithoutCaptions(shots) {
+  return (shots || []).filter(s => !captionSourceOf(s))
+}

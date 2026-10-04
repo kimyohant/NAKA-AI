@@ -118,4 +118,20 @@ Error codes ใหม่ (frontend แปลใน `errors.codes.*`): `E_STUDIO_
 
 ## Notes from Agent B (frontend)
 
-_(Agent B เขียนที่นี่)_
+**เสร็จครบ 6 tasks — branch `feat/studio2-frontend`, base `origin/master @ c0b85fa`**
+
+ไฟล์ที่แก้/เพิ่ม:
+- `app/composables/useApi.ts` — types ใหม่ `AutoRenderStage` / `StudioAutoRender`; `StudioProject` เพิ่ม `captions` / `captionStyle` / `aiLabelBurnIn` / `autoRender` / `sourceCampaignId`; `StudioMerge` เพิ่ม `captioned` / `subtitleUrl`; `studioAPI` เพิ่ม `autoRender(id, { force? })`, `cancelAutoRender(id)`, `fromCampaign({ campaignId, creativeId?, templateId })` และ `merge(id, { captions? })`
+- `app/utils/studioFlow.js` — เพิ่ม logic ล้วน (test import รันจริง): `AUTO_RENDER_ACTIVE_STAGES`, `isAutoRenderActive`, `autoRenderProgress` (percent จาก done+failed เทียบ total), `captionSourceOf` (dialogue → onScreenText → null), `shotsWithoutCaptions`
+- `app/views/studio/workspace.vue` — **ลบ chain ฝั่ง browser ทั้งหมด** (`autoVideosArmed` / `continueRenderAll` / `renderAll` / banner "ต้องเปิดหน้าไว้"); ปุ่ม "สร้างทั้งหมด (อัตโนมัติ)" + "สร้างใหม่ทุกช็อต" (`force`, แสดงเมื่อมีสื่อเสร็จแล้ว); แถบความคืบหน้าจาก `project.autoRender` (stage label + done/total + นับ failed + เปอร์เซ็นต์) + ปุ่มยกเลิก; `done` → toast + พาไปขั้นส่งออกอัตโนมัติ, `failed` → แสดง errorMsg ผ่าน `errors.codes.*` พร้อมปุ่มเริ่มใหม่, `cancelled` → toast; poll 3s ระหว่าง stage วิ่ง (timer เดียวเดิม — เพิ่ม branch `autoRenderActive` ใน `schedulePoll`); ปุ่ม render รายช็อต/รายขั้นปิดระหว่าง pipeline วิ่ง (`renderBlock` รวม `autoRenderActive`); merge ส่ง `{ captions }` จากสวิตช์; topbar มีลิงก์ "แคมเปญต้นทาง" เมื่อมี `sourceCampaignId`
+- Captions — ขั้นตั้งค่า: เปิด/ปิดซับ, สไตล์ clean/bold/boxed พร้อมตัวอย่างจำลองด้วย CSS บนกรอบสัดส่วนตาม aspect ที่เลือก, `aiLabelBurnIn` + คำอธิบาย; ขั้นบท: badge "ไม่มีซับ" ต่อช็อต + แจ้งจำนวนช็อตที่จะไม่มีซับ; ขั้นส่งออก: สวิตช์ซับก่อน merge, ปุ่มดาวน์โหลด `.srt` เมื่อมี `subtitleUrl`, badge "มีซับ" เมื่อ `captioned`
+- `app/pages/studio.vue` — badge ความคืบหน้า auto-render บนการ์ดโปรเจกต์ (stage + done/total) + poll เฉพาะตอนมีโปรเจกต์วิ่ง (`isAutoRenderActive`)
+- `app/views/marketer/campaign.vue` + `app/components/MarketerCreativeCard.vue` + `app/components/StudioFromCampaignDialog.vue` (ใหม่) — ปุ่ม "ทำวิดีโอรีวิว (Product Studio)" ทั้งระดับแคมเปญและบนการ์ด creative → dialog เลือกเทมเพลต (reuse `StudioTemplateGallery`, โหลด templates เอง แสดง error ผ่าน errors.codes ถ้าโหลดไม่ได้) → `fromCampaign` → `navigateTo('/studio/:id')`
+- i18n th+en: `productStudio.autoRender.*` (start/force/stage ×7/cancel/done/failed/started/toasts), `productStudio.captions.*` (enable/styles ×3/previewText/burnIn/exportSwitch/downloadSrt/hasSubs/noCaptionBadge/shotsNoCaption), `productStudio.fromCampaign.*` (title/desc/submit/created/backToCampaign ฯลฯ), `marketer.work.toStudio`, `marketer.creatives.toStudio`, `errors.codes.E_STUDIO_CAMPAIGN_NOT_FOUND` + `E_CAPTION_FONT_MISSING`
+- `tests/studio2-structure.test.mjs` (ใหม่, 9 tests) + ต่อ `tests/studio-structure.test.mjs` (contract ขยายด้วยตาราง PHASE2 §2 — 24 endpoints; assertion ของ browser chain เดิมเปลี่ยนเป็น auto-render ฝั่ง server)
+
+ผลตรวจ: `node --test tests/*.test.mjs` = **94/94 ผ่าน** · `npm run generate` ผ่าน (ไม่มี duplicated-import warning)
+
+**ยังไม่ได้ทดสอบ:** ยิง API จริง (backend Phase 2 ของ Agent A อยู่บน `feat/studio2-backend`, ยังไม่ merge ตอนงานนี้เสร็จ) — ตรวจสัญญาด้วย test โครงสร้างเทียบ PHASE2.md เท่านั้น ไม่มี mock หลงเหลือ · สิ่งที่คาดหวังจาก backend ตามสัญญา: `auto-render`/`cancel`/`from-campaign`/`merge(captions)` คืน `StudioProject`/`StudioMerge` ตาม shape ข้อ 2 (autoRender เป็น JSON object เสมอ แม้ stage=idle) · `GET /studio/projects` (list) ต้องรวม `autoRender` ด้วยเพื่อให้ badge หน้า list แสดงผล · ฟอนต์ OFL ใน `backend/assets/fonts/` เป็นฝั่ง A/desktop ตามการแบ่งงาน
+
+หมายเหตุ environment เครื่อง B (Mac): ใช้ symlink `node_modules` แทน `npm ci` (npm เครื่องนี้บล็อก install scripts; package.json ระหว่าง base เดิมกับ master ล่าสุดไม่ต่างกัน)
