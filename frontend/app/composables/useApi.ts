@@ -177,6 +177,8 @@ export const stylePresetAPI = {
   create: (d: any) => api.post('/style-presets', d),
   update: (id: number, d: any) => api.put(`/style-presets/${id}`, d),
   del: (id: number) => api.del(`/style-presets/${id}`),
+  // Style Gallery — นำเข้าคลังสไตล์เลขที่ 305 แบบ (idempotent — ข้ามสิ่งที่มีอยู่แล้ว)
+  importBuiltin: () => api.post<{ imported: number; skipped: number }>('/style-presets/import-builtin', {}),
 }
 
 export const storageAPI = {

@@ -3,10 +3,17 @@ import { eq, and } from 'drizzle-orm'
 import { db, getInsertId, schema } from '../db/index.js'
 import { success, created, badRequest, notFound, now } from '../utils/response.js'
 import { toSnakeCase } from '../utils/transform.js'
+import { importBuiltinStyles } from '../services/style-gallery.js'
 
 const app = new Hono()
 
 const VALUE_PATTERN = /^[a-z0-9][a-z0-9-]*$/
+
+// POST /style-presets/import-builtin — นำเข้าคลังสไตล์เลขที่ 305 แบบ (idempotent — ข้ามสิ่งที่มีอยู่)
+app.post('/import-builtin', async (c) => {
+  const result = await importBuiltinStyles()
+  return success(c, result)
+})
 
 // GET /style-presets — 默认只返回启用项，?all=1 返回全部
 app.get('/', async (c) => {
@@ -64,6 +71,10 @@ app.put('/:id', async (c) => {
   if (body.is_active !== undefined || body.isActive !== undefined) {
     const v = body.is_active ?? body.isActive
     updates.isActive = !(v === false || v === 0)
+  }
+  // Style Gallery: ตั้ง/ล้างรูปพรีวิว (frontend สร้างผ่าน /tasks แล้วส่ง path มาเก็บ)
+  if (body.preview_path !== undefined || body.previewPath !== undefined) {
+    updates.previewPath = (body.preview_path ?? body.previewPath) || null
   }
   await db.update(schema.stylePresets).set(updates)
     .where(eq(schema.stylePresets.id, id))

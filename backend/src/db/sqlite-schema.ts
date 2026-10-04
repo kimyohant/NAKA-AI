@@ -199,6 +199,9 @@ export const sqliteSchemaStatements = [
     description TEXT,
     sort_order INTEGER DEFAULT 0,
     is_active INTEGER DEFAULT 1,
+    preview_path TEXT,
+    category TEXT,
+    source TEXT NOT NULL DEFAULT 'custom',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     UNIQUE (value)
@@ -648,6 +651,12 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
       updated_at TEXT NOT NULL
     )`,
     `CREATE INDEX IF NOT EXISTS idx_clone_variants_project ON clone_variants (project_id)`,
+  ] },
+  // Style Gallery (docs/style-gallery/PLAN.md): พรีวิว/หมวด/แหล่งที่มาของ style preset
+  { version: 13, columns: [
+    { table: 'style_presets', column: 'preview_path', ddl: 'ALTER TABLE style_presets ADD COLUMN preview_path TEXT' },
+    { table: 'style_presets', column: 'category', ddl: 'ALTER TABLE style_presets ADD COLUMN category TEXT' },
+    { table: 'style_presets', column: 'source', ddl: `ALTER TABLE style_presets ADD COLUMN source TEXT NOT NULL DEFAULT 'custom'` },
   ] },
 ]
 
