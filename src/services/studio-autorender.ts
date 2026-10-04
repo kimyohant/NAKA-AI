@@ -62,8 +62,11 @@ export async function runAutoRenderPipeline(
   opts: { force?: boolean; pollMs?: number; resumeStage?: string; resumeTaskIds?: number[] } = {},
 ): Promise<void> {
   const pollMs = Math.max(opts.pollMs ?? POLL_MS, 5000) // ห้าม poll ถี่กว่า 5s ฝั่ง server
+  const STAGES = ['keyframes', 'videos'] as const
+  // resume ที่ videos: ห้ามย้อนไปส่ง keyframe ใหม่ (ช็อตที่ keyframe ล้มจะถูกส่งซ้ำ = เสียเงินซ้ำ)
+  const firstStage = opts.resumeStage ? STAGES.indexOf(opts.resumeStage as typeof STAGES[number]) : 0
   try {
-    for (const stage of ['keyframes', 'videos'] as const) {
+    for (const stage of STAGES.slice(Math.max(0, firstStage))) {
       if (await isCancelRequested(key)) {
         await patchAutoRender(projectId, { stage: 'cancelled', finishedAt: now() })
         await updateTask(key, { status: 'cancelled', finishedAt: now() })
@@ -80,8 +83,8 @@ export async function runAutoRenderPipeline(
         // resume: ไม่ส่งงานใหม่ — monitor งานเดิมจาก JSON
         taskIds = (opts.resumeTaskIds ?? []).filter(Boolean)
         const stats = await stageTaskStats(taskIds)
-        if (!stats.inFlight) {
-          // ไม่มีงานค้างให้ resume — งานหายจริง
+        // งานหายจริง = ไม่มี id หรือหา sys_task ไม่เจอบางงาน · งานจบครบแล้ว (server ดับระหว่างรอ poll) ⇒ ไป stage ถัดไปตามปกติ
+        if (!taskIds.length || stats.done + stats.failed + stats.inFlight < taskIds.length) {
           throw new Error('E_TASK_INTERRUPTED: 服务重启，任务中断，请重试')
         }
         await patchAutoRender(projectId, { stage, total: taskIds.length, done: stats.done, failed: stats.failed, stageTaskIds: taskIds })

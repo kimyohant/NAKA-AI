@@ -199,6 +199,63 @@ test('auto-render: cancel หยุดก่อนส่งงาน stage ถ�
   sqlite.close()
 })
 
+test('captions: ข้อความยาวแบ่ง cue ขนาดใกล้เคียงกัน — ไม่มี cue เศษคำเดียวที่ขึ้นจอเสี้ยววินาที', async () => {
+  // เดิม: 37 ตัวอักษรใน 9:16 → cue แรกเต็ม 2 บรรทัด + cue "ใหม่" ยาว 0.21s จากช็อต 2s
+  const cues = await buildCaptionCues(
+    [{ text: 'สวัสดีครับวันนี้จะมารีวิวเซรั่มตัวใหม่', clipPath: 'c1' }],
+    'th', '9:16', { probe: async () => 2 },
+  )
+  assert.equal(cues.length, 2)
+  for (const c of cues) assert.ok(c.end - c.start >= 0.8, `cue ${JSON.stringify(c.lines)} สั้นเกิน: ${(c.end - c.start).toFixed(2)}s`)
+  // ข้อความครบ ไม่หาย/ไม่ซ้ำ
+  assert.equal(cues.flatMap(c => c.lines).join(''), 'สวัสดีครับวันนี้จะมารีวิวเซรั่มตัวใหม่')
+})
+
+test('auto-render resume ที่ videos: ไม่ส่ง keyframe ซ้ำ และงานที่จบครบระหว่าง server ดับเดินต่อได้', async () => {
+  let videoTaskIds: number[]
+  {
+    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
+    sqlite.prepare("UPDATE studio_projects SET auto_render=NULL WHERE id=1").run()
+    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1c','running',datetime('now'),datetime('now'))").run()
+    // งานวิดีโอของ stage ที่ค้าง จบไปแล้ว (failed) ระหว่างที่ server ดับ — ไม่มี in-flight เหลือ
+    const ins = sqlite.prepare("INSERT INTO sys_task (type, status, created_at, updated_at) VALUES ('video', 'failed', ?, ?)")
+    videoTaskIds = [Number(ins.run(ts, ts).lastInsertRowid), Number(ins.run(ts, ts).lastInsertRowid)]
+    sqlite.close()
+  }
+  const countImages = () => {
+    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
+    const c = sqlite.prepare("SELECT COUNT(*) c FROM sys_task WHERE type='image'").get().c
+    sqlite.close()
+    return c
+  }
+  const imagesBefore = countImages()
+  await runAutoRenderPipeline(1, 'studio_render:1c', { pollMs: 50, resumeStage: 'videos', resumeTaskIds: videoTaskIds })
+  // keyframe ที่เคยล้ม (จาก test ก่อนหน้า) ต้องไม่ถูกส่งใหม่ — resume ห้ามย้อน stage
+  assert.equal(countImages(), imagesBefore)
+  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
+  const state = JSON.parse(sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get().auto_render)
+  // เดินต่อไปถึง merge (ไม่มีวิดีโอ → E_STUDIO_NO_VIDEOS) — ไม่ใช่ล้มทันทีด้วย E_TASK_INTERRUPTED
+  assert.equal(state.stage, 'failed')
+  assert.doesNotMatch(state.errorMsg ?? '', /E_TASK_INTERRUPTED/)
+  assert.match(state.errorMsg ?? '', /E_STUDIO_NO_VIDEOS/)
+  sqlite.close()
+})
+
+test('auto-render resume: sys_task หายจริง ⇒ E_TASK_INTERRUPTED', async () => {
+  {
+    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
+    sqlite.prepare("UPDATE studio_projects SET auto_render=NULL WHERE id=1").run()
+    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1d','running',datetime('now'),datetime('now'))").run()
+    sqlite.close()
+  }
+  await runAutoRenderPipeline(1, 'studio_render:1d', { pollMs: 50, resumeStage: 'videos', resumeTaskIds: [987654] })
+  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
+  const state = JSON.parse(sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get().auto_render)
+  assert.equal(state.stage, 'failed')
+  assert.match(state.errorMsg ?? '', /E_TASK_INTERRUPTED/)
+  sqlite.close()
+})
+
 test('drama merge เดิมไม่ถูกเปลี่ยน (mergeEpisodeVideos ยังไม่ผูก captions)', async () => {
   const { readFileSync } = await import('node:fs')
   const src = readFileSync(new URL('../src/services/ffmpeg-merge.ts', import.meta.url), 'utf8')
