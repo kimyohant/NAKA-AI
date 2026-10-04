@@ -103,7 +103,42 @@ Error codes ใหม่: `E_LOCAL_PROVIDER_UNREACHABLE` (เชื่อมต�
 
 ## Notes from Agent A (backend)
 
-_(Agent A เขียนที่นี่)_
+**สถานะ**: ทำครบ 7 tasks + ทดสอบกับ server จริง (2 คลิป) · branch `feat/unsloth-backend` · `npm run typecheck` ผ่าน · node --test (`--test-concurrency=1`) **112/112 ผ่าน** (เดิม 88 + ใหม่ 24)
+
+### ไฟล์ที่แก้
+- ใหม่: `services/adapters/unsloth-video.ts` · tests: `unsloth-video-adapter.test.ts`, `unsloth-queue.test.ts` + `unsloth-queue-scenario.ts` (scratch DB), `studio-minduration.test.ts`, `unsloth-security.test.mjs`, `e2e-seed-unsloth-studio.ts` (helper seed สำหรับ e2e ซ้ำ)
+- แก้: `adapters/types.ts` (VideoCapabilities + ctx ของ parseGenerateResponse/parsePollResponse + AIConfig.settings), `registry.ts`, `services/ai.ts` (officialProviders + `/v1` base URL + parseConfigSettings), `services/generation.ts` (คิว), `studio-templates.ts` (scaleBeats minDurationSec), `services/studio.ts` + `routes/studio.ts` (options.videoProvider + videoQueuePosition), `routes/tasks.ts` (queuePosition), `routes/aiConfigs.ts` (test endpoint + defaults), `services/marketer.ts` + `pipeline-tasks.ts` + `routes/campaigns.ts` (async revise/analyze), `utils/task-logger.ts` (redact `data:` ทุกชนิด), `utils/storage.ts` (downloadFile รับ headers + เดา ext จาก content-type), tests โครงสร้างเดิม 2 ไฟล์ปรับ regex ให้รวม `unsloth`
+
+### ตัดสินใจ endpoint: ใช้ **native** `/api/inference/video/*` ไม่ใช่ `/v1/videos`
+- Probe: `POST /v1/videos` body ว่าง → 400 `prompt: Field required` (handler ตรวจทีละฟิลด์แล้ว early-return, spec ไม่ระบุ body) → **พิสูจน์ไม่ได้ว่ารับ first_frame โดยไม่เสี่ยงสร้างงานจริง**
+- Native รับ `first_frame`/`last_frame` (base64/data-URL) ชัดเจนใน spec, คุม `num_frames` บน lattice ได้ตรง และ `GET /video/generate-progress` **คืนผลจบพร้อม GalleryVideo ทั้ง `seed` และ `url`** รวมถึง `error` ตอน failed → ผูกผลด้วย seed ที่ระบบตั้งเอง (`taskId = seed`), ถ้า seed ไม่ตรง = คลิปคนอื่น (progress ระดับระบบ) → รอต่อ ไม่ผูกผลผิด ⇒ ไม่ต้องเดาจาก gallery เลย
+- งานทีละงานบังคับด้วย `capabilities.maxConcurrent=1` (คิวใน generation.ts); มีคนใช้ GPU คู่ขนานผ่าน Unsloth UI → submit โดน **HTTP 409** → `isRetryableSubmit` (รอ 15s × 40 ≈ 10 นาที) — generation.ts ส่ง body จาก non-ok response ให้ adapter ตัดสิน (additive, provider อื่นไม่ประกาศ = เหมือนเดิม)
+
+### คิว (Task 3)
+- Gate อยู่ใน `startTask` — เกิน `maxConcurrent` (settings `max_concurrent` ทับ capabilities) คง `queued` ไม่ submit; slot นับจาก DB (submitting/processing/unknown) + in-process claims (กัน race ตอน status ยังไม่เปลี่ยน)
+- pump หลังงานจบ/ล้ม + sweep ทุก 60s; เกิน `queue_timeout_minutes` → `failed` + `E_VIDEO_QUEUE_TIMEOUT`; `recoverGenerationTasks` คืน queued เข้าคิวเดิม
+- UI: `GET /tasks/:id` เพิ่ม `queuePosition`; shot เพิ่ม `videoQueuePosition`
+- Test ยืนยัน volcengine 3 งานพร้อมกันถูก submit ทันทีทั้งหมด (ไม่มี gate เหมือนเดิม)
+
+### ความต่างจากสัญญา / จุดที่ต้องรู้
+1. **duration → num_frames ใช้ lattice "ใกล้สุด" ไม่ใช่ "เล็กสุดที่ ≥"** — สัญญาเดิมเขียน ceil แต่ชุดเคสใน brief (5→124, 6→141, 10→243, 15→345, 20→345) ต้องใช้ nearest + clamp [124,345] (ceil ให้ 6→158, floor ให้ 10→226) · คลิปจริง ±0.35s จากที่ขอ, captions ใช้ความยาว ffprobe อยู่แล้ว
+2. **ดาวน์โหลดผลต้องแนบ Authorization** — gallery file 401 ถ้ายิงเปล่า → `downloadProviderFile` (fallback 401/403 ดึง key จาก config เดิมของงาน) และ `downloadFile` เดานามสกุลจาก Content-Type (gallery URL ไม่มี `.mp4` ใน path → ได้ `.mp4` ถูกต้อง)
+3. `estimatedSecondsPerClip` ประกาศ 716s ตามข้อ 1 — **วัดจริงวันนี้ช้ากว่า** (ดูผลวัดด้านล่าง; กระทบแค่ตัวเลข UI)
+4. boot order ของ master: `failStaleRunningTasks` ทำงาน**ก่อน** `resumeStaleAutoRenders` → running pipeline ของ auto-render ถูก mark error ก่อน resume จะวิ่ง ⇒ resume pipeline ไม่เคยทำงาน (pre-existing, ไม่ใช่จาก branch นี้ — แนะนำ integrator สลับลำดับ/ยกเว้น kind `studio_render`)
+5. Text test ยืนยันถึงขั้น list models + ข้อความ error ชัด (server บอกเอง "No model loaded. Call POST /inference/load first") — **ไม่ได้ยิง chat/tool-call จริง** เพราะ Qwen3.8 ยังไม่โหลด และไม่ load 19.8GB แทนผู้ใช้; ยืนยันเพิ่มได้เมื่อโมเดล warm (endpoint รองรับอยู่แล้ว)
+6. `joinProviderUrl` ใส่ query ใน path ไม่ได้ (pathname setter escape `?`) — gguf-variants ต่อ `searchParams` เอง
+7. งานรูป/unsloth: ไม่มี image adapter (ตาม PLAN — H3 วิดีโอ + text เท่านั้น)
+
+### ผลวัดจริง 2026-10-04 (server ผู้ใช้, H3 โหลดค้างตามเดิม — ไม่ load/unload อะไร)
+ผ่าน Product Studio จริง (keyframe ไทย + บทพูดไทย, seed ผ่าน scratch DB) → วิดีโอ 2 คลิป → FFmpeg merge:
+| | ขอ | num_frames | ได้จริง | ไฟล์ | เวลา render |
+|---|---|---|---|---|---|
+| คลิป 1 (shot scene1) | 5s | 124 | 5.175s · 544×960 · h264 + **AAC 32kHz (มีเสียงพูดไทย)** | 3.70 MB | ≈ 14.3 นาที (07:37:08→07:51:23) |
+| คลิป 2 (shot packshot) | 6s | 141 | 5.875s · 544×960 · h264 + AAC | 2.03 MB | ≈ 15.9 นาที (07:06:30→07:22:26) |
+| merge | — | — | 11.095s | 1.55 MB | < 20s |
+- เฟรมตัวอย่าง: `$TEMP/naka-unsloth-e2e/frame-clip1.png`, `frame-clip2.png` (scratch DB/ไฟล์อยู่ `$TEMP/naka-unsloth-e2e` — ลบได้เมื่อไม่ใช้; มี api_key อยู่ใน scratch DB ของเครื่องนี้เท่านั้น)
+- ช่วงทดสอบ server มีงานของผู้ใช้รันค้างอยู่ช่วงหนึ่ง → งานเราได้ 409 ตามคาด และคิว/retry จัดการให้จบเองโดยไม่บุกสล็อต
+- งาน 409 ที่หมด retry ก่อนหน้า (task 3/4/5) ไม่ได้เปลือง GPU เลย (submit ไม่ผ่าน) — โควตา 2 คลิปใช้ครบตาม brief
 
 ## Notes from Agent B (frontend)
 

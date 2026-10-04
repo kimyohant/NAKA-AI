@@ -54,18 +54,52 @@ export interface ImageProviderAdapter {
 /**
  * 视频生成 Provider Adapter 接口
  */
+
+/** 供应商能力声明（additive——未声明的字段视为无限制，行为与旧 provider 完全一致） */
+export interface VideoCapabilities {
+  /** 单个任务的最短成片秒数（如 H3: 124/24 ≈ 5.17s） */
+  minDurationSec?: number
+  /** 时长取整步长秒数（如 H3: 17/24 ≈ 0.708s 的 temporal lattice） */
+  durationStepSec?: number
+  /** 单个任务的最长成片秒数（如 H3: 345/24 ≈ 14.4s） */
+  maxDurationSec?: number
+  /** 该供应商同一 config 同时进行的提交上限（声明后超出任务在队列中等待） */
+  maxConcurrent?: number
+  /** 模型自带音频（无需另行配音/TTS） */
+  nativeAudio?: boolean
+  /** true = 需要公网可访问 URL（PUBLIC_BASE_URL）；false = 适配器自行内联 base64 */
+  needsPublicUrls?: boolean
+  /** 单个片段的预计渲染秒数（实测参考值，供 UI 估算） */
+  estimatedSecondsPerClip?: number
+}
+
+/** parsePollResponse 的可选上下文：generation.ts 传入，便于需要 config/taskId 的适配器校验归属 */
+export interface VideoPollContext {
+  config: AIConfig
+  taskId?: string | null
+}
+
+/** parseGenerateResponse 的可选上下文：需要 record（如以 seed 作为轮询标识）的适配器使用 */
+export interface VideoSubmitContext {
+  config: AIConfig
+  record: VideoGenerationRecord
+}
+
 export interface VideoProviderAdapter {
   provider: string
 
   buildGenerateRequest(config: AIConfig, record: VideoGenerationRecord): ProviderRequest
 
-  parseGenerateResponse(result: any): VideoGenResponse
+  parseGenerateResponse(result: any, ctx?: VideoSubmitContext): VideoGenResponse
 
   buildPollRequest(config: AIConfig, taskId: string): ProviderRequest
 
-  parsePollResponse(result: any): VideoPollResponse
+  parsePollResponse(result: any, ctx?: VideoPollContext): VideoPollResponse
 
   extractVideoUrl(result: any): string | null
+
+  /** 可选：能力声明（maxConcurrent 触发 generation.ts 的每 config 队列） */
+  capabilities?: VideoCapabilities
 
   /** 可选：发起请求前的异步准备（如上传首尾帧/参考图），返回的 record 会传给 buildGenerateRequest */
   prepareRecord?(config: AIConfig, record: VideoGenerationRecord): Promise<VideoGenerationRecord>
@@ -94,6 +128,8 @@ export interface AIConfig {
   baseUrl: string
   apiKey: string
   model: string
+  /** ai_service_configs.settings JSON 解析结果（provider 专属设置，如 unsloth 的 steps/quality/max_concurrent） */
+  settings?: Record<string, any>
 }
 
 export interface ImageGenerationRecord {

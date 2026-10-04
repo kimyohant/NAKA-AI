@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 import { success, created, badRequest } from '../utils/response.js'
-import { generateImage, generateVideo, resumeGenerationTask } from '../services/generation.js'
+import { generateImage, generateVideo, resumeGenerationTask, videoQueuePosition } from '../services/generation.js'
 import { logTaskError, logTaskPayload, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
 import { quoteGeneration } from '../services/generation-cost.js'
 import { resolveTaskContext, prepareVideoTask, type TaskType } from '../services/task-prep.js'
@@ -105,12 +105,13 @@ app.post('/', async (c) => {
   }
 })
 
-// GET /tasks/:id — 轮询任务状态
+// GET /tasks/:id — 轮询任务状态（queued 的 video 任务附带 queuePosition 供 UI 显示「คิวที่ n」）
 app.get('/:id', async (c) => {
   const id = Number(c.req.param('id'))
   const [row] = await db.select().from(schema.sysTask)
     .where(eq(schema.sysTask.id, id))
-  return success(c, row || null)
+  if (!row) return success(c, null)
+  return success(c, { ...row, queuePosition: videoQueuePosition(row) })
 })
 
 // Resume polling an accepted provider task. This endpoint never submits a new paid task.

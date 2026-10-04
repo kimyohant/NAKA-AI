@@ -210,8 +210,15 @@ const MIN_SHOT_SECONDS = 2
  * - พยายามไม่เกิน MAX_SHOT_SECONDS — ส่วนเกินกระจายให้ช็อตที่ยังมี headroom;
  *   ถ้า durationSec > จำนวนช็อต×15 จะยอมให้เกินได้ (รักษาผลรวม = durationSec มาก่อน —
  *   render ปัดเข้าค่าที่โมเดลรองรับอีกชั้น)
+ * - opts.minDurationSec (เช่น H3 = 5.17s): ช็อตที่สั้นกว่านั้น**รวมเข้า beat ติดกัน**
+ *   (คู่ผลรวมน้อยสุด เสมอกันเลือกซ้าย) แทนการยืดทุกช็อต — ผลรวมยังเท่าเดิม;
+ *   role ของช็อตที่รวมกันเป็น `role1+role2` (frontend ที่ยังไม่มี i18n key นี้ fallback แสดงข้อความดิบ)
  */
-export function scaleBeats(beats: StudioTemplateBeat[], durationSec: number): StudioTemplateBeat[] {
+export function scaleBeats(
+  beats: StudioTemplateBeat[],
+  durationSec: number,
+  opts: { minDurationSec?: number } = {},
+): StudioTemplateBeat[] {
   const n = beats.length
   const target = Math.max(Math.round(durationSec), n * MIN_SHOT_SECONDS)
   const total = templateDurationSec(beats)
@@ -242,6 +249,29 @@ export function scaleBeats(beats: StudioTemplateBeat[], durationSec: number): St
       seconds[i] -= 1
       seconds[headroom] += 1
     }
+  }
+  // minDurationSec: รวม beat ติดกันจนทุกช็อตผ่านขั้นต่ำของโมเดลวิดีโอ (ไม่แตะผลรวม)
+  const minSeconds = opts.minDurationSec && opts.minDurationSec > 0
+    ? Math.ceil(opts.minDurationSec - 1e-9)
+    : 0
+  if (minSeconds > MIN_SHOT_SECONDS && seconds.some(s => s < minSeconds)) {
+    const roles = beats.map(b => b.role)
+    const merged = [...seconds]
+    while (merged.length > 1 && merged.some(s => s < minSeconds)) {
+      let bestIdx = -1
+      let bestSum = Infinity
+      for (let i = 0; i < merged.length - 1; i++) {
+        const sum = merged[i] + merged[i + 1]
+        if (sum < bestSum) {
+          bestSum = sum
+          bestIdx = i
+        }
+      }
+      if (bestIdx < 0) break
+      merged.splice(bestIdx, 2, merged[bestIdx] + merged[bestIdx + 1])
+      roles.splice(bestIdx, 2, `${roles[bestIdx]}+${roles[bestIdx + 1]}`)
+    }
+    return merged.map((s, i) => ({ role: roles[i], seconds: s }))
   }
   return beats.map((b, i) => ({ role: b.role, seconds: seconds[i] }))
 }

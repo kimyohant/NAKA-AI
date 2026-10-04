@@ -32,7 +32,8 @@ test('Phase 3 routes: ad references + visuals ครบตาม PHASE3 ข้�
   assert.match(service, /20_000/)
 
   // GET /:id คืน references + visuals เพิ่ม
-  assert.match(service, /references: references\.map\(toAdReferenceJson\)/)
+  // async analyze (unsloth plan): reference json รับ opts {analyzing} — flags มาจาก pipeline_tasks ที่ running
+  assert.match(service, /references: references\.map\(r => toAdReferenceJson\(r, \{ analyzing: analyzingKeys\.has\(`reference_analyze:\$\{id\}:\$\{r\.id\}`\) \}\)\)/)
   assert.match(service, /visuals,/)
 })
 

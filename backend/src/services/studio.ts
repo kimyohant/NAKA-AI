@@ -9,7 +9,8 @@ import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { db, getInsertId, schema } from '../db/index.js'
 import { AppError, now } from '../utils/response.js'
 import { getActiveConfig } from './ai.js'
-import { generateImage, generateVideo } from './generation.js'
+import { generateImage, generateVideo, videoQueuePosition } from './generation.js'
+import { videoAdapters } from './adapters/registry.js'
 import { mergeEpisodeVideos } from './ffmpeg-merge.js'
 import { ingestUrl } from './marketer.js'
 import { resolveTaskContext, prepareVideoTask } from './task-prep.js'
@@ -160,6 +161,8 @@ function buildShotJsonSync(
     videoUrl: videoStatus === 'completed' ? (slashPath(storyboard.videoUrl) ?? slashPath(latestVideo?.localPath ?? latestVideo?.resultUrl ?? null)) : null,
     videoStatus,
     videoError: videoStatus === 'failed' ? (latestVideo?.errorMsg || 'video generation failed') : null,
+    // งานวิดีโอที่ยังรอคิวของ provider แบบ maxConcurrent (เช่น unsloth) — null เมื่อไม่ได้รอคิว
+    videoQueuePosition: latestVideo ? videoQueuePosition(latestVideo) : null,
   }
 }
 
@@ -271,6 +274,24 @@ export function getStudioOptions() {
     languages: STUDIO_LANGUAGES,
     markets: STUDIO_MARKETS,
     platforms: STUDIO_PLATFORMS,
+  }
+}
+
+/** ข้อจำกัดของโมเดลวิดีโอที่ active (capabilities) — null เมื่อ provider ไม่ประกาศ capabilities */
+export async function getActiveVideoProviderInfo() {
+  const config = await getActiveConfig('video')
+  if (!config) return null
+  const caps = videoAdapters[config.provider.toLowerCase()]?.capabilities
+  if (!caps) return null
+  const fromSettings = Number(config.settings?.max_concurrent)
+  const maxConcurrent = Number.isFinite(fromSettings) && fromSettings >= 1 ? Math.floor(fromSettings) : (caps.maxConcurrent ?? null)
+  return {
+    provider: config.provider,
+    configId: config.id ?? null,
+    minDurationSec: caps.minDurationSec ?? null,
+    maxConcurrent,
+    nativeAudio: !!caps.nativeAudio,
+    estimatedSecondsPerClip: caps.estimatedSecondsPerClip ?? null,
   }
 }
 
@@ -577,7 +598,9 @@ export async function startStudioScript(projectId: number, opts: { instruction?:
   await db.delete(schema.studioShots).where(eq(schema.studioShots.projectId, projectId))
 
   // beats สเกลตาม durationSec — role strings ตรงกับ frontend i18n
-  const beats = scaleBeats(template.beats, row.durationSec)
+  // เคารพ minDurationSec ของโมเดลวิดีโอ active (เช่น H3 ≥ 5.17s) → รวม beat ติดกันแทนยืดทุกช็อต
+  const videoProviderInfo = await getActiveVideoProviderInfo()
+  const beats = scaleBeats(template.beats, row.durationSec, { minDurationSec: videoProviderInfo?.minDurationSec ?? undefined })
   const avatar = await getAvatarWithTask(row.avatarId)
 
   await db.update(schema.studioProjects).set({ status: 'scripting', errorMsg: null, updatedAt: now() })

@@ -154,11 +154,18 @@ app.delete('/:id/references/:rid', async (c) => {
 })
 
 // POST /campaigns/:id/references/:rid/analyze — sync วิเคราะห์โครงสร้าง (ad_analyst → save_reference_analysis)
+// body {async: true} → 202 + สถานะผ่าน pipeline_tasks (reference.analyzing) — sync เดิมไม่เปลี่ยน
 app.post('/:id/references/:rid/analyze', async (c) => {
   const id = requireId(c.req.param('id'))
   const rid = requireId(c.req.param('rid'))
   if (!id || !rid) return badRequest(c, 'Invalid campaign/reference ID')
+  const body = await c.req.json().catch(() => ({}))
   try {
+    if (body.async === true) {
+      const reference = await marketer.analyzeAdReferenceAsync(id, rid)
+      if (!reference) return notFound(c, 'Reference 不存在')
+      return accepted(c, 'analyzing')
+    }
     const reference = await marketer.analyzeAdReference(id, rid)
     if (!reference) return notFound(c, 'Reference 不存在')
     return success(c, reference)
@@ -243,6 +250,7 @@ app.post('/:id/docs/:docId/revisions/:revId/restore', async (c) => {
 })
 
 // POST /campaigns/:id/docs/:docId/revise — 同步修订（Agent 按 instruction 修改，version+1）
+// body {async: true} → 202 + สถานะผ่าน pipeline_tasks (doc.revising) — sync เดิมไม่เปลี่ยน
 app.post('/:id/docs/:docId/revise', async (c) => {
   const id = requireId(c.req.param('id'))
   const docId = requireId(c.req.param('docId'))
@@ -250,6 +258,11 @@ app.post('/:id/docs/:docId/revise', async (c) => {
   const body = await c.req.json().catch(() => ({}))
   if (!isNonEmptyString(body.instruction)) return badRequest(c, 'instruction 必填')
   try {
+    if (body.async === true) {
+      const doc = await marketer.reviseDocAsync(id, docId, body.instruction)
+      if (!doc) return notFound(c, '文档不存在')
+      return accepted(c, 'revising')
+    }
     const doc = await marketer.reviseDoc(id, docId, body.instruction)
     if (!doc) return notFound(c, '文档不存在')
     return success(c, doc)

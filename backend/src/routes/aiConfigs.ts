@@ -167,10 +167,26 @@ app.post('/', async (c) => {
   let price: number | null
   try { price = parseUnitPrice(body.service_type === 'image' ? body.price_thb_per_image : body.price_thb_per_video_second) }
   catch (err: any) { return badRequest(c, err.message) }
-  const configSettings: Record<string, number> = {}
+  const configSettings: Record<string, any> = {}
   if (temperature !== null) configSettings.temperature = temperature
   if (price !== null && body.service_type === 'image') configSettings.price_thb_per_image = price
   if (price !== null && body.service_type === 'video') configSettings.price_thb_per_video_second = price
+
+  // unsloth (local): ราคาต่อวินาที = 0 อัตโนมัติ (ไม่งั้น budget guard บล็อก "Set a price…")
+  // + settings default ตาม docs/unsloth/PLAN.md ข้อ 3 (ค่าที่ผู้ใช้ส่งมามาก่อน default)
+  if (body.provider === 'unsloth') {
+    const isUnslothVideo = body.service_type === 'video'
+    if (isUnslothVideo && configSettings.price_thb_per_video_second === undefined) {
+      configSettings.price_thb_per_video_second = 0
+    }
+    const defaults = isUnslothVideo
+      ? { steps: 20, quality: 'fast', max_concurrent: 1, queue_timeout_minutes: 240 }
+      : {}
+    const provided = body.settings && typeof body.settings === 'object' && !Array.isArray(body.settings) ? body.settings : {}
+    for (const [key, value] of Object.entries({ ...defaults, ...provided })) {
+      if (configSettings[key] === undefined) configSettings[key] = value
+    }
+  }
 
   const res = await db.insert(schema.aiServiceConfigs).values({
     serviceType: body.service_type,
@@ -192,6 +208,184 @@ app.post('/', async (c) => {
   return created(c, withParsedFields(row))
 })
 
+/** unsloth (local): text = list models + chat สั้น + tool-call · video = เชื่อมต่อ + video/status + ไฟล์ gguf (ไม่สร้างวิดีโอ) */
+async function runUnslothTest(serviceType: string, baseUrl: string, apiKey: string | undefined, model: string | undefined, settings: Record<string, any>) {
+  const headers: Record<string, string> = {}
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`
+  const startedAt = Date.now()
+  const result: Record<string, any> = {
+    ok: false,
+    reachable: false,
+    method: 'GET',
+    url: redactUrl(joinProviderUrl(baseUrl, '/v1', '')),
+    provider: 'unsloth',
+    service_type: serviceType,
+  }
+
+  const fail = (message: string, code?: string) => {
+    result.message = message
+    result.latencyMs = Date.now() - startedAt
+    if (code) result.errorCode = code
+    return result
+  }
+
+  let statusResp: Response
+  try {
+    statusResp = await fetch(joinProviderUrl(baseUrl, '/v1', '/models'), { headers, signal: AbortSignal.timeout(15_000) })
+  } catch (error: any) {
+    return fail(`เชื่อมต่อ Unsloth server (${redactUrl(baseUrl)}) ไม่ได้: ${error?.message || 'network error'}`, 'E_LOCAL_PROVIDER_UNREACHABLE')
+  }
+  result.status = statusResp.status
+  if (statusResp.status === 401 || statusResp.status === 403) {
+    return fail(`Unsloth server ปฏิเสธ API key (HTTP ${statusResp.status})`, 'E_LOCAL_PROVIDER_UNREACHABLE')
+  }
+  if (!statusResp.ok) {
+    return fail(`Unsloth server ตอบ HTTP ${statusResp.status} — ตรวจ Base URL (ต้องเป็น root เช่น http://127.0.0.1:8888)`)
+  }
+  result.reachable = true
+
+  if (serviceType === 'video') {
+    // video/status: loaded/defaults/presets + ตรวจว่าไฟล์ gguf ดาวน์โหลดไว้ในเครื่องหรือยัง
+    let videoStatus: any
+    try {
+      const resp = await fetch(joinProviderUrl(baseUrl, '/api/inference', '/video/status'), { headers, signal: AbortSignal.timeout(15_000) })
+      if (!resp.ok) return fail(`video/status ตอบ HTTP ${resp.status}`, 'E_LOCAL_PROVIDER_UNREACHABLE')
+      videoStatus = await resp.json()
+    } catch (error: any) {
+      return fail(`เรียก video/status ไม่สำเร็จ: ${error?.message || 'network error'}`, 'E_LOCAL_PROVIDER_UNREACHABLE')
+    }
+    const ggufFilename = typeof settings.gguf_filename === 'string' && settings.gguf_filename.trim()
+      ? settings.gguf_filename.trim()
+      : 'minimax_h3_fl2va_pruned-Q8_0.gguf'
+    let ggufDownloaded: boolean | null = null
+    try {
+      const repo = videoStatus?.repo_id || model || 'unsloth/MiniMax-H3-GGUF'
+      // joinProviderUrl ใส่ query ใน path ไม่ได้ (pathname setter จะ escape '?') — ต่อ searchParams เอง
+      const variantsUrl = new URL(joinProviderUrl(baseUrl, '/api/models', '/gguf-variants'))
+      variantsUrl.searchParams.set('repo_id', repo)
+      const variantsResp = await fetch(variantsUrl, { headers, signal: AbortSignal.timeout(15_000) })
+      if (variantsResp.ok) {
+        const variants = (await variantsResp.json() as any)?.variants
+        if (Array.isArray(variants)) {
+          ggufDownloaded = variants.some((v: any) => v?.filename === ggufFilename && v?.downloaded)
+        }
+      }
+    } catch { /* ตรวจไฟล์ไม่ได้ → null (ไม่ถือว่า fail) */ }
+    const defaults = videoStatus?.defaults || {}
+    result.ok = true
+    result.model = videoStatus?.repo_id || model || null
+    result.loaded = !!videoStatus?.loaded
+    result.gguf_downloaded = ggufDownloaded
+    if (ggufDownloaded === false) result.errorCode = 'E_LOCAL_MODEL_NOT_DOWNLOADED'
+    result.message = videoStatus?.loaded
+      ? `โมเดลวิดีโอโหลดอยู่ (${videoStatus.repo_id}) · ไฟล์ ${ggufFilename} ${ggufDownloaded === false ? 'ยังไม่ถูกดาวน์โหลด' : 'พร้อม'}`
+      : 'เชื่อมต่อสำเร็จ — โมเดลวิดีโอยังไม่โหลด (ระบบจะโหลดให้เองตอนสร้างงานแรก)'
+    result.capabilities = {
+      family: videoStatus?.family ?? null,
+      has_audio: !!videoStatus?.has_audio,
+      supports_keyframes: !!videoStatus?.supports_keyframes,
+      supports_references: !!videoStatus?.supports_references,
+      fps: defaults.fps ?? null,
+      frame_step: defaults.frame_step ?? null,
+      frame_offset: defaults.frame_offset ?? null,
+      min_num_frames: defaults.num_frames ?? null,
+      duration_presets: defaults.duration_presets ?? null,
+      resolution_presets: defaults.resolution_presets ?? null,
+    }
+    result.latencyMs = Date.now() - startedAt
+    return result
+  }
+
+  // text: (1) รายการโมเดล (2) chat ข้อความสั้น (3) tool-call ด้วย tool จำลอง
+  let models: any
+  try {
+    models = await statusResp.json()
+  } catch {
+    return fail('GET /v1/models คืนรูปแบบไม่ถูกต้อง')
+  }
+  const modelList = Array.isArray(models?.data) ? models.data.map((m: any) => m?.id).filter(Boolean) : []
+  result.model = model || modelList[0] || null
+  // loaded = โมเดลที่ระบุโหลดอยู่จริงบน server (จาก /v1/models ของ unsloth เอง)
+  const modelEntry = Array.isArray(models?.data) && result.model
+    ? models.data.find((m: any) => m?.id && String(m.id) === String(result.model))
+    : null
+  result.loaded = modelEntry ? !!modelEntry.loaded : null
+  result.models = modelList.slice(0, 10)
+  if (!result.model) return fail('ไม่พบโมเดลข้อความบน Unsloth server — โหลดโมเดลในหน้า UI ของ Unsloth ก่อน')
+
+  const chatUrl = joinProviderUrl(baseUrl, '/v1', '/chat/completions')
+  result.url = redactUrl(chatUrl)
+  result.method = 'POST'
+  let chatOk = false
+  try {
+    const chatResp = await fetch(chatUrl, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: result.model, messages: [{ role: 'user', content: 'Reply with exactly: OK' }], stream: false, max_tokens: 16 }),
+      signal: AbortSignal.timeout(120_000),
+    })
+    result.status = chatResp.status
+    if (!chatResp.ok) {
+      const text = (await chatResp.text()).slice(0, 200)
+      return fail(`chat/completions ตอบ HTTP ${chatResp.status} ${text}`, chatResp.status === 401 || chatResp.status === 403 ? 'E_LOCAL_PROVIDER_UNREACHABLE' : undefined)
+    }
+    const chat = await chatResp.json()
+    chatOk = Boolean(chat?.choices?.[0]?.message)
+    result.chat_ok = chatOk
+    result.response_preview = String(chat?.choices?.[0]?.message?.content || '').slice(0, 120)
+  } catch (error: any) {
+    return fail(`chat/completions ล้มเหลว: ${error?.message || 'network error'}`, 'E_LOCAL_PROVIDER_UNREACHABLE')
+  }
+
+  // tool-call: tool จำลอง 1 ตัว — โมเดลบน llama.cpp ต้องเลือกเรียกเองได้
+  let toolCallOk = false
+  try {
+    const toolResp = await fetch(chatUrl, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: result.model,
+        messages: [{ role: 'user', content: 'What is the weather in Tokyo right now? You must use the get_weather tool to answer.' }],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'get_weather',
+            description: 'Get the current weather for a city',
+            parameters: {
+              type: 'object',
+              properties: { city: { type: 'string', description: 'City name' } },
+              required: ['city'],
+            },
+          },
+        }],
+        tool_choice: 'auto',
+        stream: false,
+        max_tokens: 200,
+      }),
+      signal: AbortSignal.timeout(120_000),
+    })
+    if (toolResp.ok) {
+      const toolResult = await toolResp.json()
+      toolCallOk = Array.isArray(toolResult?.choices?.[0]?.message?.tool_calls) && toolResult.choices[0].message.tool_calls.length > 0
+    }
+  } catch { /* tool-call probe ล้มเหลว = toolCallOk false */ }
+  result.toolCallOk = toolCallOk
+  result.ok = chatOk
+  result.message = chatOk
+    ? (toolCallOk
+      ? `เชื่อมต่อสำเร็จ · chat ได้ · tool calling ได้ (${result.model})`
+      : `เชื่อมต่อสำเร็จ · chat ได้ · แต่ tool calling ไม่สำเร็จ — Agent บางตัวอาจทำงานไม่ครบ (${result.model})`)
+    : 'เชื่อมต่อสำเร็จ แต่ chat/completions ไม่ตอบตามรูปแบบที่คาด'
+  result.latencyMs = Date.now() - startedAt
+  return result
+}
+
+/** settings จาก request body ของ /test (payload อาจแนบ settings มาด้วย) */
+function parseTestSettings(raw: unknown): Record<string, any> {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw as Record<string, any>
+  return {}
+}
+
 // POST /ai-configs/test
 app.post('/test', async (c) => {
   const body = await c.req.json()
@@ -203,6 +397,10 @@ app.post('/test', async (c) => {
       return badRequest(c, 'การตั้งค่าที่ทดสอบไม่ตรงกับรายการที่บันทึก')
     }
     body.api_key = saved.apiKey
+    // ทดสอบด้วย config ที่บันทึกไว้ → ใช้ settings ที่บันทึกไว้ด้วย (เช่น gguf_filename ของ unsloth)
+    if (body.settings === undefined) {
+      try { body.settings = saved.settings ? JSON.parse(saved.settings) : undefined } catch { /* legacy settings */ }
+    }
   }
   if (!body.service_type || !body.provider || !body.base_url) {
     return badRequest(c, '需要 service_type、provider 与 base_url')
@@ -212,6 +410,16 @@ app.post('/test', async (c) => {
   }
 
   const model = Array.isArray(body.model) ? body.model[0] : body.model
+
+  if (body.provider === 'unsloth') {
+    // unsloth: ทดสอบหลายขั้น (text = models+chat+tool-call · video = status+gguf) — provider อื่นใช้ probe เดิม
+    const payload = await runUnslothTest(body.service_type, body.base_url, body.api_key, model, parseTestSettings(body.settings))
+    const logAction = payload.ok ? 'probe-done' : 'probe-unexpected'
+    if (payload.ok) logTaskSuccess('AIConfig', logAction, { provider: 'unsloth', status: payload.status, serviceType: body.service_type })
+    else logTaskError('AIConfig', logAction, { provider: 'unsloth', status: payload.status, serviceType: body.service_type, errorCode: payload.errorCode })
+    return success(c, payload)
+  }
+
   const probe = buildProbe(body.service_type, body.provider, body.base_url, model, body.api_key)
   const probeUrl = redactUrl(probe.url)
 
@@ -329,6 +537,20 @@ app.put('/:id', async (c) => {
         if (price === null) delete settings[key]
         else settings[key] = price
       } catch (err: any) { return badRequest(c, err.message) }
+    }
+    updates.settings = Object.keys(settings).length ? JSON.stringify(settings) : null
+  }
+
+  // unsloth: แก้ settings เฉพาะที่ (steps/quality/max_concurrent/queue_timeout_minutes/gguf_filename)
+  const effectiveProvider = ('provider' in body ? body.provider : existing.provider) === 'unsloth'
+  if (effectiveProvider && body.settings && typeof body.settings === 'object' && !Array.isArray(body.settings)) {
+    const allowed = ['steps', 'quality', 'max_concurrent', 'queue_timeout_minutes', 'gguf_filename'] as const
+    let settings: Record<string, any> = {}
+    try { settings = (updates.settings ?? existing.settings) ? JSON.parse(updates.settings ?? existing.settings) : {} } catch { settings = {} }
+    for (const key of allowed) {
+      if (!(key in body.settings)) continue
+      if (body.settings[key] === null) delete settings[key]
+      else settings[key] = body.settings[key]
     }
     updates.settings = Object.keys(settings).length ? JSON.stringify(settings) : null
   }
