@@ -479,6 +479,7 @@ export interface CloneVariant {
   errorMsg: string | null       // รูปแบบ "E_CODE: message"
   pipelineTaskId: number | null
   queuePosition?: number | null
+  episodeId?: number | null      // drama/episode ที่ backend สร้างให้ตัวแปรนี้ (เผื่อเชื่อมภายหลัง)
   createdAt: string; updatedAt: string
 }
 export interface CloneProject {

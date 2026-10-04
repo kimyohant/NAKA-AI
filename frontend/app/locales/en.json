@@ -1075,6 +1075,9 @@
     "unknown": "Operation failed. Please try again.",
     "codes": {
       "E_CLONE_ANALYZE_FAILED": "Failed to analyze the transcript — try again or switch the text model",
+      "E_CLONE_BUSY": "A job for this project is already running — wait for it to finish and try again",
+      "E_CLONE_TRANSLATE_FAILED": "Failed to translate the lines for this variant — try rendering again or check the text model",
+      "E_RENDER_TASK_FAILED": "Rendering failed — see the variant card for details",
       "E_CLONE_MATRIX_TOO_LARGE": "Too many variants for one batch — select fewer hooks/products/languages",
       "E_STUDIO_BUSY": "A script job is already running — wait for it to finish and try again",
       "E_STUDIO_NEEDS_SCRIPT": "No script yet — generate one in the Script step first",

@@ -74,7 +74,7 @@ test('viralCloneFlow: pure logic runs for real', () => {
     beats: [
       { id: 'b1', role: 'hook', line: 'สวัสดี', visual: 'avatar', visualHint: null, durationSec: 2.5 },
       { id: 'b2', role: 'demo', line: 'สาธิต', visual: 'product', visualHint: null, durationSec: 4 },
-      { id: 'b3', role: 'cta', line: '', visual: 'text', visualHint: null, durationSec: 1.5 },
+      { id: 'b3', role: 'cta', line: 'กดตะกร้าเลย', visual: 'text', visualHint: null, durationSec: 1.5 },
     ],
     hooks: ['hook ใหม่', '   ', 'hook ที่สาม'],
   }
@@ -84,6 +84,8 @@ test('viralCloneFlow: pure logic runs for real', () => {
   assert.deepEqual(usableHooks(bp), ['hook ใหม่', 'hook ที่สาม'])
   assert.equal(isValidBlueprint(bp), true)
   assert.equal(isValidBlueprint({ ...bp, beats: [...bp.beats, { id: 'b4', role: 'nope', line: '', visual: 'text', visualHint: null, durationSec: 1 }] }), false)
+  // line ว่าง = backend ปฏิเสธ (E_INVALID_FIELD) — client ต้องจับให้ได้ก่อนบันทึก
+  assert.equal(isValidBlueprint({ ...bp, beats: [{ ...bp.beats[0], line: '   ' }] }), false)
   assert.equal(isValidBlueprint({ ...bp, beats: [{ ...bp.beats[0], durationSec: 0 }] }), false)
   assert.equal(isValidBlueprint(null), false)
 
@@ -161,7 +163,7 @@ test('viralClone i18n exists in both locales with full parity', () => {
   // nav + error codes
   assert.equal(typeof th.layout.nav.viralClone, 'string')
   assert.equal(typeof en.layout.nav.viralClone, 'string')
-  for (const code of ['E_CLONE_ANALYZE_FAILED', 'E_CLONE_MATRIX_TOO_LARGE']) {
+  for (const code of ['E_CLONE_ANALYZE_FAILED', 'E_CLONE_MATRIX_TOO_LARGE', 'E_CLONE_BUSY', 'E_CLONE_TRANSLATE_FAILED', 'E_RENDER_TASK_FAILED']) {
     assert.equal(typeof th.errors.codes[code], 'string', `th errors.codes.${code} missing`)
     assert.equal(typeof en.errors.codes[code], 'string', `en errors.codes.${code} missing`)
   }

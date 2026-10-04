@@ -53,7 +53,7 @@ export function isValidBlueprint(bp) {
   return bp.beats.every((b) =>
     b && typeof b.id === 'string' && b.id.length > 0
     && CLONE_BEAT_ROLES.includes(b.role)
-    && typeof b.line === 'string'
+    && typeof b.line === 'string' && b.line.trim().length > 0
     && CLONE_VISUALS.includes(b.visual)
     && Number.isFinite(b.durationSec) && b.durationSec > 0)
 }
