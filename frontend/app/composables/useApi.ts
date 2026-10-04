@@ -441,3 +441,71 @@ export const studioAPI = {
   generateAvatarImage: (id: number, instruction?: string) => api.post<StudioAvatar>(`/studio/avatars/${id}/generate-image`, instruction ? { instruction } : {}),
   deleteAvatar: (id: number) => api.del(`/studio/avatars/${id}`),
 }
+
+// ===== Viral Clone Studio (สตูดิโอโคลนไวรัล) — สัญญา docs/viral-clone/PLAN.md §3, JSON camelCase =====
+export type CloneProjectStatus = 'draft' | 'analyzing' | 'ready' | 'error'
+export type CloneVariantStatus = 'draft' | 'queued' | 'rendering' | 'completed' | 'failed'
+export type CloneBeatRole = 'hook' | 'demo' | 'proof' | 'offer' | 'cta'
+export type CloneBeatVisual = 'product' | 'avatar' | 'broll' | 'text'
+
+export interface CloneBeat {
+  id: string
+  role: CloneBeatRole
+  line: string                  // ข้อความพูด/ซับ — beats ยึดกับคำพูด ไม่ใช่วินาที
+  visual: CloneBeatVisual
+  visualHint: string | null     // คำอธิบายภาพ (เช่น B-roll อะไร)
+  durationSec: number
+}
+export interface CloneBlueprint {
+  title?: string
+  durationSec?: number
+  beats: CloneBeat[]
+  hooks?: string[]              // hook สำรอง — แทน line ของ beat แรก (role hook) เมื่อ variant เลือก hookIndex
+  captionStyle?: Record<string, unknown>
+}
+export interface CloneVariantOverrides {
+  hookIndex?: number | null     // ดัชนีใน blueprint.hooks (null = ใช้ hook เดิม)
+  productId?: number | null     // StudioProject.id
+  avatarId?: number | null      // StudioAvatar.id
+  language?: StudioLanguage | null
+}
+export interface CloneVariant {
+  id: number; projectId: number; label: string
+  overrides: CloneVariantOverrides
+  status: CloneVariantStatus
+  outputPath: string | null     // /static/... เล่น/ดาวน์โหลดตรง ๆ
+  durationSec: number | null
+  errorCode: string | null
+  errorMsg: string | null       // รูปแบบ "E_CODE: message"
+  pipelineTaskId: number | null
+  queuePosition?: number | null
+  episodeId?: number | null      // drama/episode ที่ backend สร้างให้ตัวแปรนี้ (เผื่อเชื่อมภายหลัง)
+  createdAt: string; updatedAt: string
+}
+export interface CloneProject {
+  id: number; name: string
+  status: CloneProjectStatus
+  referencePath: string | null  // /static/... คลิปต้นแบบ (ผู้ใช้อัปโหลดเอง — ระบบไม่ดึงจากแพลตฟอร์ม)
+  transcript: string
+  language: StudioLanguage
+  blueprint: CloneBlueprint | null
+  errorCode: string | null; errorMsg: string | null
+  createdAt: string; updatedAt: string
+}
+export type CloneDetail = CloneProject & { variants: CloneVariant[] }
+export interface CloneMatrix { hookIndexes: number[]; productIds: number[]; avatarIds: number[]; languages: StudioLanguage[] }
+
+export const cloneAPI = {
+  list: () => api.get<CloneProject[]>('/clone/projects'),
+  create: (data: { name: string; transcript: string; language?: StudioLanguage; referencePath?: string | null }) => api.post<CloneProject>('/clone/projects', data),
+  get: (id: number) => api.get<CloneDetail>(`/clone/projects/${id}`),
+  update: (id: number, data: Partial<Pick<CloneProject, 'name' | 'transcript' | 'language'>>) => api.put<CloneProject>(`/clone/projects/${id}`, data),
+  // async (202) — poll get จน status ไม่ใช่ analyzing
+  analyze: (id: number, asyncMode = true) => api.post<CloneProject>(`/clone/projects/${id}/analyze`, { async: asyncMode }),
+  saveBlueprint: (id: number, blueprint: CloneBlueprint) => api.put<CloneProject>(`/clone/projects/${id}/blueprint`, { blueprint }),
+  createVariants: (id: number, matrix: CloneMatrix) => api.post<CloneVariant[]>(`/clone/projects/${id}/variants`, { matrix }),
+  renderVariant: (variantId: number, asyncMode = true) => api.post<CloneVariant>(`/clone/variants/${variantId}/render`, { async: asyncMode }),
+  renderAll: (id: number, asyncMode = true) => api.post<{ queued: number }>(`/clone/projects/${id}/render-all`, { async: asyncMode }),
+  del: (id: number) => api.del(`/clone/projects/${id}`),
+  delVariant: (variantId: number) => api.del(`/clone/variants/${variantId}`),
+}
