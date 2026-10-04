@@ -240,6 +240,10 @@ export const stylePresets = sqliteTable('style_presets', {
   description: text('description'),
   sortOrder: integer('sort_order').default(0),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  // Style Gallery (docs/style-gallery/PLAN.md): รูปพรีวิว/หมวด/แหล่งที่มา
+  previewPath: text('preview_path'),
+  category: text('category'),
+  source: text('source').notNull().default('custom'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   // 注意: 此表无 deleted_at（硬删除），value 列有唯一索引（见 sqlite-schema.ts DDL）
