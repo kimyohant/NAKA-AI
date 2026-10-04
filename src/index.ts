@@ -24,12 +24,14 @@ import props from './routes/props.js'
 import settings from './routes/settings.js'
 import campaigns from './routes/campaigns.js'
 import studio from './routes/studio.js'
+import clone from './routes/clone.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
 import { failStaleRunningTasks } from './services/pipeline-tasks.js'
 import { failStaleCampaigns } from './services/marketer.js'
 import { failStaleStudioProjects } from './services/studio.js'
+import { failStaleCloneAnalyzes, resumeStaleCloneRenders } from './services/clone.js'
 import { resumeStaleAutoRenders } from './services/studio-autorender.js'
 import { recoverGenerationTasks } from './services/generation.js'
 import { DATA_ROOT } from './utils/paths.js'
@@ -107,6 +109,7 @@ api.route('/storage', storage)
 api.route('/settings', settings)
 api.route('/campaigns', campaigns)
 api.route('/studio', studio)
+api.route('/clone', clone)
 api.route('/server-update', serverUpdate)
 
 app.route('/api/v1', api)
@@ -158,12 +161,28 @@ try {
   console.error('清理中断 studio 任务失败:', err?.message)
 }
 
+// Viral Clone: analyzing ค้างที่ pipeline row หายแล้ว → error (failStaleRunningTasks เคลียร์ row ก่อนหน้านี้แล้ว)
+try {
+  const n = await failStaleCloneAnalyzes()
+  if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 clone 分析任务`)
+} catch (err: any) {
+  console.error('清理中断 clone analyze 失败:', err?.message)
+}
+
 // Phase 2: auto-render pipeline ค้างหลัง restart — วิ่งต่อจาก stage เดิม (recover งาน provider แล้ว)
 try {
   const n = await resumeStaleAutoRenders()
   if (n > 0) console.log(`🔁 resumed ${n} studio auto-render pipelines`)
 } catch (err: any) {
   console.error('resume studio auto-render failed:', err?.message)
+}
+
+// Viral Clone: render batch ค้างหลัง restart — driver วนเก็บ variant queued ต่อ (sys_task recover แล้ว)
+try {
+  const n = await resumeStaleCloneRenders()
+  if (n > 0) console.log(`🔁 resumed ${n} clone render pipelines`)
+} catch (err: any) {
+  console.error('resume clone render failed:', err?.message)
 }
 
 serve({ fetch: app.fetch, port, hostname })
