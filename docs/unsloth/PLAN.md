@@ -107,4 +107,23 @@ _(Agent A เขียนที่นี่)_
 
 ## Notes from Agent B (frontend)
 
-_(Agent B เขียนที่นี่)_
+**เสร็จครบ 6 tasks — branch `feat/unsloth-frontend`, base `origin/master @ a453509`**
+
+ไฟล์ที่แก้/เพิ่ม:
+- `app/utils/unslothFlow.js` (ใหม่ — logic ล้วน, test import รันจริง): `UNSLOTH_PROVIDER`, `UNSLOTH_VIDEO_DEFAULTS` (gguf_filename/steps/quality/max_concurrent/queue_timeout_minutes ตาม PLAN ข้อ 3), `isLocalOrPrivateBaseUrl` (loopback/10/172.16-31/192.168/169.254/.local/.lan/.internal + IPv6 ::1), `estimateRenderSeconds/Minutes` (ช็อต × เวลาต่อคลิป), `shotsBelowMinDuration`
+- `app/pages/settings.vue` — provider `unsloth` ใน text + video (preset "Unsloth (Local)" base `http://127.0.0.1:8888`, โมเดล `unsloth/Qwen3.8-27B-GGUF` / `unsloth/MiniMax-H3-GGUF`); ฟอร์ม video settings (gguf_filename/steps/quality fast-standard/max_concurrent/queue_timeout_minutes — เก็บเป็น `settings` JSON ของ config, defaults ตาม PLAN); ราคาแสดง "฿0 (local)" และ create/update ส่ง `price_*: 0` ให้เอง (ไม่งั้น budget guard บล็อก); คำเตือนเมื่อ base URL ไม่ใช่ loopback/private; คำอธิบาย H3 local (ฟรี ~12 นาที/คลิป ทีละคลิป); ผล test เพิ่ม latency/model/loaded/toolCallOk (toolCall ไม่ผ่านมี hint ว่า agent บันทึกผลไม่ได้); payload ทดสอบแนบ `settings` ให้ backend เช็ค gguf ได้
+- `app/composables/useProviderIcon.ts` — MODEL_PROVIDER_HINTS: โมเดล `unsloth/...` → provider `unsloth` (ยังไม่มีไอคอนไฟล์ — ใช้ letter badge "U"; ถ้ามีไฟล์ icon มาภายหลังเพิ่มใน FILENAMES จุดเดียว)
+- `app/composables/useApi.ts` — `StudioShot.videoQueuePosition`, `StudioOptions.videoProvider` (`StudioVideoProviderInfo`), `CampaignDoc.revising`, `AdReference.analyzing`; `reviseDoc`/`analyzeReference` เพิ่ม param `asyncMode = true` (ส่ง `{ async: true }` เสมอ)
+- Product Studio — `workspace.vue`: ใช้ `options.videoProvider` — ขั้นตั้งค่าแสดง min duration + เตือนช็อตที่สั้นกว่า + ประมาณเวลาทั้งโปรเจกต์ (~นาที จาก `estimatedSecondsPerClip` × จำนวนช็อต เฉพาะ provider local), แถบ auto-render แสดงจำนวนช็อตรอคิว; `StudioShotCard.vue`: skeleton วิดีโอแสดง "คิวที่ n" จาก `videoQueuePosition`
+- `app/views/drama/episode.vue` — row builder ส่ง `queuePosition` (จาก `t.queue_position`), `genTaskStatusLabel` รู้จัก `queued`, chip "คิวที่ n" คู่สถานะ (เฉพาะ kind=video — provider อื่นไม่มีค่านี้จึงไม่เปลี่ยน)
+- Marketer — `MarketerDocCard`/`MarketerReferenceCard`: revise/analyze ส่ง async (POST 202) → emit `async-started` → หน้า `campaign.vue` refresh + poll ต่อด้วย timer เดิม (เงื่อนไขเพิ่ม `anyDocBusy` = มี `doc.revising` หรือ `reference.analyzing`) · การ์ดแสดง spinner จาก flag ที่ GET รายงาน · จบ → toast ครั้งเดียว · ปุ่มอื่นไม่ถูกบล็อก
+- i18n th+en: `settings.cfg.unsloth.*` (15 keys), `productStudio.settings.{minDurationHint,belowMinWarn,estimateTotal,queuedCount,queuePosition}`, `episode.tasks.{queued,queuePosition}`, `errors.codes.{E_LOCAL_PROVIDER_UNREACHABLE,E_LOCAL_MODEL_NOT_DOWNLOADED,E_VIDEO_QUEUE_TIMEOUT}`
+- `tests/unsloth-structure.test.mjs` (ใหม่, 8 tests) + ปรับ `tests/official-provider-settings.test.mjs` (list text/video รับ 'unsloth')
+
+ผลตรวจ: `node --test tests/*.test.mjs` = **102/102 ผ่าน** · `npm run generate` ผ่าน
+
+**ความปลอดภัย (PLAN ข้อ 4):** ไม่มี API key/IP จริงในโค้ด (test กันไว้: สแกน `sk-…` และ IPv4 literal ที่ไม่ใช่ loopback/private) · base URL เดียวที่ปรากฏคือ `http://127.0.0.1:8888` ตามที่ PLAN แนะนำ · ไม่มี data URL ใดเกี่ยวข้องฝั่ง frontend
+
+**สิ่งที่คาดหวังจาก backend (Agent A):** ชื่อ field `settings` (JSON) บน `ai_service_configs` — create/update รับและ GET คืนเป็น object หรือ JSON string (frontend parse ทั้งสองได้) · งาน queued รายงาน `queue_position` ใน `GET /episodes/:id/generation-tasks` และ `StudioShot.videoQueuePosition` · `GET /studio/options` → `videoProvider` เฉพาะเมื่อ config วิดีโอ active เป็น local (ไม่มี = frontend ซ่อน estimate/คำเตือน) · `revise/analyze` รับ `async: true` และ GET รายงาน `revising`/`analyzing` · test endpoint คืน `latencyMs/toolCallOk/model/loaded/capabilities`
+
+**ยังไม่ได้ทดสอบ:** ยิง API จริง (backend Unsloth อยู่บน `feat/unsloth-backend`, ยังไม่ merge ตอนงานนี้เสร็จ) — ตรวจสัญญาด้วย test โครงสร้าง ไม่มี mock หลงเหลือ · environment เครื่อง B (Mac): ใช้ symlink `node_modules` แทน `npm ci` (npm เครื่องนี้บล็อก install scripts; package.json ไม่ต่างจาก base)

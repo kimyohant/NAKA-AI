@@ -28,9 +28,9 @@ test('settings page exposes official provider templates only', () => {
   assert.doesNotMatch(useApi, /huobaoPreset/i)
   assert.doesNotMatch(useApi, /\/naka-preset/)
 
-  assert.match(settingsPage, /text:\s*\['gemini', 'openai', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'volcengine'\]/)
+  assert.match(settingsPage, /text:\s*\['gemini', 'openai', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'volcengine', 'unsloth'\]/)
   assert.match(settingsPage, /image:\s*\['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate'\]/)
-  assert.match(settingsPage, /video:\s*\['volcengine', 'minimax', 'aliyun', 'wancreate'\]/)
+  assert.match(settingsPage, /video:\s*\['volcengine', 'minimax', 'aliyun', 'wancreate', 'unsloth'\]/)
   assert.match(settingsPage, /https:\/\/generativelanguage\.googleapis\.com/)
   assert.match(settingsPage, /https:\/\/api\.openai\.com/)
   assert.match(settingsPage, /https:\/\/ark\.cn-beijing\.volces\.com/)

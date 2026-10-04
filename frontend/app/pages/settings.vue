@@ -538,6 +538,42 @@
           </label>
           <label class="field"><span class="field-label">API Key</span><input v-model="cfgForm.api_key" class="input" type="password" :placeholder="cfgEditId ? t('settings.cfg.keepKeyHint') : 'sk-...'" autocomplete="new-password" /></label>
           <label class="field"><span class="field-label">Base URL</span><input v-model="cfgForm.base_url" class="input" placeholder="https://..." /></label>
+          <p v-if="isUnsloth && cfgForm.base_url && !isLocalOrPrivateBaseUrl(cfgForm.base_url)" class="field-hint unsloth-warn" role="alert">
+            {{ t('settings.cfg.unsloth.warnPublic') }}
+          </p>
+          <div v-if="isUnsloth" class="field">
+            <span class="field-hint">{{ t('settings.cfg.unsloth.localDesc') }}</span>
+          </div>
+          <!-- Phase Unsloth: video settings (เก็บเป็น settings JSON ของ config) -->
+          <template v-if="isUnsloth && cfgForm.service_type === 'video'">
+            <label class="field">
+              <span class="field-label">{{ t('settings.cfg.unsloth.gguf') }}</span>
+              <input v-model="videoSettings.gguf_filename" class="input" :placeholder="UNSLOTH_VIDEO_DEFAULTS.gguf_filename" />
+              <span class="field-hint">{{ t('settings.cfg.unsloth.ggufHint') }}</span>
+            </label>
+            <div class="ps-settings-grid">
+              <label class="field">
+                <span class="field-label">{{ t('settings.cfg.unsloth.steps') }}</span>
+                <input v-model.number="videoSettings.steps" class="input" type="number" min="1" max="60" step="1" :placeholder="String(UNSLOTH_VIDEO_DEFAULTS.steps)" />
+              </label>
+              <label class="field">
+                <span class="field-label">{{ t('settings.cfg.unsloth.quality') }}</span>
+                <select v-model="videoSettings.quality" class="input">
+                  <option value="fast">{{ t('settings.cfg.unsloth.qualityFast') }}</option>
+                  <option value="standard">{{ t('settings.cfg.unsloth.qualityStandard') }}</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field-label">{{ t('settings.cfg.unsloth.maxConcurrent') }}</span>
+                <input v-model.number="videoSettings.max_concurrent" class="input" type="number" min="1" max="4" step="1" :placeholder="String(UNSLOTH_VIDEO_DEFAULTS.max_concurrent)" />
+              </label>
+              <label class="field">
+                <span class="field-label">{{ t('settings.cfg.unsloth.queueTimeout') }}</span>
+                <input v-model.number="videoSettings.queue_timeout_minutes" class="input" type="number" min="5" step="5" :placeholder="String(UNSLOTH_VIDEO_DEFAULTS.queue_timeout_minutes)" />
+                <span class="field-hint">{{ t('settings.cfg.unsloth.queueTimeoutHint') }}</span>
+              </label>
+            </div>
+          </template>
           <div class="field">
             <span class="field-label">{{ t('settings.cfg.models') }}</span>
             <div v-if="cfgForm.models.length" class="model-chips">
@@ -566,17 +602,33 @@
             <input v-model="cfgForm.temperature" class="input" type="number" step="0.1" min="0" max="2" :placeholder="t('settings.cfg.tempPlaceholder')" />
             <span class="field-hint">{{ t('settings.cfg.tempNote') }}</span>
           </label>
-          <label v-if="cfgForm.service_type === 'image' || cfgForm.service_type === 'video'" class="field">
+          <label v-if="(cfgForm.service_type === 'image' || cfgForm.service_type === 'video') && !isUnsloth" class="field">
             <span class="field-label">{{ cfgForm.service_type === 'image' ? t('productionGuard.imagePrice') : t('productionGuard.videoPrice') }}</span>
             <input v-model="cfgForm.unitPrice" class="input" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" :placeholder="t('productionGuard.pricePlaceholder')" />
             <span class="field-hint">{{ t('productionGuard.priceHint') }}</span>
           </label>
+          <div v-if="isUnsloth && (cfgForm.service_type === 'image' || cfgForm.service_type === 'video')" class="field">
+            <span class="field-label">{{ cfgForm.service_type === 'image' ? t('productionGuard.imagePrice') : t('productionGuard.videoPrice') }}</span>
+            <span class="input unsloth-price-static">฿0 (local)</span>
+            <span class="field-hint">{{ t('settings.cfg.unsloth.priceLocalHint') }}</span>
+          </div>
           <div v-if="cfgTestResult" class="test-result" :class="{ ok: cfgTestResult.ok, bad: !cfgTestResult.ok }">
             <div class="test-result-head">
               <span class="tag" :class="cfgTestResult.ok ? 'tag-success' : 'tag-error'">{{ cfgTestResult.status || 'ERROR' }}</span>
               <span>{{ cfgTestResult.message }}</span>
             </div>
             <div class="mono test-result-url">{{ cfgTestResult.method }} {{ cfgTestResult.url }}</div>
+            <div class="test-result-head">
+              <span v-if="cfgTestResult.latencyMs != null" class="tag">{{ t('settings.cfg.unsloth.testLatency', { n: cfgTestResult.latencyMs }) }}</span>
+              <span v-if="cfgTestResult.model" class="tag">{{ cfgTestResult.model }}</span>
+              <span v-if="cfgTestResult.loaded != null" class="tag" :class="cfgTestResult.loaded ? 'tag-success' : ''">
+                {{ cfgTestResult.loaded ? t('settings.cfg.unsloth.testLoadedYes') : t('settings.cfg.unsloth.testLoadedNo') }}
+              </span>
+              <span v-if="cfgTestResult.toolCallOk != null" class="tag" :class="cfgTestResult.toolCallOk ? 'tag-success' : 'tag-error'">
+                {{ cfgTestResult.toolCallOk ? t('settings.cfg.unsloth.testToolCallOk') : t('settings.cfg.unsloth.testToolCallFail') }}
+              </span>
+            </div>
+            <p v-if="cfgTestResult.toolCallOk === false" class="field-hint">{{ t('settings.cfg.unsloth.testToolCallHint') }}</p>
             <div v-if="cfgTestResult.response_preview" class="mono test-result-preview">{{ cfgTestResult.response_preview }}</div>
           </div>
         </div>
@@ -711,6 +763,7 @@
 import { Plus, Pencil, Trash2, FileText, ChevronDown, Check, Loader2, Bot, Cpu, Sparkles, Palette, ExternalLink, Star, HardDrive, Database, RefreshCw, Download, Languages, SunMoon, X } from 'lucide-vue-next'
 import BaseSelect from '~/components/BaseSelect.vue'
 import { toast } from 'vue-sonner'
+import { UNSLOTH_PROVIDER, UNSLOTH_VIDEO_DEFAULTS, isLocalOrPrivateBaseUrl } from '~/utils/unslothFlow'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI, promptAPI, skillsAPI, storageAPI, stylePresetAPI, settingsAPI, serverUpdateAPI } from '~/composables/useApi'
@@ -746,6 +799,31 @@ const cfgEditId = ref(null)
 const cfgTesting = ref(false)
 const cfgTestResult = ref(null)
 const cfgForm = reactive({ name: '', provider: '', api_key: '', base_url: '', models: [], service_type: 'text', priority: 0, temperature: '', unitPrice: '' })
+// Phase Unsloth — settings JSON ของ config (video: gguf/steps/quality/max_concurrent/queue_timeout)
+const videoSettings = reactive({ gguf_filename: '', steps: '', quality: 'standard', max_concurrent: '', queue_timeout_minutes: '' })
+const isUnsloth = computed(() => cfgForm.provider === UNSLOTH_PROVIDER)
+function resetVideoSettings(d = {}) {
+  const s = typeof d === 'string' ? safeParseSettings(d) : (d || {})
+  videoSettings.gguf_filename = s.gguf_filename || UNSLOTH_VIDEO_DEFAULTS.gguf_filename
+  videoSettings.steps = s.steps ?? UNSLOTH_VIDEO_DEFAULTS.steps
+  videoSettings.quality = s.quality || UNSLOTH_VIDEO_DEFAULTS.quality
+  videoSettings.max_concurrent = s.max_concurrent ?? UNSLOTH_VIDEO_DEFAULTS.max_concurrent
+  videoSettings.queue_timeout_minutes = s.queue_timeout_minutes ?? UNSLOTH_VIDEO_DEFAULTS.queue_timeout_minutes
+}
+function safeParseSettings(v) {
+  if (v && typeof v === 'object') return v
+  try { return JSON.parse(v || '{}') } catch { return {} }
+}
+function buildVideoSettingsPayload() {
+  const num = (v, fallback) => (v === '' || v == null || !Number.isFinite(Number(v)) ? fallback : Number(v))
+  return {
+    gguf_filename: String(videoSettings.gguf_filename || '').trim() || UNSLOTH_VIDEO_DEFAULTS.gguf_filename,
+    steps: num(videoSettings.steps, UNSLOTH_VIDEO_DEFAULTS.steps),
+    quality: videoSettings.quality === 'fast' ? 'fast' : 'standard',
+    max_concurrent: Math.max(1, num(videoSettings.max_concurrent, UNSLOTH_VIDEO_DEFAULTS.max_concurrent)),
+    queue_timeout_minutes: Math.max(5, num(videoSettings.queue_timeout_minutes, UNSLOTH_VIDEO_DEFAULTS.queue_timeout_minutes)),
+  }
+}
 // 模型标签编辑器：首位即默认模型；输入框支持回车添加、逗号/换行批量粘贴
 const modelInput = ref('')
 function addModel() {
@@ -774,9 +852,9 @@ const serviceTypes = computed(() => [
   { type: 'video', label: t('common.serviceType.video') },
 ])
 const providersByType = {
-  text: ['gemini', 'openai', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'volcengine'],
+  text: ['gemini', 'openai', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'volcengine', 'unsloth'],
   image: ['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate'],
-  video: ['volcengine', 'minimax', 'aliyun', 'wancreate'],
+  video: ['volcengine', 'minimax', 'aliyun', 'wancreate', 'unsloth'],
 }
 const providerSelectOptions = computed(() => (providersByType[cfgForm.service_type] || []).map(p => ({
   label: providerPresets[cfgForm.service_type]?.[p]?.label || p,
@@ -797,6 +875,8 @@ const providerPresets = {
     moonshot: { label: 'Kimi (Moonshot)', baseUrl: 'https://api.moonshot.ai', models: ['kimi-k3', 'kimi-k2.6'] },
     xai: { label: 'xAI (Grok)', baseUrl: 'https://api.x.ai', models: ['grok-4.7'] },
     volcengine: { label: 'Volcengine Ark', baseUrl: 'https://ark.cn-beijing.volces.com', models: [] },
+    // Unsloth Studio local — OpenAI-compatible /v1 (โมเดล GGUF ในเครื่อง)
+    unsloth: { label: 'Unsloth (Local)', baseUrl: 'http://127.0.0.1:8888', models: ['unsloth/Qwen3.8-27B-GGUF'] },
   },
   image: {
     gemini: { label: 'Gemini Official', baseUrl: 'https://generativelanguage.googleapis.com', models: ['gemini-3-pro-image', 'gemini-3.1-flash-image'] },
@@ -809,6 +889,8 @@ const providerPresets = {
     volcengine: { label: 'Seedance 2.0 Official', baseUrl: 'https://ark.cn-beijing.volces.com', models: ['doubao-seedance-2-0-mini-260615', 'doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128'] },
     minimax: { label: 'MiniMax H3 Official', baseUrl: 'https://api.minimaxi.com', models: ['MiniMax-H3'] },
     wancreate: { label: 'Wan Create (create.wan.video)', baseUrl: 'https://create.wan.video', models: ['wan3.0', 'wan2.7'] },
+    // Unsloth Studio local — MiniMax H3 GGUF บน GPU ในเครื่อง (มีเสียงในตัว, ทีละคลิป)
+    unsloth: { label: 'Unsloth (Local)', baseUrl: 'http://127.0.0.1:8888', models: ['unsloth/MiniMax-H3-GGUF'] },
   },
 }
 
@@ -825,6 +907,7 @@ function applyProviderPreset(type, provider) {
   cfgForm.provider = provider
   cfgForm.base_url = preset.baseUrl
   cfgForm.models = [...preset.models]
+  if (provider === UNSLOTH_PROVIDER && type === 'video') resetVideoSettings()
   // 配置名持久化进 DB：用 provider 英文 + 服务类型英文标识拼，不随界面语言漂移
   cfgForm.name = `${preset.label}-${type}`
 }
@@ -869,6 +952,7 @@ function startAddCfg(t) {
   cfgEditId.value = null
   cfgTestResult.value = null
   Object.assign(cfgForm, { name: '', provider: '', api_key: '', base_url: '', models: [], service_type: t, priority: 0, temperature: '', unitPrice: '' })
+  resetVideoSettings()
   const firstPreset = presetsByType(t)[0]
   if (firstPreset) applyProviderPreset(t, firstPreset.provider)
   cfgDialog.value = true
@@ -876,6 +960,7 @@ function startAddCfg(t) {
 function startEditCfg(c) {
   cfgEditId.value = c.id
   cfgTestResult.value = null
+  resetVideoSettings(c.settings)
   Object.assign(cfgForm, {
     name: c.name || '',
     provider: c.provider,
@@ -909,6 +994,7 @@ async function testDraftCfg() {
     api_key: cfgForm.api_key,
     base_url: cfgForm.base_url,
     model: [...cfgForm.models],
+    ...(isUnsloth.value && cfgForm.service_type === 'video' ? { settings: buildVideoSettingsPayload() } : {}),
   })
 }
 async function testExistingCfg(c) {
@@ -933,11 +1019,15 @@ async function saveCfg() {
   if (unitPrice !== null && (!Number.isFinite(unitPrice) || unitPrice < 0 || unitPrice > 1000000)) {
     toast.warning(t('productionGuard.priceInvalid')); return
   }
-  const pricing = cfgForm.service_type === 'image' ? { price_thb_per_image: unitPrice }
-    : cfgForm.service_type === 'video' ? { price_thb_per_video_second: unitPrice } : {}
+  // Unsloth local: สร้างวิดีโอในเครื่อง ไม่มีค่าใช้จ่าย — ตั้งราคา 0 ให้เอง (ไม่งั้น budget guard จะบล็อก)
+  const isUnslothMedia = cfgForm.provider === UNSLOTH_PROVIDER && (cfgForm.service_type === 'image' || cfgForm.service_type === 'video')
+  const effectivePrice = isUnslothMedia ? 0 : unitPrice
+  const pricing = cfgForm.service_type === 'image' ? { price_thb_per_image: effectivePrice }
+    : cfgForm.service_type === 'video' ? { price_thb_per_video_second: effectivePrice } : {}
+  const unslothSettings = isUnslothMedia && cfgForm.service_type === 'video' ? { settings: buildVideoSettingsPayload() } : {}
   try {
-    if (cfgEditId.value) await aiConfigAPI.update(cfgEditId.value, { name: cfgForm.name, provider: cfgForm.provider, ...(cfgForm.api_key.trim() ? { api_key: cfgForm.api_key.trim() } : {}), base_url: cfgForm.base_url, model: models, priority: cfgForm.priority, temperature, ...pricing })
-    else await aiConfigAPI.create({ service_type: cfgForm.service_type, provider: cfgForm.provider, name: cfgForm.name || `${cfgForm.provider}-${cfgForm.service_type}`, api_key: cfgForm.api_key, base_url: cfgForm.base_url, model: models, priority: cfgForm.priority, temperature, ...pricing })
+    if (cfgEditId.value) await aiConfigAPI.update(cfgEditId.value, { name: cfgForm.name, provider: cfgForm.provider, ...(cfgForm.api_key.trim() ? { api_key: cfgForm.api_key.trim() } : {}), base_url: cfgForm.base_url, model: models, priority: cfgForm.priority, temperature, ...pricing, ...unslothSettings })
+    else await aiConfigAPI.create({ service_type: cfgForm.service_type, provider: cfgForm.provider, name: cfgForm.name || `${cfgForm.provider}-${cfgForm.service_type}`, api_key: cfgForm.api_key, base_url: cfgForm.base_url, model: models, priority: cfgForm.priority, temperature, ...pricing, ...unslothSettings })
     cfgDialog.value = false; toast.success(t('common.saved')); loadCfgs()
   } catch (e) { toastError(e) }
 }

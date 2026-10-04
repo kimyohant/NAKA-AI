@@ -74,6 +74,7 @@
             <video v-if="shot.videoStatus === 'completed' && shot.videoUrl" :src="shot.videoUrl" controls preload="metadata" class="ps-shot-video" />
             <div v-else-if="shot.videoStatus === 'processing'" class="ps-shot-skeleton" role="status">
               <Loader2 :size="16" class="animate-spin" />
+              <span v-if="(shot.videoQueuePosition || 0) > 0" class="ps-shot-queue">{{ t('productStudio.settings.queuePosition', { n: shot.videoQueuePosition }) }}</span>
             </div>
             <div v-else-if="shot.videoStatus === 'failed'" class="ps-shot-failed" role="alert">
               <p>{{ shot.videoError || t('productStudio.mediaStatus.failed') }}</p>
@@ -194,7 +195,8 @@ async function save() {
 }
 .ps-shot-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ps-shot-video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ps-shot-skeleton { color: var(--text-3); }
+.ps-shot-skeleton { color: var(--text-3); display: flex; flex-direction: column; gap: 6px; }
+.ps-shot-queue { font-size: 10.5px; color: var(--text-2); }
 .ps-shot-failed { padding: 10px; text-align: center; color: var(--action-danger, #dc2626); }
 .ps-shot-failed p { margin: 0; font-size: 10.5px; line-height: 1.45; overflow-wrap: anywhere; }
 .ps-shot-none { color: var(--text-3); }

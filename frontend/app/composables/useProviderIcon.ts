@@ -37,7 +37,10 @@ export function providerIconUrl(provider?: string | null): string | undefined {
  * 此时图标应按模型名而非 provider 展示。
  * 不含 doubao/seedance：它们由 volcengine 服务，provider 图标更准确。
  */
+// Unsloth (local) ยังไม่มีไอคอนในระบบ — ใช้ letter badge "U" จาก provider name
+// โมเดลที่ระบุ repo แบบ unsloth/... ก็ map เข้า provider เดียวกันเพื่อให้ไอคอนสม่ำเสมอ
 const MODEL_PROVIDER_HINTS: [RegExp, string][] = [
+  [/^unsloth\//i, 'unsloth'],
   [/deepseek/i, 'deepseek'],
   [/claude/i, 'claude'],
   [/gemini/i, 'gemini'],

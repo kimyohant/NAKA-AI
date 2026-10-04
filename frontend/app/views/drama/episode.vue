@@ -1112,6 +1112,9 @@
                 <span :class="['dot', genTaskStateClass(row.status) === 'done' && 'ok', genTaskStateClass(row.status) === 'pending' && 'pending']" />
                 {{ genTaskStatusLabel(row.status) }}
               </span>
+              <span v-if="taskQueuePosition(row) != null" class="video-task-status is-pending">
+                {{ t('episode.tasks.queuePosition', { n: taskQueuePosition(row) }) }}
+              </span>
             </div>
           </div>
         </aside>
@@ -2479,6 +2482,8 @@ const genTaskRows = computed(() => {
     provider: t.provider || '',
     model: t.model || '',
     status: t.status || 'processing',
+    // Phase Unsloth: งาน local ที่รอคิว (provider ประกาศ maxConcurrent) — backend คำนวณตำแหน่งคิวให้
+    queuePosition: t.queue_position ?? null,
     errorMsg: t.error_msg || '',
     errorCode: t.error_code || '',
     taskId: t.task_id || '',
@@ -2512,6 +2517,7 @@ function genTaskStatusLabel(status) {
   if (status === 'completed') return t('episode.status.done')
   if (status === 'failed') return t('episode.status.failed')
   if (status === 'unknown') return t('episode.tasks.unknown')
+  if (status === 'queued') return t('episode.tasks.queued')
   return t('episode.status.generating')
 }
 
@@ -2521,6 +2527,11 @@ function genTaskStateClass(status) {
   if (status === 'failed') return 'failed'
   if (status === 'unknown') return 'blocked'
   return 'pending'
+}
+
+/** งานวิดีโอ local ที่รอคิว — แสดง "คิวที่ n" คู่กับสถานะ ไม่กระทบ provider อื่น */
+function taskQueuePosition(row) {
+  return row.kind === 'video' && row.status === 'queued' ? row.queuePosition : null
 }
 
 function taskRowSlot(task) {

@@ -221,6 +221,7 @@ export interface CampaignDoc {
   id: number; campaignId: number; kind: DocKind
   content: string
   status: 'draft' | 'approved'; version: number
+  revising?: boolean              // Phase Unsloth: revise แบบ async กำลังวิ่ง
   createdAt: string; updatedAt: string
 }
 export interface Creative {
@@ -251,6 +252,7 @@ export interface AdReference {
   notes: string | null
   analysis: string | null         // agent 产出的 markdown
   status: AdReferenceStatus       // analysis 非空即 analyzed
+  analyzing?: boolean             // Phase Unsloth: analyze แบบ async กำลังวิ่ง
   createdAt: string; updatedAt: string
 }
 export type VisualKind = 'packshot' | 'on_model' | 'lifestyle'
@@ -286,7 +288,8 @@ export const marketerAPI = {
   research: (id: number, notes?: string) => api.post<{ status: CampaignStatus }>(`/campaigns/${id}/research`, notes ? { notes } : {}),
   strategy: (id: number) => api.post<{ status: CampaignStatus }>(`/campaigns/${id}/strategy`, {}),
   updateDoc: (id: number, docId: number, data: { content?: string; status?: CampaignDoc['status'] }) => api.put<CampaignDoc>(`/campaigns/${id}/docs/${docId}`, data),
-  reviseDoc: (id: number, docId: number, instruction: string) => api.post<CampaignDoc>(`/campaigns/${id}/docs/${docId}/revise`, { instruction }),
+  // Phase Unsloth: { async: true } ⇒ 202 + สถานะผ่าน doc.revising (GET เดิม) — กัน proxy timeout เมื่อโมเดล local บน CPU
+  reviseDoc: (id: number, docId: number, instruction: string, asyncMode = true) => api.post<CampaignDoc>(`/campaigns/${id}/docs/${docId}/revise`, { instruction, async: asyncMode }),
   docRevisions: (id: number, docId: number) => api.get<CampaignDocRevision[]>(`/campaigns/${id}/docs/${docId}/revisions`),
   restoreDocRevision: (id: number, docId: number, revId: number) => api.post<CampaignDoc>(`/campaigns/${id}/docs/${docId}/revisions/${revId}/restore`, {}),
   // mode: replace（默认，覆盖仍为 draft 的创意）/ append（保留全部，追加 N 条新角度）
@@ -301,7 +304,7 @@ export const marketerAPI = {
   updateReference: (id: number, refId: number, data: Partial<Pick<AdReference, 'title' | 'sourceUrl' | 'transcript' | 'notes' | 'analysis'>>) =>
     api.put<AdReference>(`/campaigns/${id}/references/${refId}`, data),
   deleteReference: (id: number, refId: number) => api.del(`/campaigns/${id}/references/${refId}`),
-  analyzeReference: (id: number, refId: number) => api.post<AdReference>(`/campaigns/${id}/references/${refId}/analyze`, {}),
+  analyzeReference: (id: number, refId: number, asyncMode = true) => api.post<AdReference>(`/campaigns/${id}/references/${refId}/analyze`, { async: asyncMode }),
   // ===== Phase 3 — 产品视觉：不改 campaign.status，也不触发 E_CAMPAIGN_BUSY；前端 poll GET /:id =====
   generateVisuals: (id: number, data: { kind: VisualKind; sourceImage: string; count?: number; instruction?: string }) =>
     api.post<CampaignVisual[]>(`/campaigns/${id}/visuals/generate`, data),
@@ -317,10 +320,19 @@ export type StudioAspectRatio = '9:16' | '1:1' | '16:9'
 export type StudioStatus = 'draft' | 'scripting' | 'script_ready' | 'failed'
 export type MediaStatus = 'none' | 'processing' | 'completed' | 'failed'
 
+export interface StudioVideoProviderInfo {
+  provider: string
+  minDurationSec?: number
+  maxConcurrent?: number
+  nativeAudio?: boolean
+  estimatedSecondsPerClip?: number
+}
 export interface StudioOptions {
   languages: StudioLanguage[]
   markets: { id: StudioMarket; currency: string; defaultLanguage: StudioLanguage }[]
   platforms: { id: StudioPlatform; defaultAspect: StudioAspectRatio; maxDurationSec: number }[]
+  // Phase Unsloth: ข้อมูลโมเดลวิดีโอที่ active (เช่น H3 local — มีได้ตั้งแต่ backend รองรับ)
+  videoProvider?: StudioVideoProviderInfo | null
 }
 export interface StudioTemplateBeat { role: string; seconds: number }
 export interface StudioTemplate {
@@ -369,6 +381,8 @@ export interface StudioShot {
   onScreenText: string | null
   keyframeUrl: string | null; keyframeStatus: MediaStatus; keyframeError: string | null
   videoUrl: string | null; videoStatus: MediaStatus; videoError: string | null
+  // Phase Unsloth: งานวิดีโอ local ที่รอคิว (provider ที่ประกาศ maxConcurrent)
+  videoQueuePosition?: number | null
 }
 export interface StudioMerge {
   id: number; status: 'processing' | 'completed' | 'failed'; videoUrl: string | null; errorMsg: string | null; createdAt: string
