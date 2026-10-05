@@ -736,6 +736,11 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     )`,
     `CREATE INDEX IF NOT EXISTS idx_studio_influencer_contents_influencer ON studio_influencer_contents (influencer_id)`,
   ] },
+  // แก้ DB เก่าที่ campaigns ถูกสร้างก่อน DDL รูปแบบปัจจุบัน (ไม่มี error_msg) — failStaleCampaigns
+  // และการเก็บ error ของ research/strategy/creatives set errorMsg แล้ว UPDATE ล้มทุก boot
+  { version: 15, columns: [
+    { table: 'campaigns', column: 'error_msg', ddl: 'ALTER TABLE campaigns ADD COLUMN error_msg TEXT' },
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {
