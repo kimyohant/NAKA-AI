@@ -21,6 +21,7 @@ import {
   type StudioLanguage, type StudioMarket, type StudioPlatform, type StudioAspectRatio,
 } from './studio-templates.js'
 import { buildShotPrompts, clearEpisodeStoryboards, writeStudioShot } from './studio-shots.js'
+import { getInfluencerWithTask } from './studio-influencer.js'
 import { mastra } from '../mastra/index.js'
 import { buildStudioRequestContext } from '../agents/context.js'
 import { startTask, updateTask } from './pipeline-tasks.js'
@@ -97,6 +98,7 @@ export function toProjectJson(row: ProjectRow) {
     aspectRatio: row.aspectRatio,
     durationSec: row.durationSec,
     avatarId: row.avatarId,
+    influencerId: row.influencerId,
     tone: row.tone,
     notes: row.notes,
     budgetThb: row.budgetThb,
@@ -317,6 +319,7 @@ export async function getProjectDetail(id: number) {
       .orderBy(desc(schema.videoMerges.id)))[0]
     : undefined
   const avatar = await getAvatarWithTask(row.avatarId)
+  const influencer = await getInfluencerWithTask(row.influencerId)
   return {
     ...toProjectJson(row),
     shots,
@@ -331,6 +334,7 @@ export async function getProjectDetail(id: number) {
       }
       : null,
     avatar: avatar?.json ?? null,
+    influencer: influencer?.json ?? null,
   }
 }
 
@@ -389,6 +393,10 @@ export async function createProject(body: any) {
     const avatar = Number(body.avatarId)
     if (!Number.isInteger(avatar) || avatar < 1) throw new AppError('avatarId ไม่ถูกต้อง', 'E_INVALID_FIELD')
   }
+  if (body.influencerId !== undefined && body.influencerId !== null) {
+    const influencerId = Number(body.influencerId)
+    if (!Number.isInteger(influencerId) || influencerId < 1) throw new AppError('influencerId ไม่ถูกต้อง', 'E_INVALID_FIELD')
+  }
 
   const ts = now()
   const values: typeof schema.studioProjects.$inferInsert = {
@@ -412,6 +420,7 @@ export async function createProject(body: any) {
     values.productImages = JSON.stringify(body.productImages.map(String))
   }
   if (body.avatarId !== undefined && body.avatarId !== null) values.avatarId = Number(body.avatarId)
+  if (body.influencerId !== undefined && body.influencerId !== null) values.influencerId = Number(body.influencerId)
   if (body.tone !== undefined) values.tone = isNonEmptyString(body.tone) ? body.tone : null
   if (body.notes !== undefined) values.notes = isNonEmptyString(body.notes) ? body.notes : null
   if (body.budgetThb !== undefined) values.budgetThb = parseBudgetThb(body.budgetThb)
@@ -470,6 +479,7 @@ export async function updateProject(id: number, body: any) {
     updates.durationSec = duration
   }
   if (body.avatarId !== undefined) updates.avatarId = body.avatarId === null ? null : Number(body.avatarId)
+  if (body.influencerId !== undefined) updates.influencerId = body.influencerId === null ? null : Number(body.influencerId)
   if (body.tone !== undefined) updates.tone = isNonEmptyString(body.tone) ? body.tone : null
   if (body.notes !== undefined) updates.notes = isNonEmptyString(body.notes) ? body.notes : null
   if (body.budgetThb !== undefined) updates.budgetThb = parseBudgetThb(body.budgetThb)
@@ -512,15 +522,18 @@ function assertNoAutoRender(row: ProjectRow) {
   }
 }
 
-/** เทมเพลต avatarMode: required แต่ไม่มี avatar ที่มีรูป → E_AVATAR_REQUIRED (เช็กตอน script และ render keyframes) */
+/**
+ * เทมเพลต avatarMode: required แต่ไม่มี presenter ที่มีรูป → E_AVATAR_REQUIRED (เช็กตอน script และ render keyframes)
+ * presenter = avatar หรือ AI influencer (v14) ที่มีรูปเสร็จแล้วตัวใดตัวหนึ่ง
+ */
 export async function requireAvatarIfTemplateNeeds(row: ProjectRow) {
   const template = getStudioTemplate(row.templateId)
   if (!template || template.avatarMode !== 'required') return null
   const avatar = await getAvatarWithTask(row.avatarId)
-  if (!avatar || avatar.json.imageStatus !== 'completed' || !avatar.json.imageUrl) {
-    throw new AppError('เทมเพลตนี้ต้องใช้ avatar ที่มีรูปก่อน', 'E_AVATAR_REQUIRED')
-  }
-  return avatar
+  if (avatar && avatar.json.imageStatus === 'completed' && avatar.json.imageUrl) return avatar
+  const influencer = await getInfluencerWithTask(row.influencerId)
+  if (influencer && influencer.json.imageStatus === 'completed' && influencer.json.imageUrl) return influencer
+  throw new AppError('เทมเพลตนี้ต้องใช้ avatar หรือ influencer ที่มีรูปก่อน', 'E_AVATAR_REQUIRED')
 }
 
 /** สร้าง drama + episode ให้โปรเจกต์ (ถ้ายังไม่มี) — reuse pattern ของ Marketer produce */
@@ -602,6 +615,7 @@ export async function startStudioScript(projectId: number, opts: { instruction?:
   const videoProviderInfo = await getActiveVideoProviderInfo()
   const beats = scaleBeats(template.beats, row.durationSec, { minDurationSec: videoProviderInfo?.minDurationSec ?? undefined })
   const avatar = await getAvatarWithTask(row.avatarId)
+  const influencer = await getInfluencerWithTask(row.influencerId)
 
   await db.update(schema.studioProjects).set({ status: 'scripting', errorMsg: null, updatedAt: now() })
     .where(eq(schema.studioProjects.id, projectId))
@@ -617,6 +631,7 @@ export async function startStudioScript(projectId: number, opts: { instruction?:
     `- Beats (one shot per role, seconds EXACTLY as given, in order):\n${beats.map(b => `  - role: ${b.role} · ${b.seconds}s`).join('\n')}`,
     `【Settings】\n- Spoken language: ${row.language} · Market: ${row.market} (currency ${marketOption?.currency}) · Platform: ${row.platform}`,
     avatar ? `- Avatar: ${avatar.row.name} — ${avatar.row.description}` : '- Avatar: none',
+    influencer ? `- AI Influencer persona (the presenter): ${influencer.row.name} — persona: ${influencer.row.persona || 'n/a'}; appearance: ${influencer.row.appearance || 'n/a'}${influencer.row.tone ? `; speaking tone: ${influencer.row.tone}` : ''}. Dialogue must sound like this persona reviewing the product in first person.` : '',
     row.tone ? `- Tone: ${row.tone}` : '',
     row.notes ? `- Notes: ${row.notes}` : '',
     opts.instruction ? `- User instruction: ${opts.instruction}` : '',
@@ -689,7 +704,14 @@ export async function updateShot(projectId: number, shotId: number, body: any) {
   const role = shot?.role ?? storyboard.title ?? ''
 
   // imagePrompt/videoPrompt สร้างใหม่แบบ deterministic — keyframe/video เดิมยังอยู่จนกว่าจะสั่ง render ใหม่
+  // presenter: avatar ก่อน ไม่มี → influencer (persona + appearance)
   const avatar = await getAvatarWithTask(project.avatarId)
+  const influencer = avatar ? null : await getInfluencerWithTask(project.influencerId)
+  const presenter = avatar
+    ? { name: avatar.row.name, description: avatar.row.description }
+    : influencer
+      ? { name: influencer.row.name, description: [influencer.row.persona, influencer.row.appearance].filter(Boolean).join('; ') }
+      : null
   const { imagePrompt, videoPrompt } = buildShotPrompts(
     {
       productName: project.productName,
@@ -699,7 +721,7 @@ export async function updateShot(projectId: number, shotId: number, body: any) {
       hasDialogue: true,
     },
     { role, durationSec, visual, dialogue, onScreenText },
-    avatar ? { name: avatar.row.name, description: avatar.row.description } : null,
+    presenter,
   )
 
   const ts = now()
@@ -747,9 +769,12 @@ export async function submitRenderStage(
     if (!targets.length) return { queued: 0, taskIds: [] }
     const productImages = parseJsonArray(project.productImages)
     const avatar = await getAvatarWithTask(project.avatarId)
+    const influencer = await getInfluencerWithTask(project.influencerId)
+    // รูปอ้างอิง: สินค้าก่อน แล้ว presenter (avatar/influencer) — โมเดลใช้คุมหน้าตาคนและดีไซน์สินค้า
     const references = [
       ...productImages.slice(0, 3),
       ...(avatar?.json.imageUrl ? [avatar.json.imageUrl] : []),
+      ...(influencer?.json.imageUrl ? [influencer.json.imageUrl] : []),
     ]
     let queued = 0
     const taskIds: number[] = []
