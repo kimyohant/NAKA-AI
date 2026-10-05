@@ -57,7 +57,7 @@ test('backend rejects unsupported providers at DB and route boundaries', () => {
 
   assert.match(ai, /officialProviders/)
   assert.match(ai, /text:\s*\[\s*'openai',\s*'gemini',\s*'volcengine',\s*'zai',\s*'deepseek',\s*'qwen',\s*'moonshot',\s*'xai',\s*'unsloth'\s*\]/)
-  assert.match(ai, /image:\s*\[\s*'openai',\s*'gemini',\s*'volcengine',\s*'qwencloud',\s*'wancreate'\s*\]/)
+  assert.match(ai, /image:\s*\[\s*'openai',\s*'gemini',\s*'volcengine',\s*'qwencloud',\s*'wancreate',\s*'unsloth'\s*\]/)
   assert.match(ai, /video:\s*\[\s*'volcengine',\s*'minimax',\s*'aliyun',\s*'wancreate',\s*'unsloth'\s*\]/)
   assert.match(ai, /provider === 'zai'/)
   assert.match(ai, /'\/api\/paas\/v4'/)

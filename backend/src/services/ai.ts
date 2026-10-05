@@ -45,7 +45,7 @@ export function parseConfigSettings(settingsRaw: string | null | undefined): Rec
 
 export const officialProviders: Record<ServiceType, readonly string[]> = {
   text: ['openai', 'gemini', 'volcengine', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'unsloth'],
-  image: ['openai', 'gemini', 'volcengine', 'qwencloud', 'wancreate'],
+  image: ['openai', 'gemini', 'volcengine', 'qwencloud', 'wancreate', 'unsloth'],
   video: ['volcengine', 'minimax', 'aliyun', 'wancreate', 'unsloth'],
 }
 

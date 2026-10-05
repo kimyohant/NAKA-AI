@@ -29,9 +29,12 @@ const refCard = read('app/components/MarketerReferenceCard.vue')
 const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
 
-test('provider unsloth is offered for text and video with local defaults', () => {
+test('provider unsloth is offered for text, image and video with local defaults', () => {
   assert.match(settingsPage, /text:\s*\[[^\]]*'unsloth'\]/)
+  assert.match(settingsPage, /image:\s*\[[^\]]*'unsloth'\]/)
   assert.match(settingsPage, /video:\s*\[[^\]]*'unsloth'\]/)
+  // image preset: local base URL — ชื่อโมเดลผู้ใช้พิมพ์เอง (ยังไม่รู้ชื่อ image GGUF ของ server)
+  assert.match(settingsPage, /unsloth: \{ label: 'Unsloth \(Local\)', baseUrl: 'http:\/\/127\.0\.0\.1:8888', models: \[\] \}/)
   // presets: loopback base + โมเดลตาม PLAN ข้อ 1
   assert.match(settingsPage, /unsloth: \{ label: 'Unsloth \(Local\)', baseUrl: 'http:\/\/127\.0\.0\.1:8888', models: \['unsloth\/Qwen3\.8-27B-GGUF'\] \}/)
   assert.match(settingsPage, /unsloth: \{ label: 'Unsloth \(Local\)', baseUrl: 'http:\/\/127\.0\.0\.1:8888', models: \['unsloth\/MiniMax-H3-GGUF'\] \}/)
