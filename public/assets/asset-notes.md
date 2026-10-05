@@ -8,9 +8,13 @@
 
 Raster versions of the Naga-tail `public/logo.svg`. Regenerate after changing the SVG with `node creative/render-brand-icons.cjs`. The lower-left N terminal is a swept fin with a cyan inset so the letter also reads as the character's tail.
 
-## soap-demo-preview.webm
+## naka-demo-30s.webm, naka-demo-30s.mp4 and naka-demo-poster.jpg
 
-Temporary muted vertical demonstration clip for the public landing, generated from `soap-campaign.png` with `creative/landing-v2/` source and `.wrangler/qa/generate-sample-video.cjs`. It is labeled as a demonstration on the page. Replace it and the matching image with approved product media when the production asset source is connected.
+30 s muted, looping 9:16 product demo (540 × 960, 30 fps) used in the review rail card and the Instagram Reels mock on the landing. It walks through the real `/review/` flow (photos → name and real selling points → Naka writes and voices the script → finished clip → channels → try free) and ends on a seamless loop back to frame 0. Code-built motion only, from `soap-campaign.png`, `naka-plush-sales.png` and `logo.svg`, with no AI video. The soap is fictional; the clip says "ตัวอย่าง" on the output and "ตัวอย่างสาธิต · สินค้าสมมติ · ภาพสร้างด้วย AI" on the end card. Source, brief and storyboard are in `creative/demo-film/`; re-render with `node creative/demo-film/render.cjs` (needs Chrome and ffmpeg). Replaced the earlier 7 s `soap-demo-preview.webm` placeholder (added 2026-10-05).
+
+## hero/hero-review.mp4, hero/hero-drama-01|03|05.mp4 (+ .jpg posters)
+
+270 × 480, 30 fps, muted H.264 copies made only for the phones on the hero conveyor (`public/hero-line.js`), so the hero does not decode 720p clips inside 112 px phones. Sources: `naka-demo-30s.mp4` and `showcase/drama/drama-01|03|05.mp4`. Regenerate with ffmpeg: `-vf scale=270:480:flags=lanczos,fps=30 -an -c:v libx264 -crf 27 -movflags +faststart -g 30`; posters are the first frame.
 
 ## naka-sales-world.png
 

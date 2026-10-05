@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f7f8fb">
-  <title>naka-ai — ใส่รูปสินค้า ได้คลิปขายพร้อมโพสต์</title>
-  <meta name="description" content="naka-ai ทำคลิปขายและคลิปรีวิว affiliate พร้อมเสียงพากย์ไทย ละครสั้น ไลฟ์ด้วยอวตาร AI และตอบลูกค้าอัตโนมัติสำหรับร้านไทย บน Shopee, Facebook, TikTok และ Instagram">
-  <meta property="og:title" content="naka-ai — ใส่รูปสินค้า ได้คลิปขายพร้อมโพสต์">
-  <meta property="og:description" content="ใส่รูปสินค้า นาคาเขียนบท พากย์เสียงไทย และทำคลิปแนวตั้งพร้อมโพสต์บน Shopee, Facebook, TikTok และ Instagram">
+  <title>naka-ai — ให้ AI เสกคลิป ละคร และไลฟ์ ขายของให้ร้านคุณ</title>
+  <meta name="description" content="naka-ai เครื่องมือ AI ของร้านไทย เสกคลิปขายของ ละครสั้น และไลฟ์ขายของ จากรูปสินค้า พร้อมเสียงพากย์ไทย ตรวจก่อนโพสต์ได้">
+  <meta property="og:title" content="naka-ai — ให้ AI เสกคลิป ละคร และไลฟ์ ขายของให้ร้านคุณ">
+  <meta property="og:description" content="ถ่ายไม่เป็น ตัดต่อไม่เป็น ไลฟ์ไม่ไหว? ให้นาคาเสกคลิป ละคร และไลฟ์ขายของให้">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="th_TH">
   <meta property="og:url" content="https://naka-ai.com/">
   <meta property="og:image" content="https://naka-ai.com/assets/naka-share-card.png?v=4">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="ใส่รูปสินค้า ได้คลิปขายพร้อมโพสต์ กับนาคามาสคอตของ naka-ai">
+  <meta property="og:image:alt" content="naka-ai ให้ AI เสกคลิป ละคร และไลฟ์ ขายของให้ร้านคุณ">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://naka-ai.com/assets/naka-share-card.png?v=4">
   <link rel="canonical" href="https://naka-ai.com/">
@@ -27,9 +27,11 @@
   <link rel="preload" as="image" href="/assets/soap-640.jpg">
   <link rel="stylesheet" href="/glass-nav.css">
   <link rel="stylesheet" href="/landing.css">
+  <link rel="stylesheet" href="/hero-line.css">
   <script src="/account-menu.js" defer></script>
   <script src="/landing.js" defer></script>
   <script src="/glass-nav.js" defer></script>
+  <script src="/hero-line.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">ข้ามไปเนื้อหา</a>
@@ -74,7 +76,7 @@
         <a class="nav-plain" href="#pricing">ราคา</a>
       </nav>
       <div class="nav-account" data-account-menu></div>
-      <a class="btn btn-primary btn-sm nav-cta" href="/review/?demo=1">ลองฟรี <span aria-hidden="true">↗</span></a>
+      <a class="btn btn-primary btn-sm nav-cta" href="/login/?mode=register">สมัครสมาชิก <span aria-hidden="true">↗</span></a>
       <button class="menu-button" type="button" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
     </div>
     <nav class="mobile-nav shell" id="mobile-nav" aria-label="เมนูมือถือ" hidden>
@@ -83,57 +85,33 @@
       <a href="#p-live"><b>AI Live</b><small>อวตารไลฟ์ขายสินค้า</small></a>
       <a href="#p-bot"><b>แชทบอท</b><small>ตอบแชทและคอมเมนต์อัตโนมัติ</small></a>
       <a href="#pricing"><b>ราคา</b></a>
-      <a class="mobile-cta" href="/review/?demo=1">ลองสร้างคลิปฟรี ↗</a>
+      <a class="mobile-cta" href="/login/?mode=register">สมัครสมาชิก เริ่มเสกกับนาคา ↗</a>
     </nav>
   </header>
 
   <main id="main">
-    <!-- Hero: the product → script + voice → clip flow, drawn as connected nodes -->
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="shell hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>เครื่องมือทำคลิปขายด้วย AI สำหรับร้านไทย</p>
-          <h1 id="hero-title">ใส่รูปสินค้า<br><span class="grad">ได้คลิปขาย</span><br>พร้อมโพสต์</h1>
-          <p class="lead">นาคาเขียนบท พากย์เสียงไทย และตัดต่อเป็นคลิปแนวตั้ง ให้คุณตรวจก่อนโพสต์ ไม่ต้องถ่ายหรือพูดหน้ากล้อง</p>
-          <form class="quickstart" action="/review/" method="get">
-            <input type="hidden" name="demo" value="1">
-            <label for="quick-product">สินค้าที่อยากขายคืออะไร?</label>
-            <div class="quickstart-row">
-              <input id="quick-product" name="name" type="text" maxlength="160" autocomplete="off" placeholder="เช่น สบู่สมุนไพรกลิ่นมะลิ" required>
-              <button class="btn btn-primary" type="submit">ลองสร้างคลิปฟรี <span aria-hidden="true">↗</span></button>
-            </div>
-          </form>
-          <ul class="trial-notes" aria-label="การทดลองใช้">
-            <li>ไม่ต้องสมัคร</li><li>ลองด้วยบทตัวอย่าง</li><li>รูปอยู่บนเครื่องคุณ</li>
-          </ul>
-        </div>
+    <!-- Hero "Naka line" (public/hero-line.css + hero-line.js): full-width conveyor, product boxes in, sample clips out to each platform. -->
+    <section class="hero hero-line" aria-labelledby="hero-title">
+      <div class="shell hl-copy">
+        <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>ถ่ายไม่เป็น ตัดต่อไม่เป็น ไลฟ์ไม่ไหว? ให้นาคาเสกให้</p>
+        <h1 id="hero-title">ให้ AI เสกคลิป ละคร<br>และไลฟ์ <span class="grad">ขายของ</span> <span class="nw">ให้ร้านคุณ</span></h1>
+        <p class="lead">ใส่รูปสินค้า แล้วเลือกว่าจะเสกเป็นคลิปรีวิว ละครสั้น หรืออวตารไลฟ์ขายของ นาคาเขียนบทและพากย์เสียงไทยให้ คุณตรวจก่อนโพสต์</p>
+        <div class="quickstart-row hero-cta"><a class="btn btn-primary" href="/login/?mode=register">สมัครสมาชิก เริ่มเสกกับนาคา <span aria-hidden="true">↗</span></a><a class="btn btn-ghost" href="/review/?demo=1">ลองด้วยบทตัวอย่างก่อน</a></div>
+        <ul class="trial-notes" aria-label="การทดลองใช้">
+          <li>ไม่ต้องถ่าย ไม่ต้องพูด</li><li>ตรวจก่อนโพสต์ได้</li><li>รูปอยู่บนเครื่องคุณ</li>
+        </ul>
+      </div>
 
-        <div class="flow-board" aria-label="ขั้นตอน: รูปสินค้าและบทพากย์ กลายเป็นคลิปพร้อมโพสต์">
-          <div class="flow-inputs">
-            <article class="node node-photo">
-              <header><span class="node-tag">01</span>รูปสินค้า</header>
-              <div class="node-photo-frame"><img src="/assets/soap-640.jpg" width="640" height="640" alt="รูปสินค้าตัวอย่าง สบู่สมุนไพร" fetchpriority="high"></div>
-            </article>
-            <article class="node node-script">
-              <header><span class="node-tag">02</span>บท + เสียงพากย์ไทย</header>
-              <p class="script-line"><b>ฮุก</b> ใครชอบกลิ่นมะลิต้องดู</p>
-              <p class="script-line"><b>ฉาก 2</b> สบู่ก้อน 100 กรัม หอมทั้งวัน</p>
-              <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            </article>
-          </div>
-          <svg class="flow-wires" viewBox="0 0 72 460" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 118 C 44 118, 28 230, 72 230"/>
-            <path d="M0 342 C 44 342, 28 230, 72 230"/>
-          </svg>
-          <article class="node node-clip">
-            <header><span class="node-tag node-tag-live">03</span>คลิปพร้อมโพสต์</header>
-            <div class="clip-phone">
-              <video class="sample-video" autoplay muted loop playsinline preload="metadata" poster="/assets/soap-640.jpg" aria-label="คลิปสาธิตขายสบู่สมุนไพร"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video>
-              <span class="clip-badge">9:16 · พร้อมโพสต์</span>
-            </div>
-          </article>
-          <img class="flow-mascot" src="/assets/naka-plush-320.png" width="320" height="320" alt="" aria-hidden="true">
+      <div class="hl-scene" role="img" aria-label="ภาพจำลอง: กล่องสินค้าวิ่งบนสายพานเข้าเครื่องของนาคา ออกมาเป็นมือถือที่เล่นคลิปรีวิว ละครสั้น ไลฟ์ และแชทบอท แล้วลงกล่อง TikTok Facebook Instagram และ Shopee">
+        <div class="hl-belt" aria-hidden="true"><i class="hl-rollers"></i></div>
+        <div class="hl-layer back" data-hl-back aria-hidden="true"></div>
+        <div class="hl-layer items" data-hl-items aria-hidden="true"></div>
+        <div class="hl-layer front" data-hl-front aria-hidden="true"></div>
+        <div class="hl-machine" aria-hidden="true">
+          <img class="hl-naka" src="/assets/naka-plush-320.png" width="320" height="320" alt="">
+          <div class="hl-spill"></div>
         </div>
+        <span class="hl-note">ภาพจำลอง<span class="long"> · คลิปในมือถือคือตัวอย่างที่ทำด้วยนาคา</span></span>
       </div>
 
       <div class="shell platforms" aria-label="ช่องทางขาย">
@@ -150,7 +128,7 @@
           <div class="row-actions"><a class="btn btn-primary btn-sm" href="/review/?demo=1">เริ่มสร้างคลิป ↗</a></div>
         </div>
         <div class="rail" id="rail-review" tabindex="0" aria-label="ตัวอย่างคลิปรีวิว">
-          <a class="tpl" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/soap-640.jpg" aria-hidden="true"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video></div><span class="tpl-chip">สบู่สมุนไพร</span><div class="tpl-body"><h3>รีวิว 3 จุดเด่น</h3><p>ฮุก · จุดเด่นจริง · ชวนกดลิงก์</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
+          <a class="tpl" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/naka-demo-poster.jpg" aria-hidden="true"><source src="/assets/naka-demo-30s.webm" type="video/webm"><source src="/assets/naka-demo-30s.mp4" type="video/mp4"></video></div><span class="tpl-chip">สบู่สมุนไพร</span><div class="tpl-body"><h3>รีวิว 3 จุดเด่น</h3><p>ฮุก · จุดเด่นจริง · ชวนกดลิงก์</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
           <a class="tpl tpl-create" href="/review/?demo=1"><span class="create-plus" aria-hidden="true">＋</span><h3>สร้างคลิปรีวิวของคุณ</h3><p>ใส่รูปสินค้าแล้วลองฟรีด้วยบทตัวอย่าง ไม่ต้องสมัคร</p><span class="tpl-try">เริ่มเลย ↗</span></a>
         </div>
       </div>
@@ -238,7 +216,7 @@
             <div class="post-bottom"><b>@ช่องละครของคุณ</b><p>ทายาทเจ้าของบ้านกลับมาแล้ว ตอนต่อไปพรุ่งนี้ #ละครสั้น</p></div>
           </article>
           <article class="post" data-platform="instagram">
-            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/soap-640.jpg" aria-hidden="true"><source src="/assets/soap-demo-preview.webm" type="video/webm"></video></div>
+            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/naka-demo-poster.jpg" aria-hidden="true"><source src="/assets/naka-demo-30s.webm" type="video/webm"><source src="/assets/naka-demo-30s.mp4" type="video/mp4"></video></div>
             <span class="plat plat-instagram">Instagram Reels</span>
             <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
             <div class="post-bottom"><b>@ร้านของคุณ</b><p>สบู่มะลิ 100 กรัม หอมทั้งวัน ลิงก์อยู่ในไบโอ #ของดีบอกต่อ</p></div>
@@ -389,8 +367,8 @@
 
     <section class="closing">
       <div class="shell closing-card">
-        <div><h2>สินค้าชิ้นแรกของคุณ<br>พร้อมเป็นคลิปแล้ว</h2><p>ลองสร้างคลิปฟรีด้วยบทตัวอย่าง ใช้เวลาไม่ถึงนาที</p></div>
-        <div class="closing-actions"><a class="btn btn-light" href="/review/?demo=1">ลองสร้างคลิปฟรี <span aria-hidden="true">↗</span></a><a class="closing-call" href="tel:+66892788587">คุยกับทีมงานคนจริง ↗</a></div>
+        <div><h2>คุณขายของ<br>นาคาเสกทุกอย่างที่เหลือ</h2><p>สมัครสมาชิกแล้วเริ่มเสกคลิป ละคร และไลฟ์ขายของด้วย AI</p></div>
+        <div class="closing-actions"><a class="btn btn-light" href="/login/?mode=register">สมัครสมาชิก เริ่มเสกกับนาคา <span aria-hidden="true">↗</span></a><a class="closing-call" href="tel:+66892788587">คุยกับทีมงานคนจริง ↗</a></div>
       </div>
     </section>
   </main>

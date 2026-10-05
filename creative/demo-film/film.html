@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Naka demo film</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=block" rel="stylesheet">
+<style>
+/* 1080 x 1920 master. Every animated property is set by seek(t); nothing animates on its own. */
+:root { --navy: #091736; --navy-2: #0c1d43; --brand: #2459d6; --btn: #2059b6; --cyan: #14b3d6; --sky: #9adafc; --ink: #0d1b33; --soap: url(../../public/assets/soap-campaign.png); }
+html, body { margin: 0; background: #000; }
+body { width: 1080px; height: 1920px; overflow: hidden; font-family: "Anuphan", sans-serif; -webkit-font-smoothing: antialiased; }
+#stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: radial-gradient(circle at 22% 30%, #23498d, #0c1d43 46%, #081631 88%); color: #fff; }
+.a { position: absolute; left: 0; top: 0; }
+.display { font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 700; letter-spacing: -.03em; }
+.img { background-image: var(--soap); background-repeat: no-repeat; }
+.nowrap { white-space: nowrap; }
+
+/* S1 hook */
+#brand { display: flex; align-items: center; gap: 18px; font-family: "IBM Plex Sans Thai"; font-weight: 700; font-size: 54px; letter-spacing: -.04em; }
+#brand img { width: 74px; height: 74px; border-radius: 18px; }
+.hook-line { font-size: 128px; line-height: 1.1; white-space: nowrap; }
+#hookB { color: var(--sky); }
+#hookUnder { height: 14px; border-radius: 7px; background: linear-gradient(90deg, var(--brand), var(--cyan)); }
+#hookPhoto { width: 760px; height: 760px; border-radius: 40px; border: 14px solid #fff; box-shadow: 0 40px 90px #020a1f99; background-size: 732px 732px; background-position: 0 0; }
+#hookChip { font-size: 46px; font-weight: 700; color: var(--ink); background: #fff; padding: 10px 30px; border-radius: 40px; box-shadow: 0 12px 30px #020a1f55; white-space: nowrap; }
+
+/* step pill */
+.pill { font-size: 48px; font-weight: 700; padding: 14px 34px; border-radius: 50px; background: #0c1d43; border: 3px solid #14b3d680; color: #d7eaff; white-space: nowrap; box-shadow: 0 10px 30px #020a1f80; }
+.pill b { color: var(--sky); margin-right: 14px; }
+
+/* S2 form (mirrors /review/ brief card) */
+#form { width: 1000px; height: 2300px; background: #fff; color: #172a49; border-radius: 44px; box-shadow: 0 40px 100px #020c2480; }
+#form > * { position: absolute; }
+.kick { font-size: 40px; font-weight: 700; color: #527eb8; left: 50px; top: 60px; }
+.f-h2 { font-size: 78px; font-weight: 700; letter-spacing: -.03em; left: 50px; top: 112px; margin: 0; }
+#upload { left: 50px; top: 250px; width: 900px; height: 560px; border: 4px dashed #94b0d4; border-radius: 30px; background: #f2f6fc; box-sizing: border-box; }
+#upPhoto { left: 240px; top: 260px; width: 520px; height: 520px; border-radius: 22px; background-size: 520px 520px; }
+.thumb { top: 840px; width: 210px; height: 210px; border-radius: 22px; box-shadow: 0 6px 18px #0d1b3330; }
+#photoCount { left: 750px; top: 905px; font-size: 54px; font-weight: 700; color: #2059b6; white-space: nowrap; }
+.f-label { font-size: 52px; font-weight: 700; left: 50px; white-space: nowrap; }
+.f-box { left: 50px; width: 900px; border: 3px solid #cfdaea; border-radius: 22px; box-sizing: border-box; }
+.f-box.on { border-color: #417ac4; box-shadow: 0 0 0 8px #417ac422; }
+#nameText { left: 84px; top: 1206px; font-size: 64px; white-space: nowrap; }
+.caret { display: inline-block; width: 5px; height: 70px; background: #2059b6; vertical-align: -12px; margin-left: 4px; }
+#priceBox, #chanBox { top: 1890px; height: 130px; }
+#priceBox { width: 430px; }
+#chanBox { left: 520px; width: 430px; }
+.f-val { font-size: 62px; white-space: nowrap; }
+#btn { left: 50px; top: 2070px; width: 900px; height: 150px; border-radius: 30px; background: var(--btn); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 44px; box-sizing: border-box; font-size: 58px; font-weight: 700; white-space: nowrap; }
+.chip { font-size: 62px; font-weight: 700; color: #173f9e; background: #e4effd; border: 3px solid #b9d0f2; padding: 6px 34px; border-radius: 60px; white-space: nowrap; transform-origin: 0 0; }
+#cursor { width: 96px; height: 96px; transform-origin: 18px 10px; filter: drop-shadow(0 8px 10px #0006); }
+#ripple { width: 300px; height: 300px; border-radius: 50%; border: 10px solid #ffffff; }
+#btnGrow { background: var(--btn); }
+
+/* S3 Naka writes */
+#mascot { width: 330px; height: 330px; }
+#status { font-size: 62px; font-weight: 700; white-space: nowrap; }
+#status2 { font-size: 46px; color: #c4d7ec; white-space: nowrap; }
+#wave { display: flex; align-items: center; gap: 10px; height: 90px; }
+#wave i { display: block; width: 14px; border-radius: 7px; background: linear-gradient(var(--sky), var(--cyan)); }
+#prog { width: 600px; height: 22px; border-radius: 11px; background: #ffffff26; overflow: hidden; }
+#progFill { height: 100%; border-radius: 11px; background: linear-gradient(90deg, var(--brand), var(--cyan)); }
+.card { width: 960px; border-radius: 32px; background: #ffffff14; border: 3px solid #ffffff2e; box-sizing: border-box; }
+.card > * { position: absolute; }
+.cthumb { left: 20px; top: 20px; width: 190px; height: 190px; border-radius: 20px; }
+.ckick { left: 240px; top: 26px; font-size: 44px; font-weight: 700; color: var(--sky); white-space: nowrap; }
+.ctext { left: 240px; top: 92px; width: 690px; font-size: 56px; font-weight: 700; line-height: 1.25; }
+
+/* S5 output clip */
+#clip { width: 1080px; height: 1920px; overflow: hidden; background: #000; transform-origin: 540px 960px; }
+.scene { width: 1080px; height: 1920px; overflow: hidden; }
+.bg { width: 1080px; height: 1920px; }
+#bgA { transform-origin: 0 0; }
+.cap { font-family: "IBM Plex Sans Thai"; font-weight: 700; font-size: 100px; line-height: 1.15; padding: 8px 36px 16px; border-radius: 26px; white-space: nowrap; box-shadow: 0 18px 40px #020a1f66; }
+.cap.w { background: #fff; color: var(--ink); }
+.cap.b { background: var(--brand); color: #fff; }
+.badge { width: 170px; height: 170px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--cyan)); border: 8px solid #fff; box-sizing: border-box; display: grid; place-items: center; font-family: "IBM Plex Sans Thai"; font-weight: 700; font-size: 104px; color: #fff; box-shadow: 0 18px 40px #020a1f66; }
+.sub { font-size: 46px; font-weight: 700; background: #0c1d43d9; padding: 8px 28px; border-radius: 30px; white-space: nowrap; }
+#stamp { width: 260px; height: 260px; border-radius: 50%; border: 12px solid var(--brand); background: #ffffffe8; color: var(--brand); display: grid; place-items: center; font-family: "IBM Plex Sans Thai"; font-weight: 700; font-size: 92px; letter-spacing: -.04em; box-sizing: border-box; box-shadow: 0 16px 40px #0d1b3355; }
+#ctaCard { width: 640px; height: 640px; border-radius: 40px; border: 10px solid #fff; box-shadow: 0 40px 90px #020a1fa0; background-size: 620px 620px; }
+#shopBar { width: 960px; height: 190px; border-radius: 34px; background: #fff; color: var(--ink); box-shadow: 0 24px 60px #020a1f80; }
+#shopBar > * { position: absolute; }
+#ctaBtn { width: 800px; height: 150px; border-radius: 80px; background: linear-gradient(115deg, #2459d6, #3d6cf0 45%, #14b3d6); display: grid; place-items: center; font-size: 68px; font-weight: 700; white-space: nowrap; box-shadow: 0 22px 50px #14b3d655; }
+.segs { display: flex; gap: 12px; width: 980px; }
+.segs span { flex: 1; height: 10px; border-radius: 5px; background: #ffffff55; overflow: hidden; }
+.segs span i { display: block; height: 100%; background: #fff; }
+#clipTag { display: flex; align-items: center; gap: 14px; font-size: 40px; font-weight: 700; background: #0c1d43cc; padding: 8px 26px 8px 10px; border-radius: 40px; white-space: nowrap; }
+#clipTag img { width: 52px; height: 52px; border-radius: 13px; }
+
+/* S6 channels */
+.phone { width: 1080px; height: 1920px; border-radius: 100px; overflow: hidden; transform-origin: 540px 960px; box-shadow: 0 0 0 26px #0b1630, 0 0 0 32px #ffffff30, 0 60px 120px #020a1fb0; }
+.plat { font-size: 50px; font-weight: 700; padding: 10px 32px; border-radius: 40px; background: #fff; color: var(--ink); white-space: nowrap; }
+#capCard { font-size: 46px; font-weight: 700; padding: 22px 34px; border-radius: 28px; background: #fff; color: var(--ink); white-space: nowrap; box-shadow: 0 24px 50px #020a1f80; }
+#capCard em { font-style: normal; color: var(--brand); }
+
+/* S7 end card */
+#endLogo { width: 190px; height: 190px; border-radius: 46px; box-shadow: 0 30px 70px #020a1f90; }
+#endWord { font-size: 132px; letter-spacing: -.05em; white-space: nowrap; }
+#endLine { font-size: 62px; color: #d5e7fa; white-space: nowrap; font-weight: 500; }
+#endLine b { color: var(--sky); }
+#endCta { width: 840px; height: 140px; border-radius: 80px; background: linear-gradient(115deg, #2459d6, #3d6cf0 45%, #14b3d6); display: grid; place-items: center; font-size: 64px; font-weight: 700; white-space: nowrap; box-shadow: 0 22px 50px #14b3d655; }
+#endNote { font-size: 38px; color: #93a9c5; white-space: nowrap; }
+#endMascot { width: 460px; height: 460px; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- S1 hook -->
+  <div class="a" id="brand"><img src="../../public/logo.svg" alt=""><span>naka-ai.</span></div>
+  <div class="a display hook-line" id="hookA">มีแค่รูปสินค้า</div>
+  <div class="a display hook-line" id="hookB">ก็ได้คลิปรีวิว</div>
+  <div class="a" id="hookUnder"></div>
+
+  <!-- S2 form -->
+  <div class="a" id="form">
+    <div class="kick">คลิปรีวิว 20–35 วินาที · ใช้ 1 เครดิต</div>
+    <h2 class="f-h2">สินค้าที่อยากรีวิว</h2>
+    <div id="upload"></div>
+    <div id="upPhoto" class="img"></div>
+    <div class="thumb img" id="th1" style="left:50px"></div>
+    <div class="thumb img" id="th2" style="left:280px"></div>
+    <div class="thumb img" id="th3" style="left:510px"></div>
+    <div id="photoCount">3 รูป ✓</div>
+    <div class="f-label" style="top:1100px">ชื่อสินค้า</div>
+    <div class="f-box" id="nameBox" style="top:1180px;height:130px"></div>
+    <div id="nameText"><span id="nameTyped"></span><span class="caret" id="nameCaret"></span></div>
+    <div class="f-label" style="top:1350px">จุดเด่นจริงของสินค้า</div>
+    <div class="f-box" id="factBox" style="top:1430px;height:420px"></div>
+    <div class="f-box" id="priceBox"></div>
+    <div class="f-val" id="priceVal" style="left:84px;top:1914px">129 บาท</div>
+    <div class="f-box" id="chanBox"></div>
+    <div class="f-val" id="chanVal" style="left:554px;top:1914px">TikTok ▾</div>
+    <div id="btn"><span>ให้นาคาเขียนบทและพากย์</span><span>↗</span></div>
+  </div>
+  <div class="a" id="btnGrow"></div>
+
+  <!-- S3 Naka writes -->
+  <img class="a" id="mascot" src="../../public/assets/naka-plush-sales.png" alt="">
+  <div class="a" id="status"></div>
+  <div class="a" id="status2"></div>
+  <div class="a" id="wave"></div>
+  <div class="a" id="prog"><div id="progFill"></div></div>
+  <div class="a card" id="c1" style="height:230px"><div class="cthumb img" id="c1t"></div><div class="ckick">ฉาก 1 · ฮุก</div><div class="ctext" id="c1x"></div></div>
+  <div class="a card" id="c2" style="height:260px"><div class="cthumb img" id="c2t"></div><div class="ckick">ฉาก 2 · จุดเด่นจริง 3 ข้อ</div></div>
+  <div class="a card" id="c3" style="height:230px"><div class="cthumb img" id="c3t"></div><div class="ckick">ฉาก 3 · ชวนกดลิงก์</div><div class="ctext" id="c3x"></div></div>
+
+  <!-- S6 side phones (behind the clip) -->
+  <div class="a phone" id="ph1"><div class="bg img" id="ph1bg"></div><div class="a cap w" id="ph1cap" style="font-size:110px">กลิ่นมะลิอ่อน ๆ</div></div>
+  <div class="a phone" id="ph2"><div class="bg img" id="ph2bg"></div><div class="a cap w" id="ph2cap" style="font-size:110px">ทำมือ ล็อตเล็ก</div></div>
+
+  <!-- S5 output clip -->
+  <div class="a" id="clip">
+    <div class="a scene" id="sA"><div class="a bg img" id="bgA"></div>
+      <div class="a cap w" id="capA1">หาสบู่กลิ่นอ่อน ๆ</div>
+      <div class="a cap b" id="capA2">อยู่ใช่ไหม?</div>
+    </div>
+    <div class="a scene" id="sB"><div class="a bg img" id="bgB"></div>
+      <div class="a badge" id="bdB">1</div>
+      <div class="a cap w" id="capB">กลิ่นมะลิอ่อน ๆ</div>
+      <div class="a sub" id="subB">จุดเด่นจริง ข้อ 1 จาก 3</div>
+    </div>
+    <div class="a scene" id="sC"><div class="a bg img" id="bgC"></div>
+      <div class="a badge" id="bdC">2</div>
+      <div class="a cap w" id="capC">ก้อนละ 100 กรัม</div>
+      <div class="a" id="stamp">100g</div>
+    </div>
+    <div class="a scene" id="sD"><div class="a bg img" id="bgD"></div>
+      <div class="a badge" id="bdD">3</div>
+      <div class="a cap w" id="capD">ทำมือ ล็อตเล็ก</div>
+      <div class="a sub" id="subD">ข้อมูลจากผู้ขาย ไม่แต่งเติม</div>
+    </div>
+    <div class="a scene" id="sE"><div class="a bg img" id="bgE"></div>
+      <div class="a img" id="ctaCard"></div>
+      <div class="a" id="shopBar">
+        <div style="left:44px;top:30px;font-size:52px;font-weight:700;white-space:nowrap">สบู่สมุนไพรกลิ่นมะลิ</div>
+        <div style="left:44px;top:110px;font-size:36px;color:#71819a;white-space:nowrap">100 กรัม · ทำมือ</div>
+        <div class="display" style="right:44px;top:34px;font-size:96px;color:#2459d6">฿129</div>
+      </div>
+      <div class="a" id="ctaBtn">กดลิงก์ในไบโอ ↗</div>
+    </div>
+    <div class="a segs" id="segs"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
+    <div class="a" id="clipTag"><img src="../../public/logo.svg" alt="">คลิปจากนาคา · ตัวอย่าง</div>
+  </div>
+
+  <!-- S6 labels -->
+  <div class="a display hook-line" id="chA" style="font-size:100px">คลิปเดียว</div>
+  <div class="a display hook-line" id="chB" style="font-size:100px;color:var(--sky)">โพสต์ได้ทุกช่องทาง</div>
+  <div class="a plat" id="pl1">TikTok</div>
+  <div class="a plat" id="pl2">Reels</div>
+  <div class="a plat" id="pl3">Shopee</div>
+  <div class="a" id="capCard">แคปชัน + <em>ลิงก์ของคุณ</em> ✓</div>
+
+  <!-- S7 end card -->
+  <img class="a" id="endLogo" src="../../public/logo.svg" alt="">
+  <div class="a display" id="endWord">naka-ai.</div>
+  <div class="a" id="endLine">รูปสินค้า <b>→</b> คลิปรีวิวพร้อมโพสต์</div>
+  <div class="a" id="endCta">ลองฟรีที่ naka-ai.com ↗</div>
+  <div class="a" id="endNote">ตัวอย่างสาธิต · สินค้าสมมติ · ภาพสร้างด้วย AI</div>
+  <img class="a" id="endMascot" src="../../public/assets/naka-plush-sales.png" alt="">
+
+  <!-- S1 photo + shared overlays (above everything) -->
+  <div class="a img" id="hookPhoto"></div>
+  <div class="a" id="hookChip">รูปสินค้า 1 รูป</div>
+  <div class="a chip" id="ch1">กลิ่นมะลิอ่อน ๆ</div>
+  <div class="a chip" id="ch2">ก้อนละ 100 กรัม</div>
+  <div class="a chip" id="ch3">ทำมือ ล็อตเล็ก</div>
+  <div class="a" id="ripple"></div>
+  <svg class="a" id="cursor" viewBox="0 0 48 48"><path d="M9 5l28 18-13 2.6L31 40l-6 3-7-14.6L9 37z" fill="#fff" stroke="#0d1b33" stroke-width="2.6" stroke-linejoin="round"/></svg>
+  <div class="a pill" id="pill1"><b>01</b>ใส่รูปและจุดเด่น</div>
+  <div class="a pill" id="pill2"><b>02</b>นาคาเขียนบทและพากย์</div>
+  <div class="a pill" id="pill3"><b>03</b>ตรวจคลิปแล้วโพสต์</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var W = 1080, H = 1920, DUR = 30;
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---- math ----
+  function cl(v, a, b) { a = a === undefined ? 0 : a; b = b === undefined ? 1 : b; return Math.min(b, Math.max(a, v)); }
+  function P(t, a, b) { return cl((t - a) / (b - a)); }
+  function L(a, b, p) { return a + (b - a) * p; }
+  function eo(p) { return 1 - Math.pow(1 - p, 3); }
+  function eo5(p) { return 1 - Math.pow(1 - p, 5); }
+  function ei(p) { return p * p * p; }
+  function eio(p) { return p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; }
+  function back(p) { var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); }
+  function bump(p) { return Math.sin(Math.PI * cl(p)); }
+
+  // ---- element helpers ----
+  // place(el, x, y, o): (x, y) is the element centre unless o.tl, then top-left.
+  function place(el, x, y, o) {
+    o = o || {};
+    var s = o.s === undefined ? 1 : o.s, r = o.r || 0, op = o.o === undefined ? 1 : o.o;
+    el.style.transform = 'translate(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px)' + (o.tl ? '' : ' translate(-50%,-50%)') +
+      (s !== 1 ? ' scale(' + s.toFixed(4) + ')' : '') + (r ? ' rotate(' + r.toFixed(3) + 'deg)' : '');
+    show(el, op);
+    el.style.filter = o.blur > 0.05 ? 'blur(' + o.blur.toFixed(2) + 'px)' : '';
+  }
+  function show(el, op) { el.style.opacity = cl(op).toFixed(4); el.style.visibility = op <= 0.002 ? 'hidden' : 'visible'; }
+  function hide(el) { show(el, 0); }
+
+  // Crop of the square soap photo into a w x h box: image rendered at `size` px, normalised image point (cx, cy) at box centre.
+  function frame(el, w, h, size, cx, cy) {
+    var px = cl(cx * size, w / 2, size - w / 2), py = cl(cy * size, h / 2, size - h / 2);
+    el.style.width = w + 'px'; el.style.height = h + 'px';
+    el.style.backgroundSize = size.toFixed(2) + 'px ' + size.toFixed(2) + 'px';
+    el.style.backgroundPosition = (w / 2 - px).toFixed(2) + 'px ' + (h / 2 - py).toFixed(2) + 'px';
+    return { px: px, py: py };
+  }
+  function mapPt(w, h, size, cx, cy, ix, iy) {
+    var px = cl(cx * size, w / 2, size - w / 2), py = cl(cy * size, h / 2, size - h / 2);
+    return { x: w / 2 + ix * size - px, y: h / 2 + iy * size - py };
+  }
+  var seg = new Intl.Segmenter('th', { granularity: 'grapheme' });
+  function typed(str, p) { var g = Array.from(seg.segment(str), function (s) { return s.segment; }); return g.slice(0, Math.round(g.length * cl(p))).join(''); }
+
+  // ---- static setup ----
+  frame($('th1'), 210, 210, 210, .5, .5);
+  frame($('th2'), 210, 210, 520, .38, .42);
+  frame($('th3'), 210, 210, 520, .74, .74);
+  frame($('c1t'), 190, 190, 420, .40, .46);
+  frame($('c2t'), 190, 190, 600, .38, .30);
+  frame($('c3t'), 190, 190, 190, .5, .5);
+  frame($('ctaCard'), 620, 620, 620, .5, .5);
+  var wave = $('wave');
+  for (var i = 0; i < 26; i++) wave.appendChild(document.createElement('i'));
+  var bars = wave.children;
+  var chipW = [0, 0, 0];
+
+  // shot table for the output clip
+  var SH = [11.9, 14.8, 17.6, 20.4, 23.0, 25.6];
+  function shotFrame(k, t) {
+    if (k === 0) { return { size: L(2100, 2380, eo(P(t, 11.9, 14.8))), cx: .40, cy: .46 }; }
+    if (k === 1) return { size: L(3000, 3150, P(t, 14.6, 17.8)), cx: L(.35, .41, P(t, 14.6, 17.8)), cy: .30 };
+    if (k === 2) return { size: L(2400, 2520, P(t, 17.4, 20.6)), cx: .45, cy: .47 };
+    return { size: L(2800, 2960, P(t, 20.2, 23.2)), cx: L(.24, .29, P(t, 20.2, 23.2)), cy: .66 };
+  }
+
+  // ---- S1 hook ----
+  function hook(t, alpha) {
+    var x = P(t, 1.72, 2.12), xo = ei(x);
+    var live = P(t, 0, 1.9);
+    place($('brand'), 540, 150 - 120 * xo, { o: alpha * (1 - x), blur: 14 * x });
+    place($('hookA'), 540, 320 - 260 * xo, { s: 1 + .025 * live, o: alpha * (1 - x), blur: 18 * x });
+    place($('hookB'), 540, 470 - 260 * xo, { s: 1 + .025 * live, o: alpha * (1 - x), blur: 18 * x });
+    var u = eo(P(t, .25, .95));
+    $('hookUnder').style.width = (600 * u).toFixed(1) + 'px';
+    place($('hookUnder'), 540, 560 - 260 * xo, { o: alpha * (1 - x) });
+    // photo: drifts, then flies into the upload slot of the form (stage 540, 760, 520px).
+    var f = eio(P(t, 1.85, 2.45));
+    var ph = $('hookPhoto');
+    if (t < 2.45 || alpha < 1) {
+      var r = L(-4 + 2.5 * eo(live), 0, f);
+      var s = L(1 + .035 * live, 548 / 760, f); // 520 photo + 14px border on each side
+      place(ph, 540, L(1010, 760, f), { s: s, r: r, o: alpha });
+      place($('hookChip'), L(300, 260, f), L(650, 520, f) + 10 * Math.sin(t * 2.4), { r: -4, o: alpha * (1 - P(t, 1.6, 1.85)) });
+    } else { hide(ph); hide($('hookChip')); }
+  }
+
+  // ---- S2 form ----
+  function camY(t) {
+    return L(0, -770, eio(P(t, 3.25, 3.8))) + L(0, -280, eio(P(t, 5.95, 6.4)));
+  }
+  function form(t) {
+    var form = $('form');
+    if (t < 1.85 || t > 7.7) { hide(form); return; }
+    var enter = eo(P(t, 1.85, 2.4)), cy = camY(t);
+    place(form, 40, 240 + cy + 520 * (1 - enter), { tl: true, o: enter });
+    show($('upPhoto'), t >= 2.45 ? 1 : 0);
+    // land squash on the photo
+    var land = P(t, 2.45, 2.75);
+    $('upPhoto').style.transform = 'scale(' + (1 - .04 * bump(land)).toFixed(4) + ')';
+    ['th1', 'th2', 'th3'].forEach(function (id, i) {
+      var p = P(t, 2.55 + .18 * i, 2.9 + .18 * i);
+      var el = $(id); el.style.transform = 'scale(' + back(p).toFixed(4) + ')'; show(el, p > 0 ? 1 : 0);
+    });
+    var pc = P(t, 3.05, 3.35); $('photoCount').style.transform = 'translateX(' + (40 * (1 - eo(pc))).toFixed(1) + 'px)'; show($('photoCount'), pc);
+    // name typing
+    var np = P(t, 3.7, 4.55);
+    $('nameTyped').textContent = typed('สบู่สมุนไพรกลิ่นมะลิ', np);
+    var nameOn = t > 3.55 && t < 4.75;
+    $('nameBox').className = 'f-box' + (nameOn ? ' on' : '');
+    show($('nameCaret'), nameOn && (np < 1 ? 1 : Math.floor(t * 3) % 2 === 0) ? 1 : 0);
+    $('factBox').className = 'f-box' + (t > 4.65 && t < 5.95 ? ' on' : '');
+    var pr = P(t, 5.55, 5.75), ch = P(t, 5.7, 5.9);
+    show($('priceVal'), pr); show($('chanVal'), ch);
+    $('priceBox').className = 'f-box' + (t > 5.5 && t < 5.8 ? ' on' : '');
+    $('chanBox').className = 'f-box' + (t > 5.75 && t < 6.0 ? ' on' : '');
+    // button press
+    var press = bump(P(t, 6.72, 6.98));
+    $('btn').style.transform = 'scale(' + (1 - .035 * press).toFixed(4) + ')';
+    show($('btn'), 1 - P(t, 7.05, 7.2));
+    return cy;
+  }
+  // chip positions: in the form (stage top-left) and in scene card 2
+  function chipForm(i, t) { return { x: 40 + 80, y: 240 + camY(t) + 1462 + 130 * i }; }
+  function chipCard(i) {
+    var k = .62, x0 = 60 + 240, y0 = 780 + 92;
+    if (i === 0) return { x: x0, y: y0 };
+    if (i === 1) return { x: x0 + chipW[0] * k + 16, y: y0 };
+    return { x: x0, y: y0 + 74 };
+  }
+  function chips(t) {
+    ['ch1', 'ch2', 'ch3'].forEach(function (id, i) {
+      var el = $(id);
+      var a = 4.7 + .42 * i;
+      var full = ['กลิ่นมะลิอ่อน ๆ', 'ก้อนละ 100 กรัม', 'ทำมือ ล็อตเล็ก'][i];
+      if (t < a || t > 11.35) { hide(el); return; }
+      el.textContent = t < a + .5 ? (typed(full, P(t, a, a + .38)) || '​') : full;
+      var fl = eio(P(t, 7.7 + .14 * i, 8.35 + .14 * i));
+      var A = chipForm(i, Math.min(t, 7)), B = chipCard(i);
+      var x = L(A.x, B.x, fl), y = L(A.y, B.y, fl) - 90 * bump(fl);
+      var s = L(1, .62, fl) * L(.92, 1, eo(P(t, a, a + .2)));
+      var out = P(t, 10.95, 11.35);
+      place(el, x, y, { tl: true, s: s, o: eo(P(t, a, a + .15)) * (1 - out) });
+    });
+  }
+  function cursor(t) {
+    var el = $('cursor');
+    var p = eio(P(t, 6.15, 6.7));
+    if (t < 6.05 || t > 7.25) { hide(el); hide($('ripple')); return; }
+    var press = bump(P(t, 6.72, 6.98));
+    place(el, L(930, 590, p), L(1720, 1350, p), { tl: true, s: 1 - .15 * press, o: P(t, 6.05, 6.2) * (1 - P(t, 7.05, 7.25)) });
+    var rp = P(t, 6.8, 7.25);
+    place($('ripple'), 600, 1360, { s: L(.1, 1.6, eo(rp)), o: rp > 0 ? (1 - rp) * .9 : 0 });
+  }
+  function btnGrow(t) {
+    var el = $('btnGrow');
+    if (t < 7.02 || t > 12.2) { hide(el); return; }
+    var p = eio(P(t, 7.02, 7.5));
+    var top0 = 240 + camY(7) + 2070, x0 = 90, w0 = 900, h0 = 150;
+    el.style.left = L(x0, 0, p) + 'px'; el.style.top = L(top0, 0, p) + 'px';
+    el.style.width = L(w0, W, p) + 'px'; el.style.height = L(h0, H, p) + 'px';
+    el.style.borderRadius = L(30, 0, p) + 'px';
+    el.style.background = p < 1 ? 'rgb(' + Math.round(L(32, 12, p)) + ',' + Math.round(L(89, 29, p)) + ',' + Math.round(L(182, 67, p)) + ')' : 'radial-gradient(circle at 30% 20%, #1d3f80, #0c1d43 55%, #081631)';
+    el.style.transform = ''; show(el, 1 - P(t, 11.8, 12.2));
+  }
+
+  // ---- S3 Naka writes ----
+  function writes(t) {
+    var on = t > 7.3 && t < 11.7;
+    var out = P(t, 10.95, 11.45), oo = 1 - out;
+    var m = $('mascot');
+    if (!on) { ['mascot', 'status', 'status2', 'wave', 'prog', 'c1', 'c2', 'c3'].forEach(function (id) { hide($(id)); }); return; }
+    var mp = P(t, 7.45, 7.9);
+    place(m, 200, 330 + 10 * Math.sin(t * 3.1), { s: back(mp) * L(1, .9, out), r: 4 * Math.sin(t * 2.2), o: (mp > 0 ? 1 : 0) * oo });
+    var st = $('status');
+    var dots = ['', '.', '..', '...'][Math.floor(t * 3) % 4];
+    var phase = t < 9.75 ? 0 : t < 10.35 ? 1 : 2;
+    st.textContent = ['นาคากำลังเขียนบท', 'พากย์เสียงไทย', 'กำลังสร้างวิดีโอ'][phase] + (phase === 0 ? dots : '');
+    var sp = P(t, 7.6, 7.95);
+    place(st, 390, 250, { tl: true, o: eo(sp) * oo });
+    var s2 = $('status2');
+    s2.textContent = phase === 0 ? 'จากรูปและจุดเด่นที่คุณใส่' : phase === 1 ? 'เสียงพากย์ตามบท' : Math.round(100 * eo(P(t, 10.35, 10.95))) + '%';
+    place(s2, 390, 340, { tl: true, o: eo(sp) * oo * (phase === 1 ? 0 : 1) });
+    // waveform: deterministic sum of sines
+    var wv = P(t, 9.7, 9.85) * (1 - P(t, 10.3, 10.45));
+    for (var i = 0; i < bars.length; i++) {
+      var h = 18 + 62 * Math.abs(Math.sin(t * 7.3 + i * .71) * Math.sin(t * 3.1 + i * 1.37));
+      bars[i].style.height = h.toFixed(1) + 'px';
+    }
+    place($('wave'), 390, 335, { tl: true, o: wv * oo });
+    $('progFill').style.width = (100 * eo(P(t, 10.35, 10.95))).toFixed(1) + '%';
+    place($('prog'), 390, 420, { tl: true, o: P(t, 10.3, 10.45) * oo });
+    [['c1', 7.95, 520], ['c2', 7.55, 780], ['c3', 8.5, 1070]].forEach(function (c, i) {
+      var p = eo(P(t, c[1], c[1] + .45));
+      var o = p * (i === 0 ? 1 : oo);
+      place($(c[0]), 60 + 140 * (1 - p), c[2] + (i === 0 ? 0 : 30 * out), { tl: true, o: o, s: i === 0 ? 1 : L(1, .97, out) });
+    });
+    $('c1x').textContent = typed('หาสบู่กลิ่นอ่อน ๆ อยู่ใช่ไหม?', P(t, 8.2, 8.85));
+    $('c3x').textContent = typed('฿129 · กดลิงก์ในไบโอ', P(t, 9.15, 9.65));
+    // card 1 frame fades as its thumbnail takes over the screen
+    $('c1').style.borderColor = 'rgba(255,255,255,' + (.18 * oo).toFixed(3) + ')';
+    $('c1').style.background = 'rgba(255,255,255,' + (.08 * oo).toFixed(3) + ')';
+    show($('c1x'), oo); show($('c1').children[1], oo);
+    show($('c1t'), t < 11.0 ? 1 : 0);
+  }
+
+  // ---- S4/S5 output clip ----
+  function setScene(id, x, o, blur) {
+    var el = $(id);
+    el.style.transform = 'translateX(' + x.toFixed(2) + 'px)';
+    show(el, o);
+    el.style.filter = blur > .05 ? 'blur(' + blur.toFixed(2) + 'px)' : '';
+  }
+  function pop(el, x, y, t0, t, o) {
+    var p = P(t, t0, t0 + .38);
+    place(el, x, y, { s: L(.55, 1, back(p)), r: L(-6, -2, eo(p)), o: (p > 0 ? 1 : 0) * (o === undefined ? 1 : o) });
+  }
+  function clip(t) {
+    var clipEl = $('clip');
+    if (t < 11.0 || t > 28.4) { hide(clipEl); return; }
+    show(clipEl, 1);
+    clipEl.style.background = t < 11.95 ? 'transparent' : '#000';
+    // expansion of scene-1 thumbnail (stage 80,540,190) into the full frame
+    var ex = eio(P(t, 11.0, 11.95));
+    var bgA = $('bgA');
+    var f0 = shotFrame(0, t);
+    var size = Math.exp(L(Math.log(420), Math.log(f0.size), ex));
+    var w = L(190, W, ex), h = L(190, H, ex);
+    frame(bgA, w, h, size, f0.cx, f0.cy);
+    bgA.style.transform = 'translate(' + L(80, 0, ex).toFixed(2) + 'px,' + L(540, 0, ex).toFixed(2) + 'px)';
+    bgA.style.borderRadius = L(20, 0, ex).toFixed(1) + 'px';
+    // pushes between shots 0-3 (whip pans right-to-left)
+    var ids = ['sA', 'sB', 'sC', 'sD'];
+    var X = [0, 0, 0, 0], O = [0, 0, 0, 0], B = [0, 0, 0, 0];
+    var cur = t < SH[1] ? 0 : t < SH[2] ? 1 : t < SH[3] ? 2 : 3;
+    O[cur] = 1;
+    for (var k = 1; k <= 3; k++) {
+      var tp = P(t, SH[k] - .2, SH[k] + .2);
+      if (tp > 0 && tp < 1) {
+        var e = eio(tp);
+        X[k - 1] = -W * e; X[k] = W * (1 - e); O[k - 1] = 1; O[k] = 1;
+        B[k - 1] = B[k] = 22 * bump(tp);
+      }
+    }
+    // D -> E: D recedes, E settles
+    var de = P(t, 22.75, 23.15);
+    O[3] *= 1 - de;
+    for (var j = 0; j < 4; j++) setScene(ids[j], X[j], O[j], B[j]);
+    var fB = shotFrame(1, t), fC = shotFrame(2, t), fD = shotFrame(3, t);
+    frame($('bgB'), W, H, fB.size, fB.cx, fB.cy);
+    frame($('bgC'), W, H, fC.size, fC.cx, fC.cy);
+    frame($('bgD'), W, H, fD.size * L(1, 1.12, de), fD.cx, fD.cy);
+    // A captions
+    pop($('capA1'), 540, 900, 12.25, t);
+    pop($('capA2'), 540, 1050, 12.6, t);
+    // B
+    pop($('bdB'), 540, 700, 15.0, t);
+    pop($('capB'), 540, 880, 15.2, t);
+    pop($('subB'), 540, 1015, 15.45, t);
+    // C: stamp lands on the blank label band of the upright bar
+    var band = mapPt(W, H, fC.size, fC.cx, fC.cy, .385, .47);
+    var sp = P(t, 18.15, 18.5);
+    place($('stamp'), band.x, band.y, { s: L(1.9, 1, eo5(sp)), r: L(22, -9, eo5(sp)), o: sp > 0 ? Math.min(1, sp * 3) : 0 });
+    pop($('bdC'), 160, 330, 17.8, t);
+    pop($('capC'), 645, 330, 17.95, t);
+    // D
+    var dOut = 1 - P(t, 22.55, 22.8);
+    pop($('bdD'), 540, 700 - 60 * (1 - dOut), 20.6, t, dOut);
+    pop($('capD'), 540, 880 - 60 * (1 - dOut), 20.8, t, dOut);
+    pop($('subD'), 540, 1015 - 60 * (1 - dOut), 21.05, t, dOut);
+    // E: CTA
+    var sE = $('sE');
+    show(sE, de);
+    frame($('bgE'), W, H, 2400, .5, .5);
+    $('bgE').style.filter = 'blur(26px) brightness(.55)';
+    $('bgE').style.transform = 'scale(1.08)';
+    var ec = eo(de);
+    place($('ctaCard'), 540, 545, { s: L(1.25, 1, ec) * (1 + .03 * P(t, 23.3, 25.6)), o: 1 });
+    var sb = P(t, 23.35, 23.75);
+    place($('shopBar'), 540, 985 + 120 * (1 - eo(sb)), { o: sb });
+    var cb = P(t, 23.7, 24.05);
+    place($('ctaBtn'), 540, 1175, { s: back(cb) * (1 + .035 * Math.max(0, Math.sin((t - 24.05) * 6))), o: cb > 0 ? 1 : 0 });
+    // story segments + tag
+    var segs = $('segs').children;
+    for (var q = 0; q < 5; q++) segs[q].firstChild.style.width = (100 * P(t, SH[q], SH[q + 1])).toFixed(1) + '%';
+    var chrome = P(t, 11.9, 12.2);
+    place($('segs'), 540, 60, { o: chrome });
+    place($('clipTag'), 1030 - $('clipTag').offsetWidth, 100, { tl: true, o: chrome });
+    // S6: collapse into the centre phone
+    var c = eio(P(t, 25.55, 26.2));
+    var fly = P(t, 27.7, 28.12);
+    var k6 = L(1, .46, c) * L(1, 3.2, ei(fly));
+    clipEl.style.transform = 'translate(0px,' + (L(0, -20, c) - 900 * ei(fly)).toFixed(2) + 'px) scale(' + k6.toFixed(4) + ')';
+    clipEl.style.borderRadius = L(0, 100, c).toFixed(1) + 'px';
+    clipEl.style.boxShadow = c > 0 ? '0 0 0 ' + (26 * c).toFixed(1) + 'px #0b1630, 0 0 0 ' + (32 * c).toFixed(1) + 'px #ffffff30, 0 60px 120px #020a1fb0' : 'none';
+    show(clipEl, 1 - fly);
+    clipEl.style.filter = fly > .02 ? 'blur(' + (18 * fly).toFixed(1) + 'px)' : '';
+  }
+
+  // ---- S6 channels ----
+  function channels(t) {
+    var on = t > 25.8 && t < 28.4;
+    var ids = ['ph1', 'ph2', 'chA', 'chB', 'pl1', 'pl2', 'pl3', 'capCard'];
+    if (!on) { ids.forEach(function (id) { hide($(id)); }); return; }
+    var sp = eo(P(t, 25.95, 26.6));
+    var fly = P(t, 27.7, 28.12), fo = 1 - fly;
+    var flyS = L(1, 2.6, ei(fly));
+    frame($('ph1bg'), W, H, 3000, L(.36, .40, P(t, 25.8, 28)), .30);
+    frame($('ph2bg'), W, H, 2800, L(.25, .29, P(t, 25.8, 28)), .66);
+    place($('ph1cap'), 540, 880, {});
+    place($('ph2cap'), 540, 880, {});
+    [['ph1', -1], ['ph2', 1]].forEach(function (p) {
+      var el = $(p[0]);
+      var x = 540 + p[1] * 330 * sp * flyS, y = 940 - 10 * sp - 900 * ei(fly);
+      el.style.transform = 'translate(' + (x - 540).toFixed(2) + 'px,' + (y - 960).toFixed(2) + 'px) scale(' + (.38 * flyS).toFixed(4) + ') rotate(' + (p[1] * 8 * sp).toFixed(2) + 'deg)';
+      show(el, (sp > 0 ? 1 : 0) * fo);
+      el.style.filter = fly > .02 ? 'blur(' + (16 * fly).toFixed(1) + 'px)' : 'brightness(.82)';
+    });
+    var hp = eo(P(t, 25.9, 26.35));
+    place($('chA'), 540, 215 + 40 * (1 - hp) - 300 * ei(fly), { o: hp * fo });
+    var hp2 = eo(P(t, 26.05, 26.5));
+    place($('chB'), 540, 335 + 40 * (1 - hp2) - 300 * ei(fly), { o: hp2 * fo });
+    [['pl1', 200, 26.45], ['pl2', 540, 26.6], ['pl3', 880, 26.75]].forEach(function (p) {
+      var q = P(t, p[2], p[2] + .35);
+      place($(p[0]), p[1], 1470 + 300 * ei(fly), { s: back(q), o: (q > 0 ? 1 : 0) * fo });
+    });
+    var cp = P(t, 26.85, 27.2);
+    place($('capCard'), 690, 1290 + 6 * Math.sin(t * 2.5) + 300 * ei(fly), { s: back(cp), r: -3, o: (cp > 0 ? 1 : 0) * fo });
+  }
+
+  // ---- S7 end card ----
+  function endCard(t) {
+    var ids = ['endLogo', 'endWord', 'endLine', 'endCta', 'endNote', 'endMascot'];
+    if (t < 27.85) { ids.forEach(function (id) { hide($(id)); }); return; }
+    var loop = P(t, 29.35, 29.7), lo = 1 - eio(loop);
+    var push = 1 + .03 * P(t, 27.9, 30);
+    function inn(t0) { return eo(P(t, t0, t0 + .45)); }
+    var a = inn(27.9);
+    place($('endLogo'), 540, 420 * push - 40 * (1 - a), { s: L(.6, 1, back(P(t, 27.9, 28.35))) * push, o: a * lo });
+    var b = inn(28.0); place($('endWord'), 540, 630, { s: push, o: b * lo, blur: 10 * (1 - b) });
+    var c = inn(28.12); place($('endLine'), 540, 770 + 30 * (1 - c), { o: c * lo });
+    var d = P(t, 28.25, 28.6); place($('endCta'), 540, 940, { s: back(d) * (1 + .025 * Math.max(0, Math.sin((t - 28.6) * 5))), o: (d > 0 ? 1 : 0) * lo });
+    var e = inn(28.4); place($('endNote'), 540, 1080, { o: e * lo });
+    var m = eo(P(t, 28.2, 28.75));
+    place($('endMascot'), 790, 1520 + 260 * (1 - m) + 10 * Math.sin(t * 3), { r: 6 * Math.sin(t * 2.4), o: m * lo });
+  }
+
+  // ---- step pill ----
+  function pills(t) {
+    var p1 = P(t, 2.1, 2.45) * (1 - P(t, 7.25, 7.5));
+    var p2 = P(t, 7.4, 7.7) * (1 - P(t, 10.95, 11.3));
+    var p3 = P(t, 25.85, 26.2) * (1 - P(t, 27.75, 28.0));
+    place($('pill1'), 540, 105 - 30 * (1 - eo(P(t, 2.1, 2.45))) - 40 * P(t, 7.25, 7.5), { o: p1 });
+    place($('pill2'), 540, 105 + 40 * (1 - eo(P(t, 7.4, 7.7))), { o: p2 });
+    place($('pill3'), 540, 105 + 40 * (1 - eo(P(t, 25.85, 26.2))) - 200 * ei(P(t, 27.75, 28.3)), { o: p3 });
+  }
+
+  function seek(t) {
+    t = cl(t, 0, DUR);
+    // loop: the last 0.45 s cross-fades into frame 0
+    hook(t < 2.5 ? t : 0, t < 2.5 ? 1 : eo(P(t, 29.6, 30)));
+    if (t >= 2.5 && t < 29.55) { hide($('hookPhoto')); hide($('hookChip')); ['brand', 'hookA', 'hookB', 'hookUnder'].forEach(function (id) { hide($(id)); }); }
+    form(t); btnGrow(t); chips(t); cursor(t); writes(t); clip(t); channels(t); endCard(t); pills(t);
+  }
+  window.seek = seek;
+  window.DUR = DUR;
+
+  var fonts = ['700 100px "IBM Plex Sans Thai"', '400 40px Anuphan', '500 40px Anuphan', '700 40px Anuphan'];
+  Promise.all(fonts.map(function (f) { return document.fonts.load(f, 'สบู่กลิ่นมะลิ abc'); }))
+    .then(function () { return document.fonts.ready; })
+    .then(function () { return Promise.all(Array.prototype.map.call(document.images, function (im) { return im.decode().catch(function () {}); })); })
+    .then(function () {
+      var probe = new Image(); probe.src = '../../public/assets/soap-campaign.png'; return probe.decode();
+    })
+    .then(function () {
+      ['ch1', 'ch2', 'ch3'].forEach(function (id, i) { chipW[i] = $(id).offsetWidth; });
+      var q = new URLSearchParams(location.search);
+      seek(+(q.get('t') || 0));
+      window.__ready = true;
+      // ?play: real-time looping preview, scaled to the window. The renderer never passes it.
+      if (q.has('play')) {
+        var fit = function () {
+          var k = Math.min(innerWidth / W, innerHeight / H);
+          document.documentElement.style.background = '#111';
+          document.body.style.cssText += ';transform-origin:0 0;transform:translate(' + ((innerWidth - W * k) / 2) + 'px,0) scale(' + k + ')';
+        };
+        fit(); addEventListener('resize', fit);
+        var t0 = performance.now();
+        (function tick(now) { seek(((now - t0) / 1000) % DUR); requestAnimationFrame(tick); })(t0);
+      }
+    });
+})();
+</script>
+</body>
+</html>

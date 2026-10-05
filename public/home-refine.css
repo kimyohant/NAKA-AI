@@ -382,3 +382,7 @@ html { scroll-padding-top: 92px; }
   .quickstart-row input { min-height: 48px; }
   .quickstart-row .button { width: 100%; }
 }
+
+/* hero signup CTA (replaces product-name quickstart) */
+.quickstart-row.hero-cta { padding: 0; border: 0; background: none; flex-wrap: wrap; gap: 12px; }
+.quickstart-row.hero-cta .btn { min-height: 52px; }
