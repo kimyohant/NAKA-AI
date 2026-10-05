@@ -166,7 +166,7 @@
 
     <!-- ===== New dialog (project / avatar / influencer) ===== -->
     <div v-if="showCreate" class="overlay" @click.self="closeCreate">
-      <div class="dialog ps-dialog" role="dialog" aria-modal="true" :aria-label="createTitle">
+      <div :class="['dialog', 'ps-dialog', { wide: tab === 'projects' }]" role="dialog" aria-modal="true" :aria-label="createTitle">
         <div class="dialog-head">
           <div class="ps-dialog-icon">
             <ShoppingBag v-if="tab === 'projects'" :size="18" :stroke-width="1.8" />
@@ -179,7 +179,7 @@
           </div>
         </div>
         <form class="ps-create-form" @submit.prevent="create">
-          <div class="dialog-body">
+          <div class="dialog-body" :style="tab === 'projects' ? 'max-height: 62vh; overflow-y: auto;' : ''">
             <template v-if="tab === 'projects'">
               <label class="field">
                 <span class="field-label">{{ t('productStudio.product.name') }} <span class="ps-required">*</span></span>
@@ -189,13 +189,18 @@
                 <span class="field-label">{{ t('productStudio.product.url') }}</span>
                 <input v-model="projectForm.productUrl" class="input" type="url" :placeholder="t('productStudio.product.urlPlaceholder')" />
               </label>
-              <label class="field">
+              <div class="field">
                 <span class="field-label">{{ t('productStudio.create.template') }}</span>
-                <select v-model="projectForm.templateId" class="input">
-                  <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">{{ t(`productStudio.templates.${tpl.id}.name`) }}</option>
-                </select>
+                <div class="ps-tpl-pick">
+                  <StudioTemplateGallery
+                    :templates="templates"
+                    :selected-id="projectForm.templateId"
+                    :platform-options="options?.platforms || []"
+                    @select="tpl => projectForm.templateId = tpl.id"
+                  />
+                </div>
                 <span v-if="createTemplate" class="field-hint">{{ t(`productStudio.templates.${projectForm.templateId}.description`) }}</span>
-              </label>
+              </div>
             </template>
             <template v-else>
               <label class="field">
@@ -744,6 +749,8 @@ onBeforeUnmount(() => {
 
 /* === Create dialog === */
 .ps-dialog { width: 560px; max-width: calc(100vw - 32px); }
+.ps-dialog.wide { width: 760px; }
+.ps-tpl-pick { max-height: 340px; overflow-y: auto; padding: 2px; margin: -2px; }
 .ps-create-form { display: flex; flex-direction: column; min-height: 0; }
 .ps-create-form .field { margin-bottom: 12px; }
 .ps-create-form .textarea { resize: vertical; }
