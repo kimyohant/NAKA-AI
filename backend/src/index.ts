@@ -23,6 +23,8 @@ import skills from './routes/skills.js'
 import props from './routes/props.js'
 import settings from './routes/settings.js'
 import campaigns from './routes/campaigns.js'
+import trending from './routes/trending.js'
+import gallery from './routes/gallery.js'
 import studio from './routes/studio.js'
 import clone from './routes/clone.js'
 import storage from './routes/storage.js'
@@ -108,6 +110,8 @@ api.route('/props', props)
 api.route('/storage', storage)
 api.route('/settings', settings)
 api.route('/campaigns', campaigns)
+api.route('/trending-videos', trending)
+api.route('/gallery', gallery)
 api.route('/studio', studio)
 api.route('/clone', clone)
 api.route('/server-update', serverUpdate)

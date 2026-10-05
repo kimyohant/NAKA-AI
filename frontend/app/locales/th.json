@@ -1215,8 +1215,126 @@
     "eyebrow": "NAKA-AI TECH",
     "title": "AI Marketer",
     "subtitle": "บรีฟสินค้า → วิจัยตลาด → เอกสารกลยุทธ์ 4 ฉบับ → ไอเดียโฆษณา → ส่งเข้าผลิตวิดีโอได้ทันที",
+    "trending": {
+      "title": "คลิปไวรัลไทย พร้อมโคลน",
+      "subtitle": "แพตเทิร์นคลิปไวรัลไทยที่คัดไว้แล้ว — เลือกโคลนเป็นโฆษณาของสินค้าคุณได้เลย",
+      "disclaimer": "ตัวเลขเป็นข้อมูลอ้างอิง ณ {date} ไม่ใช่ข้อมูล real-time — ระบบไม่ดึงข้อมูลจากแพลตฟอร์มโดยตรง",
+      "filters": {
+        "allIndustries": "ทุกหมวด",
+        "sortViews": "เรียงตามยอดวิว",
+        "sortRevenue": "เรียงตามรายได้ประมาณการ",
+        "sortEngagement": "เรียงตามเอนเกจเมนต์",
+        "searchPlaceholder": "ค้นแคปชันหรือแฮชแท็ก…",
+        "showAll": "แสดงทั้งหมด ({total})",
+        "showLess": "ย่อกลับ",
+        "empty": "ไม่พบคลิปตามเงื่อนไขที่เลือก"
+      },
+      "industries": {
+        "beauty": "ความงาม",
+        "food": "อาหาร",
+        "fashion": "แฟชั่น",
+        "gadgets": "แกดเจ็ต",
+        "home": "ของใช้ในบ้าน",
+        "health": "สุขภาพ",
+        "pets": "สัตว์เลี้ยง",
+        "other": "อื่น ๆ"
+      },
+      "hookTypes": {
+        "pov_callout": "POV เรียกกลุ่มเป้าหมาย",
+        "demo_first": "โชว์ผลลัพธ์ก่อน",
+        "before_after": "ก่อน-หลัง",
+        "asmr": "ASMR",
+        "storytime": "เล่าเรื่อง",
+        "tutorial": "สอนทำ",
+        "live_hook": "ชวนเข้าไลฟ์",
+        "price_shock": "เผาราคา",
+        "trend_jack": "จับกระแส",
+        "comedy": "มุกตลก"
+      },
+      "roles": {
+        "hook": "Hook",
+        "demo": "โชว์",
+        "proof": "หลักฐาน",
+        "offer": "ข้อเสนอ",
+        "cta": "CTA"
+      },
+      "card": {
+        "views": "วิว",
+        "revenue": "รายได้",
+        "engagement": "เอนเกจเมนต์",
+        "replicate": "โคลนคลิปนี้",
+        "replicateAria": "โคลนคลิป {title}",
+        "why": "ทำไมมันเวิร์ก"
+      },
+      "dialog": {
+        "title": "โคลนคลิป: {title}",
+        "desc": "จะสร้าง ad reference (โครงคลิป) ในแคมเปญที่เลือก แล้วกดวิเคราะห์ → สร้าง Creative ต่อด้วย flow เดิม",
+        "modeExisting": "แคมเปญเดิม",
+        "modeNew": "สร้างแคมเปญใหม่",
+        "campaign": "เลือกแคมเปญ",
+        "campaignPlaceholder": "เลือกแคมเปญ…",
+        "noCampaign": "ยังไม่มีแคมเปญ — เริ่มด้วยการสร้างใหม่ด้านล่าง",
+        "campaignTitle": "ชื่อแคมเปญ (เว้นว่าง = ใช้ชื่อสินค้า)",
+        "productNamePlaceholder": "เช่น โทนเนอร์สมุนไพร 100 มล.",
+        "submit": "สร้าง reference",
+        "submitting": "กำลังสร้าง…",
+        "created": "สร้าง reference จากเทรนด์แล้ว — กด \"วิเคราะห์\" ต่อในหน้าแคมเปญ"
+      }
+    },
+    "gallery": {
+      "title": "คลังผลงาน & ผลตอบรับ",
+      "subtitle": "รวมไอเดียโฆษณาที่อนุมัติและผลิตแล้วทุกแคมเปญ — กรอกผลจริงหลังโพสต์ แล้วระบบจะใช้เป็น Evidence ให้การวิจัยตลาดรอบถัดไป",
+      "backToCampaigns": "กลับไปแคมเปญ",
+      "noResult": "ยังไม่บันทึกผล",
+      "openEpisode": "เปิดตอนที่ {n}",
+      "addResult": "บันทึกผลตอบรับ",
+      "editResult": "แก้ผลตอบรับ",
+      "emptyTitle": "ยังไม่มีผลงาน",
+      "emptyDesc": "อนุมัติไอเดียโฆษณาและกด \"ผลิต\" ในแคมเปญ แล้วผลงานจะมาโผล่ที่นี่",
+      "filters": {
+        "all": "ทั้งหมด",
+        "produced": "ผลิตแล้ว",
+        "approved": "รอผลิต",
+        "withResults": "มีผลตอบรับ"
+      },
+      "summary": {
+        "total": "ผลงานทั้งหมด",
+        "produced": "ผลิตแล้ว",
+        "withResults": "มีผลตอบรับ",
+        "totalViews": "ยอดวิวรวม",
+        "totalSales": "ยอดขายรวม"
+      },
+      "status": {
+        "approved": "รอผลิต",
+        "in_production": "ผลิตแล้ว"
+      },
+      "fields": {
+        "views": "ยอดวิว",
+        "likes": "ไลก์",
+        "comments": "คอมเมนต์",
+        "shares": "แชร์",
+        "engagement": "เอนเกจเมนต์",
+        "sales": "ยอดขาย (THB)",
+        "postedUrl": "ลิงก์โพสต์",
+        "postedAt": "วันที่โพสต์",
+        "note": "โน้ต"
+      },
+      "dialog": {
+        "title": "ผลตอบรับ: {title}",
+        "desc": "กรอกตัวเลขจริงจาก TikTok/Analytics ต้นทาง — เว้นว่างช่องที่ยังไม่มีข้อมูลได้",
+        "manualNote": "ระบบไม่ดึงข้อมูลจากแพลตฟอร์มเอง — ตัวเลขที่กรอกจะถูกใช้เป็น Evidence เมื่อทำวิจัยตลาดรอบถัดไปของแคมเปญนี้",
+        "urlPlaceholder": "https://www.tiktok.com/{'@'}ชื่อร้าน/video/...",
+        "notePlaceholder": "เช่น ยอดดีตอนหลังขึ้นไลฟ์ / คอมเมนต์ถามราคาเยอะ",
+        "salesPlaceholder": "เช่น 8900.50",
+        "save": "บันทึก",
+        "saving": "กำลังบันทึก…",
+        "saved": "บันทึกผลตอบรับแล้ว",
+        "deleted": "ลบผลตอบรับแล้ว"
+      }
+    },
     "list": {
       "newCampaign": "สร้างแคมเปญ",
+      "gallery": "คลังผลงาน",
       "openAria": "เปิดแคมเปญ {title}",
       "delete": "ลบแคมเปญ",
       "emptyTitle": "ยังไม่มีแคมเปญ",

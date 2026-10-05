@@ -402,6 +402,22 @@ export const campaignCreatives = sqliteTable('campaign_creatives', {
   updatedAt: text('updated_at').notNull(),
 })
 
+// v13 (docs/ai-marketer/GALLERY.md): ผลตอบรับจริงต่อ creative — ผู้ใช้กรอกเอง (manual analytics), 1:1 กับ creative
+export const creativeResults = sqliteTable('creative_results', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  creativeId: integer('creative_id').notNull().unique(),
+  views: integer('views'),
+  likes: integer('likes'),
+  comments: integer('comments'),
+  shares: integer('shares'),
+  salesThb: real('sales_thb'),
+  postedUrl: text('posted_url'),
+  postedAt: text('posted_at'),
+  note: text('note'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
 // v7: ประวัติเนื้อหาเอกสารก่อนถูกทับ (revise โดย agent = 'agent', แก้มือผ่าน PUT = 'manual')
 export const campaignDocRevisions = sqliteTable('campaign_doc_revisions', {
   id: integer('id').primaryKey({ autoIncrement: true }),

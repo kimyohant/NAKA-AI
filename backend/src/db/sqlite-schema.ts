@@ -649,6 +649,24 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     )`,
     `CREATE INDEX IF NOT EXISTS idx_clone_variants_project ON clone_variants (project_id)`,
   ] },
+  // v13 (docs/ai-marketer/GALLERY.md §2): ผลตอบรับจริงต่อ creative — ผู้ใช้กรอกเองจาก TikTok Analytics ต้นทาง (manual analytics)
+  { version: 13, columns: [], statements: [
+    `CREATE TABLE IF NOT EXISTS creative_results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      creative_id INTEGER NOT NULL UNIQUE,
+      views INTEGER,
+      likes INTEGER,
+      comments INTEGER,
+      shares INTEGER,
+      sales_thb REAL,
+      posted_url TEXT,
+      posted_at TEXT,
+      note TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_creative_results_creative ON creative_results (creative_id)`,
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {

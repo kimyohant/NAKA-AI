@@ -312,6 +312,68 @@ export const marketerAPI = {
   promoteVisual: (id: number, vid: number) => api.post<Campaign>(`/campaigns/${id}/visuals/${vid}/promote`, {}),
 }
 
+// ===== Trending Videos (Thailand) — docs/ai-marketer/TRENDING.md §4 (คลัง curated อ่านอย่างเดียว) =====
+export type TrendIndustry = 'beauty' | 'food' | 'fashion' | 'gadgets' | 'home' | 'health' | 'pets' | 'other'
+export type TrendSort = 'views' | 'revenue' | 'engagement'
+export interface TrendBeat { role: 'hook' | 'demo' | 'proof' | 'offer' | 'cta'; line: string; durationSec: number }
+export interface TrendVideo {
+  id: string; title: string
+  industry: TrendIndustry; platform: Platform; hookType: string
+  views: number                        // ข้อมูลอ้างอิง ณ curatedAt (ไม่ใช่ real-time)
+  estRevenueThb: number | null
+  engagementRate: number | null        // 0-1
+  durationSec: number
+  hashtags: string[]                   // ไม่มี # นำหน้า
+  summary: string                      // "ทำไมมันเวิร์ก"
+  pattern: { hook: string; beats: TrendBeat[]; cta: string }
+  sourceUrl: string | null
+}
+export interface TrendListResult { entries: TrendVideo[]; industries: TrendIndustry[]; curatedAt: string }
+
+export const trendingAPI = {
+  list: (params?: { industry?: TrendIndustry; sort?: TrendSort; q?: string }) => {
+    const query = new URLSearchParams()
+    if (params?.industry) query.set('industry', params.industry)
+    if (params?.sort) query.set('sort', params.sort)
+    if (params?.q) query.set('q', params.q)
+    const qs = query.toString()
+    return api.get<TrendListResult>(`/trending-videos${qs ? `?${qs}` : ''}`)
+  },
+}
+
+// ===== Creative Gallery & Ad Analytics — docs/ai-marketer/GALLERY.md §3 (manual analytics — ผู้ใช้กรอกเอง) =====
+export type CreativeResultStatus = 'approved' | 'in_production'
+export interface CreativeResult {
+  views: number | null; likes: number | null; comments: number | null; shares: number | null
+  salesThb: number | null; postedUrl: string | null; postedAt: string | null
+  note: string | null
+  engagementRate: number | null     // backend คำนวณ = (likes+comments+shares)/views เมื่อ views > 0
+  updatedAt: string
+}
+export interface GalleryEntry {
+  creativeId: number; campaignId: number; campaignTitle: string
+  productName: string; productImage: string | null
+  dramaId: number | null             // drama ของแคมเปญ — ใช้เข้าหน้า episode ตรง ๆ
+  angle: string; hook: string; format: CreativeFormat; platform: Platform
+  durationSec: number
+  status: CreativeResultStatus
+  episodeId: number | null; episodeNumber: number | null
+  result: CreativeResult | null
+  createdAt: string; updatedAt: string
+}
+export interface GallerySummary {
+  total: number; produced: number; withResults: number
+  totalViews: number; totalLikes: number; totalSalesThb: number
+}
+export type CreativeResultInput = Partial<Omit<CreativeResult, 'engagementRate' | 'updatedAt'>>
+
+export const galleryAPI = {
+  list: () => api.get<{ entries: GalleryEntry[]; summary: GallerySummary }>('/gallery'),
+  saveResult: (creativeId: number, data: CreativeResultInput) =>
+    api.put<CreativeResult>(`/gallery/creatives/${creativeId}/result`, data),
+  deleteResult: (creativeId: number) => api.del(`/gallery/creatives/${creativeId}/result`),
+}
+
 // ===== Product Studio（สตูดิโอสินค้า）— 契约见 docs/product-studio/PLAN.md §4，JSON 为 camelCase =====
 export type StudioLanguage = 'th' | 'en' | 'id' | 'vi' | 'ms' | 'fil' | 'zh' | 'ja' | 'ko' | 'es' | 'pt' | 'ar'
 export type StudioMarket = 'TH' | 'SG' | 'MY' | 'ID' | 'VN' | 'PH' | 'US' | 'UK' | 'EU' | 'JP' | 'KR' | 'CN' | 'LATAM' | 'MENA' | 'GLOBAL'

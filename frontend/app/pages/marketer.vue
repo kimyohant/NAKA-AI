@@ -7,11 +7,20 @@
         <h1 class="mk-title">{{ t('marketer.title') }}</h1>
         <p class="mk-sub">{{ t('marketer.subtitle') }}</p>
       </div>
-      <button class="btn btn-primary" type="button" @click="openCreate">
-        <Plus :size="15" :stroke-width="2.2" />
-        {{ t('marketer.list.newCampaign') }}
-      </button>
+      <div class="mk-head-actions">
+        <button class="btn" type="button" @click="navigateTo('/marketer/gallery')">
+          <Images :size="15" :stroke-width="2" />
+          {{ t('marketer.list.gallery') }}
+        </button>
+        <button class="btn btn-primary" type="button" @click="openCreate">
+          <Plus :size="15" :stroke-width="2.2" />
+          {{ t('marketer.list.newCampaign') }}
+        </button>
+      </div>
     </header>
+
+    <!-- ===== Trending Videos (Thailand) — Ready to Replicate (docs/ai-marketer/TRENDING.md) ===== -->
+    <MarketerTrendingSection />
 
     <!-- ===== Campaign grid ===== -->
     <div v-if="loading" class="mk-grid" aria-hidden="true">
@@ -123,7 +132,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Clock, Loader2, Megaphone, MoreHorizontal, Package, Plus } from 'lucide-vue-next'
+import { Clock, Images, Loader2, Megaphone, MoreHorizontal, Package, Plus } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { marketerAPI, stylePresetAPI, type Campaign, type CampaignStatus } from '~/composables/useApi'
 import { toastError } from '~/composables/useToast'
@@ -273,6 +282,7 @@ onBeforeUnmount(() => {
   gap: 16px;
   margin-bottom: 24px;
 }
+.mk-head-actions { display: flex; align-items: center; gap: 8px; }
 .eyebrow { margin-bottom: 6px; }
 .mk-title {
   margin: 0;

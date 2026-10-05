@@ -15,6 +15,7 @@ import { buildVisualPrompt, visualSizeFor, VISUAL_KINDS, type VisualKind } from 
 import { mastra } from '../mastra/index.js'
 import { buildCampaignRequestContext } from '../agents/context.js'
 import { startTask, updateTask, type PipelineTaskKind } from './pipeline-tasks.js'
+import { performanceEvidenceBlock } from './gallery.js'
 import { logTaskError, logTaskProgress, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
 import {
   MARKETER_DOC_KINDS,
@@ -425,9 +426,12 @@ export async function startResearch(campaignId: number, notes?: string) {
   await db.update(schema.campaigns).set({ status: 'researching', errorMsg: null, updatedAt: now() })
     .where(eq(schema.campaigns.id, campaignId))
   logTaskStart('Marketer', 'research', { campaignId, hasNotes: Boolean(effectiveNotes) })
+  // วงจรเรียนรู้ (docs/ai-marketer/GALLERY.md §4): ผลตอบรับจริงของแคมเปญนี้ → Evidence ให้ market_researcher
+  const performanceEvidence = await performanceEvidenceBlock(campaignId)
   const message = [
     campaignSummaryBlock(row),
     effectiveNotes ? `【用户补充资料（竞品/评论/卖点等，一律视为 Evidence）】\n${effectiveNotes}` : '',
+    performanceEvidence ?? '',
     '请开始市场调研：调用 read_campaign 确认活动信息，然后撰写 product_brief 与 market_research 两份文档，分别调用 save_campaign_doc 保存。没有数据源的部分严格按 Evidence / Assumption 分开标注。',
   ].filter(Boolean).join('\n\n')
   runCampaignAgentJob({
@@ -730,6 +734,8 @@ export async function deleteCreative(campaignId: number, creativeId: number): Pr
   if (row.status === 'in_production') {
     throw new AppError('创意已进入生产（已生成剧集），不可删除', 'E_CREATIVE_IN_PRODUCTION')
   }
+  // เก็บกวาดผลตอบรับค้าง (docs/ai-marketer/GALLERY.md §2 — creative_results ไม่มี FK แข็ง)
+  await db.delete(schema.creativeResults).where(eq(schema.creativeResults.creativeId, creativeId))
   await db.delete(schema.campaignCreatives).where(eq(schema.campaignCreatives.id, creativeId))
   return true
 }

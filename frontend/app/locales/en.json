@@ -1215,8 +1215,126 @@
     "eyebrow": "NAKA-AI TECH",
     "title": "AI Marketer",
     "subtitle": "Product brief → market research → 4 strategy docs → ad creatives → straight into video production",
+    "trending": {
+      "title": "Thai Trending Videos, Ready to Replicate",
+      "subtitle": "Curated Thai viral ad patterns — clone any of them into an ad for your own product",
+      "disclaimer": "Figures are reference data as of {date}, not real-time — the system never pulls data from platforms directly",
+      "filters": {
+        "allIndustries": "All industries",
+        "sortViews": "Sort by views",
+        "sortRevenue": "Sort by est. revenue",
+        "sortEngagement": "Sort by engagement",
+        "searchPlaceholder": "Search captions or hashtags…",
+        "showAll": "Show all ({total})",
+        "showLess": "Show less",
+        "empty": "No videos match the selected filters"
+      },
+      "industries": {
+        "beauty": "Beauty",
+        "food": "Food",
+        "fashion": "Fashion",
+        "gadgets": "Gadgets",
+        "home": "Home",
+        "health": "Health",
+        "pets": "Pets",
+        "other": "Other"
+      },
+      "hookTypes": {
+        "pov_callout": "POV callout",
+        "demo_first": "Result first",
+        "before_after": "Before & after",
+        "asmr": "ASMR",
+        "storytime": "Storytime",
+        "tutorial": "Tutorial",
+        "live_hook": "Live stream hook",
+        "price_shock": "Price shock",
+        "trend_jack": "Trend jacking",
+        "comedy": "Comedy"
+      },
+      "roles": {
+        "hook": "Hook",
+        "demo": "Demo",
+        "proof": "Proof",
+        "offer": "Offer",
+        "cta": "CTA"
+      },
+      "card": {
+        "views": "Views",
+        "revenue": "Est. revenue",
+        "engagement": "Engagement",
+        "replicate": "Replicate",
+        "replicateAria": "Replicate {title}",
+        "why": "Why it works"
+      },
+      "dialog": {
+        "title": "Replicate: {title}",
+        "desc": "Creates an ad reference (the clip's pattern) in the selected campaign — then analyze → generate creatives with the existing flow",
+        "modeExisting": "Existing campaign",
+        "modeNew": "New campaign",
+        "campaign": "Select campaign",
+        "campaignPlaceholder": "Select a campaign…",
+        "noCampaign": "No campaigns yet — start by creating one below",
+        "campaignTitle": "Campaign title (blank = use product name)",
+        "productNamePlaceholder": "e.g. Herbal toner 100 ml",
+        "submit": "Create reference",
+        "submitting": "Creating…",
+        "created": "Reference created from the trend — click \"Analyze\" in the campaign to continue"
+      }
+    },
+    "gallery": {
+      "title": "Creative gallery & results",
+      "subtitle": "Every approved and produced ad creative across campaigns — log real results after posting, and they become evidence for the next research round",
+      "backToCampaigns": "Back to campaigns",
+      "noResult": "No results logged",
+      "openEpisode": "Open episode {n}",
+      "addResult": "Log results",
+      "editResult": "Edit results",
+      "emptyTitle": "No creatives yet",
+      "emptyDesc": "Approve ad creatives and produce them in a campaign — they will show up here",
+      "filters": {
+        "all": "All",
+        "produced": "Produced",
+        "approved": "Awaiting production",
+        "withResults": "With results"
+      },
+      "summary": {
+        "total": "Total creatives",
+        "produced": "Produced",
+        "withResults": "With results",
+        "totalViews": "Total views",
+        "totalSales": "Total sales"
+      },
+      "status": {
+        "approved": "Awaiting production",
+        "in_production": "Produced"
+      },
+      "fields": {
+        "views": "Views",
+        "likes": "Likes",
+        "comments": "Comments",
+        "shares": "Shares",
+        "engagement": "Engagement",
+        "sales": "Sales (THB)",
+        "postedUrl": "Post URL",
+        "postedAt": "Posted on",
+        "note": "Note"
+      },
+      "dialog": {
+        "title": "Results: {title}",
+        "desc": "Enter the real numbers from TikTok/analytics at the source — leave fields blank if not available",
+        "manualNote": "The system never pulls platform data itself — the numbers you enter will be used as evidence in this campaign's next research round",
+        "urlPlaceholder": "https://www.tiktok.com/{'@'}shop/video/...",
+        "notePlaceholder": "e.g. Sales picked up after going live / lots of price questions",
+        "salesPlaceholder": "e.g. 8900.50",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Results saved",
+        "deleted": "Results deleted"
+      }
+    },
     "list": {
       "newCampaign": "New campaign",
+      "gallery": "Creative gallery",
       "openAria": "Open campaign {title}",
       "delete": "Delete campaign",
       "emptyTitle": "No campaigns yet",
