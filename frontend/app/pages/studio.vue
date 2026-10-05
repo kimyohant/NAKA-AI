@@ -603,9 +603,14 @@ async function load(silent = false) {
 
 async function loadOptions() {
   try {
-    options.value = await studioAPI.options()
+    const [opts, tpls] = await Promise.all([
+      studioAPI.options(),
+      studioAPI.templates(),
+    ])
+    options.value = opts
+    templates.value = tpls || []
   } catch {
-    // options โหลดไม่ได้ไม่บล็อกหน้า — ฟอร์มแก้ค่าใน workspace แทน
+    // options/templates โหลดไม่ได้ไม่บล็อกหน้า — ฟอร์มแก้ค่าใน workspace แทน
   }
 }
 
