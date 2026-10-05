@@ -177,8 +177,12 @@ app.post('/', async (c) => {
   // + settings default ตาม docs/unsloth/PLAN.md ข้อ 3 (ค่าที่ผู้ใช้ส่งมามาก่อน default)
   if (body.provider === 'unsloth') {
     const isUnslothVideo = body.service_type === 'video'
+    const isUnslothImage = body.service_type === 'image'
     if (isUnslothVideo && configSettings.price_thb_per_video_second === undefined) {
       configSettings.price_thb_per_video_second = 0
+    }
+    if (isUnslothImage && configSettings.price_thb_per_image === undefined) {
+      configSettings.price_thb_per_image = 0
     }
     const defaults = isUnslothVideo
       ? { steps: 20, quality: 'fast', max_concurrent: 1, queue_timeout_minutes: 240 }
@@ -299,6 +303,31 @@ async function runUnslothTest(serviceType: string, baseUrl: string, apiKey: stri
       duration_presets: defaults.duration_presets ?? null,
       resolution_presets: defaults.resolution_presets ?? null,
     }
+    result.latencyMs = Date.now() - startedAt
+    return result
+  }
+
+  if (serviceType === 'image') {
+    // image: ตรวจการเชื่อมต่อ + รายงานโมเดล/สถานะโหลดจาก /v1/models — ไม่ยิงสร้างรูปจริง
+    let models: any
+    try {
+      models = await statusResp.json()
+    } catch {
+      return fail('GET /v1/models คืนรูปแบบไม่ถูกต้อง')
+    }
+    const modelList = Array.isArray(models?.data) ? models.data.map((m: any) => m?.id).filter(Boolean) : []
+    result.models = modelList.slice(0, 10)
+    result.model = model || modelList[0] || null
+    const entry = result.model && Array.isArray(models?.data)
+      ? models.data.find((m: any) => String(m?.id) === String(result.model))
+      : null
+    result.loaded = entry ? !!entry.loaded : null
+    result.ok = true
+    result.message = result.loaded
+      ? `โมเดลรูปภาพโหลดอยู่ (${result.model})`
+      : result.model
+        ? `เชื่อมต่อสำเร็จ — โมเดลรูปภาพยังไม่โหลด (${result.model}) — โหลดใน Unsloth UI ก่อนสร้างงานแรก`
+        : 'เชื่อมต่อสำเร็จ — ยังไม่พบโมเดลบน server (โหลด image model ใน Unsloth UI ก่อน)'
     result.latencyMs = Date.now() - startedAt
     return result
   }

@@ -853,7 +853,7 @@ const serviceTypes = computed(() => [
 ])
 const providersByType = {
   text: ['gemini', 'openai', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'volcengine', 'unsloth'],
-  image: ['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate'],
+  image: ['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate', 'unsloth'],
   video: ['volcengine', 'minimax', 'aliyun', 'wancreate', 'unsloth'],
 }
 const providerSelectOptions = computed(() => (providersByType[cfgForm.service_type] || []).map(p => ({
@@ -883,6 +883,8 @@ const providerPresets = {
     openai: { label: 'OpenAI Official', baseUrl: 'https://api.openai.com', models: ['gpt-image-2'] },
     // Wan Create：create.wan.video 账号的 AccessKey（wan-sk.…），扣 Wan 积分；国内账号 Base URL 改为 https://wanx.biz.aliyun.com
     wancreate: { label: 'Wan Create (create.wan.video)', baseUrl: 'https://create.wan.video', models: ['wan2.7-flash', 'wan2.7', 'wan3.0'] },
+    // Unsloth Studio local — OpenAI-compatible /v1/images/generations (ต้องโหลด image GGUF model ใน Unsloth UI ก่อน; พิมพ์ชื่อโมเดลเอง)
+    unsloth: { label: 'Unsloth (Local)', baseUrl: 'http://127.0.0.1:8888', models: [] },
   },
   video: {
     aliyun: { label: 'Alibaba Cloud Bailian Wan 3.0', baseUrl: 'https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com', models: ['wan3.0-video', 'wan3.0-video-prime'] },
