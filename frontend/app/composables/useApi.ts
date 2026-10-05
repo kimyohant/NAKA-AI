@@ -354,6 +354,8 @@ export interface StudioProject {
   language: StudioLanguage; market: StudioMarket; platform: StudioPlatform; aspectRatio: StudioAspectRatio
   durationSec: number
   avatarId: number | null
+  // v14: AI Influencer — พรีเซนเตอร์ AI ที่ใช้แทน/คู่กับ avatar
+  influencerId: number | null
   tone: string | null; notes: string | null
   budgetThb: number | null
   aiDisclosure: boolean
@@ -410,6 +412,37 @@ export interface StudioImage {
 export type StudioDetail = StudioProject & {
   shots: StudioShot[]; images: StudioImage[]
   latestMerge: StudioMerge | null; avatar: StudioAvatar | null
+  influencer: StudioInfluencer | null
+}
+
+// ===== AI Influencer (v14) — คลังพรีเซนเตอร์ AI สำหรับรีวิวสินค้า =====
+export type InfluencerReviewScene = 'unboxing' | 'holding' | 'using' | 'closeup' | 'lifestyle'
+export interface StudioInfluencer {
+  id: number; name: string
+  niche: string | null
+  persona: string
+  appearance: string
+  locale: StudioMarket | null
+  tone: string | null
+  imageUrl: string | null; imageStatus: MediaStatus; imageError: string | null
+  createdAt: string; updatedAt: string
+}
+export interface StudioInfluencerContent {
+  id: number; influencerId: number
+  kind: 'image' | 'script'
+  productName: string
+  productImage: string | null
+  scene: InfluencerReviewScene | null
+  instruction: string | null
+  language: StudioLanguage | null
+  platform: StudioPlatform | null
+  durationSec: number | null
+  prompt: string
+  taskId: number | null
+  script: string | null
+  status: MediaStatus
+  imageUrl: string | null; errorMsg: string | null
+  createdAt: string; updatedAt: string
 }
 
 export const studioAPI = {
@@ -442,6 +475,20 @@ export const studioAPI = {
   updateAvatar: (id: number, data: Partial<Pick<StudioAvatar, 'name' | 'description' | 'locale' | 'imageUrl'>>) => api.put<StudioAvatar>(`/studio/avatars/${id}`, data),
   generateAvatarImage: (id: number, instruction?: string) => api.post<StudioAvatar>(`/studio/avatars/${id}/generate-image`, instruction ? { instruction } : {}),
   deleteAvatar: (id: number) => api.del(`/studio/avatars/${id}`),
+  // AI Influencer (v14)
+  influencers: () => api.get<StudioInfluencer[]>('/studio/influencers'),
+  createInfluencer: (data: { name: string; niche?: string; persona?: string; appearance?: string; locale?: StudioMarket; tone?: string; imageUrl?: string }) =>
+    api.post<StudioInfluencer>('/studio/influencers', data),
+  updateInfluencer: (id: number, data: Partial<Pick<StudioInfluencer, 'name' | 'niche' | 'persona' | 'appearance' | 'locale' | 'tone' | 'imageUrl'>>) =>
+    api.put<StudioInfluencer>(`/studio/influencers/${id}`, data),
+  deleteInfluencer: (id: number) => api.del(`/studio/influencers/${id}`),
+  generateInfluencerImage: (id: number, instruction?: string) => api.post<StudioInfluencer>(`/studio/influencers/${id}/generate-image`, instruction ? { instruction } : {}),
+  influencerContents: (id: number) => api.get<StudioInfluencerContent[]>(`/studio/influencers/${id}/contents`),
+  generateInfluencerReviewImages: (id: number, data: { productName: string; productImage: string; scenes?: InfluencerReviewScene[]; count?: number; aspectRatio?: string; instruction?: string }) =>
+    api.post<StudioInfluencerContent[]>(`/studio/influencers/${id}/contents/images`, data),
+  generateInfluencerScript: (id: number, data: { productName: string; productDescription?: string; language?: StudioLanguage; platform?: StudioPlatform; durationSec?: number; instruction?: string }) =>
+    api.post<StudioInfluencerContent>(`/studio/influencers/${id}/contents/script`, data),
+  deleteInfluencerContent: (id: number, contentId: number) => api.del(`/studio/influencers/${id}/contents/${contentId}`),
 }
 
 // ===== Viral Clone Studio (สตูดิโอโคลนไวรัล) — สัญญา docs/viral-clone/PLAN.md §3, JSON camelCase =====

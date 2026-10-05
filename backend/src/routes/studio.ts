@@ -5,6 +5,7 @@
 import { Hono } from 'hono'
 import { success, created, badRequest, notFound } from '../utils/response.js'
 import * as studio from '../services/studio.js'
+import * as influencerService from '../services/studio-influencer.js'
 import { startAutoRender, cancelAutoRender } from '../services/studio-autorender.js'
 
 const app = new Hono()
@@ -266,6 +267,105 @@ app.delete('/avatars/:id', async (c) => {
   if (!id) return badRequest(c, 'Invalid avatar ID')
   const ok = await studio.deleteAvatar(id)
   if (!ok) return notFound(c, 'Avatar ไม่พบ')
+  return success(c)
+})
+
+// ===== AI Influencer (v14) — คลังพรีเซนเตอร์ AI สำหรับรีวิวสินค้า =====
+
+// GET /studio/influencers — คลัง influencer
+app.get('/influencers', async (c) => {
+  return success(c, await influencerService.listInfluencers())
+})
+
+// POST /studio/influencers — สร้าง (imageUrl จาก uploadAPI หรือให้ AI สร้าง portrait ภายหลัง)
+app.post('/influencers', async (c) => {
+  const body = await c.req.json()
+  try {
+    return created(c, await influencerService.createInfluencer(body))
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้าง influencer ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// PUT /studio/influencers/:id
+app.put('/influencers/:id', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid influencer ID')
+  const body = await c.req.json()
+  try {
+    const influencer = await influencerService.updateInfluencer(id, body)
+    if (!influencer) return notFound(c, 'Influencer ไม่พบ')
+    return success(c, influencer)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'อัปเดต influencer ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /studio/influencers/:id/generate-image — AI สร้าง portrait (มีรูปอยู่แล้ว → ใช้เป็น reference คุมหน้าเดิม)
+app.post('/influencers/:id/generate-image', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid influencer ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const influencer = await influencerService.generateInfluencerPortrait(id, body)
+    if (!influencer) return notFound(c, 'Influencer ไม่พบ')
+    return success(c, influencer)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้างภาพ influencer ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// GET /studio/influencers/:id/contents — ภาพรีวิว + สคริปต์รีวิวทั้งหมด
+app.get('/influencers/:id/contents', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid influencer ID')
+  return success(c, await influencerService.listInfluencerContents(id))
+})
+
+// POST /studio/influencers/:id/contents/images — ภาพรีวิวสินค้า per scene (influencer × สินค้า, reference คุมหน้า/สินค้า)
+app.post('/influencers/:id/contents/images', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid influencer ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const images = await influencerService.generateReviewImages(id, body)
+    if (!images) return notFound(c, 'Influencer ไม่พบ')
+    return success(c, images)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้างภาพรีวิวไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// POST /studio/influencers/:id/contents/script — async สคริปต์รีวิวสั้น (influencer_writer) → poll GET contents
+app.post('/influencers/:id/contents/script', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid influencer ID')
+  const body = await c.req.json().catch(() => ({}))
+  try {
+    const content = await influencerService.generateReviewScript(id, body)
+    if (!content) return notFound(c, 'Influencer ไม่พบ')
+    return success(c, content)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'สร้างสคริปต์รีวิวไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+// DELETE /studio/influencers/:id/contents/:contentId
+app.delete('/influencers/:id/contents/:contentId', async (c) => {
+  const id = requireId(c.req.param('id'))
+  const contentId = requireId(c.req.param('contentId'))
+  if (!id || !contentId) return badRequest(c, 'Invalid influencer/content ID')
+  const ok = await influencerService.deleteInfluencerContent(id, contentId)
+  if (!ok) return notFound(c, 'คอนเทนต์ไม่พบ')
+  return success(c)
+})
+
+// DELETE /studio/influencers/:id — soft delete (โปรเจกต์ที่ใช้อยู่เก็บ id เดิม GET คืน null)
+app.delete('/influencers/:id', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid influencer ID')
+  const ok = await influencerService.deleteInfluencer(id)
+  if (!ok) return notFound(c, 'Influencer ไม่พบ')
   return success(c)
 })
 

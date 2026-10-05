@@ -282,8 +282,40 @@
               </button>
             </div>
             <p v-else class="ps-hint">{{ t('productStudio.settings.noAvatars') }}</p>
-            <span v-if="avatarMissing" class="ps-warn-note" role="alert">{{ t('productStudio.settings.avatarRequiredWarn') }}</span>
+            <span v-if="presenterMissing" class="ps-warn-note" role="alert">{{ t('productStudio.settings.avatarRequiredWarn') }}</span>
             <NuxtLink to="/studio?tab=avatars" class="ps-side-link">{{ t('productStudio.settings.manageAvatars') }}</NuxtLink>
+          </div>
+
+          <div class="field">
+            <span class="field-label">{{ t('productStudio.settings.influencer') }}</span>
+            <div v-if="influencers.length" class="ps-avatar-pick" role="radiogroup" :aria-label="t('productStudio.settings.influencer')">
+              <button
+                type="button"
+                role="radio"
+                :aria-checked="settingsDraft.influencerId === null"
+                :class="['ps-avatar-opt', { on: settingsDraft.influencerId === null, dim: template?.avatarMode === 'required' }]"
+                @click="settingsDraft.influencerId = null"
+              >
+                <Ban :size="16" :stroke-width="1.6" />
+                <span>{{ t('productStudio.settings.influencerNone') }}</span>
+              </button>
+              <button
+                v-for="inf in influencers"
+                :key="inf.id"
+                type="button"
+                role="radio"
+                :aria-checked="settingsDraft.influencerId === inf.id"
+                :class="['ps-avatar-opt', { on: settingsDraft.influencerId === inf.id }]"
+                @click="settingsDraft.influencerId = inf.id"
+              >
+                <img v-if="inf.imageUrl" :src="inf.imageUrl" alt="" loading="lazy" />
+                <Loader2 v-else-if="inf.imageStatus === 'processing'" :size="14" class="animate-spin" />
+                <Sparkles v-else :size="14" :stroke-width="1.6" />
+                <span class="truncate">{{ inf.name }}</span>
+              </button>
+            </div>
+            <p v-else class="ps-hint">{{ t('productStudio.settings.noInfluencers') }}</p>
+            <NuxtLink to="/studio?tab=influencers" class="ps-side-link">{{ t('productStudio.settings.manageInfluencers') }}</NuxtLink>
           </div>
 
           <label class="field">
@@ -406,21 +438,21 @@
             <p class="panel-desc">{{ t('productStudio.render.desc') }}</p>
           </div>
 
-          <div v-if="avatarMissing" class="ps-warn-note ps-run-warn" role="alert">{{ t('productStudio.settings.avatarRequiredWarn') }}</div>
+          <div v-if="presenterMissing" class="ps-warn-note ps-run-warn" role="alert">{{ t('productStudio.settings.avatarRequiredWarn') }}</div>
           <div class="ps-run-row">
-            <button class="btn" type="button" :disabled="renderBlock || avatarMissing || !shots.length" @click="renderStage('keyframes')">
+            <button class="btn" type="button" :disabled="renderBlock || presenterMissing || !shots.length" @click="renderStage('keyframes')">
               <ImageIcon :size="13" :stroke-width="2" />
               {{ t('productStudio.render.keyframesAll') }}
             </button>
-            <button class="btn" type="button" :disabled="renderBlock || avatarMissing || !allKeyframesDone" @click="renderStage('videos')">
+            <button class="btn" type="button" :disabled="renderBlock || presenterMissing || !allKeyframesDone" @click="renderStage('videos')">
               <Film :size="13" :stroke-width="2" />
               {{ t('productStudio.render.videosAll') }}
             </button>
-            <button class="btn btn-primary" type="button" :disabled="renderBlock || avatarMissing || !shots.length" @click="startAutoRender(false)">
+            <button class="btn btn-primary" type="button" :disabled="renderBlock || presenterMissing || !shots.length" @click="startAutoRender(false)">
               <Sparkles :size="13" :stroke-width="2" />
               {{ t('productStudio.autoRender.start') }}
             </button>
-            <button v-if="anyMediaDone" class="btn" type="button" :disabled="renderBlock || avatarMissing || !shots.length" :title="t('productStudio.autoRender.forceHint')" @click="startAutoRender(true)">
+            <button v-if="anyMediaDone" class="btn" type="button" :disabled="renderBlock || presenterMissing || !shots.length" :title="t('productStudio.autoRender.forceHint')" @click="startAutoRender(true)">
               <RotateCcw :size="13" :stroke-width="2" />
               {{ t('productStudio.autoRender.force') }}
             </button>
@@ -589,6 +621,7 @@ const detail = ref<StudioDetail | null>(null)
 const options = ref<StudioOptions | null>(null)
 const templates = ref<StudioTemplate[]>([])
 const avatars = ref<any[]>([])
+const influencers = ref<any[]>([])
 const loadFailed = ref(false)
 const refreshing = ref(false)
 const saving = ref(false)
@@ -599,7 +632,10 @@ const shots = computed<StudioShot[]>(() => detail.value?.shots || [])
 const images = computed(() => detail.value?.images || [])
 const latestMerge = computed(() => detail.value?.latestMerge || null)
 const avatar = computed(() => detail.value?.avatar || null)
-const avatarMissing = computed(() => template.value?.avatarMode === 'required' && !(avatar.value && avatar.value.imageUrl))
+const influencer = computed(() => detail.value?.influencer || null)
+// presenter ที่มีรูป = avatar หรือ AI influencer ตัวใดตัวหนึ่ง
+const presenterMissing = computed(() => template.value?.avatarMode === 'required'
+  && !((avatar.value && avatar.value.imageUrl) || (influencer.value && influencer.value.imageUrl)))
 const processingMedia = computed(() => shots.value.some(s => s.keyframeStatus === 'processing' || s.videoStatus === 'processing'))
 const mergeProcessing = computed(() => latestMerge.value?.status === 'processing')
 const renderBlock = computed(() => processingMedia.value || mergeProcessing.value || autoRenderActive.value)
@@ -720,14 +756,16 @@ async function refresh(silent = false) {
 
 async function loadMeta() {
   try {
-    const [opts, tpls, avs] = await Promise.all([
+    const [opts, tpls, avs, infs] = await Promise.all([
       studioAPI.options(),
       studioAPI.templates(),
       studioAPI.avatars(),
+      studioAPI.influencers(),
     ])
     options.value = opts
     templates.value = tpls || []
     avatars.value = avs || []
+    influencers.value = infs || []
   } catch (e) {
     handleErr(e)
   }
@@ -763,6 +801,7 @@ function resetSettings(d: StudioDetail) {
     aspectRatio: d.aspectRatio || '9:16',
     durationSec: d.durationSec || 30,
     avatarId: d.avatarId ?? null,
+    influencerId: d.influencerId ?? null,
     tone: d.tone || '',
     notes: d.notes || '',
     budgetThb: d.budgetThb == null ? '' : String(d.budgetThb),
@@ -774,7 +813,7 @@ function resetSettings(d: StudioDetail) {
 }
 const settingsDraft = ref({
   language: 'th', market: 'TH', platform: 'tiktok', aspectRatio: '9:16',
-  durationSec: 30, avatarId: null as number | null,
+  durationSec: 30, avatarId: null as number | null, influencerId: null as number | null,
   tone: '', notes: '', budgetThb: '', aiDisclosure: true,
   captions: true, captionStyle: 'bold' as 'clean' | 'bold' | 'boxed', aiLabelBurnIn: false,
 })
@@ -887,6 +926,7 @@ async function saveSettings(silent = false): Promise<boolean> {
       aspectRatio: s.aspectRatio,
       durationSec: clampStudioDuration(s.durationSec, durationMax.value),
       avatarId: s.avatarId,
+      influencerId: s.influencerId,
       tone: s.tone.trim() || null,
       notes: s.notes.trim() || null,
       budgetThb: budgetRaw === '' ? null : Number(budgetRaw),
@@ -937,7 +977,7 @@ function onShotUpdated(shot: StudioShot) {
 
 // ===== 5 สร้าง =====
 async function renderStage(stage: 'keyframes' | 'videos', shotIds?: number[]) {
-  if (renderBlock.value || avatarMissing.value) return
+  if (renderBlock.value || presenterMissing.value) return
   try {
     const res = await studioAPI.render(projectId, { stage, ...(shotIds?.length ? { shotIds } : {}) })
     toast.success(t('productStudio.render.queued', { n: res.queued }))
@@ -947,7 +987,7 @@ async function renderStage(stage: 'keyframes' | 'videos', shotIds?: number[]) {
   }
 }
 async function startAutoRender(force = false) {
-  if (renderBlock.value || avatarMissing.value || !shots.value.length) return
+  if (renderBlock.value || presenterMissing.value || !shots.value.length) return
   try {
     const updated = await studioAPI.autoRender(projectId, { force })
     detail.value = { ...detail.value!, ...updated }

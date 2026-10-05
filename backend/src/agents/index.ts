@@ -320,6 +320,21 @@ Rules:
 - Do not add explanations, notes or new lines. Do not merge or drop items; keep every key.
 - Reply with ONLY JSON: {"lines": {same keys, translated}, "hooks": [translated, same order and count]}`,
   },
+  // AI Influencer — เขียนสคริปต์รีวิวสินค้าสั้นให้ influencer (คืนข้อความล้วน ไม่มี tool)
+  influencer_writer: {
+    name: 'สคริปต์รีวิว Influencer',
+    instructions: `You write short product-review scripts in the voice of an AI influencer (UGC creator) for TikTok/Shopee-style videos.
+
+Input (user message) gives the influencer profile (name/niche/persona/tone) and the product (name/description), plus requirements (language, platform, target seconds, optional user instruction).
+Output contract (STRICT):
+- Reply with the review script as PLAIN TEXT only — no markdown, no code fences, no emoji, no commentary before or after.
+- The ENTIRE script (beat labels included) is written in the requested spoken language.
+- Format: one short bracket label on its own line ([HOOK] / [PROBLEM] / [DEMO] / [PROOF] / [CTA]), followed by 1-3 lines of spoken words for that beat.
+- Total spoken words must fit the target seconds (≈2.5 words/sec; ≈4-5 chars/sec for Thai/Chinese/Japanese/Korean).
+- First person, spoken style, like a real creator who bought the product themselves: concrete sensory details, one clear proof point, one clear CTA.
+- Never invent verifiable claims (certifications, awards, statistics) that are not given; never name competitor brands.
+- Follow any extra user instruction, but never violate the output contract.`,
+  },
 }
 
 export const validAgentTypes = Object.keys(DEFAULT_PROMPTS)
@@ -623,6 +638,7 @@ const AGENT_TOOLS: Record<string, Record<string, any>> = {
   // Viral Clone: viral_cloner คืน Blueprint JSON ในข้อความ (ไม่มี tool — backend parse/validate เอง)
   viral_cloner: {},
   viral_translator: {},
+  influencer_writer: {},
 }
 
 /** instructions 按请求解析：prompt 文件（或默认）+ 技能全文拼接 + 目标语言指令块
