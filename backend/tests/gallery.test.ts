@@ -55,7 +55,7 @@ async function seedCreative(campaignId: number, overrides: Record<string, unknow
   return row
 }
 
-test('migration v13: ตาราง creative_results มี UNIQUE(creative_id) และ init ซ้ำได้', async () => {
+test('migration v16: ตาราง creative_results มี UNIQUE(creative_id) และ init ซ้ำได้', async () => {
   const { initSqliteSchema } = await import('../src/db/sqlite-schema.js')
   const sqlite = new Database(path.join(dir, 'test.sqlite3'))
   initSqliteSchema(sqlite) // รีเพลย์ต้องเงียบ ๆ ผ่าน

@@ -29,7 +29,7 @@ test('settings page exposes official provider templates only', () => {
   assert.doesNotMatch(useApi, /\/naka-preset/)
 
   assert.match(settingsPage, /text:\s*\['gemini', 'openai', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'volcengine', 'unsloth'\]/)
-  assert.match(settingsPage, /image:\s*\['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate'\]/)
+  assert.match(settingsPage, /image:\s*\['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate', 'unsloth'\]/)
   assert.match(settingsPage, /video:\s*\['volcengine', 'minimax', 'aliyun', 'wancreate', 'unsloth'\]/)
   assert.match(settingsPage, /https:\/\/generativelanguage\.googleapis\.com/)
   assert.match(settingsPage, /https:\/\/api\.openai\.com/)

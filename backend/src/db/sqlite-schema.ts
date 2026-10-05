@@ -199,6 +199,9 @@ export const sqliteSchemaStatements = [
     description TEXT,
     sort_order INTEGER DEFAULT 0,
     is_active INTEGER DEFAULT 1,
+    preview_path TEXT,
+    category TEXT,
+    source TEXT NOT NULL DEFAULT 'custom',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     UNIQUE (value)
@@ -322,6 +325,45 @@ export const sqliteSchemaStatements = [
     finished_at TEXT
   )`,
   `CREATE INDEX IF NOT EXISTS idx_pipeline_tasks_episode_id ON pipeline_tasks (episode_id)`,
+
+  // AI Influencer (buzzy-style): คลังพรีเซนเตอร์ AI — หน้าตา/บุคลิก/นิชา + รูปโปรไฟล์ที่ใช้เป็น reference
+  // คุม consistency: รูปที่ generated อ่านสดจาก sys_task ผ่าน image_task_id (pattern เดียวกับ studio_avatars)
+  `CREATE TABLE IF NOT EXISTS studio_influencers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    niche TEXT,
+    persona TEXT NOT NULL DEFAULT '',
+    appearance TEXT NOT NULL DEFAULT '',
+    locale TEXT,
+    tone TEXT,
+    image_url TEXT,
+    image_task_id INTEGER,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  )`,
+  // คอนเทนต์รีวิวของ influencer — kind 'image' (ภาพรีวิวสินค้า per scene, ผลลัพธ์ใน sys_task)
+  // หรือ 'script' (สคริปต์รีวิวสั้น เก็บข้อความใน script)
+  `CREATE TABLE IF NOT EXISTS studio_influencer_contents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    influencer_id INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    product_name TEXT NOT NULL DEFAULT '',
+    product_image TEXT,
+    scene TEXT,
+    instruction TEXT,
+    language TEXT,
+    platform TEXT,
+    duration_sec INTEGER,
+    prompt TEXT NOT NULL DEFAULT '',
+    task_id INTEGER,
+    script TEXT,
+    status TEXT NOT NULL DEFAULT 'processing',
+    error_msg TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_studio_influencer_contents_influencer ON studio_influencer_contents (influencer_id)`,
 ]
 
 /**
@@ -649,8 +691,59 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     )`,
     `CREATE INDEX IF NOT EXISTS idx_clone_variants_project ON clone_variants (project_id)`,
   ] },
-  // v13 (docs/ai-marketer/GALLERY.md §2): ผลตอบรับจริงต่อ creative — ผู้ใช้กรอกเองจาก TikTok Analytics ต้นทาง (manual analytics)
-  { version: 13, columns: [], statements: [
+  // Style Gallery (docs/style-gallery/PLAN.md): พรีวิว/หมวด/แหล่งที่มาของ style preset
+  { version: 13, columns: [
+    { table: 'style_presets', column: 'preview_path', ddl: 'ALTER TABLE style_presets ADD COLUMN preview_path TEXT' },
+    { table: 'style_presets', column: 'category', ddl: 'ALTER TABLE style_presets ADD COLUMN category TEXT' },
+    { table: 'style_presets', column: 'source', ddl: `ALTER TABLE style_presets ADD COLUMN source TEXT NOT NULL DEFAULT 'custom'` },
+  ] },
+  // AI Influencer: คลังพรีเซนเตอร์ AI สำหรับรีวิวสินค้า + ผูก influencer เข้าโปรเจกต์ Studio
+  { version: 14, columns: [
+    { table: 'studio_projects', column: 'influencer_id', ddl: 'ALTER TABLE studio_projects ADD COLUMN influencer_id INTEGER' },
+  ], statements: [
+    `CREATE TABLE IF NOT EXISTS studio_influencers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      niche TEXT,
+      persona TEXT NOT NULL DEFAULT '',
+      appearance TEXT NOT NULL DEFAULT '',
+      locale TEXT,
+      tone TEXT,
+      image_url TEXT,
+      image_task_id INTEGER,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS studio_influencer_contents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      influencer_id INTEGER NOT NULL,
+      kind TEXT NOT NULL,
+      product_name TEXT NOT NULL DEFAULT '',
+      product_image TEXT,
+      scene TEXT,
+      instruction TEXT,
+      language TEXT,
+      platform TEXT,
+      duration_sec INTEGER,
+      prompt TEXT NOT NULL DEFAULT '',
+      task_id INTEGER,
+      script TEXT,
+      status TEXT NOT NULL DEFAULT 'processing',
+      error_msg TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_studio_influencer_contents_influencer ON studio_influencer_contents (influencer_id)`,
+  ] },
+  // แก้ DB เก่าที่ campaigns ถูกสร้างก่อน DDL รูปแบบปัจจุบัน (ไม่มี error_msg) — failStaleCampaigns
+  // และการเก็บ error ของ research/strategy/creatives set errorMsg แล้ว UPDATE ล้มทุก boot
+  { version: 15, columns: [
+    { table: 'campaigns', column: 'error_msg', ddl: 'ALTER TABLE campaigns ADD COLUMN error_msg TEXT' },
+  ] },
+  // v16 (docs/ai-marketer/GALLERY.md §2): ผลตอบรับจริงต่อ creative — ผู้ใช้กรอกเองจาก TikTok Analytics ต้นทาง (manual analytics)
+  // (เดิมร่างไว้เป็น v13 แต่ master ใช้เลข 13 ไปแล้วกับ style gallery — เลื่อนเป็น v16)
+  { version: 16, columns: [], statements: [
     `CREATE TABLE IF NOT EXISTS creative_results (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       creative_id INTEGER NOT NULL UNIQUE,

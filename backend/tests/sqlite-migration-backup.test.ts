@@ -23,7 +23,7 @@ test('migrates an older task table once and restores a consistent WAL snapshot',
     initSqliteSchema(sqlite)
     initSqliteSchema(sqlite)
     const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
     const columns = sqlite.pragma('table_info(sys_task)') as Array<{ name: string }>
     assert.ok(columns.some(row => row.name === 'config_id'))
     assert.ok(columns.some(row => row.name === 'error_code'))

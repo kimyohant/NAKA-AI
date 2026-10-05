@@ -61,3 +61,4 @@ desktop/release/
 desktop/resources/
 data/imports/
 *.log.err
+frontend/dist.old/

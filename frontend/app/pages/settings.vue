@@ -144,7 +144,7 @@
           </div>
         </div>
 
-        <!-- ===== 风格预设 ===== -->
+        <!-- ===== 风格预设 + Style Gallery (docs/style-gallery/PLAN.md) ===== -->
         <div v-else-if="tab === 'styles'" class="settings-scroll">
           <div class="settings-head">
             <h2 class="settings-title">{{ t('settings.styles.title') }}</h2>
@@ -156,28 +156,74 @@
                 <span class="svc-group-title">{{ t('settings.styles.allTitle') }}</span>
                 <div class="svc-group-sub">{{ t('settings.styles.count', { active: stylePresets.filter(p => p.is_active).length, total: stylePresets.length }) }}</div>
               </div>
-              <button class="btn btn-ghost btn-sm ml-auto" @click="startAddStyle"><Plus :size="13" /> {{ t('common.add') }}</button>
-            </div>
-            <div v-for="p in stylePresets" :key="p.id" class="config-row">
-              <div class="provider-badge style-badge"><Palette :size="15" /></div>
-              <div class="config-main">
-                <div class="config-line">
-                  <span class="config-name">{{ p.name }}</span>
-                  <span class="tag mono">{{ p.value }}</span>
-                  <span v-if="!p.is_active" class="tag">{{ t('settings.common.disabled') }}</span>
+              <div class="sg-toolbar">
+                <div class="sg-search-wrap">
+                  <Search :size="13" :stroke-width="2" class="sg-search-icon" />
+                  <input v-model="styleSearch" class="input sg-search" :placeholder="t('settings.styles.gallery.search')" />
                 </div>
-                <div class="config-sub mono truncate">{{ p.prompt }}</div>
-                <div v-if="p.description" class="config-sub truncate">{{ p.description }}</div>
+                <button class="btn btn-sm" :disabled="importingStyles" @click="importBuiltinStyles">
+                  <Loader2 v-if="importingStyles" :size="13" class="animate-spin" />
+                  <Download v-else :size="13" />
+                  {{ t('settings.styles.gallery.import') }}
+                </button>
+                <button class="btn btn-ghost btn-sm" @click="startAddStyle"><Plus :size="13" /> {{ t('common.add') }}</button>
               </div>
-              <label class="config-switch">
-                <input type="checkbox" class="sr-only" :checked="p.is_active" @change="toggleStyle(p)">
-                <span class="switch" :class="{ on: p.is_active }"></span>
-              </label>
-              <button class="btn btn-ghost btn-icon btn-sm" @click="startEditStyle(p)"><Pencil :size="13" /></button>
-              <button class="btn btn-danger btn-icon btn-sm" @click="styleToDelete = p"><Trash2 :size="13" /></button>
             </div>
-            <p v-if="!stylePresets.length" class="config-empty">{{ t('settings.styles.empty') }}</p>
+            <div class="sg-cats">
+              <button class="sg-cat" :class="{ on: styleCategory === 'all' }" @click="styleCategory = 'all'">{{ t('settings.styles.gallery.catAll') }}</button>
+              <button
+                v-for="cat in styleCategories" :key="cat" class="sg-cat"
+                :class="{ on: styleCategory === cat }" @click="styleCategory = cat"
+              >
+                {{ cat }} · {{ t(`settings.styles.gallery.cat_${cat}`) }}
+              </button>
+              <button class="sg-cat" :class="{ on: styleCategory === 'custom' }" @click="styleCategory = 'custom'">{{ t('settings.styles.gallery.catCustom') }}</button>
+            </div>
+            <div v-if="filteredStylePresets.length" class="sg-grid">
+              <article v-for="p in filteredStylePresets" :key="p.id" class="sg-card" :class="{ off: !p.is_active }">
+                <div class="sg-thumb">
+                  <img v-if="p.preview_path" :src="p.preview_path" alt="" loading="lazy" />
+                  <Palette v-else :size="22" :stroke-width="1.5" />
+                  <span v-if="!p.is_active" class="tag sg-off-tag">{{ t('settings.common.disabled') }}</span>
+                </div>
+                <div class="sg-body">
+                  <div class="sg-name-row">
+                    <span v-if="p.source === 'builtin'" class="sg-num mono">{{ styleNumber(p) }}</span>
+                    <h4 class="sg-name truncate">{{ p.name }}</h4>
+                  </div>
+                  <span v-if="p.category" class="tag sg-cat-tag">{{ p.category }} · {{ t(`settings.styles.gallery.cat_${p.category}`) }}</span>
+                  <p class="sg-prompt mono">{{ p.prompt }}</p>
+                </div>
+                <div class="sg-actions">
+                  <button
+                    v-if="!p.preview_path" class="btn btn-ghost btn-sm sg-act"
+                    :disabled="!!previewBusy[p.id]" :title="t('settings.styles.gallery.genPreview')"
+                    @click="genStylePreview(p)"
+                  >
+                    <Loader2 v-if="previewBusy[p.id]" :size="12" class="animate-spin" />
+                    <Sparkles v-else :size="12" />
+                    {{ previewBusy[p.id] ? t('settings.styles.gallery.previewBusy') : t('settings.styles.gallery.genPreview') }}
+                  </button>
+                  <button v-else class="btn btn-ghost btn-sm sg-act" :title="t('settings.styles.gallery.genPreview')" @click="genStylePreview(p)">
+                    <Sparkles :size="12" />
+                  </button>
+                  <button class="btn btn-ghost btn-icon btn-sm sg-act" :title="t('settings.styles.gallery.uploadPreview')" @click="pickPreviewUpload(p)">
+                    <ImagePlus :size="13" />
+                  </button>
+                  <label class="config-switch" :title="t('settings.styles.title')">
+                    <input type="checkbox" class="sr-only" :checked="p.is_active" @change="toggleStyle(p)">
+                    <span class="switch" :class="{ on: p.is_active }"></span>
+                  </label>
+                  <button class="btn btn-ghost btn-icon btn-sm" @click="startEditStyle(p)"><Pencil :size="13" /></button>
+                  <button class="btn btn-danger btn-icon btn-sm" @click="styleToDelete = p"><Trash2 :size="13" /></button>
+                </div>
+              </article>
+            </div>
+            <p v-else-if="stylePresets.length" class="config-empty">{{ t('settings.styles.gallery.noMatch') }}</p>
+            <p v-else class="config-empty">{{ t('settings.styles.empty') }}</p>
+            <p class="sg-credit">{{ t('settings.styles.gallery.credit') }}</p>
           </section>
+          <input ref="previewUploadInput" type="file" accept="image/*" class="sg-file-input" @change="onPreviewUpload" />
         </div>
 
         <!-- ===== 存储位置 ===== -->
@@ -853,7 +899,7 @@ const serviceTypes = computed(() => [
 ])
 const providersByType = {
   text: ['gemini', 'openai', 'zai', 'deepseek', 'qwen', 'moonshot', 'xai', 'volcengine', 'unsloth'],
-  image: ['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate'],
+  image: ['gemini', 'openai', 'volcengine', 'qwencloud', 'wancreate', 'unsloth'],
   video: ['volcengine', 'minimax', 'aliyun', 'wancreate', 'unsloth'],
 }
 const providerSelectOptions = computed(() => (providersByType[cfgForm.service_type] || []).map(p => ({
@@ -883,6 +929,8 @@ const providerPresets = {
     openai: { label: 'OpenAI Official', baseUrl: 'https://api.openai.com', models: ['gpt-image-2'] },
     // Wan Create：create.wan.video 账号的 AccessKey（wan-sk.…），扣 Wan 积分；国内账号 Base URL 改为 https://wanx.biz.aliyun.com
     wancreate: { label: 'Wan Create (create.wan.video)', baseUrl: 'https://create.wan.video', models: ['wan2.7-flash', 'wan2.7', 'wan3.0'] },
+    // Unsloth Studio local — OpenAI-compatible /v1/images/generations (ต้องโหลด image GGUF model ใน Unsloth UI ก่อน; พิมพ์ชื่อโมเดลเอง)
+    unsloth: { label: 'Unsloth (Local)', baseUrl: 'http://127.0.0.1:8888', models: [] },
   },
   video: {
     aliyun: { label: 'Alibaba Cloud Bailian Wan 3.0', baseUrl: 'https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com', models: ['wan3.0-video', 'wan3.0-video-prime'] },
@@ -1372,6 +1420,116 @@ async function saveStyle() {
     toast.success(t('common.saved'))
     loadStylePresets()
   } catch (e) { toastError(e) }
+}
+
+// ===== Style Gallery (docs/style-gallery/PLAN.md) — ค้นหา/หมวด/นำเข้าคลัง/พรีวิว =====
+const styleSearch = ref('')
+const styleCategory = ref('all')
+const importingStyles = ref(false)
+const previewBusy = ref({})
+const previewUploadInput = ref(null)
+const previewUploadTarget = ref(null)
+
+const styleCategories = computed(() => {
+  const codes = new Set()
+  for (const p of stylePresets.value) if (p.category) codes.add(p.category)
+  return [...codes].sort()
+})
+
+const filteredStylePresets = computed(() => {
+  const q = styleSearch.value.trim().toLowerCase()
+  return stylePresets.value.filter((p) => {
+    if (styleCategory.value === 'custom' && p.source === 'builtin') return false
+    if (styleCategory.value !== 'all' && styleCategory.value !== 'custom' && p.category !== styleCategory.value) return false
+    if (!q) return true
+    return (p.name || '').toLowerCase().includes(q)
+      || (p.value || '').includes(q)
+      || (p.description || '').toLowerCase().includes(q)
+  })
+})
+
+function styleNumber(p) {
+  return String(p.value || '').replace(/^handraw-/, '').toUpperCase()
+}
+
+async function importBuiltinStyles() {
+  if (importingStyles.value) return
+  importingStyles.value = true
+  try {
+    const r = await stylePresetAPI.importBuiltin()
+    toast.success(t('settings.styles.gallery.imported', { n: r.imported, skip: r.skipped }))
+    await loadStylePresets()
+  } catch (e) {
+    toastError(e)
+  } finally {
+    importingStyles.value = false
+  }
+}
+
+// พรีวิวสไตล์ = ยิง /tasks (type:image) ด้วย prompt ของ preset ตรง ๆ (prompt ไม่มีเลขตามกติกา upstream)
+// หัวข้อทดสอบคงที่ เพื่อเทียบสไตล์ข้าม preset ได้ — จบแล้วเก็บ path ลง preview_path
+const STYLE_PREVIEW_SUBJECT = '. Preview sheet: half-body portrait of a friendly young woman holding a coffee cup, plain light background, no text'
+
+function pollStylePreviewTask(taskId) {
+  return new Promise((resolve) => {
+    let tries = 0
+    const timer = setInterval(async () => {
+      tries++
+      try {
+        const task = await taskAPI.get(taskId)
+        if (task && (task.status === 'completed' || task.status === 'failed')) {
+          clearInterval(timer)
+          resolve(task.status === 'completed' ? (task.resultUrl || task.localPath || null) : 'failed')
+        } else if (tries > 80) {
+          clearInterval(timer)
+          resolve(null)
+        }
+      } catch {
+        if (tries > 80) { clearInterval(timer); resolve(null) }
+      }
+    }, 3000)
+  })
+}
+
+async function genStylePreview(p) {
+  if (previewBusy.value[p.id]) return
+  previewBusy.value = { ...previewBusy.value, [p.id]: true }
+  try {
+    const created = await taskAPI.generate({ type: 'image', prompt: `${p.prompt}${STYLE_PREVIEW_SUBJECT}` })
+    const taskId = created?.id ?? created
+    const outcome = await pollStylePreviewTask(taskId)
+    if (outcome === null) { toast.warning(t('settings.styles.gallery.previewTimeout')); return }
+    if (outcome === 'failed') { toast.error(t('settings.styles.gallery.previewFailed')); return }
+    await stylePresetAPI.update(p.id, { preview_path: outcome })
+    toast.success(t('settings.styles.gallery.previewDone'))
+    await loadStylePresets()
+  } catch (e) {
+    toastError(e)
+  } finally {
+    previewBusy.value = { ...previewBusy.value, [p.id]: false }
+  }
+}
+
+function pickPreviewUpload(p) {
+  previewUploadTarget.value = p
+  previewUploadInput.value?.click()
+}
+
+async function onPreviewUpload(e) {
+  const file = e.target.files?.[0]
+  e.target.value = ''
+  const target = previewUploadTarget.value
+  if (!file || !target) return
+  try {
+    const res = await uploadAPI.image(file)
+    await stylePresetAPI.update(target.id, { preview_path: res.path || res.url })
+    toast.success(t('settings.styles.gallery.previewDone'))
+    await loadStylePresets()
+  } catch (err) {
+    toastError(err)
+  } finally {
+    previewUploadTarget.value = null
+  }
 }
 
 onMounted(() => { loadCfgs(); loadAgents(); loadAllSkills(); loadAgentPrompt(selectedAgent.value); loadStylePresets() })
@@ -1942,4 +2100,31 @@ onBeforeUnmount(stopUsagePoll)
   background: var(--accent);
   transition: width 0.2s ease;
 }
+
+/* ===== Style Gallery ===== */
+.sg-toolbar { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.sg-search-wrap { position: relative; }
+.sg-search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+.sg-search { width: 180px; padding-left: 28px; }
+.sg-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.sg-cat { padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: transparent; font-size: 11.5px; color: var(--text-2); cursor: pointer; transition: border-color 0.15s var(--ease-out), background 0.15s var(--ease-out); }
+.sg-cat:hover { border-color: var(--border-strong); color: var(--text-0); }
+.sg-cat.on { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-text); }
+.sg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.sg-card { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-soft); }
+.sg-card.off { opacity: 0.55; }
+.sg-thumb { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--bg-2); display: flex; align-items: center; justify-content: center; color: var(--text-3); }
+.sg-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sg-off-tag { position: absolute; top: 6px; right: 6px; }
+.sg-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sg-name-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.sg-num { font-size: 10.5px; font-weight: 700; color: var(--accent-text); background: var(--accent-bg); border-radius: 6px; padding: 1px 6px; flex-shrink: 0; }
+.sg-name { margin: 0; font-size: 12.5px; font-weight: 700; color: var(--text-0); }
+.sg-cat-tag { align-self: flex-start; font-size: 10.5px; }
+.sg-prompt { margin: 0; font-size: 10.5px; line-height: 1.5; color: var(--text-3); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sg-actions { display: flex; align-items: center; gap: 6px; margin-top: auto; }
+.sg-actions .config-switch { margin-left: auto; }
+.sg-credit { margin: 12px 0 0; font-size: 11px; color: var(--text-3); }
+.sg-file-input { display: none; }
+@media (max-width: 720px) { .sg-toolbar { flex-wrap: wrap; } .sg-search { width: 130px; } }
 </style>

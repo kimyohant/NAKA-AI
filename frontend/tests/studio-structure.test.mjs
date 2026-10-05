@@ -48,15 +48,20 @@ function frontendCalls() {
   return calls
 }
 
-test('studioAPI implements every endpoint in PLAN.md §4 + PHASE2.md §2', () => {
+test('studioAPI implements every endpoint in PLAN.md §4 + PHASE2.md §2 + INFLUENCER.md', () => {
+  const influencerDoc = readFileSync(new URL('../docs/product-studio/INFLUENCER.md', root), 'utf8')
+  const influencerContract = [...influencerDoc.matchAll(/\|\s*(GET|POST|PUT|DELETE)\s*\|\s*`(\/[^`]*)`\s*\|/g)]
+    .filter((m) => m[2].startsWith('/influencers'))
+    .map((m) => `${m[1]} ${normalize(`/studio${m[2]}`.replace(/:\w+/g, ':'))}`)
   const contract = [
     ...[...plan.matchAll(/\|\s*(GET|POST|PUT|DELETE)\s*\|\s*`(\/[^`]*)`\s*\|/g)]
       .filter((m) => !m[2].startsWith('/campaigns'))
       .map((m) => `${m[1]} ${normalize(`/studio${m[2]}`.replace(/:\w+/g, ':'))}`),
     ...phase2ContractRoutes(),
+    ...influencerContract,
   ]
   const calls = frontendCalls()
-  assert.equal(contract.length, 24, `expected 24 contract endpoints (20 + 4 phase 2), parsed ${contract.length}`)
+  assert.equal(contract.length, 33, `expected 33 contract endpoints (20 + 4 phase 2 + 9 influencer), parsed ${contract.length}`)
   for (const c of contract) assert.ok(calls.includes(c), `studioAPI missing contract endpoint ${c}`)
   for (const c of calls) assert.ok(contract.includes(c), `studioAPI calls ${c} which is not in the contract`)
 })

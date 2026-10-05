@@ -20,7 +20,7 @@ Phase ต่อยอดจาก [TRENDING.md](TRENDING.md) — ปิดคร
 
 **Out of scope (ภายหลัง):** วิดีโอพรีวิวในคลัง (ต้องเชื่อม output ของ merge ต่อ) · กราฟตามช่วงเวลา · เปรียบเทียบระหว่างแคมเปญ · auto-pull จากแพลตฟอร์ม (ห้าม)
 
-## 2. Data model (migration **v13**)
+## 2. Data model (migration **v16** — renumber จาก v13 เพราะ master ใช้ 13 ไปกับ style gallery)
 
 ```sql
 CREATE TABLE IF NOT EXISTS creative_results (
@@ -85,7 +85,7 @@ interface GallerySummary { total: number; produced: number; withResults: number;
 
 | ฝั่ง | ไฟล์ |
 |---|---|
-| Backend | `db/sqlite-schema.ts` (v13) · `db/schema.ts` (creativeResults) · `services/gallery.ts` (ใหม่) · `routes/gallery.ts` (ใหม่) · `index.ts` (mount) · `services/marketer.ts` (startResearch แนบ evidence + deleteCreative เก็บกวาด result) · `tests/gallery.test.ts` + `tests/gallery-structure.test.mjs` |
+| Backend | `db/sqlite-schema.ts` (v16) · `db/schema.ts` (creativeResults) · `services/gallery.ts` (ใหม่) · `routes/gallery.ts` (ใหม่) · `index.ts` (mount) · `services/marketer.ts` (startResearch แนบ evidence + deleteCreative เก็บกวาด result) · `tests/gallery.test.ts` + `tests/gallery-structure.test.mjs` |
 | Frontend | `composables/useApi.ts` (galleryAPI) · `views/marketer/gallery.vue` (ใหม่) · `pages/marketer.vue` (ปุ่มเข้าคลัง) · `nuxt.config.ts` (route `/marketer/gallery` ก่อน `/marketer/:id`) · `locales/th.json` + `en.json` (`marketer.gallery.*`) · `tests/marketer-gallery-structure.test.mjs` |
 
 กติกาเดิมครบ: pure CSS · camelCase · i18n th/en parity · ไม่ commit/push · production 5679 ห้าม kill (dev PORT=5680)

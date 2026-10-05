@@ -240,6 +240,10 @@ export const stylePresets = sqliteTable('style_presets', {
   description: text('description'),
   sortOrder: integer('sort_order').default(0),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  // Style Gallery (docs/style-gallery/PLAN.md): รูปพรีวิว/หมวด/แหล่งที่มา
+  previewPath: text('preview_path'),
+  category: text('category'),
+  source: text('source').notNull().default('custom'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   // 注意: 此表无 deleted_at（硬删除），value 列有唯一索引（见 sqlite-schema.ts DDL）
@@ -402,7 +406,7 @@ export const campaignCreatives = sqliteTable('campaign_creatives', {
   updatedAt: text('updated_at').notNull(),
 })
 
-// v13 (docs/ai-marketer/GALLERY.md): ผลตอบรับจริงต่อ creative — ผู้ใช้กรอกเอง (manual analytics), 1:1 กับ creative
+// v16 (docs/ai-marketer/GALLERY.md): ผลตอบรับจริงต่อ creative — ผู้ใช้กรอกเอง (manual analytics), 1:1 กับ creative
 export const creativeResults = sqliteTable('creative_results', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   creativeId: integer('creative_id').notNull().unique(),
@@ -470,6 +474,8 @@ export const studioProjects = sqliteTable('studio_projects', {
   aspectRatio: text('aspect_ratio').notNull().default('9:16'),
   durationSec: integer('duration_sec').notNull().default(24),
   avatarId: integer('avatar_id'),
+  // v14: AI Influencer — พรีเซนเตอร์ AI ที่ตั้งค่า persona/หน้าตาไว้ (ใช้แทนหรือคู่กับ avatar)
+  influencerId: integer('influencer_id'),
   tone: text('tone'),
   notes: text('notes'),
   budgetThb: real('budget_thb'),
@@ -554,6 +560,43 @@ export const cloneVariants = sqliteTable('clone_variants', {
   errorMsg: text('error_msg'),
   pipelineTaskId: integer('pipeline_task_id'),
   episodeId: integer('episode_id'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+// v14 (AI Influencer): คลังพรีเซนเตอร์ AI — persona/appearance ใช้ประกอบสคริปต์และ generate รูป
+export const studioInfluencers = sqliteTable('studio_influencers', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  niche: text('niche'),
+  persona: text('persona').notNull().default(''),
+  appearance: text('appearance').notNull().default(''),
+  locale: text('locale'),
+  tone: text('tone'),
+  imageUrl: text('image_url'),
+  imageTaskId: integer('image_task_id'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  deletedAt: text('deleted_at'),
+})
+
+// v14 (AI Influencer): คอนเทนต์รีวิวของ influencer — kind 'image' (task_id → sys_task) หรือ 'script' (ข้อความ)
+export const studioInfluencerContents = sqliteTable('studio_influencer_contents', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  influencerId: integer('influencer_id').notNull(),
+  kind: text('kind').notNull(),
+  productName: text('product_name').notNull().default(''),
+  productImage: text('product_image'),
+  scene: text('scene'),
+  instruction: text('instruction'),
+  language: text('language'),
+  platform: text('platform'),
+  durationSec: integer('duration_sec'),
+  prompt: text('prompt').notNull().default(''),
+  taskId: integer('task_id'),
+  script: text('script'),
+  status: text('status').notNull().default('processing'),
+  errorMsg: text('error_msg'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })
