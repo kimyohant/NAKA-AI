@@ -11,6 +11,7 @@ import { MiniMaxVideoAdapter } from './minimax-video'
 import { AliyunWanVideoAdapter } from './aliyun-wan-video'
 import { WanCreateImageAdapter, WanCreateVideoAdapter } from './wan-create'
 import { UnslothVideoAdapter } from './unsloth-video'
+import { UnslothImageAdapter } from './unsloth-image'
 import type { ImageProviderAdapter, VideoProviderAdapter } from './types'
 
 // 图片 Adapter 注册表
@@ -20,6 +21,7 @@ export const imageAdapters: Record<string, ImageProviderAdapter> = {
   volcengine: new VolcEngineImageAdapter(),
   qwencloud: new QwenCloudImageAdapter(),
   wancreate: new WanCreateImageAdapter(),
+  unsloth: new UnslothImageAdapter(),
 }
 
 // 视频 Adapter 注册表
