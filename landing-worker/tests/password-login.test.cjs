@@ -19,7 +19,7 @@ mock.method(globalThis, 'fetch', async () => { throw new Error('Unexpected exter
 after(() => { mock.restoreAll(); rmSync(buildDir, { recursive: true, force: true }); });
 
 const MIGRATIONS = ['0001_auth.sql', '0002_credits_jobs.sql', '0003_social.sql', '0004_plans.sql', '0007_payments.sql', '0008_receipts.sql',
-  '0009_admin_audit.sql', '0010_stripe.sql', '0011_line_login.sql', '0012_password_login.sql'];
+  '0009_admin_audit.sql', '0010_stripe.sql', '0011_line_login.sql', '0012_password_login.sql', '0015_admin_audit_actor.sql'];
 
 function setup(t, extra = {}) {
   const { sqlite, db } = migratedDb(...MIGRATIONS);
@@ -152,7 +152,7 @@ test('config advertises password sign-in and hides unconfigured methods', async 
 });
 
 test('migration 0012 keeps identities and the admin audit history in order', () => {
-  const { sqlite } = migratedDb(...MIGRATIONS.slice(0, -1));
+  const { sqlite } = migratedDb(...MIGRATIONS.filter(name => name < '0012'));
   sqlite.exec('PRAGMA foreign_keys = ON');
   sqlite.prepare("INSERT INTO users (id, display_name, created_at) VALUES ('u1', 'x', 0)").run();
   sqlite.prepare("INSERT INTO auth_identities (id, user_id, provider, provider_uid, email, verified_at) VALUES ('i1','u1','phone','+66812345678',NULL,0)").run();

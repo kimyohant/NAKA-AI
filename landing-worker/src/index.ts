@@ -1,12 +1,13 @@
 import { AFFILIATE_JOB_KIND, handleAffiliateApi, makeAffiliateHandler } from "./affiliate";
 import { runSalesAgent } from "./agent";
-import { handleBilling, handleStripeWebhook, runBillingCron } from "./billing";
+import { handleBilling, handlePublicPlans, handleStripeWebhook, runBillingCron } from "./billing";
 import { backfillReceipts, handleReceipts } from "./receipts";
 import { handleOnboarding } from "./onboarding";
+import { checkAdmin } from "./admin/auth";
 import { handleAdminCustomers } from "./admin/customers";
 import { handleWorks } from "./works";
 import { handleAuth, requireUser } from "./auth";
-import { constantTimeEqual, readBodyBytes } from "./auth/common";
+import { readBodyBytes } from "./auth/common";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
 import { drainInbox, handleInbox, handleMetaWebhook, INBOX_JOB_KIND, makeInboxHandler } from "./inbox";
@@ -14,6 +15,8 @@ import { runQueue, errorSummary, type JobHandler } from "./jobs";
 import { getDisplayName, pushText, replyOrPush, startLoading, verifySignature } from "./line";
 import { handleSocial, publishDuePosts } from "./social";
 import { handleStudio } from "./studio";
+import { handleAdminSystem } from "./system/admin";
+import { featureOn, withSettings } from "./system/store";
 import type { Env } from "./types";
 
 interface LineEvent {
@@ -27,8 +30,10 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8" } });
 
 export default {
-  async fetch(request, env, ctx): Promise<Response> {
+  async fetch(request, workerEnv, ctx): Promise<Response> {
     const url = new URL(request.url);
+    // Settings saved in /admin/system/ override wrangler vars and secrets (src/system).
+    const env = await withSettings(workerEnv);
 
     // www serves the same Worker, but sign-in, cookies and CSRF checks belong to APP_ORIGIN only:
     // send every www request to the main domain instead of failing its logins and logouts.
@@ -36,6 +41,9 @@ export default {
     if (main && url.hostname === `www.${main.hostname}`) {
       return Response.redirect(`${main.origin}${url.pathname}${url.search}`, request.method === "GET" || request.method === "HEAD" ? 301 : 308);
     }
+
+    const unavailable = closedFeature(env, url, request.method);
+    if (unavailable) return unavailable;
 
     const authResponse = await handleAuth(request, env, url, ctx);
     if (authResponse) return authResponse;
@@ -82,6 +90,7 @@ export default {
     if (url.pathname === "/webhook/meta") return handleMetaWebhook(request, env, ctx);
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);
     if (url.pathname === "/api/health") return json({ ok: true });
+    if (url.pathname === "/api/plans") return handlePublicPlans(request, env);
     if (url.pathname === "/world/index.wasm" && (request.method === "GET" || request.method === "HEAD")) {
       const compressedUrl = new URL("/world/index.wasm.gz", url.origin);
       const compressed = await env.ASSETS.fetch(new Request(compressedUrl, request));
@@ -94,11 +103,19 @@ export default {
       return new Response(request.method === "HEAD" ? null : compressed.body, { status: compressed.status, headers });
     }
     if (url.pathname.startsWith("/api/admin/")) {
-      const auth = request.headers.get("Authorization") ?? "";
-      if (!env.ADMIN_TOKEN || !constantTimeEqual(auth, `Bearer ${env.ADMIN_TOKEN}`)) return json({ error: "unauthorized" }, 401);
+      // A Google account in ADMIN_EMAILS (signed in within 12 hours), or the ADMIN_TOKEN break-glass.
+      const check = await checkAdmin(request, env);
+      if (!("actor" in check)) return adminJson({ error: check.error, reason: check.reason }, check.status);
+      const { actor } = check;
+      if (url.pathname === "/api/admin/me") {
+        return adminJson(request.method === "GET" ? { kind: actor.kind, label: actor.label } : { error: "not found" }, request.method === "GET" ? 200 : 405);
+      }
       if (url.pathname === "/api/admin/studio") return handleStudio(request, env);
+      // The panel is given the Worker's own env so it can tell saved values from wrangler ones.
+      const systemResponse = await handleAdminSystem(request, workerEnv, url, actor);
+      if (systemResponse) return systemResponse;
       try {
-        const customerResponse = await handleAdminCustomers(request, env, url);
+        const customerResponse = await handleAdminCustomers(request, env, url, actor);
         if (customerResponse) return customerResponse;
         return await handleAdmin(request, env, url);
       } catch (err) {
@@ -110,13 +127,14 @@ export default {
   },
 
   // Cron (wrangler.jsonc): drain the AI job queue once a minute, a few jobs at a time.
-  async scheduled(_controller, env, ctx): Promise<void> {
+  async scheduled(_controller, workerEnv, ctx): Promise<void> {
+    const env = await withSettings(workerEnv);
     ctx.waitUntil(runQueue(env.DB, jobHandlers(env), { maxJobs: 30, concurrency: 5 }).then(
       (result) => { if (result.ran || result.recovered) console.log("queue", result); },
       (err) => console.error("queue run failed", errorSummary(err)),
     ));
     // Separate from the job queue so missing social config never stops AI jobs.
-    ctx.waitUntil(publishDuePosts(env, { maxPosts: 2 }).then(
+    if (featureOn(env, "FEATURE_SOCIAL")) ctx.waitUntil(publishDuePosts(env, { maxPosts: 2 }).then(
       (result) => { if (result.published || result.failed) console.log("social posts", result.published, result.failed); },
       () => console.error("social publish run failed"),
     ));
@@ -131,12 +149,32 @@ export default {
       () => console.error("receipt backfill failed"),
     ));
     // Pick up stored webhooks and queue inbox replies; the replies themselves run in runQueue.
-    ctx.waitUntil(drainInbox(env, { maxReceipts: 5, maxMessages: 20 }).then(
+    if (featureOn(env, "FEATURE_INBOX")) ctx.waitUntil(drainInbox(env, { maxReceipts: 5, maxMessages: 20 }).then(
       (result) => { if (result.receipts || result.enqueued) console.log("inbox", result.receipts, result.enqueued); },
       () => console.error("inbox drain failed"),
     ));
   },
 } satisfies ExportedHandler<Env>;
+
+const CLOSED = "ฟีเจอร์นี้ปิดให้บริการชั่วคราว";
+const adminJson = (data: unknown, status = 200) => new Response(JSON.stringify(data),
+  { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
+
+/** Answers requests for a feature switched off in /admin/system/; null lets the request through. */
+function closedFeature(env: Env, url: URL, method: string): Response | null {
+  const path = url.pathname;
+  const under = (base: string) => path === base || path.startsWith(base + "/");
+  // Maintenance closes the customer API. The panel, Google sign-in (admins use it), health and webhooks keep working.
+  if (featureOn(env, "FEATURE_MAINTENANCE") && path.startsWith("/api/") && !under("/api/admin") &&
+      path !== "/api/health" && path !== "/api/auth/config" && path !== "/api/auth/logout" && !under("/api/auth/google")) {
+    return json({ error: "ระบบปิดปรับปรุงชั่วคราว กรุณากลับมาใหม่ภายหลัง", maintenance: true }, 503);
+  }
+  if (!featureOn(env, "FEATURE_CLIPS") && method === "POST" && /^\/api\/affiliate\/reviews\/?$/.test(path)) return json({ error: CLOSED }, 503);
+  // Signed media links stay open: Instagram may still be fetching a clip for a post already sent.
+  if (!featureOn(env, "FEATURE_SOCIAL") && under("/api/social") && !path.startsWith("/api/social/media/")) return json({ error: CLOSED }, 503);
+  if (!featureOn(env, "FEATURE_INBOX") && under("/api/inbox")) return json({ error: CLOSED }, 503);
+  return null;
+}
 
 function jobHandlers(env: Env): Record<string, JobHandler> {
   return { [AFFILIATE_JOB_KIND]: makeAffiliateHandler(env), [INBOX_JOB_KIND]: makeInboxHandler(env) };
@@ -151,6 +189,7 @@ async function handleLineWebhook(request: Request, env: Env, ctx: ExecutionConte
   if (!(await verifySignature(body, request.headers.get("x-line-signature"), env.LINE_CHANNEL_SECRET))) {
     return new Response("invalid signature", { status: 401 });
   }
+  if (!featureOn(env, "FEATURE_LINE_BOT")) return new Response("ok"); // switched off: acknowledge, answer nothing
   const { events } = JSON.parse(body) as { events: LineEvent[] };
   // Acknowledge LINE immediately; the agent runs in the background.
   ctx.waitUntil(Promise.all(events.map((e) => handleLineEvent(env, e).catch((err) => console.error("event failed", errorSummary(err))))));

@@ -4,7 +4,8 @@ export interface Env {
   ANTHROPIC_API_KEY: string;
   LINE_CHANNEL_SECRET: string;
   LINE_CHANNEL_ACCESS_TOKEN: string;
-  ADMIN_TOKEN: string;
+  ADMIN_TOKEN: string; // break-glass bearer for /api/admin/* (src/admin/auth.ts)
+  ADMIN_EMAILS?: string; // Google accounts allowed into /admin/, comma separated
   // Phase 1 auth — contract in docs/phase1-tasks.md
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
@@ -45,6 +46,18 @@ export interface Env {
   RECEIPT_SELLER_TAX_ID?: string;
   RECEIPT_VAT_REGISTERED?: string; // "1" = short-form tax invoice with 7% VAT shown
   SIGNUP_CREDITS?: string; // free credits granted once at signup; unset or not a positive integer = none
+  // System control panel (src/system): base64 32-byte AES-GCM key for secrets saved from /admin/system/
+  SETTINGS_KEY?: string;
+  // Feature switches, "on" | "off" (src/system/registry.ts); withSettings() fills in their defaults
+  FEATURE_MAINTENANCE?: string;
+  FEATURE_PAYMENTS?: string;
+  FEATURE_CLIPS?: string;
+  FEATURE_SOCIAL?: string;
+  FEATURE_INBOX?: string;
+  FEATURE_LINE_BOT?: string;
+  FEATURE_GOOGLE_LOGIN?: string;
+  FEATURE_LINE_LOGIN?: string;
+  FEATURE_TURNSTILE?: string;
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */

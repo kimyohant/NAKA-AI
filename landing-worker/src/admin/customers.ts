@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import type { AdminActor } from './auth';
 import { constantTimeEqual } from '../auth/common';
 import { ledgerFor } from '../credits';
 import { hashPassword, temporaryPassword } from '../auth/password';
@@ -47,7 +48,7 @@ async function detail(env: Env, userId: string): Promise<Response> {
     env.DB.prepare('SELECT id, number FROM receipts WHERE user_id = ? ORDER BY issued_at DESC, year DESC, seq DESC').bind(userId).all(),
     // Explicit allowlist: token_enc and provider credentials never leave this module.
     env.DB.prepare('SELECT id, platform, name, status FROM social_accounts WHERE user_id = ? ORDER BY created_at DESC, id').bind(userId).all(),
-    env.DB.prepare('SELECT id, action, detail, note, created_at AS createdAt FROM admin_audit WHERE user_id = ? ORDER BY created_at DESC, rowid DESC')
+    env.DB.prepare('SELECT id, action, detail, note, actor, created_at AS createdAt FROM admin_audit WHERE user_id = ? ORDER BY created_at DESC, rowid DESC')
       .bind(userId).all<{ id: string; action: string; detail: string; note: string; createdAt: number }>(),
     env.DB.prepare("SELECT id, name, monthly_credits AS monthlyCredits, price_thb AS price FROM plans WHERE price_thb > 0 AND id <> 'free' ORDER BY price_thb, id").all(),
   ]);
@@ -88,7 +89,7 @@ type Action = 'credits' | 'package' | 'status';
 /** The audit INSERT reads before/after inside the transaction. Effects use that immutable snapshot,
  * so parallel requests cannot lose a renewal or record a stale balance. No UPDATE/DELETE of audit.
  */
-async function change(request: Request, env: Env, userId: string, action: Action): Promise<Response> {
+async function change(request: Request, env: Env, userId: string, action: Action, who: string): Promise<Response> {
   const data = await body(request);
   const note = typeof data.note === 'string' ? data.note.trim() : '';
   if (!note || note.length > 200) throw new AdminError(400, 'กรุณาระบุเหตุผล 1–200 ตัวอักษร');
@@ -131,10 +132,10 @@ async function change(request: Request, env: Env, userId: string, action: Action
     CASE WHEN s.plan_id = json_extract(?3, '$.planId') AND s.status = 'active' AND s.expires_at > ?5 THEN 1 ELSE 0 END AS extending
     FROM users u LEFT JOIN subscriptions s ON s.user_id = u.id WHERE u.id = ?2`;
   const statements = [env.DB.prepare(`WITH state AS (${stateSql})
-    INSERT INTO admin_audit (id, user_id, action, detail, note, created_at)
-    SELECT ?1, ?2, ?6, json_object('input', json(?3), 'before', ${before}, 'after', ${after}), ?4, ?5
+    INSERT INTO admin_audit (id, user_id, action, detail, note, actor, created_at)
+    SELECT ?1, ?2, ?6, json_object('input', json(?3), 'before', ${before}, 'after', ${after}), ?4, ?7, ?5
     FROM state ${action === 'package' ? "JOIN plans p ON p.id = json_extract(?3, '$.planId') AND p.id <> 'free' AND p.price_thb > 0" : ''}`)
-    .bind(id, userId, JSON.stringify(input), note, t, action)];
+    .bind(id, userId, JSON.stringify(input), note, t, action, who)];
 
   if (action === 'credits' || action === 'package') {
     // Same grant ledger semantics as grantCredits(..., 'grant', note), but its standalone
@@ -165,7 +166,7 @@ async function change(request: Request, env: Env, userId: string, action: Action
 
 /** A forgotten password: a new random one, returned once for the admin to give the customer, every
  * session signed out, and the reset audited in the same transaction. The password itself is never stored or logged. */
-async function resetPassword(request: Request, env: Env, userId: string): Promise<Response> {
+async function resetPassword(request: Request, env: Env, userId: string, who: string): Promise<Response> {
   const data = await body(request);
   const note = typeof data.note === 'string' ? data.note.trim() : '';
   if (!note || note.length > 200) throw new AdminError(400, 'กรุณาระบุเหตุผล 1–200 ตัวอักษร');
@@ -181,8 +182,8 @@ async function resetPassword(request: Request, env: Env, userId: string): Promis
   const t = Math.floor(Date.now() / 1000);
   const detail = JSON.stringify({ input: { note }, before: { email: account.email, sessions: account.sessions }, after: { sessions: 0 } });
   const [audit] = await env.DB.batch([
-    env.DB.prepare(`INSERT INTO admin_audit (id, user_id, action, detail, note, created_at)
-      SELECT ?, ?, 'password', ?, ?, ? WHERE EXISTS (SELECT 1 FROM auth_passwords WHERE user_id = ?)`).bind(id, userId, detail, note, t, userId),
+    env.DB.prepare(`INSERT INTO admin_audit (id, user_id, action, detail, note, actor, created_at)
+      SELECT ?, ?, 'password', ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM auth_passwords WHERE user_id = ?)`).bind(id, userId, detail, note, who, t, userId),
     env.DB.prepare('UPDATE auth_passwords SET hash = ?, updated_at = ? WHERE user_id = ? AND EXISTS (SELECT 1 FROM admin_audit WHERE id = ?)')
       .bind(await hashPassword(password), t, userId, id),
     env.DB.prepare('DELETE FROM sessions WHERE user_id = ? AND EXISTS (SELECT 1 FROM admin_audit WHERE id = ?)').bind(userId, id),
@@ -191,13 +192,16 @@ async function resetPassword(request: Request, env: Env, userId: string): Promis
   return json({ ok: true, auditId: id, temporaryPassword: password });
 }
 
-/** Called after the shared router's ADMIN_TOKEN check; also fails closed when mounted alone. */
-export async function handleAdminCustomers(request: Request, env: Env, url: URL): Promise<Response | null> {
+/** `actor` comes from the shared router's checkAdmin(); mounted without it, only ADMIN_TOKEN gets in. */
+export async function handleAdminCustomers(request: Request, env: Env, url: URL, actor?: AdminActor): Promise<Response | null> {
   if (url.pathname !== BASE && !url.pathname.startsWith(BASE + '/')) return null;
-  const authorized = !!env.ADMIN_TOKEN && constantTimeEqual(request.headers.get('Authorization') ?? '', `Bearer ${env.ADMIN_TOKEN}`);
-  if (!authorized) {
-    return json({ error: 'กรุณาเข้าสู่ระบบหลังร้านอีกครั้ง' }, 401);
+  if (!actor) {
+    if (!env.ADMIN_TOKEN || !constantTimeEqual(request.headers.get('Authorization') ?? '', `Bearer ${env.ADMIN_TOKEN}`)) {
+      return json({ error: 'กรุณาเข้าสู่ระบบหลังร้านอีกครั้ง' }, 401);
+    }
+    actor = { kind: 'token', label: 'โทเคนฉุกเฉิน', userId: null };
   }
+  const who = actor.label;
   try {
     if (request.method === 'POST' && request.headers.has('Origin') && request.headers.get('Origin') !== url.origin) {
       throw new AdminError(403, 'คำขอไม่ถูกต้อง');
@@ -209,8 +213,8 @@ export async function handleAdminCustomers(request: Request, env: Env, url: URL)
     try { userId = decodeURIComponent(match[1]); } catch { throw new AdminError(400, 'รหัสลูกค้าไม่ถูกต้อง'); }
     if (!userId || userId.length > 200) throw new AdminError(400, 'รหัสลูกค้าไม่ถูกต้อง');
     if (!match[2] && request.method === 'GET') return await detail(env, userId);
-    if (match[2] === 'password' && request.method === 'POST') return await resetPassword(request, env, userId);
-    if (match[2] && request.method === 'POST') return await change(request, env, userId, match[2] as Action);
+    if (match[2] === 'password' && request.method === 'POST') return await resetPassword(request, env, userId, who);
+    if (match[2] && request.method === 'POST') return await change(request, env, userId, match[2] as Action, who);
     const response = json({ error: 'ไม่รองรับวิธีเรียกใช้งานนี้' }, 405);
     response.headers.set('Allow', match[2] ? 'POST' : 'GET');
     return response;
