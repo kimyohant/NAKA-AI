@@ -183,6 +183,12 @@
               <article v-for="p in filteredStylePresets" :key="p.id" class="sg-card" :class="{ off: !p.is_active }">
                 <div class="sg-thumb">
                   <img v-if="p.preview_path" :src="p.preview_path" alt="" loading="lazy" />
+                  <!-- no generated preview yet: show the bundled example (public/studio-art/styles), else the palette icon -->
+                  <img
+                    v-else-if="styleExample(p.value) && !libraryArtFailed[`style:${p.value}`]"
+                    :src="styleExample(p.value)" alt="" loading="lazy" decoding="async"
+                    @error="libraryArtFailed[`style:${p.value}`] = true"
+                  />
                   <Palette v-else :size="22" :stroke-width="1.5" />
                   <span v-if="!p.is_active" class="tag sg-off-tag">{{ t('settings.common.disabled') }}</span>
                 </div>
@@ -817,7 +823,7 @@ import { Plus, Pencil, Trash2, FileText, ChevronDown, Check, Loader2, Bot, Cpu, 
 import BaseSelect from '~/components/BaseSelect.vue'
 import { toast } from 'vue-sonner'
 import { UNSLOTH_PROVIDER, UNSLOTH_VIDEO_DEFAULTS, isLocalOrPrivateBaseUrl } from '~/utils/unslothFlow'
-import { coverArt, skillArt } from '~/utils/studioArt'
+import { coverArt, skillArt, styleExample } from '~/utils/studioArt'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI, promptAPI, skillsAPI, storageAPI, stylePresetAPI, settingsAPI, serverUpdateAPI } from '~/composables/useApi'
