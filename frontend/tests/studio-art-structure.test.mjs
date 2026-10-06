@@ -64,3 +64,16 @@ test('cards use the art and fall back to the icon when an image fails', () => {
   assert.match(settings, /libraryArtFailed\[item\.id\] = true/)
   assert.match(settings, /coverArt\('agent', libraryAgent\.value\)/)
 })
+
+test('every seeded visual style has an example image, and the picker falls back to its gradient', async () => {
+  const { styleExample } = await import('../app/utils/studioArt.js')
+  const schema = read('../backend/src/db/sqlite-schema.ts')
+  const seeded = [...schema.matchAll(/value: '([a-z0-9-]+)', sortOrder/g)].map(m => m[1])
+  assert.ok(seeded.length >= 8)
+  for (const v of seeded) assert.ok(existsSync(publicFile(styleExample(v))), `missing style example ${v}`)
+  assert.equal(styleExample('a/b'), '')
+  const index = read('app/pages/index.vue')
+  assert.match(index, /styleImg\[p\.value\] = 'error'/)
+  assert.match(index, /v-if="styleImg\[p\.value\] !== 'ok'" class="style-glyph"/)
+  assert.doesNotMatch(index, /overflow-x: auto; scroll-snap-type: x mandatory/)
+})
