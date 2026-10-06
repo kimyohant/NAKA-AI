@@ -27,6 +27,13 @@ export function skillArt(skillId) {
   return { still: `${base}/still.webp`, clay: `${base}/clay.webp` }
 }
 
+/** Example image of a visual style preset (style_presets.value, e.g. "ghibli", "live-kdrama").
+ *  Custom styles have no file; callers keep their gradient card when the image fails to load. */
+export function styleExample(styleValue) {
+  if (!safeId(styleValue) || styleValue.includes('/')) return ''
+  return `${STUDIO_ART_ROOT}/styles/${styleValue}.webp`
+}
+
 /** Section banner: coverArt('agent', 'extractor'), coverArt('template-category', 'promo') … */
 export function coverArt(kind, id) {
   if (!COVER_KINDS.includes(kind) || !safeId(id) || id.includes('/')) return ''

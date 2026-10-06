@@ -75,7 +75,13 @@
             @click="studioStyle = p.value"
           >
             <span class="style-art" :style="{ background: styleArt(p.value) }">
-              <span class="style-glyph">{{ styleGlyph(p.value) }}</span>
+              <!-- example image of this style (public/studio-art/styles); the gradient + glyph stay for custom styles -->
+              <img
+                v-if="styleExample(p.value) && styleImg[p.value] !== 'error'"
+                class="style-photo" :src="styleExample(p.value)" alt="" loading="lazy" decoding="async"
+                @load="styleImg[p.value] = 'ok'" @error="styleImg[p.value] = 'error'"
+              >
+              <span v-if="styleImg[p.value] !== 'ok'" class="style-glyph">{{ styleGlyph(p.value) }}</span>
               <span v-if="studioStyle === p.value" class="style-badge">{{ t('index.studio.selected') }}</span>
             </span>
             <span class="style-name">{{ styleLabel(p.value) }}</span>
@@ -280,6 +286,7 @@ import { Clock, CircleHelp, Paperclip, ArrowUp, ChevronDown, Plus, Search, MoreH
 import { dramaAPI, episodeAPI, stylePresetAPI, aiConfigAPI } from '~/composables/useApi'
 import { GENRE_TAGS } from '~/composables/useCreativeTags'
 import BaseSelect from '~/components/BaseSelect.vue'
+import { styleExample } from '~/utils/studioArt'
 import { startTour, autoTour } from '~/composables/useTour'
 
 const { t, te, locale } = useI18n()
@@ -373,6 +380,8 @@ const FALLBACK_ART = [
   'radial-gradient(120% 90% at 80% 0%, #f472b6 0%, #7c2d5a 50%, #1f0a16 100%)',
   'radial-gradient(120% 90% at 50% 0%, #38bdf8 0%, #1e3a8a 50%, #0a1024 100%)',
 ]
+// per-style example image state: 'ok' once loaded (glyph hidden), 'error' when missing (gradient only)
+const styleImg = reactive({})
 function styleArt(key) {
   if (STYLE_ART[key]) return STYLE_ART[key]
   const s = String(key || '')
@@ -713,6 +722,9 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
   position: relative; display: flex; align-items: center; justify-content: center;
   aspect-ratio: 16 / 9; margin-bottom: 12px;
 }
+.style-art { overflow: hidden; }
+.style-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.style-badge { z-index: 1; }
 .style-glyph {
   font-family: var(--font-display); font-size: 40px; font-weight: 800;
   color: rgba(255, 255, 255, 0.9); text-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
