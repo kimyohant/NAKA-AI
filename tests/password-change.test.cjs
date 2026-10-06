@@ -20,7 +20,7 @@ mock.method(globalThis, 'fetch', async () => { throw new Error('Unexpected exter
 after(() => { mock.restoreAll(); rmSync(buildDir, { recursive: true, force: true }); });
 
 const MIGRATIONS = ['0001_auth.sql', '0002_credits_jobs.sql', '0003_social.sql', '0004_plans.sql', '0007_payments.sql',
-  '0008_receipts.sql', '0009_admin_audit.sql', '0010_stripe.sql', '0011_line_login.sql', '0012_password_login.sql'];
+  '0008_receipts.sql', '0009_admin_audit.sql', '0010_stripe.sql', '0011_line_login.sql', '0012_password_login.sql', '0015_admin_audit_actor.sql'];
 
 function setup(t) {
   const { sqlite, db } = migratedDb(...MIGRATIONS);

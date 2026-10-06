@@ -3,6 +3,9 @@
 สรุปจากโค้ดจริง ณ `main` @ `7077b11` (2026-09-30) — ทุกตัวแปรยืนยันจาก `src/types.ts` และตรรกะจากไฟล์ที่อ้าง
 ขั้นตอนละเอียดอยู่ใน [docs/DEPLOY.md](DEPLOY.md) หัวข้อที่อ้างในแต่ละข้อ — หน้านี้เป็นดัชนีสั้นๆ ไม่ซ้ำเนื้อหา
 
+> **ตั้งแต่ 2026-10-06:** ทุกข้อด้านล่างยกเว้น R2 (ข้อ 4) ตั้งจากหน้า **`/admin/system/`** ได้แล้ว (API key, สวิตช์, `SIGNUP_CREDITS`)
+> โดยไม่ต้องใช้ `wrangler secret put` และไม่ต้อง deploy — ดู [docs/system-control.md](system-control.md)
+
 กติกา (docs/phase1-tasks.md): แก้ `wrangler.jsonc`/`migrations/` และ deploy = **A เท่านั้น** · ค่าลับตั้งด้วย
 `npx wrangler secret put` เท่านั้น ห้ามขอ/ส่งทางแชต
 

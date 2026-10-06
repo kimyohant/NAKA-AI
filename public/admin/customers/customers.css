@@ -12,6 +12,11 @@ button:disabled { opacity:.55; cursor:wait; }
 :is(a,button,input,textarea,select,[tabindex]):focus-visible { outline:3px solid var(--brand); outline-offset:3px; }
 .topbar { min-height:56px; padding:8px 24px; display:flex; justify-content:space-between; align-items:center; gap:16px; background:var(--brand); color:#fff; }
 .topbar a { font-weight:600; text-decoration:none; }
+.topbar .topbar-link { margin-left:auto; font-weight:500; }
+.button-link { display:flex; align-items:center; justify-content:center; min-height:44px; margin-top:16px; padding:8px 16px; border-radius:10px; font-weight:600; text-decoration:none; }
+.button-link.primary { background:var(--brand); color:#fff; }
+.button-link.primary:hover { background:var(--hover); }
+.break-glass { margin-top:20px; } .break-glass summary { cursor:pointer; color:var(--muted); font-size:14px; min-height:44px; padding:8px 0; }
 .topbar button { background:transparent; color:#fff; border-color:#b9ccfa; }
 .topbar button:hover:not(:disabled) { background:var(--hover); color:#fff; }
 .topbar :focus-visible { outline-color:#fff; }
