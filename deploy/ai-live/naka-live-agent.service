@@ -1,0 +1,17 @@
+[Unit]
+Description=Naka AI Live control agent (drives LiveTalking for Naka Studio)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/naka-live/agent.env
+WorkingDirectory=/opt/naka-live
+ExecStart=/opt/naka-live/conda/envs/livetalking/bin/python /opt/naka-live/naka_live_agent.py
+Restart=on-failure
+RestartSec=5
+# LiveTalking and ffmpeg are children of the agent; stop them with it
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target

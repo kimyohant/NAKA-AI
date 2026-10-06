@@ -620,3 +620,52 @@ export const cloneAPI = {
   del: (id: number) => api.del(`/clone/projects/${id}`),
   delVariant: (variantId: number) => api.del(`/clone/variants/${variantId}`),
 }
+
+// ---------- AI Live (backend /api/v1/live → naka-live-agent on the GPU box; docs/ai-live/PLAN.md) ----------
+export interface LiveConfig {
+  agentUrl: string
+  avatarId: string
+  voice: string
+  hasToken: boolean
+  hasRtmpUrl: boolean
+  rtmpHost: string
+  configured: boolean
+}
+export interface LiveAgentHealth {
+  livetalking: { running: boolean; since: number | null; avatar: string | null; voice: string | null; model: string | null }
+  push: { running: boolean; since: number | null }
+  gpu: { name: string; used_mb: number; total_mb: number; free_mb: number; util: number } | null
+  avatars: string[]
+  models_ready: boolean
+}
+export interface LiveStatus { config: LiveConfig; online: boolean; agent: LiveAgentHealth | null; error?: string }
+export interface LiveProductInput { name: string; details?: string; price?: string; promo?: string; shop?: string }
+
+export const liveAPI = {
+  config: () => api.get<LiveConfig>('/live/config'),
+  // token / rtmpUrl: '' keeps the stored value, null clears it (they are never sent back)
+  saveConfig: (data: { agentUrl?: string; token?: string | null; avatarId?: string; voice?: string; rtmpUrl?: string | null }) => api.put<LiveConfig>('/live/config', data),
+  status: () => api.get<LiveStatus>('/live/status'),
+  start: (data: { avatarId?: string; voice?: string } = {}) => api.post<{ ready: boolean }>('/live/start', data),
+  stop: () => api.post('/live/stop', {}),
+  say: (text: string, interrupt = false) => api.post('/live/say', { text, interrupt }),
+  interrupt: () => api.post('/live/interrupt', {}),
+  speaking: () => api.get<{ speaking: boolean }>('/live/speaking'),
+  pushStart: () => api.post('/live/push/start', {}),
+  pushStop: () => api.post('/live/push/stop', {}),
+  freeGpu: () => api.post<Array<{ server: string; image: number | string; video: number | string }>>('/live/free-gpu', {}),
+  script: (product: LiveProductInput, opts: { tone?: string; minutes?: number } = {}) => api.post<{ lines: string[] }>('/live/script', { product, ...opts }),
+  answer: (data: { comment: string; viewer?: string; product: LiveProductInput; faq?: string }) =>
+    api.post<{ reply: string | null; handoff: boolean; reason: string }>('/live/answer', data),
+  /** WHEP preview: raw SDP in, raw SDP out (not the JSON envelope) */
+  async whep(offer: string): Promise<string> {
+    const resp = await fetch(`${BASE}/live/whep`, { method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: offer })
+    const text = await resp.text()
+    if (!resp.ok) {
+      let msg = text
+      try { msg = JSON.parse(text).message || text } catch { /* raw */ }
+      throw Object.assign(new Error(msg), { status: resp.status })
+    }
+    return text
+  },
+}
