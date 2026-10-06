@@ -235,6 +235,124 @@
     }));
   }
 
+  // ---------- trending clips (AI marketer gallery) ----------
+
+  var trendCategories = {};
+  var SOURCE_LABEL = { curated: 'เพิ่มเอง', import: 'ไฟล์', api: 'API' };
+  function shortNum(n) { return n == null ? '—' : Number(n).toLocaleString('th-TH'); }
+
+  function renderTrending(data) {
+    trendCategories = data.categories || trendCategories;
+    if (!$('ta-category').options.length) {
+      Object.keys(trendCategories).forEach(function (k) { var o = el('option', trendCategories[k]); o.value = k; $('ta-category').append(o); });
+    }
+    var c = data.counts || {};
+    $('trend-summary').textContent = 'ทั้งหมด ' + data.videos.length + ' คลิป · เพิ่มเอง ' + (c.curated || 0) + ' · จากไฟล์ ' + (c.import || 0) + ' · จาก API ' + (c.api || 0) +
+      (data.apiConfigured ? '' : ' · ยังไม่ได้ตั้ง API');
+    $('trend-sync').disabled = !data.apiConfigured;
+    $('trend-rows').replaceChildren.apply($('trend-rows'), data.videos.map(function (v) {
+      var tr = el('tr', null, v.active ? '' : 'off');
+      var cover = v.thumbnail ? el('img') : el('span', null, 'thumb');
+      if (v.thumbnail) { cover.src = v.thumbnail; cover.alt = ''; cover.referrerPolicy = 'no-referrer'; cover.loading = 'lazy'; }
+      var link = el('a', v.title || v.productName || v.url); link.href = v.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      var first = el('td'); first.append(cover, link);
+      var cat = el('select');
+      Object.keys(trendCategories).forEach(function (k) { var o = el('option', trendCategories[k]); o.value = k; cat.append(o); });
+      cat.value = v.category; cat.setAttribute('aria-label', 'หมวด');
+      cat.addEventListener('change', function () { patchTrend(v.id, { category: cat.value }); });
+      var catTd = el('td'); catTd.append(cat);
+      var on = el('input'); on.type = 'checkbox'; on.checked = v.active; on.setAttribute('aria-label', 'แสดงในหน้าลูกค้า');
+      on.addEventListener('change', function () { patchTrend(v.id, { active: on.checked }); });
+      var onTd = el('td'); onTd.append(on);
+      var del = el('button', 'ลบ', 'btn btn-danger btn-sm'); del.type = 'button';
+      del.addEventListener('click', async function () {
+        if (!confirm('ลบคลิปนี้ออกจากคลิปมาแรง?')) return;
+        try { renderTrending(await api('!/marketer/trending/' + v.id, 'DELETE')); } catch (error) { if (!quiet(error)) flash(error.message); }
+      });
+      var delTd = el('td'); delTd.append(del);
+      var srcTd = el('td'); srcTd.append(el('span', SOURCE_LABEL[v.source] || v.source, 'src'));
+      tr.append(first, catTd, el('td', shortNum(v.views), 'num'), el('td', shortNum(v.revenue), 'num'), srcTd, onTd, delTd);
+      return tr;
+    }));
+  }
+  async function loadTrendingAdmin() { renderTrending(await api('!/marketer/trending')); }
+  async function patchTrend(id, data) {
+    try { renderTrending(await api('!/marketer/trending/' + id, 'PATCH', data)); flash('บันทึกแล้ว'); }
+    catch (error) { if (!quiet(error)) { flash(error.message); loadTrendingAdmin().catch(function () {}); } }
+  }
+
+  $('trend-add').addEventListener('submit', async function (event) {
+    event.preventDefault();
+    var form = this, button = form.querySelector('button');
+    button.disabled = true; message($('ta-status'), 'กำลังเพิ่ม…');
+    try {
+      renderTrending(await api('!/marketer/trending', 'POST', { url: $('ta-url').value.trim(), category: $('ta-category').value,
+        views: $('ta-views').value.trim() || 0, revenue: $('ta-revenue').value.trim() || undefined, productName: $('ta-product').value.trim() }));
+      form.reset(); message($('ta-status'), 'เพิ่มแล้ว');
+    } catch (error) { if (!quiet(error)) message($('ta-status'), error.message, true); }
+    finally { button.disabled = false; }
+  });
+
+  /** RFC 4180 CSV to objects keyed by the header row: quotes, commas and line breaks inside fields. */
+  function parseCsv(text) {
+    var rows = [], row = [], field = '', quoted = false;
+    text = text.replace(/^\uFEFF/, '');
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (quoted) {
+        if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; } else if (ch === '"') quoted = false; else field += ch;
+      } else if (ch === '"') quoted = true;
+      else if (ch === ',') { row.push(field); field = ''; }
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.some(function (cell) { return cell.trim(); })) rows.push(row);
+        row = [];
+      } else field += ch;
+    }
+    row.push(field);
+    if (row.some(function (cell) { return cell.trim(); })) rows.push(row);
+    var header = (rows.shift() || []).map(function (h) { return h.trim(); });
+    return rows.map(function (cells) { var o = {}; header.forEach(function (h, j) { if (h) o[h] = (cells[j] || '').trim(); }); return o; });
+  }
+
+  $('trend-import').addEventListener('submit', async function (event) {
+    event.preventDefault();
+    var form = this, file = $('ti-file').files[0];
+    if (!file) return;
+    if (file.size > 2500000) { message($('ti-status'), 'ไฟล์ต้องไม่เกิน 2.5 MB', true); return; }
+    var text = await file.text(), rows = null;
+    try {
+      if (/\.json$/i.test(file.name) || /^\s*[\[{]/.test(text)) {
+        var parsed = JSON.parse(text);
+        rows = Array.isArray(parsed) ? parsed : ['data', 'list', 'items', 'videos', 'results'].map(function (k) { return parsed[k]; }).find(Array.isArray);
+      } else rows = parseCsv(text);
+    } catch (e) { rows = null; }
+    if (!rows || !rows.length) { message($('ti-status'), 'อ่านไฟล์ไม่ได้ หรือไม่มีแถวข้อมูล', true); return; }
+    var button = form.querySelector('button[type=submit]');
+    button.disabled = true; message($('ti-status'), 'กำลังนำเข้า ' + rows.length + ' แถว…');
+    try {
+      var result = await api('!/marketer/trending/import', 'POST', { rows: rows.slice(0, 1000), currency: $('ti-currency').value, usdRate: Number($('ti-rate').value) || undefined });
+      renderTrending(result);
+      var skipped = result.skippedCount ? ' · ข้าม ' + result.skippedCount + ' แถว (เช่น ' +
+        result.skipped.slice(0, 3).map(function (x) { return 'แถว ' + x.row + ': ' + x.reason; }).join(', ') + ')' : '';
+      message($('ti-status'), 'นำเข้า ' + result.imported + ' คลิป' + skipped, result.skippedCount > 0);
+      form.reset();
+    } catch (error) { if (!quiet(error)) message($('ti-status'), error.message, true); }
+    finally { button.disabled = false; }
+  });
+
+  $('trend-sync').addEventListener('click', async function () {
+    var button = this;
+    button.disabled = true; message($('ts-status'), 'กำลังดึง…');
+    try {
+      var result = await api('!/marketer/trending/sync', 'POST');
+      renderTrending(result);
+      message($('ts-status'), 'ดึงแล้ว ' + result.imported + ' คลิป' + (result.skipped ? ' · ข้าม ' + result.skipped : ''));
+    } catch (error) { if (!quiet(error)) message($('ts-status'), error.message, true); }
+    finally { button.disabled = false; }
+  });
+
   // ---------- tabs, import, sign-in ----------
 
   var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
@@ -244,6 +362,7 @@
       $(t.getAttribute('aria-controls')).hidden = !on;
     });
     message($('page-status'), '');
+    if (tab.id === 'tab-trending') loadTrendingAdmin().catch(function (error) { if (!quiet(error)) message($('page-status'), error.message, true); });
     if (tab.id === 'tab-audit') loadAudit().catch(function (error) { if (!quiet(error)) message($('page-status'), error.message, true); });
   }
   tabs.forEach(function (tab, i) {

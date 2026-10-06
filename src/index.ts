@@ -15,6 +15,8 @@ import { runQueue, errorSummary, type JobHandler } from "./jobs";
 import { getDisplayName, pushText, replyOrPush, startLoading, verifySignature } from "./line";
 import { handleSocial, publishDuePosts } from "./social";
 import { handleStudio } from "./studio";
+import { handleMarketer, makeMarketerHandlers, refreshTrendingCovers, syncTrendingApi } from "./marketer";
+import { handleAdminMarketer } from "./marketer/admin";
 import { handleAdminSystem } from "./system/admin";
 import { featureOn, withSettings } from "./system/store";
 import type { Env } from "./types";
@@ -58,6 +60,13 @@ export default {
       // Signed media links are fetched by Instagram without a session; every other route needs one.
       const userId = url.pathname.startsWith("/api/social/media/") ? null : (await requireUser(request, env))?.id ?? null;
       return (await handleSocial(request, env, url, userId)) ?? json({ error: "not found" }, 404);
+    }
+    if (url.pathname === "/api/marketer" || url.pathname.startsWith("/api/marketer/")) {
+      // Config, trending and signed images are public; tasks and product lookups need a session.
+      const user = /^\/api\/marketer\/(trending|image)$/.test(url.pathname) ? null : await requireUser(request, env);
+      const kick = () => ctx.waitUntil(runQueue(env.DB, jobHandlers(env), { maxJobs: 2, concurrency: 2 })
+        .catch((err) => console.error("queue kick failed", errorSummary(err))));
+      return (await handleMarketer(request, env, url, user, kick)) ?? json({ error: "not found" }, 404);
     }
     if (url.pathname === "/api/inbox" || url.pathname.startsWith("/api/inbox/")) {
       const user = await requireUser(request, env);
@@ -114,6 +123,8 @@ export default {
       // The panel is given the Worker's own env so it can tell saved values from wrangler ones.
       const systemResponse = await handleAdminSystem(request, workerEnv, url, actor);
       if (systemResponse) return systemResponse;
+      const marketerResponse = await handleAdminMarketer(request, env, url, actor);
+      if (marketerResponse) return marketerResponse;
       try {
         const customerResponse = await handleAdminCustomers(request, env, url, actor);
         if (customerResponse) return customerResponse;
@@ -127,7 +138,7 @@ export default {
   },
 
   // Cron (wrangler.jsonc): drain the AI job queue once a minute, a few jobs at a time.
-  async scheduled(_controller, workerEnv, ctx): Promise<void> {
+  async scheduled(controller, workerEnv, ctx): Promise<void> {
     const env = await withSettings(workerEnv);
     ctx.waitUntil(runQueue(env.DB, jobHandlers(env), { maxJobs: 30, concurrency: 5 }).then(
       (result) => { if (result.ran || result.recovered) console.log("queue", result); },
@@ -148,6 +159,16 @@ export default {
       (issued) => { if (issued) console.log("receipts", issued); },
       () => console.error("receipt backfill failed"),
     ));
+    // AI marketer: pull the trending API once an hour, and keep TikTok covers fresh.
+    if (featureOn(env, "FEATURE_MARKETER")) {
+      if (new Date(controller.scheduledTime).getUTCMinutes() === 7 && env.TRENDING_API_URL?.trim()) {
+        ctx.waitUntil(syncTrendingApi(env).then(
+          (result) => { if (result) console.log("trending sync", result.imported, result.skipped); },
+          (err) => console.error("trending sync failed", errorSummary(err)),
+        ));
+      }
+      ctx.waitUntil(refreshTrendingCovers(env, 3).catch(() => console.error("trending cover refresh failed")));
+    }
     // Pick up stored webhooks and queue inbox replies; the replies themselves run in runQueue.
     if (featureOn(env, "FEATURE_INBOX")) ctx.waitUntil(drainInbox(env, { maxReceipts: 5, maxMessages: 20 }).then(
       (result) => { if (result.receipts || result.enqueued) console.log("inbox", result.receipts, result.enqueued); },
@@ -177,7 +198,7 @@ function closedFeature(env: Env, url: URL, method: string): Response | null {
 }
 
 function jobHandlers(env: Env): Record<string, JobHandler> {
-  return { [AFFILIATE_JOB_KIND]: makeAffiliateHandler(env), [INBOX_JOB_KIND]: makeInboxHandler(env) };
+  return { [AFFILIATE_JOB_KIND]: makeAffiliateHandler(env), [INBOX_JOB_KIND]: makeInboxHandler(env), ...makeMarketerHandlers(env) };
 }
 
 const LINE_WEBHOOK_MAX_BYTES = 256 * 1024; // LINE payloads are small; anything larger is refused unread

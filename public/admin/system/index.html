@@ -65,6 +65,7 @@
         <button role="tab" id="tab-connections" aria-controls="panel-connections" aria-selected="false" tabindex="-1">API และการเชื่อมต่อ</button>
         <button role="tab" id="tab-general" aria-controls="panel-general" aria-selected="false" tabindex="-1">ค่าทั่วไป</button>
         <button role="tab" id="tab-plans" aria-controls="panel-plans" aria-selected="false" tabindex="-1">แพ็กเกจและราคา</button>
+        <button role="tab" id="tab-trending" aria-controls="panel-trending" aria-selected="false" tabindex="-1">คลิปมาแรง</button>
         <button role="tab" id="tab-audit" aria-controls="panel-audit" aria-selected="false" tabindex="-1">ประวัติการแก้</button>
       </nav>
       <p id="page-status" role="status" aria-live="polite"></p>
@@ -104,6 +105,43 @@
           <button class="btn btn-primary btn-sm" type="submit">เพิ่มแพ็กเกจ</button>
           <p id="new-plan-status" role="status" aria-live="polite"></p>
         </form>
+      </section>
+      <section id="panel-trending" role="tabpanel" aria-labelledby="tab-trending" hidden>
+        <p class="muted">คลิปที่ลูกค้าเห็นในหน้านักการตลาด AI (สตูดิโอ 05) · มาได้ 3 ทาง: เพิ่มเองทีละคลิป, นำเข้าไฟล์ export จาก FastMoss / Kalodata, หรือดึงจาก API อัตโนมัติทุกชั่วโมง (ตั้งในแท็บ API และการเชื่อมต่อ)</p>
+        <div class="trend-tools">
+          <form id="trend-add" class="card">
+            <p class="panel-line" aria-hidden="true">CURATED · เพิ่มเอง</p>
+            <h2>เพิ่มคลิป</h2>
+            <label for="ta-url">ลิงก์คลิป TikTok / Facebook / Instagram / YouTube</label><input id="ta-url" type="url" required placeholder="https://www.tiktok.com/@ร้าน/video/…">
+            <div class="plan-grid">
+              <div><label for="ta-category">หมวด</label><select id="ta-category"></select></div>
+              <div><label for="ta-views">ยอดวิว</label><input id="ta-views" placeholder="เช่น 1.2M"></div>
+              <div><label for="ta-revenue">ยอดขายประมาณ (บาท)</label><input id="ta-revenue" placeholder="เช่น 160K หรือเว้นว่าง"></div>
+              <div><label for="ta-product">สินค้าในคลิป</label><input id="ta-product" maxlength="200"></div>
+            </div>
+            <p class="muted">ชื่อคลิปและภาพปกของ TikTok ดึงให้อัตโนมัติ</p>
+            <button class="btn btn-primary btn-sm" type="submit">เพิ่มคลิป</button>
+            <p id="ta-status" role="status" aria-live="polite"></p>
+          </form>
+          <form id="trend-import" class="card">
+            <p class="panel-line" aria-hidden="true">IMPORT · FASTMOSS / KALODATA</p>
+            <h2>นำเข้าไฟล์</h2>
+            <label for="ti-file">ไฟล์ CSV หรือ JSON (ไม่เกิน 1,000 แถว)</label><input id="ti-file" type="file" accept=".csv,.json,text/csv,application/json" required>
+            <div class="plan-grid">
+              <div><label for="ti-currency">ยอดขายในไฟล์เป็น</label><select id="ti-currency"><option value="THB">บาท</option><option value="USD">ดอลลาร์</option></select></div>
+              <div><label for="ti-rate">อัตรา 1 USD = ? บาท</label><input id="ti-rate" type="number" min="1" max="1000" step="0.01" placeholder="เช่น 36"></div>
+            </div>
+            <p class="muted">อ่านคอลัมน์ชื่อทั่วไปให้อัตโนมัติ เช่น video url, views / play count, revenue / GMV, likes, category, title</p>
+            <button class="btn btn-primary btn-sm" type="submit">นำเข้า</button>
+            <p id="ti-status" role="status" aria-live="polite"></p>
+            <hr>
+            <p class="panel-line" aria-hidden="true">API · ทุกชั่วโมง</p>
+            <button class="btn btn-ghost btn-sm" type="button" id="trend-sync">ดึงจาก API ตอนนี้</button>
+            <p id="ts-status" class="muted" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+        <p id="trend-summary" class="muted"></p>
+        <div class="table-wrap"><table class="trend-table"><thead><tr><th>คลิป</th><th>หมวด</th><th class="num">วิว</th><th class="num">ยอดขาย (บาท)</th><th>ที่มา</th><th>แสดง</th><th></th></tr></thead><tbody id="trend-rows"></tbody></table></div>
       </section>
       <section id="panel-audit" role="tabpanel" aria-labelledby="tab-audit" hidden>
         <div class="card history"><ul id="audit"></ul></div>

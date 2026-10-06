@@ -35,7 +35,10 @@
 
   fileInput.addEventListener('change', () => {
     setError('');
-    const files = Array.from(fileInput.files || []);
+    setPhotos(Array.from(fileInput.files || []));
+  });
+
+  function setPhotos(files) {
     const rejected = files.filter((f) => !/^image\/(jpeg|png|webp)$/.test(f.type) || f.size > MAX_IMAGE_BYTES);
     if (rejected.length) setError('ใช้ได้เฉพาะรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 15 MB');
     photos.forEach((p) => URL.revokeObjectURL(p.url));
@@ -52,7 +55,38 @@
       li.append(img, tag);
       return li;
     }));
-  });
+  }
+
+  // Handoff from the AI marketer (/studio/marketer/): product details, plus image links that
+  // our own server proxies, so they load as files on this device like the seller's photos.
+  let handoff = null;
+  try { handoff = JSON.parse(sessionStorage.getItem('naka_review_handoff') || 'null'); sessionStorage.removeItem('naka_review_handoff'); } catch { handoff = null; }
+  if (handoff && typeof handoff === 'object' && !savedJobId) applyHandoff(handoff);
+
+  async function applyHandoff(data) {
+    const fields = { productName: 'review-name', details: 'review-details', price: 'review-price', affiliateUrl: 'review-link', channel: 'review-channel', tone: 'review-tone' };
+    for (const [key, id] of Object.entries(fields)) {
+      const value = typeof data[key] === 'string' ? data[key] : '';
+      const el = $(id);
+      if (!value) continue;
+      if (el.tagName === 'SELECT') { if ([...el.options].some((o) => o.value === value)) el.value = value; }
+      else el.value = value.slice(0, Number(el.getAttribute('maxlength')) || 3000);
+    }
+    const links = (Array.isArray(data.images) ? data.images : []).filter((u) => typeof u === 'string' && u.startsWith('/api/marketer/image?')).slice(0, MAX_IMAGES);
+    if (!links.length) return;
+    setError('กำลังโหลดรูปสินค้าจากลิงก์…');
+    const files = (await Promise.all(links.map(async (link, i) => {
+      try {
+        const response = await fetch(link, { credentials: 'same-origin' });
+        if (!response.ok) return null;
+        const blob = await response.blob();
+        const type = /^image\/(jpeg|png|webp)$/.test(blob.type) ? blob.type : 'image/jpeg';
+        return new File([blob], `product-${i + 1}.${type.split('/')[1]}`, { type });
+      } catch { return null; }
+    }))).filter(Boolean);
+    setPhotos(files);
+    setError(files.length ? '' : 'โหลดรูปจากลิงก์ไม่สำเร็จ กรุณาเลือกรูปสินค้าเอง');
+  }
 
   function readBrief() {
     const data = Object.fromEntries(new FormData(form));

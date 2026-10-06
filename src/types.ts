@@ -58,6 +58,11 @@ export interface Env {
   FEATURE_GOOGLE_LOGIN?: string;
   FEATURE_LINE_LOGIN?: string;
   FEATURE_TURNSTILE?: string;
+  FEATURE_MARKETER?: string;
+  // AI marketer trending videos from a data provider (src/marketer/trending.ts)
+  TRENDING_API_URL?: string;
+  TRENDING_API_KEY?: string;
+  TRENDING_API_USD_RATE?: string;
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */
