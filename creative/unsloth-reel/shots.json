@@ -1,0 +1,567 @@
+{
+  "_comment": "Clips for the landing 'reel' band (light 'AI factory' video wall). generate.cjs renders each shot with MiniMax H3 on the Unsloth Studio server; build-reel.cjs writes the band into public/index.html. first_frame is relative to public/ and is fitted to 9:16 (fit 'contain' pads with the section background #eef2f7) before it is sent. seed is fixed and unique per shot so the progress result can be matched to the job. Prompts keep scenes bright and daylit to match the light page; Thai lines stay under ~5 s.",
+  "shots": [
+    {
+      "id": "naka-line",
+      "seed": 730109,
+      "chip": "ระบบนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "สายพานเสกคลิป",
+      "sub": "รูปสินค้าเข้า คลิปแนวตั้งออก",
+      "href": "/review/?demo=1",
+      "try": "ลองส่งรูปแรก ↗",
+      "first_frame": "assets/naka-world.png",
+      "fit": "contain",
+      "prompt": "Bright, clean isometric 3D toy diorama floating on a seamless very light grey-white studio background, soft even daylight, high-key and airy. The friendly white-and-cobalt robot naga coiled beside the little blue-roofed NAKA shop comes to life: its cyan eyes blink, it turns its head toward the shop and nods. The glowing light-blue conveyor line on the tiled floor starts moving: small square product photos glide along it into the shop door, and moments later glossy vertical phone screens with a white play button pop out above the roof one by one and float upward. Tiny cardboard parcels shuffle along the tiles. Slow, gentle camera push-in, crisp polished render. A cheerful young Thai male voice says: \"ใส่รูปสินค้าเข้าไป ได้คลิปขายของออกมาครับ\""
+    },
+    {
+      "id": "live-naka",
+      "seed": 730101,
+      "chip": "AI Live",
+      "chip_class": "tpl-chip-live",
+      "title": "นาคาไลฟ์ขายผ้าไหม",
+      "sub": "อวตารทักคนดูและชูสินค้าเอง",
+      "href": "/create/?workflow=live",
+      "try": "ตั้งค่าไลฟ์ ↗",
+      "first_frame": "assets/card-live.jpg",
+      "prompt": "Vertical live-stream video at a bright Thai market stall in clean late-morning daylight. The blue-and-white plush naga mascot sits behind a light wooden table with a jasmine garland, ripe mangoes and folded Thai silk, holds a black microphone close, waves its other paw at the camera and leans in excitedly. Pink heart icons float upward, soft daylight bokeh behind, airy and fresh colours, gentle handheld feel. The mascot speaks into the microphone in a bright, friendly Thai female voice: \"สวัสดีค่ะทุกคน ผ้าไหมลายใหม่ ลดพิเศษเฉพาะในไลฟ์นะคะ\""
+    },
+    {
+      "id": "review-soap",
+      "seed": 730102,
+      "chip": "รีวิวสินค้า",
+      "title": "สบู่สมุนไพรทำมือ",
+      "sub": "จากรูปสินค้า 1 รูป",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "first_frame": "assets/soap-640.jpg",
+      "prompt": "Slow cinematic push-in on handmade herbal soap bars resting on a pale stone slab in a bright, airy white studio. Dappled leaf shadows sway softly across the clean cream wall, a woman's hand enters the frame and lifts the top bar toward the camera, a few soft foam bubbles drift by. Soft natural morning daylight, premium product commercial, shallow depth of field. A warm Thai female voice-over says: \"สบู่สมุนไพรทำมือ หอมสดชื่น ผิวนุ่มตั้งแต่ครั้งแรก\""
+    },
+    {
+      "id": "drama-naka",
+      "seed": 730103,
+      "chip": "ละครสั้น",
+      "title": "แอคชั่น!",
+      "sub": "นาคากำกับฉากเปิดเรื่อง",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "first_frame": "assets/card-drama.jpg",
+      "prompt": "On a film set, the blue-and-white plush naga mascot sits in a black director's chair holding a clapperboard. It raises the clapperboard and snaps it shut toward the camera; on the clap, big white studio lights switch on and the whole set floods with bright, soft daylight, turning it into a clean white film studio with a small Thai pavilion set behind. Light, airy, cheerful, playful cinematic feel. The mascot calls out in an energetic Thai voice: \"ฉากหนึ่ง เทคหนึ่ง แอคชั่น!\""
+    },
+    {
+      "id": "bot-naka",
+      "seed": 730104,
+      "chip": "แชทบอท",
+      "title": "ตอบแชทไม่มีพัก",
+      "sub": "ตอบตามข้อมูลของร้าน",
+      "href": "/create/?workflow=bot",
+      "try": "ตั้งค่าบอท ↗",
+      "first_frame": "assets/card-bot.jpg",
+      "prompt": "Inside a bright, airy Thai shop filled with soft daylight from large windows, teak shelves and a pink orchid on the counter, the blue-and-white plush naga mascot types quickly on a silver laptop at a light wooden counter. White chat bubbles pop in one after another around its head, then it looks up at the camera and nods happily. Clean, fresh colours, gentle camera drift. The mascot says in a calm, friendly Thai female voice: \"ลูกค้าทักมาเมื่อไหร่ นาคาตอบให้ทันทีค่ะ\""
+    },
+    {
+      "id": "naka-hello",
+      "seed": 730105,
+      "chip": "นาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "สวัสดี ผมนาคา",
+      "sub": "ผู้ช่วย AI ของร้านคุณ",
+      "href": "/login/?mode=register",
+      "try": "สมัครสมาชิก ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "prompt": "Bright, clean studio shot on a seamless very light grey-white backdrop with soft, even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot waves with one paw, bounces gently, its long coiled tail swishes, and it raises the small video play card toward the camera. A few tiny cyan sparkles drift around it. Airy, high-key, premium character animation. The mascot says in a cheerful young Thai male voice: \"สวัสดีครับ ผมนาคา ส่งรูปมา เดี๋ยวผมเสกเป็นคลิปให้ครับ\"",
+      "fit": "contain"
+    },
+    {
+      "id": "streetfood",
+      "seed": 730106,
+      "chip": "ร้านอาหาร",
+      "title": "ผัดไทยตลาดนัด",
+      "sub": "คลิปขายของแนวตั้ง",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "prompt": "Vertical smartphone video at a lively Bangkok street-food market in bright midday daylight under a white canvas canopy. A smiling Thai street-food vendor in a clean apron tosses pad thai with shrimp in a flaming wok, steam rising, then slides it onto a plate and presents it to the camera with a thumbs up. Fresh, colourful, sunlit background bokeh. He says in Thai with an upbeat voice: \"ผัดไทยกุ้งสด จานละหกสิบบาท อร่อยต้องลอง!\""
+    },
+    {
+      "id": "lipstick",
+      "seed": 730107,
+      "chip": "ความงาม",
+      "title": "รีวิวลิปติดทน",
+      "sub": "พรีเซนเตอร์ AI พูดไทย",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "prompt": "Vertical beauty review video in a bright, airy white bedroom with soft window daylight. A Thai woman in her twenties holds a coral lipstick up to the camera, applies it, presses her lips together and smiles confidently. Natural skin texture, clean pastel tones, gentle handheld framing. She says in Thai with a friendly voice: \"ลิปสีนี้ติดทนทั้งวัน ไม่ติดแมสก์เลยค่ะ\""
+    },
+    {
+      "id": "thai-tea",
+      "seed": 730108,
+      "chip": "คาเฟ่",
+      "title": "ชาไทยเย็น",
+      "sub": "ช็อตสินค้าพร้อมเสียงบรรยาย",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "prompt": "Close-up vertical shot at a clean white marble café counter in bright, soft daylight: orange Thai iced tea is poured over clear ice in a tall glass, creamy milk swirls down in slow motion, condensation beads on the glass, then a barista's hand slides the glass toward the camera. Airy, fresh, appetizing commercial look. A warm Thai voice-over says: \"ชาไทยเข้มข้น หวานมันกำลังดี สั่งเลยวันนี้\""
+    },
+    {
+      "id": "rv-soap-campaign",
+      "row": "review",
+      "seed": 730110,
+      "chip": "รีวิวสินค้า",
+      "title": "สบู่ก้อนหอมมะลิ",
+      "sub": "จากรูปโฆษณา 1 รูป",
+      "first_frame": "assets/soap-campaign.png",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "prompt": "Premium vertical product commercial. Two handmade cream soap bars rest on a pale travertine block with an olive sprig, soft leaf shadows sway gently across a warm beige wall in bright morning sunlight. Slow cinematic push-in, a few airy soap bubbles drift through the light beams, shallow depth of field. A warm Thai female voice-over says: \"สบู่หอมมะลิ ทำมือทุกก้อน ล้างแล้วผิวไม่ตึง\""
+    },
+    {
+      "id": "dr-heir",
+      "row": "drama",
+      "seed": 730111,
+      "chip": "ละครสั้น",
+      "title": "ทายาทกลับบ้าน",
+      "sub": "ฉากเปิดตัวพร้อมบทพูด",
+      "first_frame": "showcase/drama/drama-01.jpg",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "prompt": "Vertical short-drama scene continuing from the first frame. In a bright grand mansion hall with a crystal chandelier and a red carpet staircase, the young man in a dark suit walks down the last steps, stops, looks up at the camera with a confident half smile and straightens his cuff. Bright daylight from tall windows, cinematic, smooth dolly. He says in Thai with a calm, confident male voice: \"ผมกลับมาแล้ว บ้านหลังนี้ ต้องเป็นของผม\""
+    },
+    {
+      "id": "lv-skincare",
+      "row": "live",
+      "seed": 730112,
+      "chip": "● LIVE",
+      "chip_class": "tpl-chip-live",
+      "title": "ไลฟ์ขายเซรั่ม",
+      "sub": "พิธีกรโชว์สินค้า",
+      "href": "/create/?workflow=live",
+      "try": "ตั้งค่าไลฟ์ ↗",
+      "prompt": "Vertical live-commerce stream in a bright white home studio with a ring light and soft daylight. A friendly Thai female host sits at a clean white desk with a few unbranded skincare bottles, holds up a small glass serum bottle to the camera, taps a drop onto her hand and smiles. Pink heart icons float up the right side of the frame. Bright, energetic livestream feel. She says in Thai: \"เซรั่มตัวนี้ซึมไว ไม่เหนียว ลดพิเศษในไลฟ์นี้เท่านั้นค่ะ\""
+    },
+    {
+      "id": "bt-packing",
+      "row": "bot",
+      "seed": 730113,
+      "chip": "แชทบอท",
+      "title": "บอตตอบแชท คุณแพ็กของ",
+      "sub": "ไม่ต้องวางมือจากงาน",
+      "href": "/create/?workflow=bot",
+      "try": "ตั้งค่าบอท ↗",
+      "prompt": "Bright vertical lifestyle video in a sunny small Thai online shop with shelves of parcels. A young Thai shop owner tapes up a cardboard box while a smartphone on the table lights up again and again with incoming chat notifications that get answered automatically. She glances at the phone, smiles, and keeps packing. Clean, airy, cheerful. She says in Thai: \"ลูกค้าทักมา บอตก็ตอบให้ ฉันแพ็กของต่อได้เลย\""
+    },
+    {
+      "id": "rv-coffee",
+      "row": "review",
+      "seed": 730114,
+      "chip": "กาแฟ",
+      "title": "กาแฟดอยคั่วกลาง",
+      "sub": "ฮุกแรกใน 2 วินาที",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "prompt": "Bright vertical smartphone review video in a sunny white Thai cafe corner. A young Thai woman pours roasted coffee beans from a plain kraft bag into a glass jar, then slowly pours hot water over a pour-over dripper, steam rising in the window light. She lifts the cup to the camera and smiles. Clean, airy, warm daylight. She says in Thai with a friendly upbeat voice: \"กาแฟดอยคั่วกลาง หอมช็อกโกแลต ไม่เปรี้ยวเลยค่ะ\""
+    },
+    {
+      "id": "dr-maid",
+      "row": "drama",
+      "seed": 730115,
+      "chip": "ละครสั้น",
+      "title": "สาวใช้คนใหม่",
+      "sub": "วันแรกในคฤหาสน์",
+      "first_frame": "showcase/drama/drama-05.jpg",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "prompt": "Vertical short-drama scene continuing from the first frame. In a bright white-and-blue mansion room, the young maid in a red-and-yellow uniform stops cleaning the marble floor, looks up startled toward someone off-camera, then quickly stands and bows politely. Bright natural daylight, soft cinematic push-in. She says in Thai with a nervous young female voice: \"ขอโทษค่ะคุณผู้ชาย วันนี้วันแรกของหนูค่ะ\""
+    },
+    {
+      "id": "lv-durian",
+      "row": "live",
+      "seed": 730116,
+      "chip": "● LIVE",
+      "chip_class": "tpl-chip-live",
+      "title": "ไลฟ์ขายทุเรียนสวน",
+      "sub": "ขายสดจากสวน",
+      "href": "/create/?workflow=live",
+      "try": "ตั้งค่าไลฟ์ ↗",
+      "prompt": "Vertical live-commerce stream in a sunny Thai durian orchard in the morning. A cheerful Thai man in a straw hat and farm shirt holds up a freshly opened durian, showing the thick golden flesh to the camera, then gives a thumbs up. Lush green trees, bright sunlight, handheld phone feel, floating heart icons. He says in Thai with an excited voice: \"ทุเรียนหมอนทองตัดสดจากสวน เนื้อแห้ง หวานมันครับ\""
+    },
+    {
+      "id": "bt-cafe",
+      "row": "bot",
+      "seed": 730117,
+      "chip": "แชทบอท",
+      "title": "คาเฟ่ยุ่ง บอตรับออเดอร์",
+      "sub": "ตอบเมนูและราคาให้",
+      "href": "/create/?workflow=bot",
+      "try": "ตั้งค่าบอท ↗",
+      "prompt": "Bright vertical video inside a sunny white Thai cafe. A barista pours milk into an iced latte while a tablet on the counter shows new chat messages popping up with quick replies. She slides the finished drink forward, glances at the tablet and gives a satisfied nod. Fresh plants, daylight, busy but calm. She says in Thai: \"ร้านยุ่งแค่ไหน แชทลูกค้าก็มีคนตอบเสมอ\""
+    },
+    {
+      "id": "rv-sunscreen",
+      "row": "review",
+      "seed": 730118,
+      "chip": "สกินแคร์",
+      "title": "กันแดดเนื้อบางเบา",
+      "sub": "โชว์เนื้อครีมจริง",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "prompt": "Bright high-key vertical beauty review in a white bathroom with soft daylight. Close-up of a Thai woman squeezing a light white sunscreen lotion from an unbranded white tube onto the back of her hand, then spreading it until it disappears without white cast, her skin glowing. She turns her hand to the window light and smiles at the camera. Clean, fresh, premium. She says in Thai: \"กันแดดเนื้อบางเบา ทาแล้วไม่วอก ไม่เหนียวค่ะ\""
+    },
+    {
+      "id": "dr-hallway",
+      "row": "drama",
+      "seed": 730119,
+      "chip": "ละครสั้น",
+      "title": "โถงทางเดินสีทอง",
+      "sub": "งานหนักที่ไม่มีใครเห็น",
+      "first_frame": "showcase/drama/drama-02.jpg",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "prompt": "Vertical short-drama scene continuing from the first frame. In a bright, gleaming palace hallway with golden doors, the young woman cleaning the floor pauses, wipes her forehead, looks at her reflection in the polished marble and smiles with determination. Bright daylight, slow cinematic push-in, hopeful mood. She says softly in Thai: \"เหนื่อยแค่ไหน ฉันก็จะไม่ยอมแพ้\""
+    },
+    {
+      "id": "lv-dress",
+      "row": "live",
+      "seed": 730120,
+      "chip": "● LIVE",
+      "chip_class": "tpl-chip-live",
+      "title": "ไลฟ์ขายเดรส",
+      "sub": "ตอบเรื่องไซส์สด ๆ",
+      "href": "/create/?workflow=live",
+      "try": "ตั้งค่าไลฟ์ ↗",
+      "prompt": "Vertical live-commerce stream in a bright white clothing boutique with clothing racks and daylight. A smiling Thai female host holds a pastel blue summer dress against herself, turns slightly to show the length, then points to the camera as if reading a viewer comment. Floating heart and like icons. Bright, upbeat livestream. She says in Thai: \"ไซส์แอลยังมีนะคะ สนใจพิมพ์ใต้ไลฟ์ได้เลยค่ะ\""
+    },
+    {
+      "id": "bt-morning",
+      "row": "bot",
+      "seed": 730121,
+      "chip": "แชทบอท",
+      "title": "ตื่นมาออเดอร์เต็ม",
+      "sub": "ตอบแชทตลอดคืน",
+      "href": "/create/?workflow=bot",
+      "try": "ตั้งค่าบอท ↗",
+      "prompt": "Bright vertical video in a sunlit white bedroom early in the morning. A Thai shop owner sits up in bed, picks up her phone, scrolls through a long list of answered chat messages and new orders, then gasps happily and covers her mouth with a smile. Soft golden morning daylight through sheer curtains. She says in Thai with a delighted voice: \"ตื่นมาเจอออเดอร์เต็มเลย บอตตอบให้ทั้งคืน\""
+    },
+    {
+      "id": "rv-mango",
+      "row": "review",
+      "seed": 730122,
+      "chip": "ของกิน",
+      "title": "มะม่วงอบแห้ง",
+      "sub": "รีวิวกินจริง",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "prompt": "Bright vertical food review on a clean white kitchen table in sunny daylight. A smiling Thai man opens a clear resealable bag of golden dried mango slices, takes one out, bends it to show it is soft and chewy, then takes a bite and nods happily to the camera. Fresh yellow mangoes in a woven basket in the background. He says in Thai with a cheerful voice: \"มะม่วงอบแห้ง หวานธรรมชาติ หนึบอร่อย ทานเพลินมากครับ\""
+    },
+    {
+      "id": "dr-letter",
+      "row": "drama",
+      "seed": 730123,
+      "chip": "หักมุม",
+      "title": "จดหมายปริศนา",
+      "sub": "ข้อความที่เปลี่ยนทุกอย่าง",
+      "first_frame": "showcase/drama/drama-04.jpg",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "prompt": "Vertical short-drama scene continuing from the first frame. In a bright white corridor with blue doors, the young woman in a yellow shirt and red skirt reads a folded letter, her eyes widen in shock, she lowers the letter slowly and looks straight into the camera. Bright, clean daylight, dramatic slow zoom. She whispers in Thai with a shocked female voice: \"เป็นไปไม่ได้ เขาคือพ่อของฉันเหรอ\""
+    },
+    {
+      "id": "lv-chili",
+      "row": "live",
+      "seed": 730124,
+      "chip": "● LIVE",
+      "chip_class": "tpl-chip-live",
+      "title": "ไลฟ์ขายน้ำพริก",
+      "sub": "ชิมให้ดูระหว่างไลฟ์",
+      "href": "/create/?workflow=live",
+      "try": "ตั้งค่าไลฟ์ ↗",
+      "prompt": "Vertical live-commerce stream in a bright, clean Thai home kitchen with daylight. A warm middle-aged Thai woman opens a small glass jar of red chili paste, scoops some onto a plate of fresh vegetables and rice, tastes it and fans her mouth playfully, laughing at the camera. Floating heart icons. Cozy, bright, authentic. She says in Thai: \"น้ำพริกเผาสูตรบ้าน เผ็ดกำลังดี กินกับอะไรก็อร่อยค่ะ\""
+    },
+    {
+      "id": "bt-handoff",
+      "row": "bot",
+      "seed": 730125,
+      "chip": "ส่งต่อแอดมิน",
+      "title": "เรื่องสำคัญ ส่งต่อคน",
+      "sub": "บอตรู้ว่าเมื่อไรต้องหยุด",
+      "href": "/create/?workflow=bot",
+      "try": "ตั้งค่าบอท ↗",
+      "prompt": "Bright vertical video at a clean white Thai shop counter in daylight. A smartphone shows a chat flagged with a small orange alert, the phone buzzes, and a friendly Thai male staff member picks it up, reads it, nods and starts typing a careful reply. Calm, trustworthy, airy. He says in Thai: \"เรื่องคืนเงิน บอตส่งต่อให้ผมดูแลเองครับ\""
+    },
+    {
+      "id": "rv-linen",
+      "row": "review",
+      "seed": 730126,
+      "chip": "แฟชั่น",
+      "title": "เสื้อลินินใส่สบาย",
+      "sub": "ลองใส่ หมุนให้ดูทรง",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "prompt": "Bright vertical fashion try-on video in a white minimalist bedroom with sheer curtains and soft daylight. A Thai woman in a loose cream linen shirt steps into frame, turns around slowly to show the relaxed fit, rolls up one sleeve and pinches the fabric toward the camera to show the texture. Airy, natural, calm lifestyle feel. She says in Thai: \"เสื้อลินินผ้าเบา ใส่สบาย ไม่ร้อน ใส่ได้ทุกวันค่ะ\""
+    },
+    {
+      "id": "dr-room4",
+      "row": "drama",
+      "seed": 730127,
+      "chip": "ลึกลับ",
+      "title": "ห้องหมายเลข 4",
+      "sub": "ประตูที่ไม่ควรเปิด",
+      "first_frame": "showcase/drama/drama-03.jpg",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "prompt": "Vertical short-drama scene continuing from the first frame. In a clean, well-lit corridor with a red door at the end, the young woman walks slowly toward the door, reaches for the handle, hesitates, and turns her head back over her shoulder toward the camera. Bright light, suspenseful slow tracking shot. She says quietly in Thai: \"ประตูห้องสี่ ทำไมถึงไม่มีใครกล้าเปิด\""
+    },
+    {
+      "id": "lv-naka-host",
+      "row": "live",
+      "seed": 730128,
+      "chip": "อวตาร AI",
+      "chip_class": "tpl-chip-new",
+      "title": "นาคาเป็นพิธีกรไลฟ์",
+      "sub": "อวตารไลฟ์แทนคุณ",
+      "first_frame": "assets/naka-mascot.png",
+      "fit": "contain",
+      "href": "/create/?workflow=live",
+      "try": "ตั้งค่าไลฟ์ ↗",
+      "prompt": "Bright, clean livestream set on a seamless very light grey-white backdrop with soft daylight. The blue-and-white robot naga mascot avatar sways happily, waves at the camera, then gestures to the side as if presenting a product, its glowing eyes blinking. Small floating heart icons rise beside it. Playful, premium 3D character animation. The mascot says in a cheerful Thai voice: \"สวัสดีครับ วันนี้นาคามาไลฟ์แทนเจ้าของร้านครับ\""
+    },
+    {
+      "id": "bt-comments",
+      "row": "bot",
+      "seed": 730129,
+      "chip": "คอมเมนต์",
+      "title": "ตอบคอมเมนต์ใต้คลิป",
+      "sub": "ไม่มีลูกค้าตกหล่น",
+      "href": "/create/?workflow=bot",
+      "try": "ตั้งค่าบอท ↗",
+      "prompt": "Bright vertical video of a smartphone held in a hand in a sunny white room. On the phone a short product video plays while comment bubbles and small heart icons pop up around the phone in the air, and each comment gets a quick reply bubble beside it. Clean, playful, motion-graphic feel, soft daylight. A friendly Thai female voice-over says: \"คอมเมนต์ใต้คลิปก็ตอบให้ ไม่มีลูกค้าคนไหนตกหล่น\""
+    },
+    {
+      "id": "anim-welcome",
+      "row": "app",
+      "app_state": "onboarding",
+      "seed": 730130,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "ยินดีต้อนรับ",
+      "sub": "หน้าแรกของแอป / onboarding",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. The mascot pops up into frame with a happy bounce, waves both paws at the camera, then spreads its arms wide in a welcoming gesture while tiny cyan sparkles twinkle around it. It says in a cheerful young Thai male voice: \"ยินดีต้อนรับครับ วันนี้จะเสกอะไรดี\""
+    },
+    {
+      "id": "anim-upload",
+      "row": "app",
+      "app_state": "empty-upload",
+      "seed": 730131,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "ส่งรูปมาเลย",
+      "sub": "ตอนยังไม่มีรูปสินค้า",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. A small square product photo card floats down from above, the mascot catches it with both paws, looks at it happily and holds it up toward the camera, nodding. It says in a cheerful young Thai male voice: \"ส่งรูปสินค้ามาได้เลยครับ\""
+    },
+    {
+      "id": "anim-writing",
+      "row": "app",
+      "app_state": "loading-script",
+      "seed": 730132,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "กำลังเขียนบท",
+      "sub": "ระหว่างรอนาคาเขียนบท",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. The mascot holds a big cartoon pencil and writes busily on a long paper scroll unrolling in front of it, pausing to tap its chin thoughtfully, then keeps writing with a little smile. No dialogue, only soft pencil scribbling sounds and a light playful hum."
+    },
+    {
+      "id": "anim-voice",
+      "row": "app",
+      "app_state": "loading-voice",
+      "seed": 730133,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "กำลังพากย์เสียง",
+      "sub": "ระหว่างสร้างเสียงพากย์",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. The mascot holds a small studio microphone, sways to a rhythm and sings into it as soft cyan sound-wave rings pulse outward from the microphone. It sings a short bright melody in a cheerful Thai voice: \"ลา ลา ลา เสียงพากย์มาแล้ว\""
+    },
+    {
+      "id": "anim-rendering",
+      "row": "app",
+      "app_state": "loading-render",
+      "seed": 730134,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "กำลังเสกคลิป",
+      "sub": "ระหว่างรอเรนเดอร์วิดีโอ",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. The mascot turns the crank of a cute little white-and-blue machine; small vertical video cards pop out of the top one by one with a soft glow while gears spin gently. No dialogue, only soft whirring, clicking and cheerful pop sounds."
+    },
+    {
+      "id": "anim-done",
+      "row": "app",
+      "app_state": "success",
+      "seed": 730135,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "เสร็จแล้ว!",
+      "sub": "เมื่อคลิปหรือคอนเทนต์พร้อม",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. The mascot jumps up happily holding a smartphone that shows a glowing video, colorful confetti bursts around it and it gives a big thumbs up to the camera. It says in an excited young Thai male voice: \"เสร็จแล้วครับ ไปโพสต์กันเลย\""
+    },
+    {
+      "id": "anim-review",
+      "row": "app",
+      "app_state": "review",
+      "seed": 730136,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "ตรวจก่อนโพสต์",
+      "sub": "หน้าตรวจงานก่อนโพสต์",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. The mascot leans in with a big magnifying glass, carefully inspecting a smartphone screen, then looks up at the camera and nods with a satisfied smile. It says in a calm friendly Thai voice: \"ตรวจให้ดีก่อนโพสต์นะครับ\""
+    },
+    {
+      "id": "anim-oops",
+      "row": "app",
+      "app_state": "error",
+      "seed": 730137,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "ขอลองใหม่นะ",
+      "sub": "ตอนสร้างไม่สำเร็จ",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. A small cute machine beside the mascot puffs a tiny harmless cloud of grey smoke; the mascot scratches its head sheepishly, then pulls out a little wrench, taps the machine and it lights up again. It says in an apologetic but upbeat Thai voice: \"ขอโทษครับ ขอลองใหม่อีกทีนะ\""
+    },
+    {
+      "id": "anim-director",
+      "row": "app",
+      "app_state": "studio",
+      "seed": 730138,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "นาคาผู้กำกับ",
+      "sub": "หน้าสตูดิโอ / ละครสั้น",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. The mascot sits in a small black director chair wearing a tiny beret, raises a clapperboard and snaps it shut toward the camera, then points forward like a director. It calls out in an energetic Thai voice: \"พร้อมนะ แอคชั่น!\""
+    },
+    {
+      "id": "anim-empty",
+      "row": "app",
+      "app_state": "empty-list",
+      "seed": 730139,
+      "chip": "การ์ตูนนาคา",
+      "chip_class": "tpl-chip-new",
+      "title": "ยังไม่มีงาน",
+      "sub": "รายการงานว่าง",
+      "href": "/create/",
+      "try": "เริ่มเลย ↗",
+      "first_frame": "assets/naka-plush-sales.png",
+      "fit": "contain",
+      "prompt": "Bright 3D animated cartoon, high-quality family-animation style, on a seamless very light grey-white backdrop with soft even daylight and a faint blue rim light. The adorable blue-and-white plush naga mascot from the first frame is the only character; keep its exact design, colors and proportions. Smooth, bouncy, expressive character animation, gentle camera. The mascot is napping curled up on a small pile of empty cardboard boxes, a tiny sleep bubble floats above its head, then it wakes up, stretches, yawns and looks at the camera hopefully. It says in a sleepy then cheerful Thai voice: \"ยังไม่มีงานเลย เริ่มงานแรกกันไหมครับ\""
+    }
+  ],
+  "fallback": [
+    {
+      "title": "รีวิว 3 จุดเด่น",
+      "sub": "ฮุก · จุดเด่นจริง · ชวนกดลิงก์",
+      "chip": "สบู่สมุนไพร",
+      "href": "/review/?demo=1",
+      "try": "ลองแบบนี้ ↗",
+      "poster": "/assets/naka-demo-poster.jpg",
+      "sources": [
+        [
+          "/assets/naka-demo-30s.webm",
+          "video/webm"
+        ],
+        [
+          "/assets/naka-demo-30s.mp4",
+          "video/mp4"
+        ]
+      ]
+    },
+    {
+      "title": "ทายาทเจ้าของบ้าน",
+      "sub": "เดินลงบันไดพรมแดง",
+      "chip": "ละครสั้น",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "poster": "/showcase/drama/drama-01.jpg",
+      "sources": [
+        [
+          "/showcase/drama/drama-01.mp4",
+          "video/mp4"
+        ]
+      ]
+    },
+    {
+      "title": "สาวใช้คนใหม่",
+      "sub": "วันแรกในคฤหาสน์",
+      "chip": "ละครสั้น",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "poster": "/showcase/drama/drama-05.jpg",
+      "sources": [
+        [
+          "/showcase/drama/drama-05.mp4",
+          "video/mp4"
+        ]
+      ]
+    },
+    {
+      "title": "จดหมายปริศนา",
+      "sub": "ข้อความที่เปลี่ยนทุกอย่าง",
+      "chip": "ละครสั้น",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "poster": "/showcase/drama/drama-04.jpg",
+      "sources": [
+        [
+          "/showcase/drama/drama-04.mp4",
+          "video/mp4"
+        ]
+      ]
+    },
+    {
+      "title": "ห้องหมายเลข 4",
+      "sub": "ทางเดินที่ไม่ควรเข้าไป",
+      "chip": "ละครสั้น",
+      "href": "/create/?workflow=drama",
+      "try": "ทำละครแบบนี้ ↗",
+      "poster": "/showcase/drama/drama-03.jpg",
+      "sources": [
+        [
+          "/showcase/drama/drama-03.mp4",
+          "video/mp4"
+        ]
+      ]
+    }
+  ],
+  "_comment_rows": "Shots with \"row\" (review|drama|live|bot) go into that product rail on the landing page (between <!-- h3:<row>:start --> and <!-- h3:<row>:end -->), not into the #reel video wall.",
+  "_comment_app": "row \"app\": Naka cartoon animations for /create and /studio states (app_state); build-reel.cjs does not place them on the landing page."
+}

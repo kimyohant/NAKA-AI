@@ -11,15 +11,19 @@
   var conn = navigator.connection || {};
   var lightData = conn.saveData || /2g/.test(conn.effectiveType || '');
 
-  // What comes out of the machine. Videos are real samples on the site; live and bot use their card art.
+  // What goes in and comes out of the machine: each box carries the product from its clip, and the
+  // phone plays that MiniMax H3 clip (216x384 muted copies of public/showcase/h3, see asset-notes.md).
+  var LIVE = '<span class="hl-badge">LIVE</span>';
   var KINDS = [
-    { tag: 'คลิปรีวิว', video: '/assets/hero/hero-review.mp4', poster: '/assets/hero/hero-review.jpg' },
-    { tag: 'ละครสั้น AI', video: '/assets/hero/hero-drama-01.mp4', poster: '/assets/hero/hero-drama-01.jpg' },
-    { tag: 'AI Live', img: '/assets/card-live.jpg', extra: '<span class="hl-badge">LIVE</span>' },
-    { tag: 'ละครสั้น AI', video: '/assets/hero/hero-drama-03.mp4', poster: '/assets/hero/hero-drama-03.jpg' },
-    { tag: 'แชทบอท', img: '/assets/card-bot.jpg', extra: '<p class="hl-bubble me">ก้อนละกี่กรัมคะ</p><p class="hl-bubble bot">100 กรัมค่ะ</p>' },
-    { tag: 'ละครสั้น AI', video: '/assets/hero/hero-drama-05.mp4', poster: '/assets/hero/hero-drama-05.jpg' }
-  ];
+    ['rv-soap-campaign', 'คลิปรีวิว'], ['dr-heir', 'ละครสั้น AI'], ['lv-skincare', 'AI Live', LIVE], ['bt-packing', 'แชทบอท'],
+    ['rv-coffee', 'คลิปรีวิว'], ['dr-maid', 'ละครสั้น AI'], ['lv-naka-host', 'AI Live', LIVE], ['bt-cafe', 'แชทบอท'],
+    ['rv-mango', 'คลิปรีวิว'], ['lv-durian', 'AI Live', LIVE]
+  ].map(function (k) {
+    var base = '/assets/hero/h3-' + k[0];
+    return { tag: k[1], video: base + '.mp4', poster: base + '.jpg', box: base + '-box.jpg', extra: k[2] };
+  });
+  // at most this many phones decode video at once; the rest show their poster (the clip's first frame)
+  var MAX_PLAYING = 2;
   var ICONS = {
     TikTok: '<svg viewBox="0 0 48 48"><path d="M30 6c1 5 4 8 9 8.5v7c-3.4 0-6.4-1-9-2.8V32a11 11 0 1 1-11-11c.7 0 1.4 0 2 .2v7.3a4 4 0 1 0 2 3.5V6z" fill="#0d1b33"/><path d="M30 6c1 5 4 8 9 8.5" fill="none" stroke="#14b3d6" stroke-width="2.5"/></svg>',
     Facebook: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#2459d6"/><path d="M26.5 38V26h4l.6-4.6h-4.6v-3c0-1.3.4-2.2 2.3-2.2h2.4v-4.1c-.4 0-1.9-.2-3.5-.2-3.5 0-5.8 2.1-5.8 6v3.5h-3.9V26h3.9v12z" fill="#fff"/></svg>',
@@ -30,6 +34,8 @@
   // ---------- build ----------
   var belt = scene.querySelector('.hl-belt');
   var rollers = scene.querySelector('.hl-rollers');
+  rollers.innerHTML = '<i class="hl-roll"></i>';
+  var roll = rollers.firstChild;
   var machine = scene.querySelector('.hl-machine');
   var naka = scene.querySelector('.hl-naka');
   var backLayer = scene.querySelector('[data-hl-back]');
@@ -64,9 +70,9 @@
       var el = document.createElement('div');
       el.className = 'hl-item';
       var kind = KINDS[i % KINDS.length];
-      el.innerHTML = '<div class="hl-box"><img src="/assets/soap-640.jpg" alt="" decoding="async"></div><div class="hl-phone">' + screenHtml(kind) + '</div>';
+      el.innerHTML = '<div class="hl-box"><img src="' + kind.box + '" alt="" decoding="async"></div><div class="hl-phone">' + screenHtml(kind) + '</div>';
       itemLayer.appendChild(el);
-      items.push({ el: el, video: el.querySelector('video'), phone: null, playing: false, bin: 0 });
+      items.push({ el: el, video: el.querySelector('video'), phone: null, playing: false, bin: 0, vis: true });
     }
   }
 
@@ -104,8 +110,9 @@
   function hop(u, a) { return a * u + (3 - 2 * a) * u * u + (a - 2) * u * u * u; }
   function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
 
-  var xs = [];
+  var xs = [], order = [];
   function placeItems(t) {
+    if (order.length !== items.length) order = items.map(function (_, i) { return i; });
     var glow = 0;
     for (var i = 0; i < items.length; i++) {
       var it = items[i];
@@ -133,15 +140,24 @@
       var e = Math.round(clamp01((x - G.mx - 110 * G.k) / (110 * G.k)) * 100) / 100;
       if (e !== it.e) { it.e = e; it.el.style.setProperty('--e', e); }
       xs[i] = x;
-      it.el.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)' + (r ? ' rotate(' + r.toFixed(2) + 'deg)' : '');
-      it.el.style.visibility = visible ? 'visible' : 'hidden';
+      it.el.style.transform = 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0)' + (r ? ' rotate(' + r.toFixed(2) + 'deg)' : '');
+      if (visible !== it.vis) { it.vis = visible; it.el.style.visibility = visible ? 'visible' : 'hidden'; }
       var dx = (x - G.mx) / (70 * G.k);
       glow = Math.max(glow, Math.exp(-dx * dx));
-      // start decoding while the item is still inside the machine so playback is running when it appears
-      syncVideo(it, visible && x > G.mx - 40 * G.k && x < G.W + 60);
+      // decode only while the phone is fully out and riding the belt; a hopping/dropping phone holds its
+      // last frame, and a phone that has not played yet shows the poster (the clip's first frame)
+      it.want = visible && e >= .99 && x <= G.beltEnd + 30 * G.k;
+    }
+    var playing = 0;
+    order.sort(function (a, b) { return xs[a] - xs[b]; });
+    for (var o = 0; o < order.length; o++) {
+      var item = items[order[o]];
+      var on = item.want && playing < MAX_PLAYING;
+      if (on) playing++;
+      syncVideo(item, on);
     }
     machine.style.setProperty('--glow', glow.toFixed(3));
-    drawMachine(t, glow);
+    G.glow = glow;
   }
 
   // ---------- machine (SVG, 262 x 330 units, housing centred at x 130) ----------
@@ -288,7 +304,7 @@
   function armSvg(side) {
     var held = side === 'l'
       ? '<rect class="held-box" x="-36" y="0" width="72" height="62" rx="6"/><clipPath id="hl-clip-soap"><circle cx="0" cy="31" r="21"/></clipPath><image href="/assets/soap-640.jpg" x="-21" y="10" width="42" height="42" clip-path="url(#hl-clip-soap)"/><circle cx="0" cy="31" r="21" fill="none" stroke="#fff" stroke-width="3"/>'
-      : '<rect class="held-phone" x="-34" y="0" width="68" height="120" rx="12"/><clipPath id="hl-clip-ph"><rect x="-30" y="4" width="60" height="112" rx="9"/></clipPath><image href="/showcase/drama/drama-02.jpg" x="-30" y="4" width="60" height="112" preserveAspectRatio="xMidYMid slice" clip-path="url(#hl-clip-ph)"/>';
+      : '<rect class="held-phone" x="-34" y="0" width="68" height="120" rx="12"/><clipPath id="hl-clip-ph"><rect x="-30" y="4" width="60" height="112" rx="9"/></clipPath><image href="/assets/hero/h3-dr-heir.jpg" x="-30" y="4" width="60" height="112" preserveAspectRatio="xMidYMid slice" clip-path="url(#hl-clip-ph)"/>';
     return '<svg class="hl-arm hl-arm-' + side + '" viewBox="0 0 420 400" aria-hidden="true">' +
       (side === 'l' ? '<defs><linearGradient id="hl-shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f1f5fc"/><stop offset="1" stop-color="#d9e3f2"/></linearGradient></defs>' : '') +
       '<rect class="mount" x="-60" y="-10" width="96" height="84" rx="14"/>' +
@@ -327,10 +343,14 @@
     });
   }
 
+  var tick = 0;
   function draw(t) {
-    rollers.style.backgroundPosition = ((t * G.speed) % (46 * G.k)).toFixed(1) + 'px 50%';
+    // the roller strip is one period wider than the belt and slides on the compositor (no repaint)
+    roll.style.transform = 'translate3d(' + ((t * G.speed) % (46 * G.k) - 46 * G.k).toFixed(2) + 'px,0,0)';
     placeItems(t);
-    placeArms(t);
+    // the SVG machine HUD and the arms repaint as whole images, so they redraw every other frame;
+    // the belt, boxes and phones (compositor transforms) still move every frame
+    if (!(tick++ & 1) || !running) { drawMachine(t, G.glow || 0); placeArms(t); }
     naka.style.transform = 'translateY(' + (-3 * Math.abs(Math.sin(t * 2.2))).toFixed(2) + 'px) rotate(' + (3 * Math.sin(t * 1.1)).toFixed(2) + 'deg)';
   }
 

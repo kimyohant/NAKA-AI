@@ -7,3 +7,5 @@ creative/godot-flow/.godot/
 *.blend1
 .claude/settings.local.json
 .openclaw/
+creative/unsloth-reel/out/
+creative/unsloth-reel/.env.local

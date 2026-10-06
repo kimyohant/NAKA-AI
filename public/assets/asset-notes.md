@@ -12,9 +12,18 @@ Raster versions of the Naga-tail `public/logo.svg`. Regenerate after changing th
 
 30 s muted, looping 9:16 product demo (540 × 960, 30 fps) used in the review rail card and the Instagram Reels mock on the landing. It walks through the real `/review/` flow (photos → name and real selling points → Naka writes and voices the script → finished clip → channels → try free) and ends on a seamless loop back to frame 0. Code-built motion only, from `soap-campaign.png`, `naka-plush-sales.png` and `logo.svg`, with no AI video. The soap is fictional; the clip says "ตัวอย่าง" on the output and "ตัวอย่างสาธิต · สินค้าสมมติ · ภาพสร้างด้วย AI" on the end card. Source, brief and storyboard are in `creative/demo-film/`; re-render with `node creative/demo-film/render.cjs` (needs Chrome and ffmpeg). Replaced the earlier 7 s `soap-demo-preview.webm` placeholder (added 2026-10-05).
 
-## hero/hero-review.mp4, hero/hero-drama-01|03|05.mp4 (+ .jpg posters)
+## hero/h3-<id>.mp4 (+ h3-<id>.jpg poster, h3-<id>-box.jpg)
 
-270 × 480, 30 fps, muted H.264 copies made only for the phones on the hero conveyor (`public/hero-line.js`), so the hero does not decode 720p clips inside 112 px phones. Sources: `naka-demo-30s.mp4` and `showcase/drama/drama-01|03|05.mp4`. Regenerate with ffmpeg: `-vf scale=270:480:flags=lanczos,fps=30 -an -c:v libx264 -crf 27 -movflags +faststart -g 30`; posters are the first frame.
+These are 216 × 384, 24 fps, muted H.264 copies of 10 MiniMax H3 clips from `showcase/h3/`: rv-soap-campaign, dr-heir, lv-skincare, bt-packing, rv-coffee, dr-maid, lv-naka-host, bt-cafe, rv-mango and lv-durian. They exist only for the phones on the hero conveyor (`public/hero-line.js`), so the hero never decodes full-size clips inside 112 px phones. At most two phones play at a time.
+
+- `h3-<id>.jpg` is the poster, taken from the first frame so the cut to playback is seamless.
+- `h3-<id>-box.jpg` is a 120 × 120 square crop taken at 0.4 s. It is the product shown on that item's box before the machine.
+
+Regenerate one clip with:
+
+```sh
+ffmpeg -i showcase/h3/<id>.mp4 -vf scale=216:384:flags=lanczos,fps=24 -an -c:v libx264 -preset slow -crf 28 -g 24 -movflags +faststart assets/hero/h3-<id>.mp4
+```
 
 ## naka-sales-world.png
 
@@ -74,3 +83,7 @@ reference so the plush naga character stays on-model. Thai-style scenes: film
 director set with Thai cinema backdrop (drama), livestream table with mangoes,
 jasmine garland and Thai silk (live), chat-helper at a Thai shop counter with
 blank speech bubbles (bot). The sales card keeps its video artwork.
+
+## ../showcase/h3/<id>.mp4, <id>.jpg, <id>-from.jpg
+
+Clips for the "Naka Reel" band. Each is rendered with MiniMax H3 (fl2va) on Unsloth Studio from the first frame in `creative/unsloth-reel/shots.json`, then encoded to 540 × 960 H.264 with AAC so the Thai audio H3 generates is kept. `<id>.jpg` is the poster and `<id>-from.jpg` is the exact 9:16 first frame sent to the model, shown as "จากรูปนี้". Regenerate with `node creative/unsloth-reel/generate.cjs` (see the README there). Until clips exist, the band falls back to the demo and drama clips.

@@ -32,13 +32,15 @@
 .hl-scene { position: relative; z-index: 1; height: calc(380px * var(--k, 1)); margin-top: calc(-6px * var(--k, 1)); }
 .hl-belt { position: absolute; left: 0; top: calc(300px * var(--k, 1)); height: calc(52px * var(--k, 1)); }
 .hl-belt::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: calc(18px * var(--k, 1)); border-radius: 0 calc(9px * var(--k, 1)) calc(9px * var(--k, 1)) 0; background: linear-gradient(180deg, #4b7cf2, #2459d6 55%, #173f9e); }
-.hl-rollers { position: absolute; left: 0; right: 0; top: calc(18px * var(--k, 1)); height: calc(34px * var(--k, 1)); border-radius: 0 calc(17px * var(--k, 1)) calc(17px * var(--k, 1)) 0; background-color: #fff; background-image: radial-gradient(circle, #0d1b33 0 calc(7px * var(--k, 1)), transparent calc(7.5px * var(--k, 1))); background-size: calc(46px * var(--k, 1)) 100%; background-repeat: repeat-x; box-shadow: 0 14px 26px rgba(13, 27, 51, .12); }
+.hl-rollers { position: absolute; left: 0; right: 0; top: calc(18px * var(--k, 1)); height: calc(34px * var(--k, 1)); border-radius: 0 calc(17px * var(--k, 1)) calc(17px * var(--k, 1)) 0; overflow: hidden; background-color: #fff; box-shadow: 0 14px 26px rgba(13, 27, 51, .12); }
+/* the roller pattern lives on an inner strip one period (46px) wider than the belt; hero-line.js slides it with translate3d */
+.hl-roll { position: absolute; top: 0; bottom: 0; left: 0; right: calc(-46px * var(--k, 1)); background-image: radial-gradient(circle, #0d1b33 0 calc(7px * var(--k, 1)), transparent calc(7.5px * var(--k, 1))); background-size: calc(46px * var(--k, 1)) 100%; background-repeat: repeat-x; will-change: transform; }
 
 .hl-layer { position: absolute; inset: 0; pointer-events: none; }
 .hl-layer.back { z-index: 1; }
 .hl-layer.items { z-index: 2; clip-path: inset(-240px -240px calc(12px * var(--k, 1)) -240px); }
 .hl-layer.front { z-index: 3; }
-.hl-item { position: absolute; left: 0; top: 0; will-change: transform; }
+.hl-item { position: absolute; left: 0; top: 0; will-change: transform; contain: layout style; }
 
 /* product box */
 .hl-box { position: absolute; left: calc(-52px * var(--k, 1)); bottom: 0; width: calc(104px * var(--k, 1)); height: calc(92px * var(--k, 1)); border-radius: calc(8px * var(--k, 1)); background: linear-gradient(180deg, #e2c497, #d3ad79); box-shadow: inset 0 calc(-8px * var(--k, 1)) 0 rgba(0, 0, 0, .06), 0 8px 16px rgba(13, 27, 51, .14); }

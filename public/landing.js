@@ -54,6 +54,23 @@
     });
   }
 
+  // ---- product walls: the "make your own" card spans the cells left in the last row ----
+  var walls = Array.prototype.slice.call(document.querySelectorAll('.prod-wall'));
+  function fillWalls() {
+    walls.forEach(function (wall) {
+      var slot = wall.querySelector('.tpl-create');
+      if (!slot) return;
+      var cols = getComputedStyle(wall).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+      var cells = wall.children.length; // every card takes one cell, the slot included
+      slot.style.setProperty('--slot', 1 + (cols - (cells % cols)) % cols);
+    });
+  }
+  if (walls.length) {
+    fillWalls();
+    var wallTimer = 0;
+    window.addEventListener('resize', function () { clearTimeout(wallTimer); wallTimer = setTimeout(fillWalls, 100); });
+  }
+
   // ---- rail arrows ----
   document.querySelectorAll('.rail-arrow').forEach(function (button) {
     button.addEventListener('click', function () {
@@ -78,6 +95,24 @@
     }, { threshold: 0.35 });
     videos.forEach(function (v) { videoObserver.observe(v); });
   }
+
+  // ---- reel sound: AI clips carry their own Thai audio; one clip is heard at a time ----
+  var soundButtons = Array.prototype.slice.call(document.querySelectorAll('.reel-sound'));
+  function setSound(button, on) {
+    var v = button.parentNode.querySelector('video');
+    button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    button.setAttribute('aria-label', button.getAttribute('aria-label').replace(/^(เปิด|ปิด)/, on ? 'ปิด' : 'เปิด'));
+    if (!v) return;
+    v.muted = !on;
+    if (on) { v.currentTime = 0; v.play().catch(function () {}); }
+  }
+  soundButtons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      var on = button.getAttribute('aria-pressed') !== 'true';
+      soundButtons.forEach(function (b) { if (b !== button && b.getAttribute('aria-pressed') === 'true') setSound(b, false); });
+      setSound(button, on);
+    });
+  });
 
   // ---- chat demos: reveal messages one by one when the card scrolls into view ----
   var chats = Array.prototype.slice.call(document.querySelectorAll('[data-chat]'));
