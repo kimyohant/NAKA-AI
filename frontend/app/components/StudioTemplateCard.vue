@@ -1,7 +1,17 @@
 <template>
-  <button type="button" :class="['ps-tpl', { selected }]" :aria-pressed="selected" @click="emit('select', template)">
-    <div class="ps-tpl-visual" :class="`cat-${categoryClass}`" aria-hidden="true">
-      <component :is="icon" :size="22" :stroke-width="1.6" />
+  <button
+    type="button" :class="['ps-tpl', { selected }]" :aria-pressed="selected" @click="emit('select', template)"
+    @mouseenter="startCycle" @mouseleave="stopCycle" @focus="startCycle" @blur="stopCycle"
+  >
+    <div class="ps-tpl-visual" :class="[`cat-${categoryClass}`, { 'has-art': showArt }]" aria-hidden="true">
+      <template v-if="showArt">
+        <!-- preview frames of this template for different product categories; hover cycles them -->
+        <img
+          v-for="k in loaded" :key="art[k]" :src="art[k]" alt="" loading="lazy" decoding="async"
+          :class="['ps-tpl-art', { on: k === current }]" @error="artFailed = true"
+        >
+      </template>
+      <component :is="icon" v-else :size="22" :stroke-width="1.6" />
       <span v-if="template.avatarMode === 'required'" class="ps-tpl-avatar-badge" :title="t('productStudio.templates.avatarRequired')">
         <UserRound :size="11" :stroke-width="2" />
       </span>
@@ -37,12 +47,40 @@
 import { Eye, Hand, Heart, Lightbulb, Package, PartyPopper, Scissors, SearchCheck, Shirt, Sparkles, UserRound, VolumeX, Wand2, Zap } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { beatBars } from '~/utils/studioFlow'
+import { templateArt } from '~/utils/studioArt'
 
-/** StudioTemplateCard — การ์ดเทมเพลตใน Creative Gallery: ชื่อ/คำอธิบายจาก i18n + timeline beat */
+/** StudioTemplateCard — การ์ดเทมเพลตใน Creative Gallery: ภาพตัวอย่าง + ชื่อ/คำอธิบายจาก i18n + timeline beat */
 const props = defineProps({
   template: { type: Object, required: true },
   selected: { type: Boolean, default: false },
+  /** which product-category preview to show first, so neighbouring cards differ */
+  artIndex: { type: Number, default: 0 },
 })
+
+const art = computed(() => templateArt(props.template.id))
+const artFailed = ref(false)
+const showArt = computed(() => art.value.length > 0 && !artFailed.value)
+const current = ref(0)
+const loaded = ref([])
+watch(art, (list) => {
+  current.value = list.length ? ((props.artIndex % list.length) + list.length) % list.length : 0
+  loaded.value = list.length ? [current.value] : []
+  artFailed.value = false
+}, { immediate: true })
+
+// hover/focus cycles the previews; only images that have been shown are ever requested
+let timer = null
+function startCycle() {
+  if (timer || art.value.length < 2 || !import.meta.client) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  timer = setInterval(() => {
+    const next = (current.value + 1) % art.value.length
+    if (!loaded.value.includes(next)) loaded.value = [...loaded.value, next]
+    current.value = next
+  }, 1100)
+}
+function stopCycle() { clearInterval(timer); timer = null }
+onBeforeUnmount(stopCycle)
 const emit = defineEmits(['select'])
 
 const { t, te } = useI18n()
@@ -106,6 +144,15 @@ function beatLabel(role) {
 .ps-tpl-visual.cat-fashion_beauty { background: color-mix(in srgb, #ec4899 8%, var(--surface-soft)); }
 .ps-tpl-visual.cat-showcase { background: color-mix(in srgb, var(--success, #22c55e) 8%, var(--surface-soft)); }
 .ps-tpl-visual.cat-promo { background: color-mix(in srgb, #ef4444 8%, var(--surface-soft)); }
+.ps-tpl-visual.has-art { height: auto; aspect-ratio: 5 / 4; overflow: hidden; }
+.ps-tpl-art {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: 50% 38%;
+  opacity: 0; transition: opacity 0.45s var(--ease-out);
+}
+.ps-tpl-art.on { opacity: 1; }
+.ps-tpl-visual.has-art .ps-tpl-avatar-badge, .ps-tpl-visual.has-art .ps-tpl-mute-badge { z-index: 1; }
+@media (prefers-reduced-motion: reduce) { .ps-tpl-art { transition: none; } }
 .ps-tpl-avatar-badge, .ps-tpl-mute-badge {
   position: absolute; top: 6px; width: 20px; height: 20px;
   display: flex; align-items: center; justify-content: center;

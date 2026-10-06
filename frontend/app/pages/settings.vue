@@ -514,12 +514,19 @@
                   </button>
                 </div>
               </div>
+              <div v-if="libraryCover && !libraryArtFailed[libraryCover]" class="skills-library-cover" aria-hidden="true">
+                <img :src="libraryCover" alt="" decoding="async" @error="libraryArtFailed[libraryCover] = true">
+              </div>
               <p v-if="libraryLoading" class="dim">{{ t('settings.skills.loadingLibrary') }}</p>
               <div v-else-if="!filteredLibrary.length" class="card skills-empty">
                 <div class="skills-empty-title">{{ t('settings.skills.libraryEmpty') }}</div>
               </div>
               <div v-else class="skills-library-grid">
                 <article v-for="item in filteredLibrary" :key="item.id" class="card skills-library-card">
+                  <div v-if="skillArt(item.id) && !libraryArtFailed[item.id]" class="skills-library-art" aria-hidden="true">
+                    <img :src="skillArt(item.id).still" alt="" loading="lazy" decoding="async" @error="libraryArtFailed[item.id] = true">
+                    <img class="skills-library-clay" :src="skillArt(item.id).clay" alt="" loading="lazy" decoding="async" @error="libraryArtFailed[item.id] = true">
+                  </div>
                   <div class="skills-library-card-head">
                     <span class="skills-library-category">{{ t(`settings.skills.categories.${item.category}`) }}</span>
                     <span v-if="item.installed" class="tag tag-success">{{ t('settings.skills.installed') }}</span>
@@ -810,6 +817,7 @@ import { Plus, Pencil, Trash2, FileText, ChevronDown, Check, Loader2, Bot, Cpu, 
 import BaseSelect from '~/components/BaseSelect.vue'
 import { toast } from 'vue-sonner'
 import { UNSLOTH_PROVIDER, UNSLOTH_VIDEO_DEFAULTS, isLocalOrPrivateBaseUrl } from '~/utils/unslothFlow'
+import { coverArt, skillArt } from '~/utils/studioArt'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI, promptAPI, skillsAPI, storageAPI, stylePresetAPI, settingsAPI, serverUpdateAPI } from '~/composables/useApi'
@@ -1153,6 +1161,14 @@ const skillLibrary = ref([])
 const librarySearch = ref('')
 const libraryCategory = ref('all')
 const libraryAgent = ref('all')
+// library art (public/studio-art): banner for the chosen agent/category, image per skill card;
+// anything that fails to load is hidden so the text-only card still works
+const libraryArtFailed = reactive({})
+const libraryCover = computed(() => {
+  if (libraryAgent.value !== 'all') return coverArt('agent', libraryAgent.value)
+  if (libraryCategory.value !== 'all') return coverArt('skill-category', libraryCategory.value)
+  return ''
+})
 const libraryLoading = ref(false)
 const installingSkill = ref('')
 const editingSkill = ref(null)
@@ -2005,6 +2021,11 @@ onBeforeUnmount(stopUsagePoll)
 .skills-library-filter.active { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-text); font-weight: 650; }
 .skills-library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 12px; }
 .skills-library-card { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding: 16px; min-height: 205px; }
+.skills-library-cover { height: 160px; overflow: hidden; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--surface-soft); }
+.skills-library-cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+.skills-library-art { position: relative; align-self: stretch; margin: -16px -16px 4px; aspect-ratio: 16 / 9; overflow: hidden; border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; background: var(--surface-soft); }
+.skills-library-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.skills-library-art .skills-library-clay { position: absolute; right: 10px; bottom: 10px; width: 54px; height: 54px; border-radius: 14px; border: 2px solid var(--surface-raised); background: var(--surface-raised); box-shadow: var(--shadow-elevated); }
 .skills-library-card-head { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .skills-library-category { color: var(--text-3); font-size: 11px; font-weight: 650; }
 .skills-library-card h3 { margin: 0; color: var(--text-0); font-size: 14px; line-height: 1.35; }
