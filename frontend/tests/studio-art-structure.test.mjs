@@ -77,5 +77,5 @@ test('every seeded visual style has an example image, and the picker falls back 
   assert.match(index, /v-if="styleImg\[p\.value\] !== 'ok'" class="style-glyph"/)
   assert.doesNotMatch(index, /overflow-x: auto; scroll-snap-type: x mandatory/)
   // Settings → visual styles: bundled example when the preset has no generated preview
-  assert.match(read('app/pages/settings.vue'), /v-else-if="styleExample(p.value)/)
+  assert.match(read('app/pages/settings.vue'), /v-else-if="styleExample\(p\.value\)/)
 })
