@@ -27,6 +27,7 @@ export const SETTINGS: readonly SettingDef[] = [
   feature('FEATURE_CLIPS', 'สร้างคลิปรีวิว', 'ปิดแล้วลูกค้าส่งงานสร้างคลิปใหม่ไม่ได้ งานที่อยู่ในคิวยังทำต่อจนเสร็จ'),
   feature('FEATURE_SOCIAL', 'โพสต์โซเชียลอัตโนมัติ', 'ปิดแล้วหยุดโพสต์ตามเวลาและปิดหน้าเชื่อมเพจ'),
   feature('FEATURE_INBOX', 'AI Inbox', 'ปิดแล้วหยุดตอบแชตเพจอัตโนมัติ ข้อความใหม่ยังถูกเก็บไว้'),
+  feature('FEATURE_MARKETER', 'นักการตลาด AI (สตูดิโอ 05)', 'ปิดแล้วหน้าเมนูนักการตลาด AI และคลิปมาแรงใช้งานไม่ได้'),
   feature('FEATURE_LINE_BOT', 'บอทขายของใน LINE OA', 'ปิดแล้วบอทไม่ตอบลูกค้าใน LINE'),
   feature('FEATURE_GOOGLE_LOGIN', 'ล็อกอินด้วย Google', 'ต้องตั้ง Google Client ID/Secret ด้วยจึงจะแสดงปุ่ม'),
   feature('FEATURE_LINE_LOGIN', 'ล็อกอินด้วย LINE', 'ต้องตั้ง LINE Login Channel ID/Secret ด้วยจึงจะแสดงปุ่ม'),
@@ -45,6 +46,9 @@ export const SETTINGS: readonly SettingDef[] = [
   { key: 'GOOGLE_TTS_API_KEY', group: 'ai', kind: 'secret', label: 'Google Text-to-Speech API key', help: 'เสียงพากย์คลิปรีวิว', pattern: /^[A-Za-z0-9_-]{20,}$/ },
   { key: 'GOOGLE_TTS_VOICE', group: 'ai', kind: 'text', label: 'เสียงพากย์', help: 'เช่น th-TH-Standard-A · ว่าง = ค่าเริ่มต้น', pattern: /^[a-z]{2,3}-[A-Z]{2}-[A-Za-z0-9-]{1,40}$/, max: 60 },
 
+  { key: 'TRENDING_API_URL', group: 'ai', kind: 'text', label: 'API คลิปมาแรง (FastMoss / Kalodata)', help: 'https ที่ตอบ JSON รายการคลิป · ระบบดึงทุกชั่วโมง · ว่าง = ใช้เฉพาะคลิปที่คัดเองและไฟล์นำเข้า', pattern: /^https:\/\/[^\s]+$/, max: 500 },
+  { key: 'TRENDING_API_KEY', group: 'ai', kind: 'secret', label: 'คีย์ API คลิปมาแรง', help: 'ส่งเป็น Authorization: Bearer' },
+  { key: 'TRENDING_API_USD_RATE', group: 'ai', kind: 'number', label: 'อัตราแลกเปลี่ยน USD → บาท ของ API คลิปมาแรง', help: 'ใส่เมื่อ API ส่งยอดขายเป็นดอลลาร์ · ว่าง = เป็นบาทอยู่แล้ว', max: 1000 },
   { key: 'EMAIL_PROVIDER', group: 'email', kind: 'select', label: 'ระบบส่งอีเมล (ลืมรหัสผ่าน)', help: 'resend = เปิดลืมรหัสผ่านทางอีเมล', options: ['off', 'resend'] },
   { key: 'RESEND_API_KEY', group: 'email', kind: 'secret', label: 'Resend API key', pattern: /^re_[A-Za-z0-9_]{10,}$/ },
   { key: 'EMAIL_FROM', group: 'email', kind: 'text', label: 'อีเมลผู้ส่ง', help: 'เช่น naka-ai <no-reply@naka-ai.com>', max: 120,
