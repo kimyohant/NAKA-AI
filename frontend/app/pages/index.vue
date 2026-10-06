@@ -55,7 +55,7 @@
       </div>
     </section>
 
-    <!-- ===== 视觉风格：横向卡片行（点选即用于上方输入框） ===== -->
+    <!-- ===== 视觉风格：全部卡片网格展示，不横向滚动（点选即用于上方输入框） ===== -->
     <section v-if="stylePresets.length" class="block" aria-labelledby="styles-title">
       <div class="block-head">
         <div>
@@ -64,7 +64,7 @@
         </div>
       </div>
       <div class="style-rail-wrap">
-        <div ref="styleRail" class="style-rail">
+        <div class="style-rail">
           <button
             v-for="p in stylePresets"
             :key="p.value"
@@ -82,9 +82,6 @@
             <span class="style-desc">{{ styleDesc(p) }}</span>
           </button>
         </div>
-        <button type="button" class="rail-next" :aria-label="t('index.studio.scrollNext')" @click="scrollStyles">
-          <ChevronRight :size="18" :stroke-width="2" />
-        </button>
       </div>
     </section>
 
@@ -279,7 +276,7 @@
 import { toast } from 'vue-sonner'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
-import { Clock, CircleHelp, Paperclip, ArrowUp, ChevronDown, ChevronRight, Plus, Search, MoreHorizontal, Play, Loader2 } from 'lucide-vue-next'
+import { Clock, CircleHelp, Paperclip, ArrowUp, ChevronDown, Plus, Search, MoreHorizontal, Play, Loader2 } from 'lucide-vue-next'
 import { dramaAPI, episodeAPI, stylePresetAPI, aiConfigAPI } from '~/composables/useApi'
 import { GENRE_TAGS } from '~/composables/useCreativeTags'
 import BaseSelect from '~/components/BaseSelect.vue'
@@ -535,14 +532,6 @@ async function startFromStory() {
   }
 }
 
-const styleRail = ref(null)
-function scrollStyles() {
-  const el = styleRail.value
-  if (!el) return
-  const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8
-  el.scrollBy({ left: atEnd ? -el.scrollWidth : el.clientWidth * 0.8, behavior: 'smooth' })
-}
-
 onMounted(load)
 
 // ===== 应用内引导（首页）：3 步 — 欢迎 / AI 配置 / 新建项目 =====
@@ -704,16 +693,13 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
 }
 .block-sub { margin: 2px 0 0; font-size: 13px; color: var(--text-3); }
 
-/* 风格卡片行 */
+/* 风格卡片：网格换行，一次展示全部风格（无横向滚动条） */
 .style-rail-wrap { position: relative; }
 .style-rail {
-  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 1fr);
-  gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
-  padding-bottom: 6px; scrollbar-width: none;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
 }
-.style-rail::-webkit-scrollbar { display: none; }
 .style-card {
-  scroll-snap-align: start;
   display: flex; flex-direction: column; text-align: left;
   padding: 0 0 14px; border-radius: 16px; overflow: hidden;
   border: 1px solid var(--border); background: var(--surface-raised);
@@ -742,14 +728,6 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
   padding: 2px 14px 0; font-size: 12.5px; line-height: 1.5; color: var(--text-3);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.rail-next {
-  position: absolute; right: -14px; top: 30%;
-  width: 40px; height: 40px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  border: none; background: #fff; color: #111; cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-.rail-next:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--button-focus); }
 
 /* 我的项目 */
 .projects-head .block-title { margin-right: 4px; }
@@ -870,8 +848,7 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
   .composer-right { margin-left: 0; width: 100%; }
   .send-btn { margin-left: auto; }
   .chip-upload { max-width: 100%; }
-  .style-rail { grid-auto-columns: 78%; }
-  .rail-next { display: none; }
+  .style-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .sort-wrap { margin-left: 0; }
   .search-box { width: 100%; }
   .project-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
