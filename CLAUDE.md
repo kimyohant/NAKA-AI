@@ -68,6 +68,20 @@ Single SQLite file (default `data/naka.sqlite3`; in userData for the desktop app
 - The full list of environment variables is in the README ("环境变量" section); `configs/config.yaml` is dead config (do not reference it)
 - `PUBLIC_BASE_URL`: Seedance needs a public address to reference local assets; the desktop app cannot provide one (it shows a Chinese error message)
 
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `kimyohant/naka-drama-studio` (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-label vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
 <!-- OPENWIKI:START -->
 
 ## OpenWiki
