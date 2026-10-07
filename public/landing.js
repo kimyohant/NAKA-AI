@@ -174,7 +174,7 @@
 (function () {
   'use strict';
   var grid = document.querySelector('#pricing .plan-grid');
-  if (!grid || !window.fetch) return;
+  if (!grid || grid.closest('[hidden]') || !window.fetch) return;
   var baht = function (n) { return Math.round(n).toLocaleString('en-US'); };
   function fill(article, plan) {
     article.querySelector('h3').textContent = plan.name;

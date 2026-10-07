@@ -63,6 +63,13 @@ export interface Env {
   TRENDING_API_URL?: string;
   TRENDING_API_KEY?: string;
   TRENDING_API_USD_RATE?: string;
+  // AI video (src/video): the active provider and its account, chosen in /admin/system/
+  VIDEO_PROVIDER?: string;
+  VIDEO_API_KEY?: string;
+  VIDEO_BASE_URL?: string;
+  VIDEO_MODEL?: string;
+  VIDEO_RESOLUTION?: string;
+  AI_VIDEO_CREDITS?: string;
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */

@@ -17,6 +17,7 @@
   let signedIn = false;
   let composerTemplate = null; // template id the composer text came from
   let recreateSource = null; // { frames, seconds, previews } from an upload, or { trending } from the gallery
+  let recreateFile = null; // the reference clip itself, reused when the seller asks for an AI video
   let pollTimer = null;
   const taskContext = new Map(); // jobId → { productName, channel } for handoffs
 
@@ -58,7 +59,7 @@
     $('#credit-chip').hidden = !signedIn;
     if (signedIn) $('#credit-count').textContent = String(result.data.credits ?? 0);
     $('#tasks-section').hidden = !signedIn;
-    if (signedIn) loadTasks();
+    if (signedIn) { loadTasks(); loadVideos(); }
   }
   function needSignIn() {
     if (signedIn) return false;
@@ -194,6 +195,17 @@
       images: [...$('#url-images').querySelectorAll('input:checked')].map((input) => input.value) });
   });
 
+  $('#url-video').addEventListener('click', () => {
+    const name = $('#url-name').value.trim();
+    if (!name) { $('#url-error').textContent = 'กรุณากรอกชื่อสินค้า'; return; }
+    const selling = $('#url-selling').value.trim();
+    $('#url-dialog').close();
+    openVideo({ kind: 'plan', productName: name, title: name,
+      script: [`สินค้า: ${name}`, selling && `จุดขายหลัก: ${selling}`, $('#url-audience').value.trim() && `กลุ่มลูกค้า: ${$('#url-audience').value.trim()}`,
+        'ช็อต: เปิดด้วยปัญหาของลูกค้า → โชว์สินค้าใกล้ ๆ → ใช้งานจริง → ผลลัพธ์ → ชวนกดสั่ง'].filter(Boolean).join('\n'),
+      imageUrls: [...$('#url-images').querySelectorAll('input:checked')].map((input) => input.value) });
+  });
+
   function toReview(data) {
     const handoff = { ...data, productName: (data.productName || '').slice(0, 160), details: (data.details || '').slice(0, 3000),
       channel: REVIEW_CHANNELS.includes(data.channel) ? data.channel : 'tiktok' };
@@ -232,6 +244,7 @@
 
   $('#recreate-video').addEventListener('change', async () => {
     const file = $('#recreate-video').files[0];
+    recreateFile = file || null;
     $('#recreate-error').textContent = '';
     $('#frame-strip').replaceChildren();
     recreateSource = null;
@@ -273,7 +286,8 @@
     await submitTask('recreate', { mode: new FormData($('#recreate-form')).get('mode'), frames: source.frames || [], seconds: source.seconds,
       trendingId: source.trending ? source.trending.id : undefined, sourceUrl: source.trending ? source.trending.url : undefined,
       caption, productName, productDetails: $('#recreate-details').value.trim(), newContent, channel },
-    '#recreate-form', '#recreate-error', '#recreate-dialog', { productName, channel, details: $('#recreate-details').value.trim() });
+    '#recreate-form', '#recreate-error', '#recreate-dialog', { productName, channel, details: $('#recreate-details').value.trim(),
+      mode: new FormData($('#recreate-form')).get('mode'), hasClip: !!recreateFile });
   });
 
   // ---------- 04 bulk ----------
@@ -372,6 +386,7 @@
         el('p', { class: 'caption-box', text: `${plan.caption}\n${plan.hashtags.map((h) => (h.startsWith('#') ? h : `#${h}`)).join(' ')}` }),
         el('div', { class: 'result-actions' },
           copyButton(() => `${plan.angle}\nฮุก: ${plan.hook}\n${shotsText(plan.shots)}\n\n${plan.caption}\n${plan.hashtags.join(' ')}\n${plan.cta}`),
+          videoButton(() => ({ kind: 'plan', productName: ctx.productName, title: plan.angle, script: `ฮุก: ${plan.hook}\n${shotsText(plan.shots)}\nคำชวนซื้อ: ${plan.cta}` })),
           el('button', { type: 'button', class: 'button primary', text: 'ทำเป็นคลิปรีวิว →', onclick: () => toReview({
             productName: ctx.productName || plan.angle, channel: ctx.channel, tone: ctx.tone,
             details: `มุมขาย: ${plan.angle}\nกลุ่มลูกค้า: ${plan.audience}\nฮุกที่อยากใช้: ${plan.hook}\nประเด็นในคลิป: ${plan.shots.map((s) => s.voiceover).filter(Boolean).join(' / ')}\nคำชวนซื้อ: ${plan.cta}` }) })))));
@@ -393,10 +408,133 @@
         remake.productionNotes.length ? [el('h3', { text: 'เตรียมถ่าย' }), el('ul', {}, remake.productionNotes.map((n) => el('li', { text: n })))] : null),
       el('div', { class: 'result-actions' },
         copyButton(() => `${remake.title}\nฮุก: ${remake.hook}\n${shotsText(remake.shots)}\n\n${remake.caption}\n${remake.hashtags.join(' ')}`),
+        videoButton(() => ({ kind: ctx.mode === 'replace' ? 'replace' : 'recreate', productName: ctx.productName, title: remake.title,
+          script: `ฮุก: ${remake.hook}\n${shotsText(remake.shots)}` })),
         el('button', { type: 'button', class: 'button primary', text: 'ทำเป็นคลิปรีวิวจากรูปสินค้า →', onclick: () => toReview({
           productName: ctx.productName, channel: ctx.channel,
           details: `${ctx.details ? ctx.details + '\n' : ''}ฮุกที่อยากใช้: ${remake.hook}\nประเด็นในคลิป: ${remake.shots.map((s) => s.voiceover).filter(Boolean).join(' / ')}` }) })));
   }
+
+  // ---------- AI video ----------
+
+  let videoContext = null;
+  let videoTimer = null;
+  let videoProducts = []; // File objects
+  function videoButton(getContext) {
+    const v = config && config.video;
+    const ready = v && v.enabled;
+    return el('button', { type: 'button', class: 'button btn-video', disabled: !ready,
+      title: ready ? '' : (v && v.reason) || 'ยังไม่พร้อม',
+      text: ready ? `🎬 สร้างวิดีโอ AI · ${v.credits} เครดิต` : '🎬 วิดีโอ AI ยังไม่เปิด',
+      onclick: () => { $('#result-dialog').close(); openVideo(getContext()); } });
+  }
+
+  async function fetchAsFile(url, i) {
+    try {
+      const response = await fetch(url, { credentials: 'same-origin' });
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      const type = /^image\/(jpeg|png|webp)$/.test(blob.type) ? blob.type : 'image/jpeg';
+      return new File([blob], `product-${i + 1}.${type.split('/')[1]}`, { type });
+    } catch { return null; }
+  }
+  function showProducts() {
+    $('#video-product-previews').replaceChildren(...videoProducts.map((file, i) => el('img', { src: URL.createObjectURL(file), alt: `รูปสินค้าที่ ${i + 1}` })));
+  }
+
+  async function openVideo(context) {
+    if (needSignIn()) return;
+    const v = config.video;
+    if (!v || !v.enabled) { toast(`วิดีโอ AI ยังไม่เปิด: ${(v && v.reason) || 'ยังไม่พร้อม'}`); return; }
+    videoContext = context;
+    $('#video-lead').textContent = `ใช้ ${v.provider} · ${v.credits} เครดิตต่อคลิป · ความยาว ${v.limits.minSec}–${v.limits.maxSec} วินาที · ใช้เวลาราว 2–10 นาที`;
+    $('#video-form').reset(); $('#video-error').textContent = ''; $('#video-consent').hidden = true;
+    const range = $('#video-duration');
+    range.min = v.limits.minSec; range.max = v.limits.maxSec; range.value = Math.min(v.limits.maxSec, Math.max(v.limits.minSec, 10));
+    $('#video-duration-out').textContent = range.value;
+    $('#video-script').value = context.script || '';
+    $('#video-form').querySelector(`input[name=vkind][value=${context.kind}]`).checked = true;
+    $('#video-source-note').textContent = recreateFile && context.kind !== 'plan' ? `ใช้คลิป "${recreateFile.name}" ที่เลือกไว้ หรือเลือกคลิปใหม่` : '';
+    videoProducts = [];
+    showProducts();
+    syncVideoMode();
+    $('#video-dialog').showModal();
+    if (context.imageUrls && context.imageUrls.length) {
+      $('#video-error').textContent = 'กำลังโหลดรูปสินค้าจากลิงก์…';
+      videoProducts = (await Promise.all(context.imageUrls.slice(0, 4).map(fetchAsFile))).filter(Boolean);
+      showProducts();
+      $('#video-error').textContent = '';
+    }
+  }
+  function syncVideoMode() {
+    const kind = new FormData($('#video-form')).get('vkind');
+    $('#video-source-field').hidden = kind === 'plan';
+  }
+  $('#video-mode').addEventListener('change', syncVideoMode);
+  $('#video-duration').addEventListener('input', () => { $('#video-duration-out').textContent = $('#video-duration').value; });
+  $('#video-products').addEventListener('change', () => { videoProducts = [...$('#video-products').files].slice(0, 4); showProducts(); });
+  $('#video-person').addEventListener('change', () => { $('#video-consent').hidden = !$('#video-person').files.length; });
+
+  async function uploadFile(file, query) {
+    const response = await fetch('/api/marketer/media' + (query ? '?' + query : ''), { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': file.type }, body: file });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'อัปโหลดไฟล์ไม่สำเร็จ');
+    return data.key;
+  }
+
+  $('#video-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData($('#video-form'));
+    const kind = form.get('vkind');
+    const script = $('#video-script').value.trim();
+    const source = kind === 'plan' ? null : ($('#video-source').files[0] || recreateFile);
+    const person = $('#video-person').files[0] || null;
+    const error = (text) => { $('#video-error').textContent = text; };
+    if (!script) return error('ใส่แผนช็อตของคลิปก่อน');
+    if (kind !== 'plan' && !source) return error('โหมดนี้ต้องมีคลิปต้นแบบ');
+    if (kind === 'replace' && !person && !videoProducts.length) return error('เลือกรูปคนหรือรูปสินค้าที่จะใส่แทน');
+    if (kind === 'plan' && !videoProducts.length && !person) return error('เพิ่มรูปสินค้าอย่างน้อย 1 รูป');
+    if (source && source.size > 50 * 1024 * 1024) return error('คลิปต้องไม่เกิน 50 MB');
+    if (person && !$('#video-consent-check').checked) return error('ติ๊กยืนยันเรื่องความยินยอมของบุคคลในรูปก่อน');
+    const button = $('#video-submit');
+    button.disabled = true;
+    try {
+      error('กำลังอัปโหลดไฟล์…');
+      const sourceVideo = source ? await uploadFile(source) : undefined;
+      const productImages = [];
+      for (const file of videoProducts) productImages.push(await uploadFile(file));
+      const personImage = person ? await uploadFile(person, `person=${encodeURIComponent(form.get('person'))}&consent=1`) : undefined;
+      error('กำลังส่งงาน…');
+      const result = await api('/api/marketer/videos', { body: { kind, script, productName: videoContext.productName || '', title: videoContext.title || '',
+        sourceVideo, productImages, personImage, durationSec: Number($('#video-duration').value), aspectRatio: form.get('ratio'),
+        generateAudio: $('#video-audio').checked } });
+      if (!result.ok) return error(explainFailure(result));
+      $('#video-dialog').close();
+      toast('ส่งงานวิดีโอ AI แล้ว ดูความคืบหน้าที่ "วิดีโอ AI ของฉัน"');
+      loadAccount(); loadVideos();
+      $('#videos-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) { error(e.message); }
+    finally { button.disabled = false; }
+  });
+
+  const VIDEO_STATUS = { queued: 'รอคิว', submitting: 'กำลังส่ง', submitted: 'AI กำลังสร้าง', done: 'เสร็จแล้ว', failed: 'ไม่สำเร็จ' };
+  async function loadVideos() {
+    clearTimeout(videoTimer);
+    const result = await api('/api/marketer/videos');
+    if (!result.ok) return;
+    const videos = result.data.videos;
+    $('#videos-section').hidden = !videos.length && !(config.video && config.video.enabled);
+    $('#video-list').replaceChildren(...(videos.length ? videos.map((v) => el('li', { class: 'video-card' },
+      v.url ? el('video', { src: v.url, controls: true, playsinline: true, preload: 'metadata' })
+        : el('div', { class: 'video-wait' }, v.status === 'failed' ? '⚠' : el('div', { class: 'loading-ring' }), VIDEO_STATUS[v.status] || v.status),
+      el('div', { class: 'video-meta' }, el('strong', { text: v.title || 'วิดีโอ AI' }),
+        v.url ? el('a', { class: 'download', href: v.url, download: 'naka-ai-video.mp4', text: 'ดาวน์โหลด ↓' }) : el('span', { class: `badge ${v.status === 'failed' ? 'failed' : 'running'}`, text: VIDEO_STATUS[v.status] })),
+      v.error ? el('p', { class: 'video-error', text: v.error }) : null))
+      : [el('li', { class: 'trending-empty', text: 'ยังไม่มีวิดีโอ AI สร้างได้จากผลงาน "ทำซ้ำคลิปไวรัล" หรือ "สร้างโฆษณาหลายแบบ"' })]));
+    if (videos.some((v) => v.status !== 'done' && v.status !== 'failed')) videoTimer = setTimeout(loadVideos, 15000);
+  }
+  $('#refresh-videos').addEventListener('click', loadVideos);
 
   // ---------- trending ----------
 

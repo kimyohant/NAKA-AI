@@ -79,6 +79,11 @@
       <ul class="task-list" id="task-list"></ul>
     </section>
 
+    <section class="mk-section" id="videos-section" aria-labelledby="videos-title" hidden>
+      <div class="mk-section-head"><h2 id="videos-title">วิดีโอ AI ของฉัน</h2><button class="text-button" type="button" id="refresh-videos">โหลดใหม่</button></div>
+      <ul class="video-list" id="video-list"></ul>
+    </section>
+
     <section class="mk-section" aria-labelledby="trending-title">
       <div class="mk-section-head"><h2 id="trending-title">คลิปมาแรง พร้อมทำซ้ำ</h2><p>คลิปขายของที่ได้ผลในไทย กด "ทำซ้ำ" เพื่อถอดสูตรแล้วทำของร้านคุณ</p></div>
       <form class="filters" id="filters">
@@ -142,6 +147,7 @@
       </div>
       <p class="field-error" id="url-error" role="alert"></p>
       <button class="mk-primary" type="submit">ไปสร้างคลิป <span>· 1 เครดิตในขั้นถัดไป</span></button>
+      <button class="button btn-video url-video" type="button" id="url-video">🎬 หรือสร้างเป็นวิดีโอ AI จากรูปสินค้า</button>
     </form>
   </dialog>
 
@@ -197,6 +203,51 @@
       </div>
       <p class="field-error" id="bulk-error" role="alert"></p>
       <button class="mk-primary" type="submit">สร้างแผนครีเอทีฟ <span>· 1 เครดิต</span></button>
+    </form>
+  </dialog>
+
+  <!-- AI video -->
+  <dialog id="video-dialog" class="mk-dialog" aria-labelledby="video-title">
+    <form method="dialog" class="dialog-close"><button class="icon-button" aria-label="ปิด">×</button></form>
+    <p class="mk-eyebrow"><span class="fx-led" aria-hidden="true"></span>AI Video</p>
+    <h2 id="video-title">สร้างวิดีโอ AI</h2>
+    <p class="dialog-lead" id="video-lead"></p>
+    <form id="video-form" novalidate>
+      <fieldset class="mode-pick" id="video-mode"><legend>แบบไหน</legend>
+        <label><input type="radio" name="vkind" value="recreate"><span><strong>ทำโครงซ้ำ</strong><small>ช็อตและจังหวะตามคลิปต้นแบบ เนื้อหาใหม่</small></span></label>
+        <label><input type="radio" name="vkind" value="replace"><span><strong>เปลี่ยนคน / สินค้า</strong><small>คงฉากและท่าทาง เปลี่ยนคนหรือสินค้าตามรูป</small></span></label>
+        <label><input type="radio" name="vkind" value="plan"><span><strong>จากแผนช็อต</strong><small>ไม่ใช้คลิปต้นแบบ สร้างจากรูปสินค้า</small></span></label>
+      </fieldset>
+      <div class="field" id="video-source-field">
+        <label for="video-source">คลิปต้นแบบ <span class="required-text">MP4 · ไม่เกิน 50 MB · ต้องเป็นคลิปของคุณหรือที่ได้สิทธิ์แล้ว</span></label>
+        <input id="video-source" type="file" accept="video/mp4,video/quicktime,video/webm">
+        <p class="field-help" id="video-source-note"></p>
+      </div>
+      <div class="field">
+        <label for="video-products">รูปสินค้า <span class="optional-text">สูงสุด 4 รูป · ช่วยให้สินค้าในคลิปตรงของจริง</span></label>
+        <input id="video-products" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+        <div class="url-images" id="video-product-previews"></div>
+      </div>
+      <div class="field">
+        <label for="video-person">รูปคน / พรีเซนเตอร์ <span class="optional-text">ไม่บังคับ</span></label>
+        <input id="video-person" type="file" accept="image/jpeg,image/png,image/webp">
+        <div class="consent" id="video-consent" hidden>
+          <label><input type="radio" name="person" value="consented" checked> เป็นคนจริงที่ยินยอมให้ใช้ใบหน้าในโฆษณานี้</label>
+          <label><input type="radio" name="person" value="ai_generated"> เป็นใบหน้าที่สร้างด้วย AI (AI influencer)</label>
+          <label class="check-line"><input type="checkbox" id="video-consent-check"> ฉันยืนยันข้อความข้างบน และรับผิดชอบการใช้ภาพบุคคลนี้</label>
+        </div>
+      </div>
+      <div class="field"><label for="video-script">แผนช็อต (นาคาเติมจากผลงานให้แล้ว แก้ได้)</label><textarea id="video-script" rows="5" maxlength="6000"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label for="video-duration">ความยาว <output id="video-duration-out">10</output> วินาที</label><input id="video-duration" type="range" min="4" max="15" step="1" value="10"></div>
+        <fieldset class="seg"><legend>สัดส่วน</legend>
+          <label><input type="radio" name="ratio" value="9:16" checked><span>9:16</span></label><label><input type="radio" name="ratio" value="1:1"><span>1:1</span></label><label><input type="radio" name="ratio" value="16:9"><span>16:9</span></label>
+        </fieldset>
+      </div>
+      <label class="check-line"><input type="checkbox" id="video-audio"> ให้ AI ใส่เสียงประกอบ (เสียงพูดภาษาไทยยังไม่ดี แนะนำพากย์ทีหลัง)</label>
+      <p class="field-help">คลิปที่สร้างด้วย AI ควรติดป้าย "AI-generated" ตามกติกาของ TikTok และ Meta ตอนโพสต์</p>
+      <p class="field-error" id="video-error" role="alert"></p>
+      <button class="mk-primary" type="submit" id="video-submit">สร้างวิดีโอ AI</button>
     </form>
   </dialog>
 

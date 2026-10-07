@@ -76,12 +76,13 @@ test('panel values win over wrangler values, which win over switch defaults', as
   const workerEnv = { ...env, SIGNUP_CREDITS: '5', ANTHROPIC_API_KEY: 'from-wrangler' };
   let merged = await withSettings(workerEnv);
   assert.equal(merged.SIGNUP_CREDITS, '5'); assert.equal(merged.ANTHROPIC_API_KEY, 'from-wrangler');
-  assert.equal(merged.FEATURE_PAYMENTS, 'on'); assert.equal(merged.FEATURE_MAINTENANCE, 'off');
-  assert.equal(featureOn(merged, 'FEATURE_PAYMENTS'), true); assert.equal(featureOn(merged, 'FEATURE_MAINTENANCE'), false);
+  assert.equal(merged.FEATURE_PAYMENTS, 'off'); assert.equal(merged.FEATURE_MAINTENANCE, 'off'); // payments default off (non-commercial)
+  assert.equal(merged.FEATURE_CLIPS, 'on');
+  assert.equal(featureOn(merged, 'FEATURE_PAYMENTS'), false); assert.equal(featureOn(merged, 'FEATURE_MAINTENANCE'), false);
   assert.equal((await setting('SIGNUP_CREDITS')).source, 'unset');
-  await set('SIGNUP_CREDITS', 10); await set('ANTHROPIC_API_KEY', ANTHROPIC); await set('FEATURE_PAYMENTS', 'off');
+  await set('SIGNUP_CREDITS', 10); await set('ANTHROPIC_API_KEY', ANTHROPIC); await set('FEATURE_PAYMENTS', 'on');
   merged = await withSettings(workerEnv); // the write cleared this isolate's cache
-  assert.equal(merged.SIGNUP_CREDITS, '10'); assert.equal(merged.ANTHROPIC_API_KEY, ANTHROPIC); assert.equal(featureOn(merged, 'FEATURE_PAYMENTS'), false);
+  assert.equal(merged.SIGNUP_CREDITS, '10'); assert.equal(merged.ANTHROPIC_API_KEY, ANTHROPIC); assert.equal(featureOn(merged, 'FEATURE_PAYMENTS'), true);
   assert.equal(merged.DB, db); assert.equal(merged.ADMIN_TOKEN, TOKEN); // bindings and locked values pass through
   const view = (await (await call('/settings', undefined, { env: workerEnv })).json()).settings;
   assert.equal(view.find(s => s.key === 'SIGNUP_CREDITS').value, '10');

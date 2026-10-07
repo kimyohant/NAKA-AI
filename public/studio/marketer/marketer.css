@@ -190,6 +190,22 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: 520px; z-i
 .caption-box { white-space: pre-wrap; font-size: 13px; padding: 10px 12px; border-radius: 10px; background: var(--canvas); color: var(--ink); }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
+/* ---------- AI video ---------- */
+.video-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.video-card { border: 1px solid var(--line); border-radius: 16px; background: #fff; overflow: hidden; box-shadow: var(--shadow-sm); }
+.video-card video, .video-card .video-wait { display: block; width: 100%; aspect-ratio: 9 / 16; max-height: 380px; object-fit: contain; background: #0d1b33; }
+.video-card .video-wait { display: grid; place-items: center; align-content: center; gap: 10px; color: #b9c6df; font-size: 13px; text-align: center; padding: 16px; }
+.video-card .video-meta { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; }
+.video-card .video-meta strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.video-card a.download { font-weight: 600; color: var(--brand); white-space: nowrap; }
+.video-card .video-error { padding: 0 12px 12px; font-size: 12px; color: var(--danger); }
+.consent { display: grid; gap: 6px; margin-top: 10px; padding: 12px; border-radius: 12px; background: #fff8e6; border: 1px solid #f3d48a; font-size: 13px; }
+.consent label, .check-line { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-weight: 400; font-size: 13px; }
+.check-line { margin: 4px 0 10px; }
+.consent input, .check-line input { width: 18px; height: 18px; flex: none; margin-top: 2px; accent-color: var(--brand); }
+.url-video { width: 100%; margin-top: 10px; min-height: 46px; border-radius: 999px; }
+.btn-video { background: linear-gradient(115deg, #0d1b33, #2459d6) !important; color: #fff !important; border-color: transparent !important; }
+
 @media (max-width: 1060px) { .ways { grid-template-columns: repeat(2, minmax(0, 1fr)); } .chip-group + .chip-group { border-left: 0; } }
 @media (max-width: 760px) {
   .mk-hero { padding-top: 12px; } .composer { border-radius: 18px; padding: 12px; }
