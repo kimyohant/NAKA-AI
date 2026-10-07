@@ -18,7 +18,7 @@ jobs:
         working-directory: backend
       - run: npm run typecheck
         working-directory: backend
-      - run: npx tsx --test tests/sqlite-migration-backup.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts
+      - run: npx tsx --test tests/sqlite-migration-backup.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts
         working-directory: backend
 
   frontend:
@@ -32,7 +32,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
         working-directory: frontend
-      - run: node --test tests/video-preflight.test.mjs tests/official-provider-settings.test.mjs
+      - run: node --test tests/video-preflight.test.mjs tests/ai-seller-structure.test.mjs
         working-directory: frontend
       - run: npm run build
         working-directory: frontend

@@ -131,8 +131,11 @@ No config files — everything is set via environment variables (all have defaul
 | `HYPIT_NODE` | `node` | Node.js ≥ 22.15 executable that runs the Hypit CLI |
 | `HYPIT_WORKERS` / `HYPIT_TIMEOUT_MS` | `2` / 30 min | Hypit render browser workers / per-command timeout |
 | `HYPIT_KEEP_WORKDIR` | — | `1` keeps the generated Hypit project under `data/hypit/` for debugging |
+| `ADMIN_TOKEN` | — | Admin password (≥ 16 chars) for the back-office app [naka-ai-backend](https://github.com/kimyohant/naka-ai-backend). When set, the system-settings API (AI services, styles, agent prompts/skills, storage, server update) requires the `X-Admin-Token` header. Unset = open (dev/desktop) |
+| `ADMIN_DIST` | — | Built back-office app (`naka-ai-backend/.output/public`); when set the backend serves it at `/admin` |
+| `ADMIN_ORIGINS` | — | Comma-separated origins allowed to call the API when the back-office app is hosted elsewhere |
 
-> **Note**: AI service API keys, base URLs, and model parameters are all configured in the web UI "Settings" page and stored in the database — never in config files or environment variables.
+> **Note**: AI service API keys, base URLs, and model parameters are configured in the back-office app **naka-ai-backend** (system settings, served at `/admin`) and stored in the database — never in config files or environment variables. The user-facing app no longer has a Settings menu.
 
 ### 📥 Installation
 

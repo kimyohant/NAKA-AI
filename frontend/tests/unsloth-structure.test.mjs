@@ -16,7 +16,6 @@ import {
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 
-const settingsPage = read('app/pages/settings.vue')
 const useApi = read('app/composables/useApi.ts')
 const providerIcon = read('app/composables/useProviderIcon.ts')
 const unslothFlow = read('app/utils/unslothFlow.js')
@@ -29,33 +28,8 @@ const refCard = read('app/components/MarketerReferenceCard.vue')
 const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
 
-test('provider unsloth is offered for text, image and video with local defaults', () => {
-  assert.match(settingsPage, /text:\s*\[[^\]]*'unsloth'\]/)
-  assert.match(settingsPage, /image:\s*\[[^\]]*'unsloth'\]/)
-  assert.match(settingsPage, /video:\s*\[[^\]]*'unsloth'\]/)
-  // image preset: local base URL — ชื่อโมเดลผู้ใช้พิมพ์เอง (ยังไม่รู้ชื่อ image GGUF ของ server)
-  assert.match(settingsPage, /unsloth: \{ label: 'Unsloth \(Local\)', baseUrl: 'http:\/\/127\.0\.0\.1:8888', models: \[\] \}/)
-  // presets: loopback base + โมเดลตาม PLAN ข้อ 1
-  assert.match(settingsPage, /unsloth: \{ label: 'Unsloth \(Local\)', baseUrl: 'http:\/\/127\.0\.0\.1:8888', models: \['unsloth\/Qwen3\.8-27B-GGUF'\] \}/)
-  assert.match(settingsPage, /unsloth: \{ label: 'Unsloth \(Local\)', baseUrl: 'http:\/\/127\.0\.0\.1:8888', models: \['unsloth\/MiniMax-H3-GGUF'\] \}/)
-  assert.match(useApi, /StudioOptions[\s\S]*?videoProvider\?/)
-})
-
-test('video settings fields and payloads are complete', () => {
-  for (const field of ['gguf_filename', 'steps', 'quality', 'max_concurrent', 'queue_timeout_minutes']) {
-    assert.ok(settingsPage.includes(field), `settings.vue missing ${field}`)
-  }
-  assert.match(settingsPage, /buildVideoSettingsPayload/)
-  assert.match(settingsPage, /settings: buildVideoSettingsPayload\(\)/)
-  // ราคา local = 0 และแสดง ฿0 (local)
-  assert.match(settingsPage, /฿0 \(local\)/)
-  assert.match(settingsPage, /effectivePrice = isUnslothMedia \? 0 : unitPrice/)
-  // test payload แนบ settings ให้ backend เช็ค gguf ได้
-  assert.match(settingsPage, /settings: buildVideoSettingsPayload\(\) \}/)
-})
-
 test('no real API keys or public server IPs in delivered code', () => {
-  for (const [name, src] of [['settings.vue', settingsPage], ['unslothFlow.js', unslothFlow]]) {
+  for (const [name, src] of [['unslothFlow.js', unslothFlow]]) {
     assert.doesNotMatch(src, /sk-[A-Za-z0-9]{12,}/, `${name} contains an API key`)
     // IPv4 literal ต้องเป็น loopback/private เท่านั้น (ห้าม IP จริงของ server)
     for (const m of src.matchAll(/https?:\/\/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g)) {
@@ -133,7 +107,6 @@ test('unsloth i18n keys exist in both locales with full parity', () => {
   function getObj(o, p) { return p.split('.').reduce((a, k) => (a == null ? a : a[k]), o) }
   // ทุก key ที่ settings.vue / workspace.vue ใช้ต้องมีจริง
   for (const [name, src, re] of [
-    ['settings.vue', settingsPage, /\bt\('settings\.cfg\.unsloth\.[\w.]+[']*'\)/g],
     ['workspace.vue', workspace, /\bt\('productStudio\.settings\.[\w.]+[']*'\)/g],
   ]) {
     for (const m of src.matchAll(re)) {

@@ -4,6 +4,12 @@ export default defineNuxtConfig({
   srcDir: 'app/',
   ssr: false,
   devtools: { enabled: false },
+  runtimeConfig: {
+    public: {
+      // ระบบผู้ดูแล (repo naka-ai-backend) — หน้าตั้งค่าระบบย้ายไปที่นั่น; override: NUXT_PUBLIC_ADMIN_URL
+      adminUrl: '/admin/',
+    },
+  },
   experimental: {
     appManifest: false,
   },

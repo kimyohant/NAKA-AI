@@ -64,7 +64,8 @@ study/hypit/ — Full source of Hypit (hypit-ai/hypit @ 7f730ab); the Viral Clon
 Single SQLite file (default `data/naka.sqlite3`; in userData for the desktop app). `initSqliteSchema` idempotently creates tables and seeds style presets at startup. One-off MySQL→SQLite migration: `cd backend && npx tsx scripts/import-mysql-to-sqlite.ts [--force]` (per-table row-count verification, backup before writing).
 
 ## Key Config
-- AI service configs are stored in the DB (`ai_service_configs` table) and maintained from the Settings page, not in config files
+- AI service configs are stored in the DB (`ai_service_configs` table) and maintained from the back-office app **naka-ai-backend** (separate private repo, served by the backend at `/admin` via `ADMIN_DIST`), not in config files. The user-facing app no longer has a Settings menu
+- `ADMIN_TOKEN`: guards the system-settings API (`backend/src/middleware/admin.ts`); admin-only calls need `X-Admin-Token`. The app keeps open reads (AI config list without keys, style presets) and `/settings/*` user prefs
 - The full list of environment variables is in the README ("环境变量" section); `configs/config.yaml` is dead config (do not reference it)
 - `PUBLIC_BASE_URL`: Seedance needs a public address to reference local assets; the desktop app cannot provide one (it shows a Chinese error message)
 

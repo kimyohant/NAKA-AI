@@ -279,6 +279,7 @@
 </template>
 
 <script setup>
+import { openAdmin } from '~/composables/useAdminUrl'
 import { toast } from 'vue-sonner'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
@@ -523,7 +524,7 @@ async function startFromStory() {
     const hasActive = type => configs.some(c => c.service_type === type && c.is_active)
     if (!hasActive('image') || !hasActive('video')) {
       toast.error(t('index.studio.needConfig'), {
-        action: { label: t('layout.banner.goSettings'), onClick: () => navigateTo('/settings?tab=ai') },
+        action: { label: t('layout.banner.goSettings'), onClick: () => openAdmin() },
       })
       return
     }
@@ -546,7 +547,6 @@ onMounted(load)
 // ===== 应用内引导（首页）：3 步 — 欢迎 / AI 配置 / 新建项目 =====
 const INDEX_TOUR = [
   { element: '#__nuxt', titleKey: 'tour.index.welcome.title', descKey: 'tour.index.welcome.desc' },
-  { element: '.side-link[href="/settings?tab=ai"]', titleKey: 'tour.index.settings.title', descKey: 'tour.index.settings.desc', popoverSide: 'right' },
   { element: '.composer', titleKey: 'tour.index.create.title', descKey: 'tour.index.create.desc', popoverSide: 'bottom' },
 ]
 onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))

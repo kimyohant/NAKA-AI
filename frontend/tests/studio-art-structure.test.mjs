@@ -59,10 +59,6 @@ test('cards use the art and fall back to the icon when an image fails', () => {
   const gallery = read('app/components/StudioTemplateGallery.vue')
   assert.match(gallery, /:art-index=/)
   assert.match(gallery, /coverArt\('template-category'/)
-  const settings = read('app/pages/settings.vue')
-  assert.match(settings, /skills-library-art/)
-  assert.match(settings, /libraryArtFailed\[item\.id\] = true/)
-  assert.match(settings, /coverArt\('agent', libraryAgent\.value\)/)
 })
 
 test('every seeded visual style has an example image, and the picker falls back to its gradient', async () => {
@@ -76,6 +72,4 @@ test('every seeded visual style has an example image, and the picker falls back 
   assert.match(index, /styleImg\[p\.value\] = 'error'/)
   assert.match(index, /v-if="styleImg\[p\.value\] !== 'ok'" class="style-glyph"/)
   assert.doesNotMatch(index, /overflow-x: auto; scroll-snap-type: x mandatory/)
-  // Settings → visual styles: bundled example when the preset has no generated preview
-  assert.match(read('app/pages/settings.vue'), /v-else-if="styleExample\(p\.value\)/)
 })

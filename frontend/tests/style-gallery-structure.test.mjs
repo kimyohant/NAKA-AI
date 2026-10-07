@@ -10,38 +10,9 @@ import assert from 'node:assert/strict'
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 
-const settings = read('app/pages/settings.vue')
 const useApi = read('app/composables/useApi.ts')
 const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
-
-test('styles tab renders the numbered gallery with search, categories and import', () => {
-  assert.match(settings, /sg-grid/)
-  assert.match(settings, /v-model="styleSearch"/)
-  assert.match(settings, /filteredStylePresets/)
-  assert.match(settings, /styleCategories/)
-  assert.match(settings, /styleCategory = 'custom'/)
-  assert.match(settings, /importBuiltinStyles\(\)/)
-  assert.match(settings, /stylePresetAPI\.importBuiltin\(\)/)
-  assert.match(settings, /sg-credit/)
-  // พรีวิว: ปุ่มเจน + อัปโหลด + แสดงรูปจาก preview_path
-  assert.match(settings, /genStylePreview\(p\)/)
-  assert.match(settings, /pickPreviewUpload\(p\)/)
-  assert.match(settings, /p\.preview_path/)
-})
-
-test('preview generation reuses the existing /tasks pipeline and stores the result', () => {
-  assert.match(settings, /taskAPI\.generate\(\{ type: 'image', prompt:/)
-  assert.match(settings, /taskAPI\.get\(taskId\)/)
-  assert.match(settings, /task\.resultUrl \|\| task\.localPath/)
-  assert.match(settings, /preview_path: outcome/)
-  assert.match(settings, /uploadAPI\.image\(file\)/)
-  // กติกา upstream: prompt ของพรีวิวห้ามมีเลขสไตล์ (โมเดลจะวาดเลขลงภาพ)
-  const m = settings.match(/STYLE_PREVIEW_SUBJECT = '([^']+)'/)
-  assert.ok(m, 'STYLE_PREVIEW_SUBJECT constant missing')
-  assert.doesNotMatch(m[1], /\b\d{3}\b/)
-  assert.doesNotMatch(m[1], /\b[A-Z]{2}-\d{3}\b/)
-})
 
 test('gallery i18n exists in both locales with full parity', () => {
   const thG = th.settings.styles.gallery

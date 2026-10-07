@@ -92,11 +92,11 @@
             {{ t('productStudio.script.title') }}
           </button>
         </div>
-        <!-- โมเดลยังไม่ตั้งค่า → banner ลิงก์ Settings แบบเดิม -->
+        <!-- โมเดลยังไม่ตั้งค่า → banner ลิงก์ไประบบผู้ดูแล -->
         <div v-if="modelBanner" class="ps-alert" role="alert">
           <CircleAlert :size="16" :stroke-width="1.9" />
           <div class="ps-alert-copy"><span>{{ t(`errors.codes.${modelBanner}`) }}</span></div>
-          <NuxtLink to="/settings?tab=ai" class="btn btn-sm">{{ t('banner.goSettings') }}</NuxtLink>
+          <a :href="adminUrl" target="_blank" rel="noopener" class="btn btn-sm">{{ t('layout.banner.goSettings') }}</a>
         </div>
         <!-- scripting -->
         <div v-if="scripting" class="ps-running" role="status">
@@ -590,6 +590,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useAdminUrl } from '~/composables/useAdminUrl'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import {
@@ -613,6 +614,7 @@ import {
 type StepId = typeof STUDIO_STEPS[number]
 
 const { t, te } = useI18n()
+const adminUrl = useAdminUrl()
 const route = useRoute()
 const projectId = Number(route.params.id)
 

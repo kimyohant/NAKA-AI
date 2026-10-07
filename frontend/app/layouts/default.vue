@@ -39,24 +39,6 @@
         </NuxtLink>
       </nav>
 
-      <div class="side-divider"></div>
-
-      <nav class="side-nav">
-        <p class="side-group side-label">{{ t('layout.nav.setup') }}</p>
-        <NuxtLink
-          v-for="item in settingsItems"
-          :key="item.tab"
-          :to="`/settings?tab=${item.tab}`"
-          class="side-link"
-          :class="{ active: route.path === '/settings' && currentSettingsTab === item.tab }"
-          :title="item.label"
-          @click="navOpen = false"
-        >
-          <component :is="item.icon" :size="17" :stroke-width="1.8" />
-          <span class="side-label">{{ item.label }}</span>
-          <span v-if="item.tab === 'ai' && missingConfigLabels.length" class="side-dot" aria-hidden="true"></span>
-        </NuxtLink>
-      </nav>
 
       <div class="side-bottom">
         <div class="side-tools">
@@ -80,7 +62,7 @@
       <div v-if="missingConfigLabels.length" class="config-banner">
         <TriangleAlert :size="14" :stroke-width="1.8" />
         <span>{{ t('layout.banner.missing', { types: missingConfigLabels.join(t('common.listJoin')) }) }}</span>
-        <NuxtLink to="/settings?tab=ai" class="config-banner-link">{{ t('layout.banner.goSettings') }}</NuxtLink>
+        <a :href="adminUrl" target="_blank" rel="noopener" class="config-banner-link">{{ t('layout.banner.goSettings') }}</a>
       </div>
 
       <main class="content">
@@ -91,9 +73,10 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, Copy, Radio, Store } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Menu, X, Megaphone, Copy, Radio, Store } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI } from '~/composables/useApi'
+import { useAdminUrl } from '~/composables/useAdminUrl'
 import brandLogo from '~/assets/brand-logo.svg'
 
 const { t, locale } = useI18n()
@@ -106,16 +89,9 @@ const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.
 const isSellerRoute = computed(() => route.path === '/seller' || route.path.startsWith('/seller/'))
 const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
 const isLiveRoute = computed(() => route.path === '/live')
-const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))
 
-const settingsItems = computed(() => [
-  { tab: 'ai', label: t('settings.tabs.ai'), icon: Cpu },
-  { tab: 'styles', label: t('settings.tabs.styles'), icon: Palette },
-  { tab: 'agents', label: t('settings.tabs.agents'), icon: Bot },
-  { tab: 'general', label: t('settings.tabs.general'), icon: SlidersHorizontal },
-  { tab: 'storage', label: t('settings.tabs.storage'), icon: HardDrive },
-  { tab: 'about', label: t('settings.tabs.about'), icon: Info },
-])
+// ตั้งค่าระบบย้ายไปแอปผู้ดูแล (naka-ai-backend)
+const adminUrl = useAdminUrl()
 
 function go(path) {
   navOpen.value = false

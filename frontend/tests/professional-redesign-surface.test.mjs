@@ -7,7 +7,6 @@ const indexPage = readFileSync(new URL('../app/pages/index.vue', import.meta.url
 const defaultLayout = readFileSync(new URL('../app/layouts/default.vue', import.meta.url), 'utf8')
 const episodeWorkbench = readFileSync(new URL('../app/views/drama/episode.vue', import.meta.url), 'utf8')
 const dramaDetail = readFileSync(new URL('../app/views/drama/detail.vue', import.meta.url), 'utf8')
-const settingsPage = readFileSync(new URL('../app/pages/settings.vue', import.meta.url), 'utf8')
 
 function cssBlock(source, selector) {
   const start = source.indexOf(selector)
@@ -55,16 +54,6 @@ test('workbench removes legacy light panels from the main production surface', (
   assert.match(episodeWorkbench, /background:\s*var\(--surface-muted\)/)
   assert.doesNotMatch(episodeWorkbench, /rgba\(246,\s*248,\s*252,\s*0\.92\)/)
   assert.doesNotMatch(episodeWorkbench, /rgba\(27,\s*41,\s*64,\s*0\.08\)/)
-})
-
-test('settings page removes the legacy quick setup recommendation cards', () => {
-  assert.doesNotMatch(settingsPage, /Quick Setup/)
-  assert.doesNotMatch(settingsPage, /官方推荐配置/)
-  assert.doesNotMatch(settingsPage, /officialPresetCards/)
-  assert.doesNotMatch(settingsPage, /\.preset-card\s*\{/)
-  assert.doesNotMatch(settingsPage, /background:\s*rgba\(255,255,255,0\.82\)/)
-  assert.doesNotMatch(settingsPage, /background:\s*rgba\(244,248,255,0\.72\)/)
-  assert.doesNotMatch(settingsPage, /background:\s*rgba\(255,255,255,0\.72\)/)
 })
 
 test('project episode dialog follows the light brand system', () => {
