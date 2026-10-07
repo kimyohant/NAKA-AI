@@ -32,6 +32,7 @@ import seller from './routes/seller.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
+import { adminGuard, adminGuardEnabled, assertAdminTokenConfig, isAdminRequest } from './middleware/admin.js'
 import { failStaleRunningTasks } from './services/pipeline-tasks.js'
 import { failStaleCampaigns } from './services/marketer.js'
 import { failStaleStudioProjects } from './services/studio.js'
@@ -52,6 +53,12 @@ const isLoopback = ['127.0.0.1', 'localhost', '::1'].includes(hostname)
 if (!isLoopback && !authPassword) {
   throw new Error('NAKA_AUTH_PASSWORD is required when NAKA_HOST is not loopback')
 }
+assertAdminTokenConfig()
+if (!isLoopback && !adminGuardEnabled()) {
+  console.warn('⚠️ ADMIN_TOKEN is not set — the settings API (AI keys, models, prompts) is open to every signed-in user')
+}
+// back-office app (repo naka-ai-backend) hosted on another origin: comma-separated origins
+const adminOrigins = (process.env.ADMIN_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean)
 
 function matchesCredential(actual: string, expected: string): boolean {
   const a = Buffer.from(actual)
@@ -62,6 +69,7 @@ function matchesCredential(actual: string, expected: string): boolean {
 // Middleware
 app.use('*', async (c, next) => {
   if (!authPassword || c.req.path === '/api/v1/health' || c.req.method === 'OPTIONS') return next()
+  if (isAdminRequest(c)) return next() // admin token is a stronger credential than the shared Basic Auth
   const header = c.req.header('Authorization') || ''
   let username = ''
   let password = ''
@@ -80,7 +88,8 @@ app.use('*', async (c, next) => {
   return next()
 })
 app.use('*', cors({
-  origin: ['http://localhost:3013', 'http://localhost:5679'],
+  origin: ['http://localhost:3013', 'http://localhost:5679', 'http://localhost:3014', ...adminOrigins],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Admin-Token'],
   credentials: true,
 }))
 app.use('*', requestLogger)
@@ -94,7 +103,11 @@ app.get('/api/v1/health', (c) => c.json({
 }))
 
 // API routes
+// system-settings API is for the back-office app only (middleware/admin.ts)
+app.use('/api/v1/*', adminGuard)
 const api = new Hono()
+// back-office login check: 401 E_ADMIN_REQUIRED unless the token is valid (guard off → always ok)
+api.get('/admin/session', c => c.json({ code: 200, data: { admin: true, guard: adminGuardEnabled() }, message: 'success' }))
 api.route('/dramas', dramas)
 api.route('/episodes', episodes)
 api.route('/storyboards', storyboards)
@@ -130,6 +143,15 @@ app.use('/static/*', async (c, next) => {
   if (c.res.ok) c.header('Cache-Control', 'public, max-age=31536000, immutable')
 })
 app.use('/static/*', serveStatic({ root: DATA_ROOT }))
+
+// Optional: serve the back-office build (repo naka-ai-backend, built with base /admin/) at /admin
+const adminDist = process.env.ADMIN_DIST
+if (adminDist) {
+  const toAdminFile = (p: string) => p.replace(/^\/admin/, '') || '/'
+  app.get('/admin', c => c.redirect('/admin/'))
+  app.use('/admin/*', serveStatic({ root: adminDist, rewriteRequestPath: toAdminFile }))
+  app.get('/admin/*', serveStatic({ root: adminDist, path: 'index.html' }))
+}
 
 // Serve frontend (production build) — 桌面版由主进程注入 FRONTEND_DIST（resources/frontend）
 const distPath = process.env.FRONTEND_DIST || path.join(projectRoot, 'frontend', 'dist')
