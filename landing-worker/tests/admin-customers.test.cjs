@@ -11,7 +11,7 @@ execFileSync(process.execPath, [path.join(root, 'node_modules/typescript/bin/tsc
   '--noEmit', 'false', '--module', 'node16', '--moduleResolution', 'node16', '--rootDir', path.join(root, 'src'), '--outDir', buildDir], { stdio: 'inherit' });
 const { handleAdminCustomers } = require(path.join(buildDir, 'admin/customers.js'));
 const { getUser, requireUser, createSession } = require(path.join(buildDir, 'auth/session.js'));
-const migrations = readdirSync(path.join(root, 'migrations')).filter(name => /^000[1-9]_.*\.sql$/.test(name)).sort();
+const migrations = readdirSync(path.join(root, 'migrations')).filter(name => /^\d{4}_.*\.sql$/.test(name)).sort();
 const TOKEN = 'test-only-admin-token';
 const MONTH = 30 * 86400;
 let sqlite, db, env;
@@ -241,7 +241,7 @@ function ui(fetcher) {
   const fetch = async (url, options) => { requests.push({ url, options }); return fetcher(url, options); };
   vm.runInNewContext(readFileSync(path.join(root, 'public/admin/customers/customers.js'), 'utf8'), {
     document, fetch, sessionStorage: { getItem: k => storage.get(k), setItem: (k,v) => storage.set(k,v), removeItem: k => storage.delete(k) },
-    Date, Number, Error, encodeURIComponent,
+    Date, Number, Error, encodeURIComponent, URLSearchParams, location: { search: '' },
   });
   const settle = async () => { for (let i = 0; i < 15; i++) await new Promise(r => setImmediate(r)); };
   return { $, fields, document, storage, requests, settle };
@@ -272,7 +272,9 @@ test('all three UI forms require in-page confirmation, use bearer session storag
   page.$('status').value = 'disabled'; page.$('status-note').value = 'ทดสอบฟอร์มสถานะ';
   await page.$('status-form').fire('submit'); assert.equal((await getUser(db, 'u1')).id, 'u1');
   await page.$('confirm').fire('click'); assert.equal(await getUser(db, 'u1'), null); assert.equal(audit().length, 3);
-  assert.equal(page.requests.every(r => r.options.headers.Authorization === 'Bearer ' + TOKEN), true);
+  // The first request probes for a Google admin session (cookie) before any token exists.
+  assert.equal(page.requests[0].options.headers.Authorization, undefined);
+  assert.equal(page.requests.slice(1).every(r => r.options.headers.Authorization === 'Bearer ' + TOKEN), true);
   assert.equal(page.requests.some(r => r.url.includes(TOKEN)), false);
   await page.$('logout').fire('click'); assert.equal(page.storage.size, 0); assert.equal(page.$('app').hidden, true);
 });

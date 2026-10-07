@@ -36,7 +36,7 @@ export function priceSatang(plan: Pick<PlanRow, "price_thb">, period: Period): n
 
 async function paidPlan(env: Env, planId: unknown): Promise<PlanRow> {
   if (typeof planId !== "string") throw new BillingError(400, "กรุณาเลือกแพ็กเกจ");
-  const plan = await env.DB.prepare("SELECT * FROM plans WHERE id = ? AND price_thb > 0").bind(planId).first<PlanRow>();
+  const plan = await env.DB.prepare("SELECT * FROM plans WHERE id = ? AND price_thb > 0 AND on_sale = 1").bind(planId).first<PlanRow>();
   if (!plan) throw new BillingError(400, "ไม่พบแพ็กเกจนี้");
   return plan;
 }
@@ -126,6 +126,7 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
 }
 
 async function checkout(request: Request, env: Env, userId: string): Promise<Response> {
+  if (!onlinePayment(env)) throw new BillingError(503, "ระบบชำระเงินออนไลน์ยังไม่เปิดใช้งาน กรุณาติดต่อทีมงาน");
   const body = await readBody(request);
   const plan = await paidPlan(env, body.planId);
   const period: Period = body.period === "yearly" ? "yearly" : body.period === "monthly" ? "monthly" : (() => { throw new BillingError(400, "กรุณาเลือกรายเดือนหรือรายปี"); })();
@@ -185,13 +186,30 @@ async function billingState(env: Env, userId: string): Promise<Response> {
   const sub = await env.DB.prepare(`SELECT s.plan_id, s.status, s.expires_at, s.billing_period, s.next_credit_at, p.name
     FROM subscriptions s JOIN plans p ON p.id = s.plan_id WHERE s.user_id = ?`).bind(userId)
     .first<{ plan_id: string; status: string; expires_at: number | null; billing_period: string | null; next_credit_at: number | null; name: string }>();
-  const plans = await env.DB.prepare("SELECT id, name, monthly_credits, max_parallel_jobs, price_thb FROM plans WHERE price_thb > 0 ORDER BY price_thb").all<PlanRow>();
+  const plans = await onSale(env);
   const active = sub && sub.status === "active" && (sub.expires_at === null || sub.expires_at > now());
   return json({
     subscription: active ? { planId: sub.plan_id, name: sub.name, expiresAt: sub.expires_at, period: sub.billing_period, nextCreditAt: sub.next_credit_at } : null,
     credits: await getBalance(env.DB, userId),
-    plans: plans.results.map((p) => ({ id: p.id, name: p.name, monthlyCredits: p.monthly_credits, parallelJobs: p.max_parallel_jobs,
-      monthly: priceSatang(p, "monthly") / 100, yearly: priceSatang(p, "yearly") / 100 })),
+    plans: plans.map(planView),
+  });
+}
+
+const onSale = async (env: Env) => (await env.DB.prepare(
+  "SELECT id, name, monthly_credits, max_parallel_jobs, price_thb FROM plans WHERE price_thb > 0 AND on_sale = 1 ORDER BY price_thb, id").all<PlanRow>()).results;
+const planView = (p: PlanRow) => ({ id: p.id, name: p.name, monthlyCredits: p.monthly_credits, parallelJobs: p.max_parallel_jobs,
+  monthly: priceSatang(p, "monthly") / 100, yearly: priceSatang(p, "yearly") / 100 });
+
+/** Stripe is configured and the payments switch in /admin/system/ is on. */
+function onlinePayment(env: Env): boolean {
+  return env.FEATURE_PAYMENTS !== "off" && !!env.STRIPE_SECRET_KEY?.trim() && !!env.STRIPE_WEBHOOK_SECRET?.trim();
+}
+
+/** GET /api/plans — packages on sale, for the public pricing section. No session needed. */
+export async function handlePublicPlans(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response(null, { status: 405, headers: { Allow: "GET, HEAD" } });
+  return new Response(JSON.stringify({ plans: (await onSale(env)).map(planView) }), {
+    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=60" },
   });
 }
 
@@ -201,7 +219,7 @@ export async function handleBilling(request: Request, env: Env, url: URL, userId
   const path = url.pathname.slice("/api/billing".length);
   try {
     if (request.method === "POST" && request.headers.get("Origin") !== url.origin) throw new BillingError(403, "คำขอไม่ถูกต้อง");
-    if (path === "/config" && request.method === "GET") return json({ enabled: !!env.STRIPE_SECRET_KEY?.trim() && !!env.STRIPE_WEBHOOK_SECRET?.trim() });
+    if (path === "/config" && request.method === "GET") return json({ enabled: onlinePayment(env) });
     if (path === "/me" && request.method === "GET") return await billingState(env, userId);
     if (path === "/checkout" && request.method === "POST") return await checkout(request, env, userId);
     const match = path.match(/^\/payments\/([0-9a-f-]{36})$/);

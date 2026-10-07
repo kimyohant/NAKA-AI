@@ -3,6 +3,9 @@ import { appOrigin, AuthError, constantTimeEqual, cookie, cookieValue, now, rand
 import { createSession, identityUser } from './session';
 
 const STATE_COOKIE = 'naka_oauth_state';
+const NEXT_COOKIE = 'naka_oauth_next';
+// Where a sign-in may return to besides /app/: the admin pages only. Anything else is ignored.
+const safeNext = (value: string | null) => value && /^\/admin\/(?:[a-z-]+\/)?$/.test(value) ? value : null;
 const STATE_SECONDS = 600;
 const CALLBACK = '/api/auth/google/callback';
 
@@ -25,11 +28,18 @@ export async function googleStart(request: Request, env: Env): Promise<Response>
     client_id: env.GOOGLE_CLIENT_ID, redirect_uri: redirectUri, response_type: 'code',
     scope: 'openid email profile', state, code_challenge: await sha256(verifier), code_challenge_method: 'S256',
   }).toString();
-  return new Response(null, { status: 302, headers: { Location: url.href, 'Set-Cookie': cookieValue(env, STATE_COOKIE, state, STATE_SECONDS) } });
+  const headers = new Headers({ Location: url.href });
+  headers.append('Set-Cookie', cookieValue(env, STATE_COOKIE, state, STATE_SECONDS));
+  const next = safeNext(new URL(request.url).searchParams.get('next'));
+  headers.append('Set-Cookie', cookieValue(env, NEXT_COOKIE, next ? encodeURIComponent(next) : '', next ? STATE_SECONDS : 0));
+  return new Response(null, { status: 302, headers });
 }
 
 export async function googleCallback(request: Request, env: Env, url: URL): Promise<Response> {
   const headers = new Headers({ 'Set-Cookie': cookieValue(env, STATE_COOKIE, '', 0) });
+  let next: string | null = null;
+  try { next = safeNext(decodeURIComponent(cookie(request, NEXT_COOKIE) ?? '')); } catch { /* malformed: ignore */ }
+  if (next) headers.append('Set-Cookie', cookieValue(env, NEXT_COOKIE, '', 0));
   try {
     const redirectUri = googleConfig(env);
     const state = url.searchParams.get('state');
@@ -61,9 +71,9 @@ export async function googleCallback(request: Request, env: Env, url: URL): Prom
     // Stable Google sub is the identity key. Never merge accounts by email.
     const user = await identityUser(env, 'google', profile.sub, name, profile.email);
     headers.append('Set-Cookie', await createSession(request, env, user));
-    headers.set('Location', new URL('/app/', appOrigin(env)).href);
+    headers.set('Location', new URL(next ?? '/app/', appOrigin(env)).href);
   } catch {
-    headers.set('Location', new URL('/login/?error=google', appOrigin(env)).href);
+    headers.set('Location', new URL(next ? `${next}?error=google` : '/login/?error=google', appOrigin(env)).href);
   }
   return new Response(null, { status: 302, headers });
 }

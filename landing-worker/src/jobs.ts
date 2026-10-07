@@ -44,6 +44,15 @@ export type EnqueueResult =
 export class PermanentJobError extends Error {}
 
 /**
+ * Thrown by a handler whose work is still running elsewhere (an AI video at the provider):
+ * the job goes back to the queue for another look in `seconds`, keeping its credit hold.
+ * The handler bounds the total wait itself.
+ */
+export class JobDeferredError extends Error {
+  constructor(readonly seconds: number) { super("deferred"); }
+}
+
+/**
  * Class-level description of an error for logs and stored job errors: the error's name plus
  * an HTTP status when the provider supplies one, never the message — provider messages can
  * echo customer content. PermanentJobError keeps its message because handlers throw it with
@@ -161,6 +170,23 @@ export async function failJob(db: D1Database, jobId: string, expectedAttempts: n
   return row?.status ?? null;
 }
 
+/**
+ * Put a running job back in the queue without spending a retry: the attempt still counts
+ * (attempts only grows, so the fencing token stays unique) and max_attempts grows with it.
+ */
+export async function deferJob(db: D1Database, jobId: string, expectedAttempts: number, seconds: number): Promise<boolean> {
+  const wait = Math.min(Math.max(Math.round(seconds), 5), 3600);
+  const result = await db
+    .prepare(
+      `UPDATE jobs SET status = 'queued', lease_until = NULL, max_attempts = max_attempts + 1,
+         run_after = datetime('now', ?1), updated_at = datetime('now')
+       WHERE id = ?2 AND status = 'running' AND attempts = ?3`,
+    )
+    .bind(`+${wait} seconds`, jobId, expectedAttempts)
+    .run();
+  return result.meta.changes === 1;
+}
+
 /** Jobs whose worker died mid-run: count the lost attempt and retry or fail them.
  * The attempt number read here is the fencing token that keeps the stalled worker out. */
 export async function recoverExpiredLeases(db: D1Database): Promise<number> {
@@ -208,6 +234,10 @@ async function runJob(db: D1Database, handlers: Record<string, JobHandler>, job:
     const applied = await completeJob(db, job.id, job.attempts, output, providerCostUsd);
     if (!applied) console.error("job fencing: discarded result from a worker that lost its lease", job.id, job.kind);
   } catch (err) {
+    if (err instanceof JobDeferredError) {
+      if (!(await deferJob(db, job.id, job.attempts, err.seconds))) console.error("job fencing: lost the lease while deferring", job.id, job.kind);
+      return;
+    }
     // Keep provider error details (which can carry customer content) out of logs and the job row.
     const summary = errorSummary(err);
     console.error("job failed", job.id, job.kind, summary);

@@ -24,7 +24,7 @@ after(() => {
   rmSync(buildDir, { recursive: true, force: true });
 });
 
-const MIGRATIONS = ["0001_auth.sql", "0002_credits_jobs.sql", "0004_plans.sql", "0007_payments.sql", "0008_receipts.sql", "0010_stripe.sql"];
+const MIGRATIONS = ["0001_auth.sql", "0002_credits_jobs.sql", "0004_plans.sql", "0007_payments.sql", "0008_receipts.sql", "0010_stripe.sql", "0014_system_settings.sql"];
 const WEBHOOK_SECRET = "whsec_test_signing_secret";
 let sqlite, db, env, sessions, created;
 beforeEach(() => {
