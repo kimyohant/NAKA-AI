@@ -11,6 +11,11 @@ export default defineNuxtConfig({
     // 动态路由页面统一放在 app/views/ 手动注册，避免文件路径中出现 [id] 方括号
     // （方括号路径在 git/shell 中需转义，且部分部署环境不兼容）。URL 保持不变。
       'pages:extend'(pages) {
+        // แอปเหลือเมนูหลักเดียวคือ AI นักขาย: เปิดแอป (/) → /seller
+        // หน้าแรกเดิม (สตูดิโอละคร) ย้ายไป /drama — โมดูลอื่นยังเข้าได้ทาง URL แค่ไม่อยู่ในเมนู
+        const dramaHome = pages.find(p => p.path === '/')
+        if (dramaHome) dramaHome.path = '/drama'
+        pages.push({ path: '/', redirect: '/seller' })
         pages.push(
           {
             name: 'drama-detail',

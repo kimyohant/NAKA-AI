@@ -2854,6 +2854,15 @@
       "placeholder": "AI is making the video…",
       "attached": "Video is ready and attached to the post",
       "badge": "Making video"
+    },
+    "home": {
+      "kicker": "NAKA AI Seller",
+      "subtitle": "Pick a skill, add a product, and AI makes the review video, writes captions and attaches images and links, ready for TikTok, Shopee, Facebook and Instagram.",
+      "searchPlaceholder": "Search skills or posts, e.g. review, unboxing…",
+      "skillsTitle": "Pick a skill to start selling",
+      "skillsDesc": "Each skill is a sales-video format. Pick one, add your product, and AI makes the video and captions.",
+      "postsTitle": "My posts",
+      "noPostMatch": "No posts match your search"
     }
   }
 }

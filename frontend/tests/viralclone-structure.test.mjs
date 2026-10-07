@@ -29,10 +29,8 @@ const en = JSON.parse(read('app/locales/en.json'))
 
 const NEW_FILES = { listPage, workspace, editor, matrix, card }
 
-test('nav link + dynamic route are registered', () => {
-  assert.match(layout, /to="\/viral-clone"/)
-  assert.match(layout, /isViralCloneRoute/)
-  assert.match(layout, /\bCopy\b/)
+test('dynamic route is registered', () => {
+  // เมนูหลักเหลือ AI นักขายเมนูเดียว — หน้านี้เข้าทาง URL ได้ (ดู ai-seller-structure.test.mjs)
   assert.match(nuxtConfig, /viralclone-workspace/)
   assert.match(nuxtConfig, /\/viral-clone\/:id/)
   assert.ok(existsSync(new URL('app/views/viralclone/workspace.vue', root)), 'workspace view missing')

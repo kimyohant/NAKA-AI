@@ -79,9 +79,7 @@ test('routes and menu are registered', () => {
   assert.match(nuxtConfig, /name: 'studio-workspace'/)
   assert.match(nuxtConfig, /path: '\/studio\/:id'/)
   assert.match(nuxtConfig, /views\/studio\/workspace\.vue/)
-  assert.match(layout, /to="\/studio"/)
-  assert.match(layout, /layout\.nav\.studio/)
-  assert.match(layout, /isProductStudioRoute/)
+  // เมนูหลักเหลือ AI นักขายเมนูเดียว — หน้านี้เข้าทาง URL ได้ (ดู ai-seller-structure.test.mjs)
 })
 
 test('studio.* i18n keys exist in both locales with full parity', () => {

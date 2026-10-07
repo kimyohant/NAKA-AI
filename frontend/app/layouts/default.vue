@@ -3,7 +3,7 @@
     <!-- 左侧导航栏（参考 Topview Drama Studio 布局；剧集工作台使用独立的 studio 布局） -->
     <aside class="sidebar" :class="{ open: navOpen }" :aria-label="t('layout.nav.home')">
       <div class="side-top">
-        <button class="brand" :title="t('app.title')" @click="go('/')">
+        <button class="brand" :title="t('app.title')" @click="go('/seller')">
           <span class="brand-mark">
             <img v-if="showBrandImage" :src="brandLogo" :alt="t('app.title')" class="brand-logo" @error="showBrandImage = false" />
             <span v-else class="brand-fallback">H</span>
@@ -15,30 +15,11 @@
         </button>
       </div>
 
+      <!-- เมนูหลักเหลือ AI นักขายเมนูเดียว (โมดูลอื่นยังเข้าได้ทาง URL: /drama /marketer /studio /viral-clone /live) -->
       <nav class="side-nav">
-        <NuxtLink to="/" class="side-link" :class="{ active: isStudioRoute }" :title="t('layout.nav.home')" @click="navOpen = false">
-          <Clapperboard :size="17" :stroke-width="1.8" />
-          <span class="side-label">{{ t('layout.nav.home') }}</span>
-        </NuxtLink>
-        <NuxtLink to="/marketer" class="side-link" :class="{ active: isMarketerRoute }" :title="t('layout.nav.marketer')" @click="navOpen = false">
-          <Megaphone :size="17" :stroke-width="1.8" />
-          <span class="side-label">{{ t('layout.nav.marketer') }}</span>
-        </NuxtLink>
-        <NuxtLink to="/studio" class="side-link" :class="{ active: isProductStudioRoute }" :title="t('layout.nav.studio')" @click="navOpen = false">
-          <LayoutGrid :size="17" :stroke-width="1.8" />
-          <span class="side-label">{{ t('layout.nav.studio') }}</span>
-        </NuxtLink>
         <NuxtLink to="/seller" class="side-link" :class="{ active: isSellerRoute }" :title="t('layout.nav.seller')" @click="navOpen = false">
           <Store :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.seller') }}</span>
-        </NuxtLink>
-        <NuxtLink to="/viral-clone" class="side-link" :class="{ active: isViralCloneRoute }" :title="t('layout.nav.viralClone')" @click="navOpen = false">
-          <Copy :size="17" :stroke-width="1.8" />
-          <span class="side-label">{{ t('layout.nav.viralClone') }}</span>
-        </NuxtLink>
-        <NuxtLink to="/live" class="side-link" :class="{ active: isLiveRoute }" :title="t('layout.nav.live')" @click="navOpen = false">
-          <Radio :size="17" :stroke-width="1.8" />
-          <span class="side-label">{{ t('layout.nav.live') }}</span>
         </NuxtLink>
       </nav>
 
@@ -94,7 +75,7 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, LayoutGrid, Copy, Radio, Store } from 'lucide-vue-next'
+import { TriangleAlert, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Store } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI } from '~/composables/useApi'
 import brandLogo from '~/assets/brand-logo.svg'
@@ -104,12 +85,7 @@ const route = useRoute()
 const showBrandImage = ref(true)
 const navOpen = ref(false)
 
-const isStudioRoute = computed(() => route.path === '/' || route.path.startsWith('/drama/'))
-const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.startsWith('/marketer/'))
-const isProductStudioRoute = computed(() => route.path === '/studio' || route.path.startsWith('/studio/'))
 const isSellerRoute = computed(() => route.path === '/seller' || route.path.startsWith('/seller/'))
-const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
-const isLiveRoute = computed(() => route.path === '/live')
 const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))
 
 const settingsItems = computed(() => [

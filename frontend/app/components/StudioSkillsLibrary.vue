@@ -105,7 +105,7 @@ const CATEGORY_ICONS = { review: Heart, demo: Lightbulb, fashion_beauty: Shirt, 
 // workflow ของแต่ละโมดูลใน NAKA — route = ไปหน้าอื่น, tab = สลับแท็บในหน้านี้
 const workflows = computed(() => [
   { id: 'seller', route: '/seller', icon: Store, tint: '#ee4d2d', art: coverArt('template-category', 'demo') },
-  { id: 'drama', route: '/', icon: Clapperboard, tint: '#8b5cf6', art: coverArt('agent', 'storyboard_breaker') },
+  { id: 'drama', route: '/drama', icon: Clapperboard, tint: '#8b5cf6', art: coverArt('agent', 'storyboard_breaker') },
   { id: 'marketer', route: '/marketer', icon: Megaphone, tint: '#f97316', art: coverArt('template-category', 'promo') },
   { id: 'viralClone', route: '/viral-clone', icon: Copy, tint: '#ec4899', art: coverArt('skill-category', 'cinematography') },
   { id: 'live', route: '/live', icon: Radio, tint: '#ef4444', art: coverArt('template-category', 'showcase') },
