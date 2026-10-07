@@ -27,11 +27,18 @@
       </button>
     </div>
 
+    <!-- banner for the chosen category (hidden if its image is missing) -->
+    <div v-if="categoryCover && !coverFailed" class="ps-gallery-cover" aria-hidden="true">
+      <img :src="categoryCover" alt="" decoding="async" @error="coverFailed = true">
+      <span>{{ t(`productStudio.categories.${category}`) }}</span>
+    </div>
+
     <div v-if="filtered.length" class="ps-gallery-grid">
       <StudioTemplateCard
         v-for="(tpl, i) in filtered"
         :key="tpl.id"
         :template="tpl"
+        :art-index="templates.indexOf(tpl)"
         :selected="tpl.id === selectedId"
         :style="{ animationDelay: `${Math.min(i, 8) * 0.03}s` }"
         @select="emit('select', $event)"
@@ -44,6 +51,7 @@
 <script setup>
 import { UserRound } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
+import { coverArt } from '~/utils/studioArt'
 
 /** StudioTemplateGallery — Creative Gallery: grid เทมเพลต + ตัวกรองหมวด/แพลตฟอร์ม/ต้องใช้ avatar */
 const props = defineProps({
@@ -60,6 +68,9 @@ const platform = ref('')
 const needAvatar = ref(false)
 
 const categories = computed(() => [...new Set(props.templates.map(tpl => tpl.category).filter(Boolean))])
+const categoryCover = computed(() => (category.value ? coverArt('template-category', category.value) : ''))
+const coverFailed = ref(false)
+watch(category, () => { coverFailed.value = false })
 const filtered = computed(() => props.templates.filter((tpl) => {
   if (category.value && tpl.category !== category.value) return false
   if (platform.value && !(tpl.platforms || []).includes(platform.value)) return false
@@ -75,6 +86,16 @@ const filtered = computed(() => props.templates.filter((tpl) => {
 .ps-gallery-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
+}
+.ps-gallery-cover {
+  position: relative; height: 150px; overflow: hidden;
+  border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--surface-soft);
+}
+.ps-gallery-cover img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; display: block; }
+.ps-gallery-cover span {
+  position: absolute; left: 14px; bottom: 12px; padding: 4px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-raised) 88%, transparent); color: var(--text-0);
+  font: 700 13px/1.4 var(--font-display);
 }
 .ps-gallery-empty { margin: 0; font-size: 12.5px; color: var(--text-3); }
 </style>

@@ -55,7 +55,7 @@
       </div>
     </section>
 
-    <!-- ===== 视觉风格：横向卡片行（点选即用于上方输入框） ===== -->
+    <!-- ===== 视觉风格：全部卡片网格展示，不横向滚动（点选即用于上方输入框） ===== -->
     <section v-if="stylePresets.length" class="block" aria-labelledby="styles-title">
       <div class="block-head">
         <div>
@@ -64,7 +64,7 @@
         </div>
       </div>
       <div class="style-rail-wrap">
-        <div ref="styleRail" class="style-rail">
+        <div class="style-rail">
           <button
             v-for="p in stylePresets"
             :key="p.value"
@@ -75,16 +75,19 @@
             @click="studioStyle = p.value"
           >
             <span class="style-art" :style="{ background: styleArt(p.value) }">
-              <span class="style-glyph">{{ styleGlyph(p.value) }}</span>
+              <!-- example image of this style (public/studio-art/styles); the gradient + glyph stay for custom styles -->
+              <img
+                v-if="styleExample(p.value) && styleImg[p.value] !== 'error'"
+                class="style-photo" :src="styleExample(p.value)" alt="" loading="lazy" decoding="async"
+                @load="styleImg[p.value] = 'ok'" @error="styleImg[p.value] = 'error'"
+              >
+              <span v-if="styleImg[p.value] !== 'ok'" class="style-glyph">{{ styleGlyph(p.value) }}</span>
               <span v-if="studioStyle === p.value" class="style-badge">{{ t('index.studio.selected') }}</span>
             </span>
             <span class="style-name">{{ styleLabel(p.value) }}</span>
             <span class="style-desc">{{ styleDesc(p) }}</span>
           </button>
         </div>
-        <button type="button" class="rail-next" :aria-label="t('index.studio.scrollNext')" @click="scrollStyles">
-          <ChevronRight :size="18" :stroke-width="2" />
-        </button>
       </div>
     </section>
 
@@ -279,10 +282,11 @@
 import { toast } from 'vue-sonner'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
-import { Clock, CircleHelp, Paperclip, ArrowUp, ChevronDown, ChevronRight, Plus, Search, MoreHorizontal, Play, Loader2 } from 'lucide-vue-next'
+import { Clock, CircleHelp, Paperclip, ArrowUp, ChevronDown, Plus, Search, MoreHorizontal, Play, Loader2 } from 'lucide-vue-next'
 import { dramaAPI, episodeAPI, stylePresetAPI, aiConfigAPI } from '~/composables/useApi'
 import { GENRE_TAGS } from '~/composables/useCreativeTags'
 import BaseSelect from '~/components/BaseSelect.vue'
+import { styleExample } from '~/utils/studioArt'
 import { startTour, autoTour } from '~/composables/useTour'
 
 const { t, te, locale } = useI18n()
@@ -376,6 +380,8 @@ const FALLBACK_ART = [
   'radial-gradient(120% 90% at 80% 0%, #f472b6 0%, #7c2d5a 50%, #1f0a16 100%)',
   'radial-gradient(120% 90% at 50% 0%, #38bdf8 0%, #1e3a8a 50%, #0a1024 100%)',
 ]
+// per-style example image state: 'ok' once loaded (glyph hidden), 'error' when missing (gradient only)
+const styleImg = reactive({})
 function styleArt(key) {
   if (STYLE_ART[key]) return STYLE_ART[key]
   const s = String(key || '')
@@ -533,14 +539,6 @@ async function startFromStory() {
   } finally {
     creatingStory.value = false
   }
-}
-
-const styleRail = ref(null)
-function scrollStyles() {
-  const el = styleRail.value
-  if (!el) return
-  const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8
-  el.scrollBy({ left: atEnd ? -el.scrollWidth : el.clientWidth * 0.8, behavior: 'smooth' })
 }
 
 onMounted(load)
@@ -704,16 +702,13 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
 }
 .block-sub { margin: 2px 0 0; font-size: 13px; color: var(--text-3); }
 
-/* 风格卡片行 */
+/* 风格卡片：网格换行，一次展示全部风格（无横向滚动条） */
 .style-rail-wrap { position: relative; }
 .style-rail {
-  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 1fr);
-  gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
-  padding-bottom: 6px; scrollbar-width: none;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
 }
-.style-rail::-webkit-scrollbar { display: none; }
 .style-card {
-  scroll-snap-align: start;
   display: flex; flex-direction: column; text-align: left;
   padding: 0 0 14px; border-radius: 16px; overflow: hidden;
   border: 1px solid var(--border); background: var(--surface-raised);
@@ -727,6 +722,9 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
   position: relative; display: flex; align-items: center; justify-content: center;
   aspect-ratio: 16 / 9; margin-bottom: 12px;
 }
+.style-art { overflow: hidden; }
+.style-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.style-badge { z-index: 1; }
 .style-glyph {
   font-family: var(--font-display); font-size: 40px; font-weight: 800;
   color: rgba(255, 255, 255, 0.9); text-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
@@ -742,14 +740,6 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
   padding: 2px 14px 0; font-size: 12.5px; line-height: 1.5; color: var(--text-3);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.rail-next {
-  position: absolute; right: -14px; top: 30%;
-  width: 40px; height: 40px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  border: none; background: #fff; color: #111; cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-.rail-next:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--button-focus); }
 
 /* 我的项目 */
 .projects-head .block-title { margin-right: 4px; }
@@ -870,8 +860,7 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
   .composer-right { margin-left: 0; width: 100%; }
   .send-btn { margin-left: auto; }
   .chip-upload { max-width: 100%; }
-  .style-rail { grid-auto-columns: 78%; }
-  .rail-next { display: none; }
+  .style-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .sort-wrap { margin-left: 0; }
   .search-box { width: 100%; }
   .project-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
