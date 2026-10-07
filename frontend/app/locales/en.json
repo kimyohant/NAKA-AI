@@ -54,6 +54,10 @@
       "light": "Light mode",
       "dark": "Dark mode",
       "system": "Follow system"
+    },
+    "account": {
+      "manage": "naka-ai account",
+      "signOut": "Sign out"
     }
   },
   "migrate": {
@@ -1141,7 +1145,11 @@
       "E_SELLER_VIDEO_FAILED": "Making the video failed. Try again or open it in Studio.",
       "E_SELLER_VIDEO_GONE": "The video project was deleted.",
       "E_SELLER_VIDEO_CANCELLED": "Video making was stopped.",
-      "E_ADMIN_REQUIRED": "Admin sign-in required"
+      "E_ADMIN_REQUIRED": "Admin sign-in required",
+      "E_AUTH_REQUIRED": "Please sign in with your naka-ai account",
+      "E_SSO_STATE": "The sign-in link expired. Please sign in again.",
+      "E_SSO_DENIED": "This account is not allowed to use naka-studio yet",
+      "E_FORBIDDEN_OWNER": "You do not have access to this item"
     }
   },
   "tour": {
