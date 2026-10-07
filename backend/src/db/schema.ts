@@ -601,3 +601,28 @@ export const studioInfluencerContents = sqliteTable('studio_influencer_contents'
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })
+
+// v18: AI นักขาย — โพสต์ขายสินค้า + แคปชั่น/แฮชแท็ก/คอมเมนต์ต่อช่องทาง (content = JSON ตาม channel)
+export const sellerPosts = sqliteTable('seller_posts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull().default(''),
+  productName: text('product_name').notNull().default(''),
+  productUrl: text('product_url'),
+  productPrice: text('product_price'),
+  productDescription: text('product_description'),
+  productImages: text('product_images').notNull().default('[]'),
+  affiliateUrl: text('affiliate_url'),
+  videoUrl: text('video_url'),
+  studioProjectId: integer('studio_project_id'),
+  channels: text('channels').notNull().default('[]'),
+  language: text('language').notNull().default('th'),
+  tone: text('tone').notNull().default('casual'),
+  notes: text('notes'),
+  content: text('content').notNull().default('{}'),
+  status: text('status').notNull().default('draft'),
+  errorMsg: text('error_msg'),
+  generatedAt: text('generated_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  deletedAt: text('deleted_at'),
+})
