@@ -5,6 +5,8 @@
  * - Render: reuse pipeline ของ Studio (drama/episode/storyboard + generateImage/generateVideo + คิว maxConcurrent
  *   + mergeEpisodeVideos + captions primitives) — ไม่สร้าง renderer ใหม่; kind `clone_render` + boot-resume ของตัวเอง
  * - ภาษาตัวแปร ≠ ภาษาโปรเจกต์ → แปล line/hooks ด้วย text provider ก่อน render เก็บใน overrides_json.translations[lang]
+ * - render_engine 'hypit' → ขั้นสุดท้าย (ต่อคลิป + ซับ) ใช้ Hypit แทน ffmpeg merge + ASS (services/hypit-render.ts);
+ *   Hypit ไม่พร้อม/ล้ม → ถอยกลับ engine เดิมของ NAKA เพื่อยังส่งมอบตัวแปรได้
  */
 import fs from 'fs'
 import path from 'path'
@@ -25,10 +27,12 @@ import { mastra } from '../mastra/index.js'
 import { startTask, updateTask, getTask, isCancelRequested } from './pipeline-tasks.js'
 import { logTaskError, logTaskProgress, logTaskStart, logTaskSuccess, logTaskWarn } from '../utils/task-logger.js'
 import { STORAGE_ROOT } from '../utils/paths.js'
+import { isHypitAvailable, probeClip, renderWithHypit, type HypitCaptionStyle } from './hypit-render.js'
 
 export const CLONE_BEAT_ROLES = ['hook', 'demo', 'proof', 'offer', 'cta'] as const
 export const CLONE_BEAT_VISUALS = ['product', 'avatar', 'broll', 'text'] as const
 export const CLONE_CAPTION_STYLES = ['clean', 'bold', 'boxed'] as const
+export const CLONE_RENDER_ENGINES = ['naka', 'hypit'] as const
 export const CLONE_MATRIX_CAP = 12
 export const CLONE_MAX_TRANSCRIPT_LENGTH = 20_000
 
@@ -88,6 +92,7 @@ export function toCloneProjectJson(row: CloneProjectRow) {
     referencePath: slashPath(row.referencePath),
     transcript: row.referenceTranscript,
     language: row.language,
+    renderEngine: row.renderEngine,
     blueprint: row.blueprintJson ? parseJson<CloneBlueprint | null>(row.blueprintJson, null) : null,
     errorCode: row.errorCode,
     errorMsg: row.errorMsg,
@@ -325,6 +330,13 @@ export async function listCloneProjects() {
   return rows.map(toCloneProjectJson)
 }
 
+function parseRenderEngine(raw: unknown): typeof CLONE_RENDER_ENGINES[number] {
+  if (typeof raw !== 'string' || !CLONE_RENDER_ENGINES.includes(raw as any)) {
+    throw new AppError(`renderEngine ต้องเป็น ${CLONE_RENDER_ENGINES.join('|')}`, 'E_INVALID_FIELD')
+  }
+  return raw as typeof CLONE_RENDER_ENGINES[number]
+}
+
 export async function createCloneProject(body: any) {
   const name = typeof body.name === 'string' && body.name.trim() ? body.name.trim() : ''
   if (!name) throw new AppError('name 必填', 'E_INVALID_FIELD')
@@ -335,6 +347,7 @@ export async function createCloneProject(body: any) {
   }
   const language = typeof body.language === 'string' && body.language.trim() ? body.language.trim() : 'th'
   const referencePath = typeof body.referencePath === 'string' && body.referencePath.trim() ? body.referencePath.trim() : null
+  const renderEngine = body.renderEngine === undefined ? 'naka' : parseRenderEngine(body.renderEngine)
 
   const ts = now()
   const res = await db.insert(schema.cloneProjects).values({
@@ -343,6 +356,7 @@ export async function createCloneProject(body: any) {
     referencePath,
     referenceTranscript: transcript,
     language,
+    renderEngine,
     blueprintJson: null,
     createdAt: ts,
     updatedAt: ts,
@@ -384,6 +398,7 @@ export async function updateCloneProject(id: number, body: any) {
     if (typeof body.language !== 'string' || !body.language.trim()) throw new AppError('language ไม่ถูกต้อง', 'E_INVALID_FIELD')
     updates.language = body.language.trim()
   }
+  if (body.renderEngine !== undefined) updates.renderEngine = parseRenderEngine(body.renderEngine)
   if (body.referencePath !== undefined) {
     updates.referencePath = typeof body.referencePath === 'string' && body.referencePath.trim() ? body.referencePath.trim() : null
   }
@@ -821,6 +836,51 @@ async function burnCloneCaptions(
   return outputRel
 }
 
+/** ต่อคลิป + ซับด้วย Hypit — คืน path ของวิดีโอ (null = ไม่ได้ใช้ Hypit / ล้ม → ให้ใช้ engine เดิม) */
+async function renderCloneWithHypit(
+  project: CloneProjectRow,
+  variant: CloneVariantRow,
+  beats: CloneBeat[],
+  episodeId: number,
+): Promise<string | null> {
+  if (project.renderEngine !== 'hypit') return null
+  if (!isHypitAvailable()) {
+    logTaskWarn('Clone', 'hypit-unavailable', { variantId: variant.id })
+    return null
+  }
+  try {
+    const blueprint = parseJson<CloneBlueprint | null>(project.blueprintJson, null)
+    const style = (blueprint?.captionStyle?.style as string) ?? 'bold'
+    const language = (parseJson<Record<string, any>>(variant.overridesJson, {}).language as string) || project.language
+    const storyboards = await db.select().from(schema.storyboards)
+      .where(eq(schema.storyboards.episodeId, episodeId))
+      .orderBy(schema.storyboards.storyboardNumber)
+    // beats ผ่าน mergeShortBeats แล้ว → จำนวนตรงกับ storyboards (เรียงตาม number)
+    const clips = []
+    for (let i = 0; i < storyboards.length; i++) {
+      const videoUrl = storyboards[i].videoUrl
+      if (!videoUrl) throw new Error(`storyboard ${storyboards[i].id} ไม่มีคลิป`)
+      const videoPath = toAbs(videoUrl)
+      const probe = await probeClip(videoPath)
+      if (probe.durationSec <= 0) throw new Error(`คลิป ${videoUrl} ไม่มีความยาว`)
+      clips.push({ videoPath, ...probe, caption: beats[i]?.line ?? null })
+    }
+    const outputRel = await renderWithHypit({
+      clips,
+      language,
+      captions: {
+        enabled: blueprint?.captionStyle?.enabled !== false,
+        style: (CLONE_CAPTION_STYLES.includes(style as any) ? style : 'bold') as HypitCaptionStyle,
+      },
+    })
+    logTaskProgress('Clone', 'hypit-rendered', { variantId: variant.id, outputPath: outputRel })
+    return outputRel
+  } catch (err: any) {
+    logTaskWarn('Clone', 'hypit-fallback', { variantId: variant.id, error: String(err?.message || err).slice(0, 500) })
+    return null
+  }
+}
+
 async function saveRenderState(projectId: number, state: CloneRenderState) {
   await db.update(schema.cloneProjects)
     .set({ renderState: JSON.stringify(state), updatedAt: now() })
@@ -940,21 +1000,24 @@ async function renderSingleVariant(project: CloneProjectRow, variant: CloneVaria
     await waitTasksSettle(videoTaskIds)
     await assertTasksOk(videoTaskIds)
 
-    // stage 3: merge + captions + วัดความยาวจริง
-    const mergeId = await mergeEpisodeVideos(episodeId, dramaId)
+    // stage 3: merge + captions + วัดความยาวจริง (engine hypit → Hypit ต่อคลิป + ซับในขั้นเดียว)
     await saveRenderState(project.id, { variantId: variant.id, stage: 'merge', taskIds: [] })
-    const mergeRow = await waitForMergeCompletion(mergeId)
-    if (mergeRow.status === 'failed') {
-      throw Object.assign(new Error(`E_RENDER_TASK_FAILED: ${mergeRow.errorMsg || 'merge failed'}`), { errorCode: 'E_RENDER_TASK_FAILED' })
-    }
-    let outputPath = mergeRow.mergedUrl
-    if (!outputPath) throw Object.assign(new Error('E_RENDER_TASK_FAILED: merge completed without output path'), { errorCode: 'E_RENDER_TASK_FAILED' })
-    try {
-      const captioned = await burnCloneCaptions(project, variant, beats, mergeRow)
-      if (captioned) outputPath = captioned
-    } catch (err: any) {
-      // captions ล้ม (เช่นฟอนต์) — ยังส่งมอบตัวแปรได้ด้วยคลิปที่ไม่มีซับ
-      logTaskWarn('Clone', 'captions-fallback', { variantId: variant.id, error: err?.message })
+    let outputPath = await renderCloneWithHypit(project, variant, beats, episodeId)
+    if (!outputPath) {
+      const mergeId = await mergeEpisodeVideos(episodeId, dramaId)
+      const mergeRow = await waitForMergeCompletion(mergeId)
+      if (mergeRow.status === 'failed') {
+        throw Object.assign(new Error(`E_RENDER_TASK_FAILED: ${mergeRow.errorMsg || 'merge failed'}`), { errorCode: 'E_RENDER_TASK_FAILED' })
+      }
+      outputPath = mergeRow.mergedUrl
+      if (!outputPath) throw Object.assign(new Error('E_RENDER_TASK_FAILED: merge completed without output path'), { errorCode: 'E_RENDER_TASK_FAILED' })
+      try {
+        const captioned = await burnCloneCaptions(project, variant, beats, mergeRow)
+        if (captioned) outputPath = captioned
+      } catch (err: any) {
+        // captions ล้ม (เช่นฟอนต์) — ยังส่งมอบตัวแปรได้ด้วยคลิปที่ไม่มีซับ
+        logTaskWarn('Clone', 'captions-fallback', { variantId: variant.id, error: err?.message })
+      }
     }
     const durationSec = await probeDurationSec(toAbs(outputPath))
 

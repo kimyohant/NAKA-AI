@@ -8,6 +8,7 @@ import { Hono } from 'hono'
 import { success, created, badRequest, notFound } from '../utils/response.js'
 import type { Context } from 'hono'
 import * as clone from '../services/clone.js'
+import { getHypitStatus } from '../services/hypit-render.js'
 
 const app = new Hono()
 
@@ -30,6 +31,12 @@ app.post('/projects', async (c) => {
   } catch (err: any) {
     return badRequest(c, err?.message || 'สร้างโปรเจกต์ไม่สำเร็จ', err?.errorCode)
   }
+})
+
+// GET /clone/hypit/status — engine render Hypit พร้อมใช้ในเครื่องนี้หรือไม่
+app.get('/hypit/status', (c) => {
+  const status = getHypitStatus()
+  return success(c, { available: status.available, reason: status.reason })
 })
 
 // GET /clone/projects — รายการ (ใหม่→เก่า)
