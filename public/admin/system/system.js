@@ -3,7 +3,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var KEY = 'naka_admin_customers'; // shared with /admin/customers/, so one sign-in covers both pages
   var token = '', authVersion = 0, signingIn = false;
-  var GROUPS = { payments: 'ชำระเงิน (Stripe)', ai: 'AI และเสียงพากย์', email: 'อีเมล', login: 'การเข้าสู่ระบบ',
+  var GROUPS = { payments: 'ชำระเงิน (Stripe)', ai: 'AI และเสียงพากย์', email: 'อีเมล', login: 'การเข้าสู่ระบบ', studio: 'naka-studio (ล็อกอินร่วม)',
     sms: 'SMS OTP', video: 'วิดีโอ AI', line_bot: 'LINE OA (บอทขายของ)', meta: 'Facebook / Instagram (Meta)' };
   var SOURCES = { panel: 'ตั้งจากหน้านี้', cloudflare: 'ใช้ค่าจาก Cloudflare', default: 'ค่าเริ่มต้น', unset: 'ยังไม่ได้ตั้ง' };
   var ACTIONS = { set: 'ตั้งค่า', clear: 'ล้างค่า', import: 'ย้ายจาก Cloudflare', create: 'เพิ่มแพ็กเกจ', update: 'แก้แพ็กเกจ' };

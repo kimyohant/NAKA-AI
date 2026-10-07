@@ -55,6 +55,8 @@
         if (config && config.passwordReset === true) {
           forgotAvailable = true;
           forgotArea.hidden = pwMode === "register";
+          // the email link replaces the "call us" fallback
+          document.getElementById("pw-help").hidden = true;
         }
         // "or" separates the provider buttons from the forms; without buttons it has nothing to separate.
         document.getElementById("login-divider").hidden = lineButton.hidden && googleButton.hidden;
@@ -93,7 +95,7 @@
     document.getElementById("pw-tab-login").setAttribute("aria-selected", String(!register));
     document.getElementById("pw-tab-register").setAttribute("aria-selected", String(register));
     document.getElementById("pw-name-field").hidden = !register;
-    document.getElementById("pw-help").hidden = register;
+    document.getElementById("pw-help").hidden = register || forgotAvailable;
     document.getElementById("forgot-area").hidden = register || !forgotAvailable;
     pwPassword.setAttribute("autocomplete", register ? "new-password" : "current-password");
     pwPassword.placeholder = register ? "อย่างน้อย 8 ตัวอักษร" : "";
@@ -176,6 +178,13 @@
 
   function showError(message) {
     errorEl.textContent = message;
+    // the message sits above the tabs; after scrolling down to a submit button it would be off-screen
+    // or tucked under the sticky header
+    if (!message || typeof errorEl.getBoundingClientRect !== "function" || typeof errorEl.scrollIntoView !== "function") return;
+    var header = document.querySelector && document.querySelector("header");
+    var top = header && header.getBoundingClientRect ? header.getBoundingClientRect().bottom : 0;
+    var box = errorEl.getBoundingClientRect();
+    if (box.top < top || box.bottom > window.innerHeight) errorEl.scrollIntoView({ block: "center", behavior: "smooth" });
   }
   function clearError() {
     errorEl.textContent = "";

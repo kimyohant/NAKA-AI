@@ -118,6 +118,7 @@
           status: "signed-in",
           user: data.user,
           credits: typeof data.credits === "number" ? data.credits : 0,
+          studioUrl: data.studio && typeof data.studio.url === "string" ? data.studio.url : null,
           source: "server",
         };
       }
@@ -247,8 +248,17 @@
     dashboard.className = "acct-item";
     dashboard.href = "/app/";
     dashboard.setAttribute("role", "menuitem");
-    dashboard.textContent = "แดชบอร์ดของฉัน";
+    dashboard.textContent = "พื้นที่ของร้าน";
     menu.appendChild(dashboard);
+
+    if (state.studioUrl) {
+      var studio = document.createElement("a");
+      studio.className = "acct-item";
+      studio.href = state.studioUrl;
+      studio.setAttribute("role", "menuitem");
+      studio.textContent = "เปิด Naka Studio ↗";
+      menu.appendChild(studio);
+    }
 
     var account = document.createElement("a");
     account.className = "acct-item";
@@ -330,6 +340,12 @@
       else renderLogin(container);
     });
     document.body.classList.toggle("acct-signed-in", signedIn);
+    // naka-studio entries ([data-studio-link]) appear only for members naka-ai lets into the studio
+    var studioUrl = signedIn ? state.studioUrl : null;
+    document.querySelectorAll("[data-studio-link]").forEach(function (link) {
+      if (studioUrl) link.href = studioUrl;
+      link.hidden = !studioUrl;
+    });
   }
 
   async function refresh() {

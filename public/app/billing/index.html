@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#091736">
+  <meta name="theme-color" content="#f7f8fb">
   <title>แพ็กเกจและการชำระเงิน — naka-ai</title>
   <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
   <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
@@ -13,13 +13,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/glass-nav.css">
   <link rel="stylesheet" href="/account-menu.css">
+  <link rel="stylesheet" href="/member.css">
   <link rel="stylesheet" href="/app/app.css">
   <link rel="stylesheet" href="/app/inbox/inbox.css">
   <link rel="stylesheet" href="/app/billing/billing.css">
   <script src="/account-menu.js" defer></script>
   <script src="/app/billing/billing.js" defer></script>
 </head>
-<body>
+<body class="member-ui">
   <a class="skip-link" href="#main">ข้ามไปที่เนื้อหา</a>
   <header class="app-topbar glass-nav">
     <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" width="36" height="36" alt=""><span>naka<span class="brand-accent">-ai</span><b>.</b></span></a>
@@ -29,6 +30,7 @@
       <a href="/app/">พื้นที่ของร้าน</a>
       <a href="/app/inbox/">กล่องข้อความ</a>
       <a href="/app/billing/" aria-current="page">แพ็กเกจ</a>
+      <a class="nav-studio" href="#" data-studio-link hidden>Naka Studio ↗</a>
     </nav>
     <div data-account-menu></div>
   </header>
@@ -69,7 +71,7 @@
         <ul class="receipt-list" id="receipt-list"></ul>
       </section>
     </div>
-    <p class="legal-links" style="text-align:center;font-size:12.5px;color:#9fb4d6;margin:32px 0 24px"><a href="/legal/terms/">ข้อกำหนด</a> · <a href="/legal/refund/">นโยบายคืนเงิน</a> · <a href="/legal/privacy/">ความเป็นส่วนตัว</a></p>
+    <p class="legal-links" style="text-align:center;font-size:12.5px;color:var(--m-ink-3);margin:32px 0 24px"><a href="/legal/terms/">ข้อกำหนด</a> · <a href="/legal/refund/">นโยบายคืนเงิน</a> · <a href="/legal/privacy/">ความเป็นส่วนตัว</a></p>
   </main>
 </body>
 </html>

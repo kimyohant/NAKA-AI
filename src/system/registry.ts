@@ -3,7 +3,7 @@
 // ADMIN_TOKEN, SETTINGS_KEY, SOCIAL_TOKEN_KEY, APP_ORIGIN) stays in wrangler config — see LOCKED.
 
 export type SettingKind = 'secret' | 'text' | 'select' | 'number' | 'switch';
-export type SettingGroup = 'features' | 'general' | 'payments' | 'ai' | 'video' | 'email' | 'login' | 'sms' | 'line_bot' | 'meta';
+export type SettingGroup = 'features' | 'general' | 'payments' | 'ai' | 'video' | 'email' | 'login' | 'studio' | 'sms' | 'line_bot' | 'meta';
 
 export interface SettingDef {
   key: string;
@@ -67,6 +67,14 @@ export const SETTINGS: readonly SettingDef[] = [
   { key: 'LINE_LOGIN_CHANNEL_SECRET', group: 'login', kind: 'secret', label: 'LINE Login Channel Secret', pattern: /^[0-9a-f]{32}$/ },
   { key: 'TURNSTILE_SITE_KEY', group: 'login', kind: 'text', label: 'Turnstile site key', pattern: /^[\w-]{10,100}$/, max: 100 },
   { key: 'TURNSTILE_SECRET_KEY', group: 'login', kind: 'secret', label: 'Turnstile secret key' },
+
+  // naka-studio signs members in through naka-ai (src/auth/studio.ts, docs/studio-sso.md)
+  { key: 'STUDIO_URL', group: 'studio', kind: 'text', label: 'ที่อยู่ naka-studio', help: 'เช่น https://studio.naka-ai.com · ว่าง = ปิดการเชื่อมต่อ', max: 200,
+    pattern: /^https:\/\/[a-z0-9.-]+(?::\d{2,5})?\/?$/i },
+  { key: 'STUDIO_ACCESS', group: 'studio', kind: 'select', label: 'ใครเข้า naka-studio ได้',
+    help: 'admins = เฉพาะอีเมลผู้ดูแล (แนะนำจนกว่า studio จะแยกข้อมูลรายบัญชี) · members = สมาชิกทุกคน · off = ปิด', options: ['admins', 'members', 'off'] },
+  { key: 'STUDIO_SSO_SECRET', group: 'studio', kind: 'secret', label: 'รหัสลับเชื่อม naka-studio',
+    help: 'ค่าเดียวกับ NAKA_SSO_SECRET ของ naka-studio · อย่างน้อย 32 ตัวอักษร', pattern: /^[A-Za-z0-9_-]{32,128}$/ },
 
   { key: 'SMS_PROVIDER', group: 'sms', kind: 'select', label: 'ล็อกอินด้วยเบอร์โทร (OTP)', help: 'off = ซ่อนฟอร์มเบอร์โทร', options: ['off', 'thaibulksms', 'android_gateway'] },
   { key: 'SMS_API_KEY', group: 'sms', kind: 'secret', label: 'ThaiBulkSMS API key' },

@@ -18,6 +18,9 @@ export interface Env {
   EMAIL_PROVIDER?: "off" | "mock" | "resend";
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
+  STUDIO_URL?: string; // naka-studio origin that may sign members in through naka-ai
+  STUDIO_ACCESS?: string; // 'admins' (default) | 'members' | 'off'
+  STUDIO_SSO_SECRET?: string; // shared with naka-studio for the server-to-server code exchange
   // Affiliate review voiceover (Google Cloud Text-to-Speech)
   GOOGLE_TTS_API_KEY: string;
   GOOGLE_TTS_VOICE?: string;

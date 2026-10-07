@@ -1,7 +1,7 @@
 :root {
   font-family: "Anuphan", sans-serif;
   color-scheme: light;
-  --shell: #091736;
+  --shell: #eef2f8; /* light naka-ai canvas around the paper */
   --paper: #fff;
   --ink: #15264a;
   --muted: #586782;
@@ -15,20 +15,20 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; background: var(--shell); color: var(--paper); font-size: 16px; line-height: 1.7; }
+body { margin: 0; background: var(--shell); color: var(--ink); font-family: "Anuphan", sans-serif; font-size: 16px; line-height: 1.7; }
 a { color: inherit; text-underline-offset: 4px; }
 a:hover { text-decoration-thickness: 2px; }
 button { min-height: 44px; padding: 10px 20px; border: 0; border-radius: 999px; background: var(--accent); color: var(--paper); font: inherit; font-weight: 600; cursor: pointer; }
 button:hover:not(:disabled) { background: var(--accent-hover); }
 button:disabled { opacity: .55; cursor: not-allowed; }
-a:focus-visible, button:focus-visible { outline: 3px solid #87d9fa; outline-offset: 4px; }
-.skip-link { position: absolute; top: -100px; left: var(--space-md); background: var(--paper); color: var(--ink); padding: var(--space-sm) var(--space-md); }
+a:focus-visible, button:focus-visible { outline: 3px solid rgba(36, 89, 214, .45); outline-offset: 4px; }
+.skip-link { position: absolute; top: -100px; left: var(--space-md); background: var(--ink); color: var(--paper); padding: var(--space-sm) var(--space-md); }
 .skip-link:focus { top: var(--space-sm); }
 .toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-md); width: min(210mm, calc(100% - 32px)); margin: var(--space-lg) auto; }
 .toolbar a { display: inline-flex; align-items: center; min-height: 44px; }
 .state { max-width: 560px; margin: 64px auto; padding: var(--space-lg); text-align: center; }
 .state h1 { font-size: 24px; }
-.receipt { width: min(210mm, calc(100% - 32px)); min-height: 297mm; margin: 0 auto; padding: 16mm; background: var(--paper); color: var(--ink); box-shadow: 0 16px 48px #0003, 0 2px 6px #0002; overflow-wrap: anywhere; }
+.receipt { width: min(210mm, calc(100% - 32px)); min-height: 297mm; margin: 0 auto; padding: 16mm; background: var(--paper); color: var(--ink); box-shadow: 0 24px 60px rgba(20, 45, 110, .12), 0 2px 6px rgba(13, 27, 51, .06); overflow-wrap: anywhere; }
 .receipt p { margin: 0; }
 .receipt-heading { padding-bottom: var(--space-lg); border-bottom: 2px solid var(--ink); }
 .receipt-heading h1 { margin: 0 0 var(--space-sm); font-size: clamp(22px, 3vw, 28px); font-weight: 700; line-height: 1.5; }
@@ -56,7 +56,7 @@ dd { margin: 0; }
 .grand-total strong { font-size: 24px; }
 .receipt .vat-note { margin-top: var(--space-sm); color: var(--muted); text-align: right; }
 .receipt .amount-words { margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--line); text-align: right; }
-.print-help { max-width: 210mm; margin: var(--space-lg) auto var(--space-xl); padding: 0 var(--space-md); color: #c4d7ec; font-size: 14px; text-align: center; }
+.print-help { max-width: 210mm; margin: var(--space-lg) auto var(--space-xl); padding: 0 var(--space-md); color: var(--muted); font-size: 14px; text-align: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media screen and (max-width: 600px) {
   .receipt { min-height: auto; padding: var(--space-lg); }
