@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "naka-ai",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/webhook/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "naka-ai-db",
+      "database_id": "c54b3e34-feab-4d93-af31-3354cc30fbe5"
+    }
+  ],
+  // Private bucket for clips waiting to be posted (src/social). Not bound at launch: R2 is not enabled on
+  // the account and auto-posting is off (uploads answer 503). To turn it on, enable R2 in the dashboard,
+  // run `wrangler r2 bucket create naka-ai-media`, and restore:
+  //   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "naka-ai-media" }],
+  "triggers": { "crons": ["* * * * *"] },
+  // Served only on naka-ai.com: a second *.workers.dev origin is not used anywhere (security audit note).
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "naka-ai.com", "custom_domain": true },
+    { "pattern": "www.naka-ai.com", "custom_domain": true }
+  ],
+  "observability": { "enabled": true },
+  // Non-secret settings (docs/DEPLOY.md §3). Secrets go through `wrangler secret put`.
+  "vars": {
+    "APP_ORIGIN": "https://naka-ai.com",
+    "SMS_PROVIDER": "off", // LINE Login only; "android_gateway" or "thaibulksms" to add phone OTP
+    "RECEIPT_SELLER_NAME": "ณัฐพงษ์ โยธาไพ",
+    "RECEIPT_SELLER_ADDRESS": "112/417 ถนนประชาร่วมมิตร ต.หนองญาติ อ.เมือง จ.นครพนม 48000"
+  }
+}
