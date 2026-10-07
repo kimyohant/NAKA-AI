@@ -7,7 +7,8 @@
  * - merge ใหม่ท้ายงาน
  */
 import Database from 'better-sqlite3'
-import { analyzeVideoShot } from '../../frontend/app/utils/videoPreflight.js'
+// needs the frontend repo next to this one (../naka-drama-studio)
+import { analyzeVideoShot } from '../../../naka-drama-studio/frontend/app/utils/videoPreflight.js'
 
 const API = 'http://localhost:5679/api/v1'
 const EP_ID = 21

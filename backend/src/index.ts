@@ -6,6 +6,7 @@ import { cors } from 'hono/cors'
 import path from 'path'
 import { timingSafeEqual } from 'node:crypto'
 import { fileURLToPath } from 'url'
+import { existsSync } from 'node:fs'
 
 import dramas from './routes/dramas.js'
 import episodes from './routes/episodes.js'
@@ -144,8 +145,10 @@ app.use('/static/*', async (c, next) => {
 })
 app.use('/static/*', serveStatic({ root: DATA_ROOT }))
 
-// Optional: serve the back-office build (repo naka-ai-backend, built with base /admin/) at /admin
-const adminDist = process.env.ADMIN_DIST
+// Back-office build (admin/ in this repo, built with base /admin/) at /admin —
+// ADMIN_DIST overrides; default admin/.output/public when it has been built
+const defaultAdminDist = path.join(projectRoot, 'admin', '.output', 'public')
+const adminDist = process.env.ADMIN_DIST || (existsSync(defaultAdminDist) ? defaultAdminDist : '')
 if (adminDist) {
   const toAdminFile = (p: string) => p.replace(/^\/admin/, '') || '/'
   app.get('/admin', c => c.redirect('/admin/'))
@@ -153,8 +156,10 @@ if (adminDist) {
   app.get('/admin/*', serveStatic({ root: adminDist, path: 'index.html' }))
 }
 
-// Serve frontend (production build) — 桌面版由主进程注入 FRONTEND_DIST（resources/frontend）
-const distPath = process.env.FRONTEND_DIST || path.join(projectRoot, 'frontend', 'dist')
+// Serve the user-facing frontend (repo naka-drama-studio, `npm run generate`) — FRONTEND_DIST overrides
+// (desktop: main process injects resources/frontend; Docker: /app/frontend-dist).
+// Default: the naka-drama-studio checkout next to this repo.
+const distPath = process.env.FRONTEND_DIST || path.join(projectRoot, '..', 'naka-drama-studio', 'frontend', '.output', 'public')
 app.use('*', serveStatic({ root: distPath }))
 app.get('*', serveStatic({ root: distPath, path: 'index.html' }))
 

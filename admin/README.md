@@ -13,7 +13,7 @@ It holds the **system settings** that used to be the "ตั้งค่าร�
 | เกี่ยวกับและอัปเดต (About) | Version, server update |
 
 This is a Nuxt 3 SPA (`ssr: false`). It has no server of its own: it calls the existing NAKA-AI backend API
-(`/api/v1`, the `backend/` folder of naka-drama-studio).
+(`/api/v1`, the `backend/` folder of this repo).
 
 ## Security model
 
@@ -38,7 +38,7 @@ On the NAKA-AI backend set:
 
 ```bash
 ADMIN_TOKEN=<long random secret>        # e.g. openssl rand -hex 24
-ADMIN_DIST=/path/to/naka-ai-backend/.output/public
+ADMIN_DIST=/path/to/naka-ai-backend/admin/.output/public  # default when built: admin/.output/public
 ```
 
 Then open `https://<your-naka-host>/admin/`. The user-facing app links its "เปิดระบบผู้ดูแล" (Open Admin) buttons to `/admin/`
@@ -57,7 +57,7 @@ Also set `ADMIN_ORIGINS=https://admin.example.com` on the backend so CORS allows
 ## Development
 
 ```bash
-# terminal 1 — NAKA-AI backend (naka-drama-studio/backend), optionally with ADMIN_TOKEN set
+# terminal 1 — NAKA-AI backend (../backend), optionally with ADMIN_TOKEN set
 npm run dev                      # port 5679
 
 # terminal 2 — this app

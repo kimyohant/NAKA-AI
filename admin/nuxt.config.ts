@@ -35,7 +35,7 @@ export default defineNuxtConfig({
   },
   vite: {
     server: {
-      // dev: backend on 5679 (naka-drama-studio/backend → npm run dev)
+      // dev: backend on 5679 (../backend → npm run dev)
       proxy: {
         '/api': { target: 'http://localhost:5679', changeOrigin: true },
         '/static': { target: 'http://localhost:5679', changeOrigin: true },

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { hasFrontend, readFrontend } from './_frontend.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
@@ -16,7 +17,7 @@ test('backend provider registry does not expose ChatFire as a model provider', (
   const registry = read('src/services/adapters/registry.ts')
   const ai = read('src/services/ai.ts')
   const aiConfigRoute = read('src/routes/aiConfigs.ts')
-  const useApi = read('../frontend/app/composables/useApi.ts')
+  const useApi = hasFrontend ? readFrontend('app/composables/useApi.ts') : ''
 
   assert.doesNotMatch(registry, /chatfire/i)
   assert.doesNotMatch(ai, /chatfire/i)

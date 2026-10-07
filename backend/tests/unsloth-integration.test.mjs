@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { hasFrontend, readFrontend } from './_frontend.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
@@ -11,8 +12,7 @@ test('episode generation-tasks ส่ง queue_position ที่ episode workbe
   const block = route.slice(route.indexOf("app.get('/:id/generation-tasks'"))
   assert.match(block, /queuePosition: videoQueuePosition\(t\)/)
   // toSnakeCase แปลง queuePosition → queue_position
-  const episodeView = read('../frontend/app/views/drama/episode.vue')
-  assert.match(episodeView, /t\.queue_position/)
+  if (hasFrontend) assert.match(readFrontend('app/views/drama/episode.vue'), /t\.queue_position/)
 })
 
 test('boot: studio_render ถูกยกเว้นจาก failStaleRunningTasks และ resume รันทีหลัง', () => {

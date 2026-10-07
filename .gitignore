@@ -1,0 +1,8 @@
+node_modules
+.env
+.DS_Store
+*.log
+# runtime data (SQLite + generated media) — never commit
+data/
+# Hypit render engine source (installed separately, see study/README.md)
+study/hypit/
