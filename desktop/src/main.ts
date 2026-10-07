@@ -24,8 +24,8 @@ const DESKTOP_ROOT = path.resolve(__dirname, '..')
 // dev 模式下仓库各目录
 const REPO_ROOT = path.resolve(DESKTOP_ROOT, '..')
 const BACKEND_BUNDLE = path.join(DESKTOP_ROOT, 'build', 'backend.mjs')
-// dev: backend repo checked out next to this one (kimyohant/naka-ai-backend), override NAKA_BACKEND_DIR
-const DEV_BACKEND_DIR = path.resolve(process.env.NAKA_BACKEND_DIR || path.join(REPO_ROOT, '..', 'naka-ai-backend', 'backend'))
+// dev: backend/ in this repo, override NAKA_BACKEND_DIR
+const DEV_BACKEND_DIR = path.resolve(process.env.NAKA_BACKEND_DIR || path.join(REPO_ROOT, 'backend'))
 
 /** workspace 模板版本：内置模板更新时递增，触发向用户目录补缺失文件 */
 const TEMPLATE_VERSION = '4'

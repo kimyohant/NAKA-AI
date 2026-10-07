@@ -2,9 +2,7 @@
 #   powershell -ExecutionPolicy Bypass -File scripts\redeploy.ps1 [-SkipInstall] [-SkipBuild]
 # 1) SQLite snapshot  2) frontend generate → frontend/dist, admin generate  3) restart backend on PORT (default 5679), detached
 #
-# The backend lives in kimyohant/naka-ai-backend: clone it next to this repo (..\naka-ai-backend) or set NAKA_BACKEND_DIR.
-# Data stays where it always was — this repo's data\ (SQLite, generated files, online-edited workspace) — via
-# NAKA_DATA_DIR / SQLITE_PATH / WORKSPACE_PATH; backend secrets (ADMIN_TOKEN, NAKA_SSO_*) go in naka-ai-backend\backend\.env
+# Data: data\ in this repo (SQLite + generated files); backend secrets (ADMIN_TOKEN, NAKA_SSO_*) in backend\.env
 param(
   [switch]$SkipInstall,
   [switch]$SkipBuild,
@@ -12,16 +10,13 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$backend = if ($env:NAKA_BACKEND_DIR) { $env:NAKA_BACKEND_DIR } else { Join-Path (Split-Path -Parent $root) 'naka-ai-backend\backend' }
-$admin = Join-Path (Split-Path -Parent $backend) 'admin'
+$backend = Join-Path $root 'backend'
+$admin = Join-Path $root 'admin'
 $frontend = Join-Path $root 'frontend'
 $data = Join-Path $root 'data'
 $db = Join-Path $data 'naka.sqlite3'
 $workspace = Join-Path $data 'workspace'
 $log = Join-Path $root 'backend.log'
-if (-not (Test-Path (Join-Path $backend 'src\index.ts'))) {
-  throw "backend not found at $backend — git clone https://github.com/kimyohant/naka-ai-backend next to this repo (or set NAKA_BACKEND_DIR)"
-}
 
 function Step($msg) { Write-Host "==> $msg" -ForegroundColor Cyan }
 
@@ -42,26 +37,6 @@ if (-not $SkipBuild) {
   Push-Location $admin
   npm run generate; if ($LASTEXITCODE) { throw 'admin generate failed' }
   Pop-Location
-}
-
-# workspace (agent prompts + skills, editable online) used to be backend\workspace inside this repo:
-# keep a writable copy under data\ — seeded once (from the old backend\workspace if it is still on disk,
-# else the backend's template), never overwritten afterwards
-if (-not (Test-Path (Join-Path $workspace '.template-version'))) {
-  $legacy = Join-Path $root 'backend\workspace'
-  $source = if (Test-Path (Join-Path $legacy 'skills')) { $legacy } else { Join-Path $backend 'workspace' }
-  Step "seed workspace $source → $workspace"
-  New-Item -ItemType Directory -Force $workspace | Out-Null
-  Copy-Item -Recurse -Force (Join-Path $source '*') $workspace
-  New-Item -ItemType File -Force (Join-Path $workspace '.template-version') | Out-Null
-}
-
-# backend .env used to be backend\.env inside this repo (gitignored, so it survives the pull): carry it over once
-$legacyEnv = Join-Path $root 'backend\.env'
-$backendEnv = Join-Path $backend '.env'
-if ((Test-Path $legacyEnv) -and -not (Test-Path $backendEnv)) {
-  Step "copy $legacyEnv → $backendEnv"
-  Copy-Item $legacyEnv $backendEnv
 }
 
 if (Test-Path $db) {
@@ -98,7 +73,8 @@ Step "start backend (detached) → $log"
 $env:PORT = "$Port"
 $env:NAKA_DATA_DIR = $data
 $env:SQLITE_PATH = $db
-$env:WORKSPACE_PATH = $workspace
+# a data\workspace copy exists only if the two-repo version of this script ran once — keep using it
+if (Test-Path (Join-Path $workspace '.template-version')) { $env:WORKSPACE_PATH = $workspace }
 $env:FRONTEND_DIST = Join-Path $frontend 'dist'
 $tsx = Join-Path $backend 'node_modules\tsx\dist\cli.mjs'
 Start-Process -FilePath 'node' -ArgumentList "`"$tsx`" src/index.ts" -WorkingDirectory $backend `

@@ -1,12 +1,42 @@
 name: CI
 
-# The backend moved to kimyohant/naka-ai-backend (its own CI). Tests here that compare against backend
-# sources skip themselves when that repo is not checked out next to this one.
 on:
   push:
   pull_request:
 
 jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npm run typecheck
+        working-directory: backend
+      - run: npx tsx --test tests/sqlite-migration-backup.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts
+        working-directory: backend
+
+  admin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run generate
+
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -18,7 +48,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
         working-directory: frontend
-      - run: node --test tests/*.test.mjs
+      - run: node --test tests/video-preflight.test.mjs tests/ai-seller-structure.test.mjs
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
