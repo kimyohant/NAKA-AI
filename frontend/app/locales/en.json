@@ -2532,6 +2532,38 @@
       "shared": "shared the live",
       "joined": "joined",
       "pending": "{n} comment(s) waiting"
+    },
+    "avatar": {
+      "create": "New avatar from a photo / video",
+      "title": "Create your avatar",
+      "desc": "Upload a photo or video of yourself; it becomes an avatar that lip-syncs Thai speech on the live stream",
+      "source": "Create from",
+      "fromPhoto": "Photo",
+      "fromVideo": "Video",
+      "name": "Avatar name",
+      "nameHint": "Lowercase letters, digits, _ or -, 3–41 characters, e.g. naka_host_ann",
+      "photo": "Your photo (JPG / PNG / WebP)",
+      "video": "Your video (MP4 / MOV / WebM, up to 50 MB)",
+      "tipPhoto1": "Face the camera, shoulders visible, mouth closed, even light, nothing covering the face",
+      "tipPhoto2": "AI first makes a ~10 s idle video from the photo (breathing, blinking, a small smile); about 20–30 minutes in total",
+      "tipPhoto3": "Making the video uses the whole GPU, so stop the running avatar first",
+      "tipVideo1": "10–60 seconds, facing the camera, still or talking softly, steady camera",
+      "tipVideo2": "Face clearly visible in every frame, no profile shots, nothing covering the mouth",
+      "tipVideo3": "Vertical 9:16 fits mobile live best; building takes a few minutes",
+      "stopFirst": "Stop the avatar before creating one from a photo",
+      "consent": "I confirm this is my own face, or its owner has agreed to it being used as an avatar",
+      "submit": "Create avatar",
+      "uploading": "Uploading…",
+      "startedPhoto": "Started: AI is making a video from the photo (about 20–30 min)",
+      "startedVideo": "Avatar build started (a few minutes)",
+      "ready": "Avatar {name} is ready",
+      "stage": {
+        "video": "AI is making the video",
+        "upload": "Sending to the GPU box",
+        "building": "Building the avatar",
+        "done": "Ready",
+        "failed": "Failed"
+      }
     }
   }
 }

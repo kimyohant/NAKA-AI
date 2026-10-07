@@ -99,3 +99,17 @@ test('TikTok on the page: connect/poll/auto-answer wiring and API routes', () =>
   assert.match(page, /stopTikTokPolling\(\)/)
   assert.match(page, /v-model="form\.tiktokSignApiKey"[^>]*type="password"/)
 })
+
+test('new avatar from photo / video: upload, consent, polling, i18n', () => {
+  for (const p of ['/live/avatars', '/live/avatars/jobs']) assert.ok(api.includes(p), `missing ${p}`)
+  assert.match(page, /uploadAPI\.image\(avatarForm\.file\)/)
+  assert.match(page, /uploadAPI\.video\(avatarForm\.file\)/)
+  assert.match(page, /consent: true/)
+  assert.match(page, /canSubmitAvatar = computed\(\(\) => !avatarBusy\.value && avatarForm\.consent/)
+  assert.match(page, /setTimeout\(pollAvatarJobs, 5000\)/)
+  assert.match(page, /URL\.revokeObjectURL/)
+  for (const s of ['video', 'upload', 'building', 'done', 'failed']) {
+    assert.equal(typeof th.live.avatar.stage[s], 'string')
+    assert.equal(typeof en.live.avatar.stage[s], 'string')
+  }
+})

@@ -40,6 +40,11 @@ say "PyTorch 2.9.1 (CUDA 12.8) + LiveTalking requirements (this takes a while)"
 "$ENV_PY" -m pip install -r $ROOT/LiveTalking/requirements.txt
 "$ENV_PY" -c "import torch; print('torch', torch.__version__, 'cuda', torch.cuda.is_available())"
 
+say "face detector for building avatars (s3fd, public download)"
+S3FD=$ROOT/LiveTalking/avatars/wav2lip/face_detection/detection/sfd/s3fd.pth
+[ -f "$S3FD" ] || curl -fL --retry 3 -o "$S3FD" https://www.adrianbulat.com/downloads/python-fan/s3fd-619a316812.pth \
+  || echo "WARN: s3fd.pth download failed; genavatar will try again on first use"
+
 say "naka-live-agent"
 install -m 0644 "$HERE/naka_live_agent.py" $ROOT/naka_live_agent.py
 mkdir -p /etc/naka-live /var/log/naka-live

@@ -11,6 +11,7 @@ Studio calls this agent to:
   - make the avatar speak a line (/human echo), interrupt it, ask whether it is speaking
   - relay the SRS stream to a live platform over RTMP (ffmpeg -c copy) and stop the relay
   - exchange the WHEP SDP for the browser preview
+  - build a new wav2lip avatar from an uploaded video (POST /avatars, GET /avatars/tasks/<id>)
 """
 import asyncio
 import hmac
@@ -218,6 +219,95 @@ async def push_stop(_):
     return json_ok()
 
 
+# ---------- avatars: build a wav2lip avatar from an uploaded video (genavatar.py) ----------
+UPLOAD_DIR = Path(os.environ.get('NAKA_LIVE_UPLOAD_DIR', '/opt/naka-live/uploads'))
+MAX_UPLOAD = 300 * 1024 * 1024
+avatar_tasks = {}  # avatar_id -> {status, error, started, finished}
+
+
+def log_tail(path, n=6):
+    try:
+        lines = path.read_text(errors='ignore').strip().splitlines()
+        return [l[-200:] for l in lines[-n:]]
+    except Exception:
+        return []
+
+
+async def build_avatar(avatar_id, src):
+    """normalize the clip (25 fps, max 960 px tall, no audio), then run LiveTalking's wav2lip genavatar"""
+    task = avatar_tasks[avatar_id]
+    log = LOG_DIR / f'avatar-{avatar_id}.log'
+    norm = UPLOAD_DIR / f'{avatar_id}-25fps.mp4'
+    try:
+        with open(log, 'ab') as out:
+            p = await asyncio.create_subprocess_exec(
+                'ffmpeg', '-nostdin', '-y', '-loglevel', 'warning', '-i', str(src),
+                '-vf', "fps=25,scale=-2:'min(960,ih)'", '-an', '-c:v', 'libx264', '-crf', '18', str(norm),
+                stdout=out, stderr=asyncio.subprocess.STDOUT)
+            if await p.wait() != 0:
+                raise RuntimeError('ffmpeg could not read the video')
+            task['status'] = 'building'
+            p = await asyncio.create_subprocess_exec(
+                LT_PYTHON, 'avatars/wav2lip/genavatar.py', '--video_path', str(norm), '--avatar_id', avatar_id, '--img_size', '256',
+                cwd=str(LT_DIR), stdout=out, stderr=asyncio.subprocess.STDOUT)
+            if await p.wait() != 0:
+                raise RuntimeError('genavatar failed (no face found?) — see the log')
+        if avatar_id not in avatars():
+            raise RuntimeError('genavatar finished but the avatar folder is missing')
+        task.update(status='done', finished=time.time())
+    except Exception as err:
+        shutil.rmtree(LT_DIR / 'data' / 'avatars' / avatar_id, ignore_errors=True)
+        task.update(status='failed', error=str(err), log=log_tail(log), finished=time.time())
+    finally:
+        for f in (src, norm):
+            try:
+                f.unlink()
+            except FileNotFoundError:
+                pass
+
+
+async def avatar_create(request):
+    reader = await request.multipart()
+    avatar_id, src = None, None
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    while True:
+        part = await reader.next()
+        if part is None:
+            break
+        if part.name == 'avatar_id':
+            avatar_id = (await part.text()).strip()
+        elif part.name == 'file':
+            if not avatar_id or not SAFE_ID.match(avatar_id):
+                return json_err('send avatar_id before the file (letters, digits, _ . -)')
+            src = UPLOAD_DIR / f'{avatar_id}-upload'
+            size = 0
+            with open(src, 'wb') as f:
+                while chunk := await part.read_chunk(1 << 20):
+                    size += len(chunk)
+                    if size > MAX_UPLOAD:
+                        f.close()
+                        src.unlink(missing_ok=True)
+                        return json_err('video is larger than 300 MB', 413)
+                    f.write(chunk)
+    if not avatar_id or not SAFE_ID.match(avatar_id) or src is None:
+        return json_err('avatar_id and file are required')
+    if avatar_id in avatars() or avatar_tasks.get(avatar_id, {}).get('status') in ('queued', 'building'):
+        src.unlink(missing_ok=True)
+        return json_err(f'avatar {avatar_id} already exists', 409)
+    avatar_tasks[avatar_id] = {'status': 'queued', 'error': None, 'started': time.time(), 'finished': None}
+    asyncio.get_running_loop().create_task(build_avatar(avatar_id, src))
+    return json_ok({'avatar_id': avatar_id, 'status': 'queued'}, 202)
+
+
+async def avatar_task(request):
+    avatar_id = request.match_info['avatar_id']
+    task = avatar_tasks.get(avatar_id)
+    if task is None:
+        return json_ok({'avatar_id': avatar_id, 'status': 'done' if avatar_id in avatars() else 'unknown'})
+    return json_ok({'avatar_id': avatar_id, **task})
+
+
 async def whep(request):
     """Browser preview: Studio forwards the viewer's SDP offer here; SRS answers (play only)."""
     offer = await request.text()
@@ -234,13 +324,15 @@ async def whep(request):
 def main():
     if len(TOKEN) < 24:
         raise SystemExit('NAKA_LIVE_TOKEN must be set (24+ characters)')
-    app = web.Application(middlewares=[auth], client_max_size=1024 * 1024)
+    # large client_max_size only matters for /avatars (multipart is streamed to disk chunk by chunk)
+    app = web.Application(middlewares=[auth], client_max_size=MAX_UPLOAD + 1024 * 1024)
     app.add_routes([
         web.get('/ping', ping), web.get('/health', health),
         web.post('/start', start), web.post('/stop', stop),
         web.post('/say', say), web.post('/interrupt', interrupt), web.get('/speaking', speaking),
         web.post('/push/start', push_start), web.post('/push/stop', push_stop),
         web.post('/whep', whep),
+        web.post('/avatars', avatar_create), web.get('/avatars/tasks/{avatar_id}', avatar_task),
     ])
 
     async def cleanup(_):

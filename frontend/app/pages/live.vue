@@ -68,6 +68,17 @@
         <p v-if="gpu" class="lv-hint mono">{{ gpu.name }} · {{ t('live.stage.vram', { free: (gpu.free_mb / 1024).toFixed(1), total: (gpu.total_mb / 1024).toFixed(0) }) }}</p>
         <p v-if="status?.agent && !status.agent.models_ready" class="lv-error">{{ t('live.stage.noModel') }}</p>
 
+        <!-- new avatar from your own photo / video -->
+        <button class="btn btn-sm lv-start" type="button" :disabled="!online" @click="openAvatarDialog"><UserPlus :size="12" /> {{ t('live.avatar.create') }}</button>
+        <ul v-if="avatarJobs.length" class="lv-jobs">
+          <li v-for="j in avatarJobs" :key="j.avatarId">
+            <Loader2 v-if="!['done', 'failed'].includes(j.stage)" :size="12" class="animate-spin" />
+            <span class="mono">{{ j.avatarId }}</span>
+            <span class="tag" :class="j.stage === 'done' ? 'tag-success' : j.stage === 'failed' ? 'lv-tag-warn' : ''">{{ t(`live.avatar.stage.${j.stage}`) }}</span>
+            <span v-if="j.error" class="lv-hint lv-job-err">{{ j.error }}</span>
+          </li>
+        </ul>
+
         <div class="lv-golive">
           <div>
             <strong>{{ t('live.push.title') }}</strong>
@@ -231,6 +242,48 @@
       </div>
     </div>
 
+    <!-- ===== New avatar dialog ===== -->
+    <div v-if="showAvatar" class="overlay" @click.self="closeAvatarDialog">
+      <div class="dialog lv-dialog" role="dialog" aria-modal="true" :aria-label="t('live.avatar.title')">
+        <div class="dialog-head">
+          <div class="dialog-head-copy">
+            <h2 class="dialog-title">{{ t('live.avatar.title') }}</h2>
+            <p class="dialog-desc">{{ t('live.avatar.desc') }}</p>
+          </div>
+        </div>
+        <form @submit.prevent="submitAvatar">
+          <div class="dialog-body lv-dialog-body">
+            <div class="lv-seg" role="radiogroup" :aria-label="t('live.avatar.source')">
+              <button type="button" role="radio" :aria-checked="avatarForm.source === 'photo'" :class="{ on: avatarForm.source === 'photo' }" @click="setAvatarSource('photo')"><ImageIcon :size="13" /> {{ t('live.avatar.fromPhoto') }}</button>
+              <button type="button" role="radio" :aria-checked="avatarForm.source === 'video'" :class="{ on: avatarForm.source === 'video' }" @click="setAvatarSource('video')"><Video :size="13" /> {{ t('live.avatar.fromVideo') }}</button>
+            </div>
+            <label class="field">
+              <span class="field-label">{{ t('live.avatar.name') }}</span>
+              <input v-model="avatarForm.name" class="input mono" maxlength="41" placeholder="naka_host_ann" />
+              <span class="field-hint">{{ t('live.avatar.nameHint') }}</span>
+            </label>
+            <label class="field">
+              <span class="field-label">{{ avatarForm.source === 'photo' ? t('live.avatar.photo') : t('live.avatar.video') }}</span>
+              <input :key="avatarForm.source" class="input" type="file" :accept="avatarForm.source === 'photo' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/quicktime,video/webm'" @change="onAvatarFile" />
+            </label>
+            <img v-if="avatarPreview && avatarForm.source === 'photo'" :src="avatarPreview" class="lv-avatar-preview" alt="" />
+            <video v-else-if="avatarPreview" :src="avatarPreview" class="lv-avatar-preview" muted autoplay loop playsinline></video>
+            <ul class="lv-tips">
+              <li v-for="k in (avatarForm.source === 'photo' ? ['tipPhoto1', 'tipPhoto2', 'tipPhoto3'] : ['tipVideo1', 'tipVideo2', 'tipVideo3'])" :key="k">{{ t(`live.avatar.${k}`) }}</li>
+            </ul>
+            <p v-if="avatarForm.source === 'photo' && running" class="lv-error">{{ t('live.avatar.stopFirst') }}</p>
+            <label class="lv-check"><input v-model="avatarForm.consent" type="checkbox" /> {{ t('live.avatar.consent') }}</label>
+          </div>
+          <div class="dialog-foot">
+            <button type="button" class="btn" :disabled="avatarBusy" @click="closeAvatarDialog">{{ t('common.cancel') }}</button>
+            <button type="submit" class="btn btn-primary" :disabled="!canSubmitAvatar">
+              <Loader2 v-if="avatarBusy" :size="13" class="animate-spin" /> {{ avatarBusy ? t('live.avatar.uploading') : t('live.avatar.submit') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <ConfirmDialog
       :open="confirmPush"
       :title="t('live.push.confirmTitle')"
@@ -245,12 +298,12 @@
 </template>
 
 <script setup lang="ts">
-import { Cpu, Hand, Link2, Loader2, MessageSquare, MonitorPlay, Pause, Play, Plus, Radio, Settings2, Sparkles, Square, Unlink, Volume2, VolumeX, X } from 'lucide-vue-next'
+import { Cpu, Hand, Image as ImageIcon, Link2, Loader2, MessageSquare, MonitorPlay, Pause, Play, Plus, Radio, Settings2, Sparkles, Square, Unlink, UserPlus, Video, Volume2, VolumeX, X } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import ConfirmDialog from '~/components/ConfirmDialog.vue'
 import { toastError } from '~/composables/useToast'
-import { liveAPI, type LiveStatus, type TikTokEvent, type TikTokStatus } from '~/composables/useApi'
+import { liveAPI, uploadAPI, type LiveAvatarJob, type LiveStatus, type TikTokEvent, type TikTokStatus } from '~/composables/useApi'
 import { LIVE_VOICES, enqueueLimited, isAnswerable, nextQueueIndex, thanksLine, waitUntilQuiet } from '~/utils/liveFlow'
 
 const { t } = useI18n()
@@ -295,11 +348,14 @@ onMounted(() => {
   loadDraft()
   refresh()
   pollTikTok() // pick up a connection that is still open on the backend
+  pollAvatarJobs() // and avatars that are still being built
   statusTimer = setInterval(refresh, 5000)
 })
 onBeforeUnmount(() => {
   if (statusTimer) clearInterval(statusTimer)
   stopTikTokPolling()
+  if (jobsTimer) clearTimeout(jobsTimer)
+  setPreview('')
   playing.value = false
   closePreview()
 })
@@ -324,6 +380,73 @@ async function freeGpu() {
     toast.success(r.length ? t('live.stage.freedGpu', { n: r.length }) : t('live.stage.noUnsloth'))
     await refresh()
   } catch (err) { toastError(err) } finally { busy.value = '' }
+}
+
+// ---------- new avatar from your own photo (AI idle video first) or video ----------
+const showAvatar = ref(false)
+const avatarBusy = ref(false)
+const avatarForm = reactive<{ source: 'photo' | 'video'; name: string; file: File | null; consent: boolean }>({ source: 'photo', name: '', file: null, consent: false })
+const avatarPreview = ref('')
+const avatarJobs = ref<LiveAvatarJob[]>([])
+const AVATAR_NAME_RE = /^[a-z0-9][a-z0-9_-]{2,40}$/
+const canSubmitAvatar = computed(() => !avatarBusy.value && avatarForm.consent && !!avatarForm.file
+  && AVATAR_NAME_RE.test(avatarForm.name.trim().toLowerCase()) && !(avatarForm.source === 'photo' && running.value))
+let jobsTimer: ReturnType<typeof setTimeout> | null = null
+
+function openAvatarDialog() {
+  Object.assign(avatarForm, { source: 'photo', name: '', file: null, consent: false })
+  setPreview('')
+  showAvatar.value = true
+}
+function closeAvatarDialog() {
+  if (avatarBusy.value) return
+  setPreview('')
+  showAvatar.value = false
+}
+function setAvatarSource(source: 'photo' | 'video') {
+  avatarForm.source = source
+  avatarForm.file = null
+  setPreview('')
+}
+function setPreview(url: string) {
+  if (avatarPreview.value) URL.revokeObjectURL(avatarPreview.value)
+  avatarPreview.value = url
+}
+function onAvatarFile(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0] || null
+  avatarForm.file = file
+  setPreview(file ? URL.createObjectURL(file) : '')
+}
+async function submitAvatar() {
+  if (!canSubmitAvatar.value || !avatarForm.file) return
+  avatarBusy.value = true
+  try {
+    const up = avatarForm.source === 'photo' ? await uploadAPI.image(avatarForm.file) : await uploadAPI.video(avatarForm.file)
+    await liveAPI.createAvatar({ name: avatarForm.name.trim().toLowerCase(), source: avatarForm.source, path: up.path, consent: true })
+    toast.success(avatarForm.source === 'photo' ? t('live.avatar.startedPhoto') : t('live.avatar.startedVideo'))
+    avatarBusy.value = false
+    closeAvatarDialog()
+    pollAvatarJobs()
+  } catch (err) {
+    toastError(err)
+  } finally {
+    avatarBusy.value = false
+  }
+}
+/** poll every 5 s while a job is running; a finished job refreshes the avatar list and selects the new avatar */
+async function pollAvatarJobs() {
+  if (jobsTimer) { clearTimeout(jobsTimer); jobsTimer = null }
+  const before = new Map(avatarJobs.value.map(j => [j.avatarId, j.stage]))
+  try { avatarJobs.value = await liveAPI.avatarJobs() } catch { /* try again next tick */ }
+  for (const j of avatarJobs.value) {
+    const was = before.get(j.avatarId)
+    if (j.stage === 'done' && was && was !== 'done') {
+      toast.success(t('live.avatar.ready', { name: j.avatarId }))
+      await refresh()
+      if (!running.value) avatarId.value = j.avatarId
+    }
+  }
+  if (avatarJobs.value.some(j => !['done', 'failed'].includes(j.stage))) jobsTimer = setTimeout(pollAvatarJobs, 5000)
 }
 
 // ---------- go live (RTMP relay on the GPU box) ----------
@@ -631,6 +754,14 @@ async function saveSettings() {
 .lv-feed-who { font-weight: 700; }
 .lv-feed-btn { float: right; width: 22px; height: 20px; display: grid; place-items: center; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-2); cursor: pointer; }
 .lv-feed-btn:disabled { opacity: .4; }
+.lv-jobs { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.lv-jobs li { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; }
+.lv-job-err { flex-basis: 100%; color: var(--danger, #ef4444); }
+.lv-seg { display: inline-flex; padding: 3px; gap: 3px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-soft); align-self: flex-start; }
+.lv-seg button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 999px; background: transparent; color: var(--text-2); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.lv-seg button.on { background: var(--accent); color: #fff; }
+.lv-avatar-preview { max-height: 220px; max-width: 100%; align-self: center; border-radius: var(--radius); border: 1px solid var(--border); object-fit: contain; background: #000; }
+.lv-tips { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.6; color: var(--text-2); }
 .lv-dialog { width: min(520px, 94vw); }
 .lv-dialog-body { display: flex; flex-direction: column; gap: 12px; }
 .lv-start { align-self: flex-start; }

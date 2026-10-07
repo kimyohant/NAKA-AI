@@ -641,7 +641,16 @@ export interface LiveAgentHealth {
   models_ready: boolean
 }
 export interface LiveStatus { config: LiveConfig; online: boolean; agent: LiveAgentHealth | null; error?: string }
-export type TikTokEventKind = 'chat' | 'gift' | 'follow' | 'share' | 'member' | 'system'
+export interface LiveAvatarJob {
+  avatarId: string
+  source: 'photo' | 'video'
+  stage: 'video' | 'upload' | 'building' | 'done' | 'failed'
+  error: string | null
+  videoTaskId: number | null
+  startedAt: number
+  finishedAt: number | null
+}
+export type TikTokEventKind ='chat' | 'gift' | 'follow' | 'share' | 'member' | 'system'
 export interface TikTokEvent {
   id: number
   at: number
@@ -677,6 +686,9 @@ export const liveAPI = {
   script: (product: LiveProductInput, opts: { tone?: string; minutes?: number } = {}) => api.post<{ lines: string[] }>('/live/script', { product, ...opts }),
   answer: (data: { comment: string; viewer?: string; product: LiveProductInput; faq?: string }) =>
     api.post<{ reply: string | null; handoff: boolean; reason: string }>('/live/answer', data),
+  // new avatar from the user's own photo (AI idle video first) or video; upload with uploadAPI first
+  createAvatar: (data: { name: string; source: 'photo' | 'video'; path: string; consent: boolean }) => api.post<LiveAvatarJob>('/live/avatars', data),
+  avatarJobs: () => api.get<LiveAvatarJob[]>('/live/avatars/jobs'),
   // TikTok LIVE comments (unofficial tiktok-live-connector on the backend)
   tiktokConnect: (username?: string) => api.post<TikTokStatus>('/live/tiktok/connect', username ? { username } : {}),
   tiktokDisconnect: () => api.post<TikTokStatus>('/live/tiktok/disconnect', {}),
