@@ -8,6 +8,7 @@ import { requestOtp, verifyOtp } from './otp';
 import { changePassword, forgotPassword, hasPassword, loginWithPassword, registerWithPassword, resetPassword } from './password';
 import { smsProvider } from './sms';
 import { logout, requireUser } from './session';
+import { studioLink } from './studio';
 
 export { requireUser } from './session';
 
@@ -61,7 +62,7 @@ export async function handleAuth(request: Request, env: Env, url: URL, ctx?: Exe
           if (user) {
             const password = await hasPassword(env, user.id);
             response = json({ user, credits: await getBalance(env.DB, user.id),
-              ...(password === undefined ? {} : { hasPassword: password }) });
+              ...(password === undefined ? {} : { hasPassword: password }), ...(await studioLink(env, user)) });
           } else response = json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
         }
       }

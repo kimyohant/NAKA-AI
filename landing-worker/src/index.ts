@@ -7,6 +7,7 @@ import { checkAdmin } from "./admin/auth";
 import { handleAdminCustomers } from "./admin/customers";
 import { handleWorks } from "./works";
 import { handleAuth, requireUser } from "./auth";
+import { handleStudioSso } from "./auth/studio";
 import { readBodyBytes } from "./auth/common";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
@@ -47,6 +48,10 @@ export default {
 
     const unavailable = closedFeature(env, url, request.method);
     if (unavailable) return unavailable;
+
+    // naka-studio sign-in: the token exchange is server-to-server (no Origin), so it sits outside handleAuth's checks.
+    const studioResponse = await handleStudioSso(request, env, url);
+    if (studioResponse) return studioResponse;
 
     const authResponse = await handleAuth(request, env, url, ctx);
     if (authResponse) return authResponse;
