@@ -39,26 +39,19 @@
         </NuxtLink>
       </nav>
 
-      <div class="side-divider"></div>
-
-      <nav class="side-nav">
-        <p class="side-group side-label">{{ t('layout.nav.setup') }}</p>
-        <NuxtLink
-          v-for="item in settingsItems"
-          :key="item.tab"
-          :to="`/settings?tab=${item.tab}`"
-          class="side-link"
-          :class="{ active: route.path === '/settings' && currentSettingsTab === item.tab }"
-          :title="item.label"
-          @click="navOpen = false"
-        >
-          <component :is="item.icon" :size="17" :stroke-width="1.8" />
-          <span class="side-label">{{ item.label }}</span>
-          <span v-if="item.tab === 'ai' && missingConfigLabels.length" class="side-dot" aria-hidden="true"></span>
-        </NuxtLink>
-      </nav>
 
       <div class="side-bottom">
+        <!-- สมาชิก naka-ai (SSO) — ซ่อนในโหมดผู้ใช้คนเดียว -->
+        <div v-if="session?.sso" class="side-user">
+          <span class="side-avatar" aria-hidden="true">{{ (session.user.name || '?').slice(0, 1).toUpperCase() }}</span>
+          <div class="side-user-copy side-label">
+            <span class="side-user-name truncate">{{ session.user.name }}</span>
+            <a v-if="session.accountUrl" :href="session.accountUrl" class="side-user-link">{{ t('layout.account.manage') }}</a>
+          </div>
+          <button type="button" class="side-user-out" :title="t('layout.account.signOut')" :aria-label="t('layout.account.signOut')" @click="signOut">
+            <LogOut :size="15" :stroke-width="1.9" />
+          </button>
+        </div>
         <div class="side-tools">
           <ThemeToggle />
           <LocaleSwitcher />
@@ -80,7 +73,7 @@
       <div v-if="missingConfigLabels.length" class="config-banner">
         <TriangleAlert :size="14" :stroke-width="1.8" />
         <span>{{ t('layout.banner.missing', { types: missingConfigLabels.join(t('common.listJoin')) }) }}</span>
-        <NuxtLink to="/settings?tab=ai" class="config-banner-link">{{ t('layout.banner.goSettings') }}</NuxtLink>
+        <a :href="adminUrl" target="_blank" rel="noopener" class="config-banner-link">{{ t('layout.banner.goSettings') }}</a>
       </div>
 
       <main class="content">
@@ -91,9 +84,10 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, Copy, Radio, Store } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Menu, X, Megaphone, Copy, Radio, Store, LogOut } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
-import { aiConfigAPI } from '~/composables/useApi'
+import { aiConfigAPI, authAPI } from '~/composables/useApi'
+import { useAdminUrl } from '~/composables/useAdminUrl'
 import brandLogo from '~/assets/brand-logo.svg'
 
 const { t, locale } = useI18n()
@@ -106,16 +100,21 @@ const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.
 const isSellerRoute = computed(() => route.path === '/seller' || route.path.startsWith('/seller/'))
 const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
 const isLiveRoute = computed(() => route.path === '/live')
-const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))
 
-const settingsItems = computed(() => [
-  { tab: 'ai', label: t('settings.tabs.ai'), icon: Cpu },
-  { tab: 'styles', label: t('settings.tabs.styles'), icon: Palette },
-  { tab: 'agents', label: t('settings.tabs.agents'), icon: Bot },
-  { tab: 'general', label: t('settings.tabs.general'), icon: SlidersHorizontal },
-  { tab: 'storage', label: t('settings.tabs.storage'), icon: HardDrive },
-  { tab: 'about', label: t('settings.tabs.about'), icon: Info },
-])
+// ตั้งค่าระบบย้ายไปแอปผู้ดูแล (naka-ai-backend)
+const adminUrl = useAdminUrl()
+
+// สมาชิก naka-ai ที่ล็อกอินผ่าน SSO (null = ยังโหลด / โหมดผู้ใช้คนเดียวจะได้ sso:false)
+const session = ref(null)
+onMounted(async () => {
+  try { session.value = await authAPI.me() } catch { /* 401 → useApi พาไปล็อกอินเอง */ }
+})
+async function signOut() {
+  try {
+    const r = await authAPI.logout()
+    window.location.href = r.accountUrl || '/'
+  } catch { window.location.reload() }
+}
 
 function go(path) {
   navOpen.value = false
@@ -218,7 +217,25 @@ watch(locale, checkAiConfigs)
 .side-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); margin-left: auto; }
 .side-divider { height: 1px; background: var(--border); margin: 14px 8px; }
 
-.side-bottom { margin-top: auto; padding-top: 16px; }
+.side-bottom { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.side-user {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border-radius: 12px; border: 1px solid var(--border); min-width: 0;
+}
+.side-avatar {
+  width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-gradient); color: #fff; font: 700 13px var(--font-display);
+}
+.side-user-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.side-user-name { font-size: 13px; font-weight: 600; color: var(--text-0); }
+.side-user-link { font-size: 11px; color: var(--accent-text); text-decoration: none; }
+.side-user-link:hover { text-decoration: underline; }
+.side-user-out {
+  width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 8px; background: transparent; color: var(--text-2); cursor: pointer;
+}
+.side-user-out:hover { background: var(--bg-hover); color: var(--text-0); }
 .side-tools {
   display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
   padding: 6px; border-radius: 12px;

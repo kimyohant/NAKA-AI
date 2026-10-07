@@ -46,14 +46,18 @@
       "seller": "AI นักขาย"
     },
     "banner": {
-      "missing": "ยังไม่ได้ตั้งค่าโมเดล{types} ฟีเจอร์ AI จึงยังใช้งานไม่ได้",
-      "goSettings": "ไปที่ตั้งค่า"
+      "missing": "ยังไม่ได้ตั้งค่าโมเดล{types} ฟีเจอร์ AI จึงยังใช้งานไม่ได้ — ให้ผู้ดูแลตั้งค่าในระบบผู้ดูแล (NAKA Admin)",
+      "goSettings": "เปิดระบบผู้ดูแล"
     },
     "theme": {
       "label": "สลับธีม",
       "light": "โหมดสว่าง",
       "dark": "โหมดมืด",
       "system": "ตามระบบ"
+    },
+    "account": {
+      "manage": "บัญชี naka-ai",
+      "signOut": "ออกจากระบบ"
     }
   },
   "migrate": {
@@ -1140,7 +1144,12 @@
       "E_SELLER_VIDEO_BUSY": "กำลังทำวิดีโออยู่ รอให้เสร็จหรือกดหยุดก่อน",
       "E_SELLER_VIDEO_FAILED": "ทำวิดีโอไม่สำเร็จ ลองใหม่หรือเปิดดูใน Studio",
       "E_SELLER_VIDEO_GONE": "โปรเจกต์วิดีโอถูกลบไปแล้ว",
-      "E_SELLER_VIDEO_CANCELLED": "หยุดทำวิดีโอแล้ว"
+      "E_SELLER_VIDEO_CANCELLED": "หยุดทำวิดีโอแล้ว",
+      "E_ADMIN_REQUIRED": "ต้องเข้าสู่ระบบผู้ดูแลก่อน",
+      "E_AUTH_REQUIRED": "กรุณาเข้าสู่ระบบด้วยบัญชี naka-ai",
+      "E_SSO_STATE": "ลิงก์เข้าสู่ระบบหมดอายุ กรุณาเข้าสู่ระบบใหม่",
+      "E_SSO_DENIED": "บัญชีนี้ยังไม่ได้รับสิทธิ์ใช้ naka-studio",
+      "E_FORBIDDEN_OWNER": "ไม่มีสิทธิ์เข้าถึงงานนี้"
     }
   },
   "tour": {

@@ -7,7 +7,6 @@ const readApp = (path) => readFileSync(new URL(path, appRoot), 'utf8')
 
 const episodePage = readApp('views/drama/episode.vue')
 const dramaPage = readApp('views/drama/detail.vue')
-const settingsPage = readApp('pages/settings.vue')
 const useApi = readApp('composables/useApi.ts')
 
 test('frontend API client no longer exposes TTS or voice endpoints', () => {
@@ -34,13 +33,8 @@ test('episode workbench removes all role voice assignment controls', () => {
   assert.doesNotMatch(episodePage, /voicesAPI/)
 })
 
-test('project and settings pages remove audio service configuration', () => {
+test('project page removes audio service configuration', () => {
   assert.doesNotMatch(dramaPage, /audio_config_id/)
   assert.doesNotMatch(dramaPage, /audioConfigs/)
   assert.doesNotMatch(dramaPage, /音频/)
-  assert.doesNotMatch(settingsPage, /voice_assigner/)
-  assert.doesNotMatch(settingsPage, /音色分配/)
-  assert.doesNotMatch(settingsPage, /serviceTypes[\s\S]*audio/)
-  assert.doesNotMatch(settingsPage, /音频/)
-  assert.doesNotMatch(settingsPage, /speech-2\.8-hd/)
 })

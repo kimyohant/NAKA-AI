@@ -1,5 +1,16 @@
 const BASE = '/api/v1'
 
+/**
+ * naka-ai single sign-on: the Studio engine answers 401 E_AUTH_REQUIRED when the member session is missing or
+ * expired → sign in at naka-ai.com (backend /auth/naka/login) and come back to the same page.
+ */
+export function redirectToLogin() {
+  if (typeof window === 'undefined' || (window as any).__nakaLoginRedirect) return
+  ;(window as any).__nakaLoginRedirect = true
+  const next = window.location.pathname + window.location.search
+  window.location.href = `${BASE}/auth/naka/login?next=${encodeURIComponent(next)}`
+}
+
 async function req<T = any>(method: string, path: string, body?: any): Promise<T> {
   const opts: RequestInit = { method, headers: { 'Content-Type': 'application/json' } }
   if (body) opts.body = JSON.stringify(body)
@@ -13,6 +24,7 @@ async function req<T = any>(method: string, path: string, body?: any): Promise<T
     const ms = Math.round(performance.now() - start)
 
     if (!resp.ok || (json.code && json.code >= 400)) {
+      if (resp.status === 401 && json.errorCode === 'E_AUTH_REQUIRED') redirectToLogin()
       console.log(`%c[API] %c${method} ${path} %c${resp.status} %c${ms}ms`, 'color:#888', 'color:#ef5350', 'color:#ef5350;font-weight:bold', 'color:#888', json.message || '')
       // errorCode: รหัสเสถียรจาก backend (เช่น E_NO_TEXT_MODEL) → toastError แปลเป็นภาษา UI
       throw Object.assign(new Error(json.message || `${resp.status}`), { errorCode: json.errorCode || undefined, status: resp.status })
@@ -127,6 +139,7 @@ async function uploadReq<T = any>(path: string, file: File): Promise<T> {
   const resp = await fetch(`${BASE}${path}`, { method: 'POST', body: fd })
   const json = await resp.json()
   if (!resp.ok || (json.code && json.code >= 400)) {
+    if (resp.status === 401 && json.errorCode === 'E_AUTH_REQUIRED') redirectToLogin()
     console.log(`%c[API] %cPOST ${path} %c${resp.status}`, 'color:#888', 'color:#ef5350', 'color:#ef5350;font-weight:bold')
     throw new Error(json.message || `${resp.status}`)
   }
@@ -764,4 +777,12 @@ export const sellerAPI = {
   stopVideo: (id: number) => api.post<SellerPost>(`/seller/posts/${id}/video/stop`, {}),
   ingestUrl: (url: string) => api.post<IngestResult>('/seller/ingest-url', { url }),
   studioVideos: () => api.get<SellerStudioVideo[]>('/seller/studio-videos'),
+}
+
+// ===== บัญชีผู้ใช้ (naka-ai SSO) =====
+export interface StudioUser { id: string; name: string; email: string | null; admin: boolean }
+export interface StudioSession { user: StudioUser; sso: boolean; accountUrl: string | null }
+export const authAPI = {
+  me: () => api.get<StudioSession>('/auth/naka/me'),
+  logout: () => api.post<{ loggedOut: boolean; accountUrl: string | null }>('/auth/naka/logout', {}),
 }

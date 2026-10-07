@@ -7,6 +7,7 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { backendSkip, backendUrl, hasBackend, readBackend } from './_backend.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
@@ -17,7 +18,7 @@ const listPage = read('app/pages/marketer.vue')
 const useApi = read('app/composables/useApi.ts')
 const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
-const backendTrending = new URL('../backend/src/routes/trending.ts', root)
+const backendTrending = backendUrl('src/routes/trending.ts')
 
 test('trending section is wired into the marketer list page', () => {
   assert.match(listPage, /<MarketerTrendingSection/)
@@ -35,7 +36,7 @@ test('trending client matches the backend route (GET /trending-videos only)', { 
   assert.doesNotMatch(useApi, /\/trending-videos[^`']*['`]?\s*,\s*\{/)
 
   // service ฝั่ง backend เป็น static seed — ห้ามมี scraper
-  const service = read('../backend/src/services/trending.ts')
+  const service = readBackend('src/services/trending.ts')
   assert.doesNotMatch(service, /fetch\(|axios|playwright|puppeteer/)
 })
 
