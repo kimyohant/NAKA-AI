@@ -80,7 +80,7 @@
 </template>
 
 <script setup>
-import { Clapperboard, Copy, Eye, Heart, LayoutGrid, Lightbulb, Megaphone, Radio, Search, SearchX, Shirt, ShoppingBag, Sparkles, UserRound, Workflow, X, Zap } from 'lucide-vue-next'
+import { Clapperboard, Copy, Eye, Heart, LayoutGrid, Lightbulb, Megaphone, Radio, Search, SearchX, Shirt, ShoppingBag, Sparkles, Store, UserRound, Workflow, X, Zap } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { coverArt, templateArt } from '~/utils/studioArt'
 import { beatBars } from '~/utils/studioFlow'
@@ -88,7 +88,7 @@ import { beatBars } from '~/utils/studioFlow'
 /**
  * StudioSkillsLibrary — หน้า "คลังสกิล" (แนว Skills Library): hero + ค้นหา + ชิปหมวด
  * + แถว workflow ของ NAKA (ไปยังโมดูลอื่น) + การ์ดสกิลวิดีโอสินค้า (= เทมเพลต Product Studio)
- * เลือกสกิลเทมเพลต → emit use-template ให้หน้าแม่เปิดไดอะล็อกสร้างโปรเจกต์ที่เลือกเทมเพลตไว้แล้ว
+ * เลือกสกิลเทมเพลต → emit use-template ให้หน้าแม่พาไป AI นักขาย (สร้างโพสต์ + ทำวิดีโอด้วยสกิลนั้น)
  */
 const props = defineProps({
   templates: { type: Array, default: () => [] },
@@ -104,6 +104,7 @@ const CATEGORY_ICONS = { review: Heart, demo: Lightbulb, fashion_beauty: Shirt, 
 
 // workflow ของแต่ละโมดูลใน NAKA — route = ไปหน้าอื่น, tab = สลับแท็บในหน้านี้
 const workflows = computed(() => [
+  { id: 'seller', route: '/seller', icon: Store, tint: '#ee4d2d', art: coverArt('template-category', 'demo') },
   { id: 'drama', route: '/', icon: Clapperboard, tint: '#8b5cf6', art: coverArt('agent', 'storyboard_breaker') },
   { id: 'marketer', route: '/marketer', icon: Megaphone, tint: '#f97316', art: coverArt('template-category', 'promo') },
   { id: 'viralClone', route: '/viral-clone', icon: Copy, tint: '#ec4899', art: coverArt('skill-category', 'cinematography') },

@@ -54,6 +54,7 @@
           </div>
           <p v-if="p.productPrice" class="sl-card-price">{{ p.productPrice }}</p>
           <div class="sl-card-tags">
+            <span v-if="p.videoJob?.running" class="tag tag-info"><Loader2 :size="10" class="animate-spin" /> {{ t('seller.skillVideo.badge') }}</span>
             <span class="tag" :class="p.status === 'ready' ? 'tag-success' : p.status === 'failed' ? 'tag-error' : ''">{{ t(`seller.status.${p.status}`) }}</span>
             <span v-for="ch in p.channels" :key="ch" class="tag">{{ t(`seller.channels.${ch}`) }}</span>
           </div>
@@ -84,6 +85,10 @@
         </div>
         <form class="sl-form" @submit.prevent="create()">
           <div class="dialog-body">
+            <p v-if="skill" class="sl-skill">
+              <LayoutGrid :size="13" :stroke-width="2" />
+              {{ t('seller.create.withSkill', { skill: skillName }) }}
+            </p>
             <label class="field">
               <span class="field-label">{{ t('seller.product.url') }}</span>
               <input v-model="form.productUrl" class="input" type="url" :placeholder="t('seller.product.urlPlaceholder')" />
@@ -94,7 +99,7 @@
               <input v-model="form.productName" class="input" :placeholder="t('seller.product.namePlaceholder')" />
             </label>
 
-            <div v-if="studioVideos.length" class="field">
+            <div v-if="studioVideos.length && !skill" class="field">
               <span class="field-label">{{ t('seller.create.fromStudio') }}</span>
               <div class="sl-videos">
                 <button
@@ -137,12 +142,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Clock, Film, Loader2, MessageSquareText, MoreHorizontal, Package, Plus, Store, Video } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
+import { Clock, Film, LayoutGrid, Loader2, MessageSquareText, MoreHorizontal, Package, Plus, Store, Video } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { sellerAPI, type SellerPost, type SellerStudioVideo } from '~/composables/useApi'
 import { toastError } from '~/composables/useToast'
 
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
+const route = useRoute()
+
+// มาจากคลังสกิล (/seller?skill=<templateId>) → เปิดฟอร์มสร้างโพสต์ แล้วพาไปขั้นทำวิดีโอด้วยสกิลนั้น
+const skill = ref(typeof route.query.skill === 'string' ? route.query.skill : '')
+const skillName = computed(() => (te(`productStudio.templates.${skill.value}.name`) ? t(`productStudio.templates.${skill.value}.name`) : skill.value))
 
 const steps = [
   { key: 'product', icon: Package },
@@ -188,7 +199,9 @@ async function openCreate() {
   try { studioVideos.value = await sellerAPI.studioVideos() || [] } catch { studioVideos.value = [] }
 }
 function closeCreate() {
-  if (!creating.value) showCreate.value = false
+  if (creating.value) return
+  showCreate.value = false
+  skill.value = ''
 }
 function pickVideo(v: SellerStudioVideo) {
   if (form.value.studioProjectId === v.projectId) {
@@ -233,7 +246,7 @@ async function create() {
     }
     if (!data.productName) data.productName = url
     const post = await sellerAPI.create(data)
-    navigateTo(`/seller/${post.id}`)
+    navigateTo(skill.value ? { path: `/seller/${post.id}`, query: { skill: skill.value }, hash: '#skill-video' } : `/seller/${post.id}`)
   } catch (e) {
     toastError(e)
   } finally {
@@ -260,7 +273,10 @@ async function remove() {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  if (skill.value) openCreate()
+})
 </script>
 
 <style scoped>
@@ -329,6 +345,10 @@ onMounted(load)
 .sl-empty-title { margin: 8px 0 0; font-size: 15px; font-weight: 700; color: var(--text-1); }
 .sl-empty-desc { margin: 0 0 14px; font-size: 12.5px; max-width: 420px; }
 
+.sl-skill {
+  display: flex; align-items: center; gap: 6px; margin: 0 0 12px; padding: 8px 12px;
+  border-radius: 10px; background: var(--accent-bg); color: var(--accent-text); font-size: 12.5px; font-weight: 600;
+}
 .sl-dialog { width: 600px; max-width: calc(100vw - 32px); }
 .sl-dialog-icon {
   width: 38px; height: 38px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;

@@ -3,14 +3,21 @@
  * → AI (seller_copywriter) เขียนแคปชั่น/แฮชแท็ก/คอมเมนต์ปักหมุดแยกตามช่องทาง → ผู้ใช้คัดลอก/ดาวน์โหลดไปโพสต์เอง
  * Phase 1 ไม่โพสต์อัตโนมัติ (ต้องเชื่อมบัญชีแพลตฟอร์ม — Phase 2)
  * ลิงก์สินค้าไม่ผ่าน LLM: backend ต่อท้ายคอมเมนต์เอง เพื่อไม่ให้ URL ถูกแต่ง/ตัดทอน
+ * v19 คลังสกิล × AI นักขาย: makeVideo สร้างโปรเจกต์ Studio จากสินค้าของโพสต์ + สกิล (เทมเพลต) → เขียนบท
+ * → auto-render → แนบวิดีโอที่รวมเสร็จเข้าโพสต์เอง (driveVideo วนเช็กทุก 5s + getPost sync ซ้ำ กันหลุดหลัง restart)
  */
 import { and, desc, eq, isNull } from 'drizzle-orm'
 import { db, getInsertId, schema } from '../db/index.js'
 import { AppError, now } from '../utils/response.js'
-import { getTextConfig } from './ai.js'
+import { getActiveConfig, getTextConfig } from './ai.js'
 import { mastra } from '../mastra/index.js'
 import { ingestUrl } from './marketer.js'
-import { getProjectDetail, listProjects } from './studio.js'
+import {
+  createProject, deleteProject, getProjectDetail, getProjectRow, listProjects, parseAutoRender, startStudioScript,
+} from './studio.js'
+import { cancelAutoRender, startAutoRender } from './studio-autorender.js'
+import { getStudioTemplate, type StudioPlatform } from './studio-templates.js'
+import { logTaskError } from '../utils/task-logger.js'
 
 export const SELLER_CHANNELS = ['tiktok', 'shopee', 'facebook', 'instagram'] as const
 export type SellerChannel = typeof SELLER_CHANNELS[number]
@@ -19,6 +26,9 @@ export type SellerTone = typeof SELLER_TONES[number]
 export const SELLER_LANGUAGES = ['th', 'en'] as const
 
 const HASHTAG_LIMITS: Record<SellerChannel, number> = { tiktok: 5, shopee: 5, facebook: 3, instagram: 10 }
+/** ช่องทางแรกที่เลือก → แพลตฟอร์มของโปรเจกต์ Studio (กำหนดสัดส่วน/ความยาวสูงสุด) */
+const CHANNEL_PLATFORM: Record<SellerChannel, StudioPlatform> = { tiktok: 'tiktok', shopee: 'shopee', facebook: 'facebook', instagram: 'instagram_reels' }
+const DRIVE_POLL_MS = 5_000
 const MAX_IMAGES = 9
 
 export interface SellerChannelContent { caption: string; hashtags: string[]; comment: string }
@@ -149,12 +159,12 @@ export async function listPosts() {
   const rows = await db.select().from(schema.sellerPosts)
     .where(isNull(schema.sellerPosts.deletedAt))
     .orderBy(desc(schema.sellerPosts.updatedAt))
-  return rows.map(toPostJson)
+  return Promise.all(rows.map(withVideoJob))
 }
 
 export async function getPost(id: number) {
   const row = await getRow(id)
-  return row ? toPostJson(row) : null
+  return row ? withVideoJob(await syncVideo(row)) : null
 }
 
 /** ฟิลด์ที่แก้ได้ — ใช้ทั้ง create และ update (ไม่ส่งฟิลด์ = ไม่แก้) */
@@ -205,8 +215,11 @@ export async function createPost(body: Record<string, unknown>) {
 }
 
 export async function updatePost(id: number, body: Record<string, unknown>) {
-  if (!await getRow(id)) return null
+  const row = await getRow(id)
+  if (!row) return null
   const patch = patchFrom(body)
+  // ผู้ใช้เลือก/อัปโหลดวิดีโออื่นระหว่างที่ระบบกำลังทำวิดีโอจากสกิล → เลิกแนบผลของงานนั้น
+  if ('videoUrl' in body && patch.videoUrl !== row.videoUrl) Object.assign(patch, { videoAuto: false, videoError: null })
   await db.update(schema.sellerPosts).set({ ...patch, updatedAt: now() }).where(eq(schema.sellerPosts.id, id))
   return getPost(id)
 }
@@ -302,5 +315,167 @@ export async function generateCopy(id: number, body: { channels?: unknown; tone?
   await db.update(schema.sellerPosts).set({
     content: JSON.stringify(merged), status: 'ready', errorMsg: null, generatedAt: ts, updatedAt: ts,
   }).where(eq(schema.sellerPosts.id, id))
+  return getPost(id)
+}
+
+// ---------- คลังสกิล → วิดีโอ (v19) ----------
+
+export type SellerVideoStage = 'scripting' | 'keyframes' | 'videos' | 'merging' | 'done' | 'failed' | 'cancelled'
+
+async function setVideo(id: number, patch: Partial<typeof schema.sellerPosts.$inferInsert>): Promise<PostRow> {
+  await db.update(schema.sellerPosts).set({ ...patch, updatedAt: now() }).where(eq(schema.sellerPosts.id, id))
+  return (await getRow(id))!
+}
+
+/** วิดีโอที่รวมเสร็จล่าสุดของโปรเจกต์ Studio (null = ยังไม่มี) */
+async function mergedVideoUrl(projectId: number): Promise<string | null> {
+  const merge = (await getProjectDetail(projectId))?.latestMerge
+  return merge?.status === 'completed' && merge.videoUrl ? merge.videoUrl : null
+}
+
+/**
+ * พางานทำวิดีโอเดินต่อหนึ่งก้าว (idempotent — เรียกซ้ำได้จาก driver และ getPost)
+ * script_ready → เริ่ม auto-render · done → แนบวิดีโอ · failed/cancelled/ลบ → หยุดพร้อม video_error
+ */
+export async function syncVideo(row: PostRow): Promise<PostRow> {
+  if (!row.videoAuto || !row.studioProjectId) return row
+  const project = await getProjectRow(row.studioProjectId)
+  if (!project) return setVideo(row.id, { videoAuto: false, videoError: 'E_SELLER_VIDEO_GONE: โปรเจกต์วิดีโอถูกลบ' })
+  if (project.status === 'failed') {
+    return setVideo(row.id, { videoAuto: false, videoError: project.errorMsg || 'E_SELLER_VIDEO_FAILED: เขียนบทไม่สำเร็จ' })
+  }
+  if (project.status === 'scripting') return row
+  const state = parseAutoRender(project.autoRender)
+  if (state.stage === 'idle') {
+    if (project.status !== 'script_ready') return row
+    try {
+      await startAutoRender(project.id)
+    } catch (err: any) {
+      if (err?.errorCode === 'E_STUDIO_BUSY') return row // driver กับ getPost ชนกัน — อีกตัวเริ่มไปแล้ว
+      const msg = err?.errorCode ? `${err.errorCode}: ${err.message}` : (err?.message || 'auto-render failed')
+      return setVideo(row.id, { videoAuto: false, videoError: msg })
+    }
+    return row
+  }
+  if (state.stage === 'done') {
+    const url = await mergedVideoUrl(project.id)
+    return setVideo(row.id, url
+      ? { videoAuto: false, videoUrl: url, videoError: null }
+      : { videoAuto: false, videoError: 'E_STUDIO_NO_VIDEOS: ไม่พบวิดีโอที่รวมเสร็จ' })
+  }
+  if (state.stage === 'failed' || state.stage === 'cancelled') {
+    return setVideo(row.id, { videoAuto: false, videoError: state.errorMsg || `E_SELLER_VIDEO_FAILED: ${state.stage}` })
+  }
+  return row
+}
+
+/** สถานะงานวิดีโอสำหรับ UI (null = โพสต์ไม่ได้ทำวิดีโอจากสกิล) */
+async function videoJobOf(row: PostRow) {
+  if (!row.studioProjectId || !row.videoTemplateId) return null
+  const project = await getProjectRow(row.studioProjectId)
+  const state = project ? parseAutoRender(project.autoRender) : null
+  let stage: SellerVideoStage
+  if (row.videoAuto) {
+    stage = !project || project.status === 'scripting' || !state || state.stage === 'idle' ? 'scripting'
+      : (['keyframes', 'videos', 'merging'].includes(state.stage) ? state.stage : 'merging') as SellerVideoStage
+  } else if (row.videoError) {
+    stage = state?.stage === 'cancelled' || row.videoError.startsWith('E_SELLER_VIDEO_CANCELLED') ? 'cancelled' : 'failed'
+  } else {
+    stage = 'done'
+  }
+  return {
+    projectId: row.studioProjectId,
+    templateId: row.videoTemplateId,
+    running: !!row.videoAuto,
+    stage,
+    done: state && row.videoAuto ? state.done : 0,
+    failed: state && row.videoAuto ? state.failed : 0,
+    total: state && row.videoAuto ? state.total : 0,
+    error: row.videoError,
+  }
+}
+
+async function withVideoJob(row: PostRow) {
+  return { ...toPostJson(row), videoJob: await videoJobOf(row) }
+}
+
+const drivers = new Set<number>()
+
+/** วนพางานจนจบ (fire-and-forget) — ตัวเดียวต่อโพสต์ */
+export async function driveVideo(postId: number, pollMs = DRIVE_POLL_MS): Promise<void> {
+  if (drivers.has(postId)) return
+  drivers.add(postId)
+  try {
+    for (;;) {
+      const row = await getRow(postId)
+      if (!row?.videoAuto) return
+      if (!(await syncVideo(row)).videoAuto) return
+      await new Promise(r => setTimeout(r, pollMs))
+    }
+  } catch (err: any) {
+    logTaskError('Seller', 'video-driver', { postId, error: err?.message || String(err) })
+  } finally {
+    drivers.delete(postId)
+  }
+}
+
+/** boot: โพสต์ที่ยังรอวิดีโออยู่ → วน driver ต่อ (auto-render ของ Studio resume เองแล้ว) */
+export async function resumeSellerVideos(): Promise<number> {
+  const rows = await db.select().from(schema.sellerPosts)
+    .where(and(eq(schema.sellerPosts.videoAuto, true), isNull(schema.sellerPosts.deletedAt)))
+  for (const row of rows) void driveVideo(row.id)
+  return rows.length
+}
+
+/**
+ * ทำวิดีโอจากสกิล: ใช้ข้อมูลสินค้าของโพสต์สร้างโปรเจกต์ Studio (เทมเพลต = สกิล) แล้วเริ่มเขียนบททันที
+ * guard ก่อนเสียเงิน: ต้องมีชื่อสินค้า + โมเดลข้อความ/รูป/วิดีโอครบ + presenter ถ้าสกิลต้องใช้ (E_AVATAR_REQUIRED)
+ */
+export async function makeVideo(id: number, body: { templateId?: unknown; avatarId?: unknown; influencerId?: unknown } = {}) {
+  const row = await getRow(id)
+  if (!row) return null
+  if (row.videoAuto) throw new AppError('กำลังทำวิดีโออยู่ — รอให้เสร็จหรือกดหยุดก่อน', 'E_SELLER_VIDEO_BUSY')
+  const template = getStudioTemplate(typeof body.templateId === 'string' ? body.templateId : '')
+  if (!template) throw new AppError(`ไม่รู้จักสกิล: ${String(body.templateId ?? '')}`, 'E_TEMPLATE_UNKNOWN')
+  if (!row.productName.trim()) throw new AppError('ใส่ชื่อสินค้าก่อนทำวิดีโอ', 'E_SELLER_NEEDS_PRODUCT')
+  const [text, image, video] = await Promise.all([getActiveConfig('text'), getActiveConfig('image'), getActiveConfig('video')])
+  if (!text) throw new AppError('未配置文本模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_TEXT_MODEL')
+  if (!image) throw new AppError('未配置图片模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_IMAGE_MODEL')
+  if (!video) throw new AppError('未配置视频模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_VIDEO_MODEL')
+
+  const post = toPostJson(row)
+  const optionalId = (v: unknown) => (v === undefined || v === null || v === '' ? undefined : Number(v))
+  const project = await createProject({
+    title: row.title || row.productName,
+    productName: row.productName,
+    productUrl: row.productUrl,
+    productDescription: [row.productDescription, row.productPrice ? `Price: ${row.productPrice}` : ''].filter(Boolean).join('\n') || undefined,
+    productImages: post.productImages,
+    templateId: template.id,
+    platform: CHANNEL_PLATFORM[post.channels[0] ?? 'tiktok'],
+    language: row.language,
+    market: row.language === 'th' ? 'TH' : 'GLOBAL',
+    avatarId: optionalId(body.avatarId),
+    influencerId: optionalId(body.influencerId),
+    notes: row.notes || undefined,
+  })
+  if (!project) throw new AppError('สร้างโปรเจกต์วิดีโอไม่สำเร็จ', 'E_SELLER_VIDEO_FAILED')
+  try {
+    await startStudioScript(project.id)
+  } catch (err) {
+    await deleteProject(project.id) // ไม่ทิ้งโปรเจกต์ค้าง เช่น สกิลต้องมี presenter แต่ไม่ได้เลือก
+    throw err
+  }
+  await setVideo(id, { studioProjectId: project.id, videoUrl: null, videoTemplateId: template.id, videoAuto: true, videoError: null })
+  void driveVideo(id)
+  return getPost(id)
+}
+
+/** หยุดทำวิดีโอ: ยกเลิก auto-render (งานที่ส่งแล้วปล่อยจบเอง) และเลิกรอแนบ */
+export async function stopVideo(id: number) {
+  const row = await getRow(id)
+  if (!row) return null
+  if (row.videoAuto && row.studioProjectId) await cancelAutoRender(row.studioProjectId)
+  await setVideo(id, { videoAuto: false, videoError: row.videoAuto ? 'E_SELLER_VIDEO_CANCELLED: หยุดโดยผู้ใช้' : row.videoError })
   return getPost(id)
 }

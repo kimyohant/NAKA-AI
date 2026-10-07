@@ -1136,7 +1136,11 @@
       "E_INFLUENCER_BUSY": "A review script is already being written — wait for it to finish",
       "E_SELLER_NEEDS_PRODUCT": "Add a product name or link first.",
       "E_SELLER_NO_CHANNEL": "Pick at least one channel.",
-      "E_SELLER_COPY": "AI could not write the captions. Try again or switch the text model."
+      "E_SELLER_COPY": "AI could not write the captions. Try again or switch the text model.",
+      "E_SELLER_VIDEO_BUSY": "A video is already being made. Wait for it or stop it first.",
+      "E_SELLER_VIDEO_FAILED": "Making the video failed. Try again or open it in Studio.",
+      "E_SELLER_VIDEO_GONE": "The video project was deleted.",
+      "E_SELLER_VIDEO_CANCELLED": "Video making was stopped."
     }
   },
   "tour": {
@@ -2283,7 +2287,7 @@
       "featuredTitle": "Featured workflows",
       "featuredDesc": "End-to-end skills from every NAKA-AI studio",
       "productTitle": "Product video skills",
-      "productDesc": "Pick a skill, add one product, and AI writes the script, makes the images and renders a voiced video.",
+      "productDesc": "Pick a skill and continue in AI Seller: add one product, AI makes a voiced review video and writes ready-to-post captions.",
       "badgeWorkflow": "Workflow",
       "use": "Use this skill",
       "useAria": "Use skill {name}",
@@ -2295,6 +2299,11 @@
       "emptyDesc": "Try another search or pick \"All\".",
       "reset": "Clear filters",
       "workflows": {
+        "seller": {
+          "name": "AI Seller",
+          "description": "Add a product, pick a skill, get a review video with captions for every channel.",
+          "tag": "Selling"
+        },
         "drama": {
           "name": "AI Short Drama",
           "description": "Novel → script → characters & scenes → storyboard → video, all in one place.",
@@ -2698,7 +2707,7 @@
       "product": "Product",
       "productDesc": "Paste a shop link to pull the name, images and price",
       "video": "Review video",
-      "videoDesc": "Pick one from the Skills Library or upload your clip",
+      "videoDesc": "Let AI make the video with a skill from the library, or upload your clip",
       "copy": "Captions & channels",
       "copyDesc": "AI writes captions, hashtags and a comment with your link"
     },
@@ -2734,7 +2743,8 @@
       "needProduct": "Add a link or product name",
       "submit": "Create post",
       "creating": "Creating…",
-      "ingestFailed": "Could not read that link. Fill in the details on the next page."
+      "ingestFailed": "Could not read that link. Fill in the details on the next page.",
+      "withSkill": "Selected skill: {skill}. Add the product and we take you to the video step."
     },
     "delete": {
       "title": "Delete sales post",
@@ -2763,8 +2773,7 @@
     "video": {
       "none": "No video yet",
       "upload": "Upload video",
-      "fromStudio": "Pick from Skills Library",
-      "makeNew": "Make a new video",
+      "fromStudio": "Pick a finished video",
       "remove": "Remove video",
       "hint": "Vertical 9:16, 15–60 seconds works best.",
       "studioEmpty": "No finished (merged) videos in the Skills Library yet."
@@ -2816,6 +2825,35 @@
       "saving": "Saving…",
       "saved": "Saved",
       "notFound": "Post not found"
+    },
+    "skillVideo": {
+      "title": "Skills Library: pick a video style",
+      "divider": "Or let AI make a new video with the Skills Library",
+      "making": "AI is making \"{skill}\"",
+      "openStudio": "View/edit in Studio",
+      "runningHint": "This takes a few minutes. You can close this page; the video is attached to the post when it is done.",
+      "stop": "Stop",
+      "stage": {
+        "scripting": "Script",
+        "keyframes": "Images",
+        "videos": "Video clips",
+        "merging": "Merge",
+        "done": "Video attached",
+        "failed": "Video failed",
+        "cancelled": "Video stopped"
+      },
+      "selectedHint": "About {n} seconds · uses the product name, details, price and images from step 1",
+      "presenter": "Presenter",
+      "presenterPick": "Pick a presenter",
+      "presenterNone": "No presenter",
+      "noPresenter": "No avatar or influencer with an image yet.",
+      "createPresenter": "Create one in the Skills Library",
+      "needPresenter": "This skill needs a presenter",
+      "make": "Make the video with this skill",
+      "costHint": "Uses your configured image and video models (provider charges apply).",
+      "placeholder": "AI is making the video…",
+      "attached": "Video is ready and attached to the post",
+      "badge": "Making video"
     }
   }
 }

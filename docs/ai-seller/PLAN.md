@@ -15,6 +15,19 @@ AI เขียนแคปชั่นแบบสบาย ๆ แยกตา
 - AI ใช้เฉพาะข้อมูลที่ผู้ใช้ใส่ ห้ามแต่งราคา ส่วนลด หรือสรรพคุณ
 - สร้างข้อความใหม่เฉพาะช่องทางที่เลือก ช่องทางอื่นที่แก้มือไว้จะไม่ถูกทับ
 
+## คลังสกิล × AI นักขาย (v19)
+
+คลังสกิลรวมเข้ากับ AI นักขายแล้ว
+- **ขั้นวิดีโอในโพสต์**: เลือกสกิล (= เทมเพลต Product Studio 12 แบบ) แล้วกด "ให้ AI ทำวิดีโอด้วยสกิลนี้"
+  - backend สร้างโปรเจกต์ Studio จากข้อมูลสินค้าของโพสต์ (ชื่อ ลิงก์ รายละเอียด+ราคา รูป ภาษา และแพลตฟอร์มจากช่องทางแรก)
+  - จากนั้นเขียนบท (review_director) → auto-render (ภาพ → วิดีโอ → รวมคลิป) → แนบวิดีโอที่รวมเสร็จเข้าโพสต์เอง
+- **guard ก่อนเสียเงิน**: ต้องมีชื่อสินค้า มีโมเดลข้อความ/รูป/วิดีโอครบ และถ้าสกิลต้องใช้พรีเซนเตอร์ต้องเลือกอวตารหรืออินฟลูเอนเซอร์ (`E_AVATAR_REQUIRED`) ถ้าไม่ผ่านจะไม่ทิ้งโปรเจกต์ค้าง
+- **เดินงานอัตโนมัติ**: `driveVideo` วนเช็กทุก 5 วินาที, `getPost` sync ซ้ำ และ `resumeSellerVideos` ตอน boot ทำให้ปิดหน้าได้หรือ restart ได้
+- **ระหว่างทำวิดีโอ**: หน้าโพสต์ poll ทุก 5 วินาที แสดงขั้น เขียนบท/สร้างภาพ/สร้างวิดีโอ/รวมคลิป มีปุ่มหยุดและลิงก์ไปแก้ใน Studio
+- **กันวิดีโอถูกทับ**: autosave ไม่ส่ง `videoUrl` การเปลี่ยนวิดีโอเองเป็น PUT ทันที และถ้าเปลี่ยนวิดีโอระหว่างงานวิ่ง ระบบจะเลิกรอแนบผลของงานนั้น
+- **หน้าคลังสกิล** (`/studio`): กด "ใช้สกิลนี้" → `/seller?skill=<id>` → ฟอร์มสร้างโพสต์ → หน้าโพสต์ที่เลือกสกิลไว้แล้ว และมีไทล์ "AI นักขาย" ในเวิร์กโฟลว์แนะนำ
+- ตาราง `seller_posts` เพิ่มคอลัมน์ `video_template_id`, `video_auto`, `video_error` (migration v19)
+
 ## API: `/api/v1/seller`
 
 | Method | Path | หน้าที่ |
@@ -28,8 +41,10 @@ AI เขียนแคปชั่นแบบสบาย ๆ แยกตา
 | POST | `/posts/:id/generate` | AI เขียนแคปชั่น (sync) |
 | POST | `/ingest-url` | ดึงข้อมูลสินค้าจากลิงก์ |
 | GET | `/studio-videos` | วิดีโอที่รวมคลิปเสร็จแล้วใน Product Studio |
+| POST | `/posts/:id/video` | ทำวิดีโอจากคลังสกิล `{templateId, avatarId?, influencerId?}` (202) |
+| POST | `/posts/:id/video/stop` | หยุดทำวิดีโอ |
 
-ตาราง `seller_posts` (migration v18) error codes: `E_SELLER_NEEDS_PRODUCT`, `E_SELLER_NO_CHANNEL`, `E_SELLER_COPY`
+ตาราง `seller_posts` (migration v18) error codes: `E_SELLER_NEEDS_PRODUCT`, `E_SELLER_NO_CHANNEL`, `E_SELLER_COPY`, `E_SELLER_VIDEO_BUSY`, `E_SELLER_VIDEO_FAILED`, `E_SELLER_VIDEO_GONE`, `E_SELLER_VIDEO_CANCELLED`
 
 ## เฟส 2 (ยังไม่ทำ): โพสต์อัตโนมัติ
 

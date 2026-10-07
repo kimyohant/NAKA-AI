@@ -27,11 +27,25 @@ const { mastra } = await import('../src/mastra/index.js')
 }
 
 const replies: string[] = []
+const { eq } = await import('drizzle-orm')
+const studio = await import('../src/services/studio.js')
+const waitFor = async (fn: () => Promise<boolean>, ms = 3000) => {
+  const end = Date.now() + ms
+  while (Date.now() < end) { if (await fn()) return; await new Promise(r => setTimeout(r, 20)) }
+  throw new Error('waitFor timeout')
+}
 const prompts: any[] = []
 const realGetAgent = mastra.getAgent.bind(mastra)
 ;(mastra as any).getAgent = (type: string) => type === 'seller_copywriter'
   ? { generate: async (msgs: any[]) => { prompts.push(JSON.parse(msgs[0].content)); return { text: replies.shift() ?? '' } } }
+  // review_director ปลอม: จบทันทีโดยไม่บันทึกช็อต → โปรเจกต์เป็น script_ready ที่ไม่มีช็อต
+  : type === 'review_director' ? { generate: async (msgs: any[]) => { scriptPrompts.push(msgs[0].content); await scriptGate; return { text: '', toolCalls: [] } } }
   : realGetAgent(type)
+const scriptPrompts: string[] = []
+// เปิด/ปิดประตูให้ review_director ปลอมจบ — คุมลำดับเหตุการณ์ใน test
+let scriptGate: Promise<void> = Promise.resolve()
+let openGate = () => {}
+const closeGate = () => { scriptGate = new Promise<void>(r => { openGate = r }) }
 
 test('generate without a text model → E_NO_TEXT_MODEL', async () => {
   const post = await seller.createPost({ productName: 'เซรั่ม' })
@@ -99,4 +113,76 @@ test('delete is soft and hides the post', async () => {
   assert.equal(await seller.getPost(post!.id), null)
   assert.ok(!(await seller.listPosts()).some(p => p.id === post!.id))
   assert.deepEqual(await seller.listStudioVideos(), [])
+})
+
+test('skill video: guards before spending (models, skill, presenter)', async () => {
+  const post = await seller.createPost({ productName: 'แก้วเก็บความเย็น', channels: ['instagram'] })
+  // ยังไม่มีโมเดลรูป/วิดีโอ (มีแค่ข้อความจาก test แรก)
+  await assert.rejects(() => seller.makeVideo(post!.id, { templateId: 'unboxing' }), (e: any) => /^E_NO_(IMAGE|VIDEO)_MODEL$/.test(e.errorCode))
+  for (const [serviceType, provider] of [['image', 'openai'], ['video', 'minimax']]) {
+    db.insert(schema.aiServiceConfigs).values({
+      serviceType, provider, name: serviceType, baseUrl: 'http://127.0.0.1:1', apiKey: 'k', model: JSON.stringify(['m']),
+      isActive: true, priority: 1, createdAt: now(), updatedAt: now(),
+    } as any).run()
+  }
+  await assert.rejects(() => seller.makeVideo(post!.id, { templateId: 'nope' }), (e: any) => e.errorCode === 'E_TEMPLATE_UNKNOWN')
+  const before = (await studio.listProjects()).length
+  // ugc_review ต้องมี presenter → ไม่มี avatar/influencer = E_AVATAR_REQUIRED และไม่ทิ้งโปรเจกต์ค้าง
+  await assert.rejects(() => seller.makeVideo(post!.id, { templateId: 'ugc_review' }), (e: any) => e.errorCode === 'E_AVATAR_REQUIRED')
+  assert.equal((await studio.listProjects()).length, before)
+  assert.equal((await seller.getPost(post!.id))!.videoJob, null)
+})
+
+test('skill video: product goes to Studio, finished merge is attached to the post', async () => {
+  const post = await seller.createPost({
+    productName: 'แก้วเก็บความเย็น', productPrice: '390 บาท', productDescription: 'เย็นนาน 24 ชม.',
+    productImages: ['/static/products/cup.png'], channels: ['instagram', 'tiktok'], language: 'th',
+  })
+  closeGate()
+  const started = await seller.makeVideo(post!.id, { templateId: 'unboxing' })
+  assert.equal(started!.videoJob!.stage, 'scripting')
+  assert.equal(started!.videoJob!.running, true)
+  await assert.rejects(() => seller.makeVideo(post!.id, { templateId: 'unboxing' }), (e: any) => e.errorCode === 'E_SELLER_VIDEO_BUSY')
+  const project = (await studio.getProjectRow(started!.studioProjectId!))!
+  assert.equal(project.templateId, 'unboxing')
+  assert.equal(project.platform, 'tiktok') // ช่องทางแรกตามลำดับมาตรฐาน (tiktok มาก่อน instagram)
+  assert.equal(project.productName, 'แก้วเก็บความเย็น')
+  assert.match(project.productDescription || '', /Price: 390 บาท/)
+  assert.match(scriptPrompts.at(-1)!, /แก้วเก็บความเย็น/)
+  assert.equal((await seller.getPost(post!.id))!.videoJob!.stage, 'scripting')
+
+  // จำลอง auto-render จบ + merge เสร็จ แล้ว getPost ต้องแนบวิดีโอเอง
+  const fresh = (await studio.getProjectRow(project.id))!
+  db.update(schema.studioProjects).set({ autoRender: JSON.stringify({ stage: 'done', total: 1, done: 1, failed: 0 }) })
+    .where(eq(schema.studioProjects.id, project.id)).run()
+  db.insert(schema.videoMerges).values({ episodeId: fresh.episodeId, dramaId: fresh.dramaId, provider: 'ffmpeg', model: 'concat', status: 'completed', mergedUrl: 'static/merged/cup.mp4', createdAt: now() } as any).run()
+  openGate()
+  await waitFor(async () => (await studio.getProjectRow(project.id))!.status === 'script_ready')
+  const done = await seller.getPost(post!.id)
+  assert.equal(done!.videoUrl, '/static/merged/cup.mp4')
+  assert.equal(done!.videoJob!.stage, 'done')
+  assert.equal(done!.videoJob!.running, false)
+})
+
+test('skill video: script ready without shots → auto-render refuses → job failed with code; stop + manual video', async () => {
+  const post = await seller.createPost({ productName: 'ร่มพับ', channels: ['tiktok'] })
+  const started = await seller.makeVideo(post!.id, { templateId: 'unboxing' })
+  await waitFor(async () => (await studio.getProjectRow(started!.studioProjectId!))!.status === 'script_ready')
+  const failed = await seller.getPost(post!.id)
+  assert.equal(failed!.videoJob!.stage, 'failed')
+  assert.match(failed!.videoJob!.error || '', /^E_STUDIO_NEEDS_SCRIPT/)
+
+  // ลองใหม่แล้วหยุด → cancelled; อัปโหลดวิดีโอเองหลังจากนั้นได้
+  closeGate()
+  const again = await seller.makeVideo(post!.id, { templateId: 'lifestyle_showcase' })
+  assert.equal(again!.videoJob!.running, true)
+  const stopped = await seller.stopVideo(again!.id)
+  assert.equal(stopped!.videoJob!.stage, 'cancelled')
+  assert.equal(stopped!.videoJob!.running, false)
+  openGate()
+  // บทเขียนเสร็จหลังหยุด → ต้องไม่เริ่ม render/แนบอะไรอีก
+  await waitFor(async () => (await studio.getProjectRow(again!.studioProjectId!))!.status === 'script_ready')
+  assert.equal((await seller.getPost(post!.id))!.videoJob!.stage, 'cancelled')
+  const manual = await seller.updatePost(post!.id, { videoUrl: '/static/uploads/mine.mp4' })
+  assert.equal(manual!.videoUrl, '/static/uploads/mine.mp4')
 })

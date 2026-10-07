@@ -434,10 +434,10 @@ function openCreate(templateId?: string) {
   influencerForm.value = { name: '', appearance: '', persona: '', niche: '', locale: '', imageUrl: '' }
   showCreate.value = true
 }
-// คลังสกิล → เลือกสกิลวิดีโอสินค้า = เปิดฟอร์มสร้างโปรเจกต์โดยเลือกเทมเพลตนั้นไว้แล้ว
+// คลังสกิล → เลือกสกิลวิดีโอสินค้า = ไป AI นักขาย: สร้างโพสต์ขาย แล้วทำวิดีโอด้วยสกิลนั้นให้อัตโนมัติ
+// (สร้างโปรเจกต์ Studio เองยังทำได้จากแท็บโปรเจกต์)
 function useTemplate(tpl: StudioTemplate) {
-  tab.value = 'projects'
-  openCreate(tpl.id)
+  navigateTo({ path: '/seller', query: { skill: tpl.id } })
 }
 function closeCreate() {
   if (!creating.value) showCreate.value = false

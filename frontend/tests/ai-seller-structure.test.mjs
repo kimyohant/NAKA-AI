@@ -59,3 +59,27 @@ test('composeChannel / parseHashtags / postLink', () => {
   assert.equal(composeChannel({ caption: '', hashtags: [], comment: 'see https://aff' }, 'https://aff').comment, 'see https://aff')
   assert.deepEqual(composeChannel(undefined, null), { post: '', comment: '' })
 })
+
+test('skills library is built into AI Seller (skill → Studio video → attached to the post)', () => {
+  const skillVideo = read('app/components/SellerSkillVideo.vue')
+  const list = read('app/pages/seller.vue')
+  assert.match(workspace, /<SellerSkillVideo/)
+  assert.match(workspace, /:before-start="save"/)
+  assert.match(workspace, /route\.query\.skill/)
+  // วิดีโอไม่อยู่ใน autosave — กันค่าเก่าทับวิดีโอที่ระบบแนบให้
+  const payloadFn = workspace.slice(workspace.indexOf('function payload()'), workspace.indexOf('// ===== autosave'))
+  assert.ok(!/videoUrl:/.test(payloadFn), 'payload() must not send videoUrl')
+  assert.match(workspace, /videoJob\?\.running/)
+  assert.match(skillVideo, /studioAPI\.templates\(\)/)
+  assert.match(skillVideo, /sellerAPI\.makeVideo/)
+  assert.match(skillVideo, /sellerAPI\.stopVideo/)
+  assert.match(skillVideo, /<StudioSkillCard/)
+  assert.match(list, /route\.query\.skill/)
+  assert.match(list, /query: \{ skill: skill\.value \}/)
+  for (const st of ['scripting', 'keyframes', 'videos', 'merging', 'done', 'failed', 'cancelled']) {
+    assert.ok(th.seller.skillVideo.stage[st] && en.seller.skillVideo.stage[st], st)
+  }
+  for (const code of ['E_SELLER_VIDEO_BUSY', 'E_SELLER_VIDEO_FAILED', 'E_SELLER_VIDEO_GONE', 'E_SELLER_VIDEO_CANCELLED']) {
+    assert.ok(th.errors.codes[code] && en.errors.codes[code], code)
+  }
+})
