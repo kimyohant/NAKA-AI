@@ -1,7 +1,7 @@
 /**
- * Desktop packaging — the backend lives in kimyohant/naka-ai-backend (sibling checkout or NAKA_BACKEND_DIR):
+ * Desktop packaging — the backend is backend/ in this repo (or NAKA_BACKEND_DIR):
  * esbuild bundles its src, prepare-resources copies its workspace, caption fonts and the admin build,
- * and the main process points the backend at them (moved from the backend repo's studio2-structure test).
+ * and the main process points the backend at them.
  */
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
@@ -10,9 +10,9 @@ import assert from 'node:assert/strict'
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 
-test('backend comes from the naka-ai-backend checkout', () => {
+test('backend comes from backend/ in this repo', () => {
   const dir = read('scripts/backend-dir.mjs')
-  assert.match(dir, /process\.env\.NAKA_BACKEND_DIR \|\| path\.join\(REPO, '\.\.', 'naka-ai-backend', 'backend'\)/)
+  assert.match(dir, /process\.env\.NAKA_BACKEND_DIR \|\| path\.join\(REPO, 'backend'\)/)
   assert.match(read('scripts/build-backend.mjs'), /entryPoints: \[path\.join\(requireBackendDir\(\), 'src', 'index\.ts'\)\]/)
   const main = read('src/main.ts')
   assert.match(main, /DEV_BACKEND_DIR = path\.resolve\(process\.env\.NAKA_BACKEND_DIR/)

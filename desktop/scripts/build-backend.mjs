@@ -1,6 +1,6 @@
 /**
- * esbuild 打包后端 — naka-ai-backend/backend/src → desktop/build/backend.mjs（单文件 ESM）
- * 后端在独立 repo（见 scripts/backend-dir.mjs），需先在其 backend/ 执行 npm ci
+ * esbuild 打包后端 — backend/src → desktop/build/backend.mjs（单文件 ESM）
+ * 需先在 backend/ 执行 npm ci（路径见 scripts/backend-dir.mjs）
  *
  * - format esm：backend 顶层 await initDb() 要求 ESM
  * - external 四件套：sharp / better-sqlite3（原生模块，electron-builder 按

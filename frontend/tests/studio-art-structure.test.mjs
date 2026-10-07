@@ -5,20 +5,18 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { backendSkip, backendUrl, hasBackend, readBackend } from './_backend.mjs'
 import { COVER_KINDS, TEMPLATE_ART_IDS, TEMPLATE_ART_VARIANTS, coverArt, skillArt, templateArt } from '../app/utils/studioArt.js'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 const publicFile = (url) => new URL(`app/public${url}`, root)
 
-// template / skill ids come from the backend repo (naka-ai-backend) — tests that need them skip without it
-const templatesSrc = hasBackend ? readBackend('src/services/studio-templates.ts') : ''
-const skillsSrc = hasBackend ? readBackend('src/agents/skill-library.ts') : ''
+const templatesSrc = read('../backend/src/services/studio-templates.ts')
+const skillsSrc = read('../backend/src/agents/skill-library.ts')
 const templateIds = [...templatesSrc.matchAll(/^\s+id: '([a-z_]+)', category:/gm)].map(m => m[1])
 const skillIds = [...skillsSrc.matchAll(/^\s+skill\('[a-z_]+', '[a-z]+', '([a-z/-]+)', '([a-z0-9-]+)'/gm)].map(m => `${m[1]}/${m[2]}`)
 
-test('every studio template has art for all six product categories', { skip: backendSkip }, () => {
+test('every studio template has art for all six product categories', () => {
   assert.equal(templateIds.length, 12)
   assert.deepEqual([...templateIds].sort(), [...TEMPLATE_ART_IDS].sort())
   for (const id of templateIds) {
@@ -29,7 +27,7 @@ test('every studio template has art for all six product categories', { skip: bac
   assert.deepEqual(templateArt('not_a_template'), [])
 })
 
-test('every library skill has a film still and a clay icon', { skip: backendSkip }, () => {
+test('every library skill has a film still and a clay icon', () => {
   assert.equal(skillIds.length, 32)
   for (const id of skillIds) {
     const art = skillArt(id)
@@ -63,9 +61,9 @@ test('cards use the art and fall back to the icon when an image fails', () => {
   assert.match(gallery, /coverArt\('template-category'/)
 })
 
-test('every seeded visual style has an example image, and the picker falls back to its gradient', { skip: backendSkip }, async () => {
+test('every seeded visual style has an example image, and the picker falls back to its gradient', async () => {
   const { styleExample } = await import('../app/utils/studioArt.js')
-  const schema = readBackend('src/db/sqlite-schema.ts')
+  const schema = read('../backend/src/db/sqlite-schema.ts')
   const seeded = [...schema.matchAll(/value: '([a-z0-9-]+)', sortOrder/g)].map(m => m[1])
   assert.ok(seeded.length >= 8)
   for (const v of seeded) assert.ok(existsSync(publicFile(styleExample(v))), `missing style example ${v}`)

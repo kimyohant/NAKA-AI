@@ -8,7 +8,6 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { backendSkip, backendUrl, hasBackend, readBackend } from './_backend.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
@@ -24,7 +23,7 @@ const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
 const uiFiles = [['pages/marketer.vue', listPage], ['views/marketer/campaign.vue', workbench], ...components]
 
-const backendRoutesUrl = backendUrl('src/routes/campaigns.ts')
+const backendRoutesUrl = new URL('../backend/src/routes/campaigns.ts', root)
 const phase3DocUrl = new URL('../docs/ai-marketer/PHASE3.md', root)
 
 /** Phase 3 contract (PHASE3.md §2) — backend อยู่บน feat/p3-backend ซึ่งทำขนานกันอยู่

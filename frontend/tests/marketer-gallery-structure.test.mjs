@@ -5,7 +5,6 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { backendSkip, backendUrl, hasBackend, readBackend } from './_backend.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
@@ -16,7 +15,7 @@ const nuxtConfig = read('nuxt.config.ts')
 const useApi = read('app/composables/useApi.ts')
 const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
-const backendRoute = backendUrl('src/routes/gallery.ts')
+const backendRoute = new URL('../backend/src/routes/gallery.ts', root)
 
 test('gallery route registered before /marketer/:id + reachable from the marketer page', () => {
   const galleryIdx = nuxtConfig.indexOf("name: 'marketer-gallery'")
@@ -28,7 +27,7 @@ test('gallery route registered before /marketer/:id + reachable from the markete
   assert.match(listPage, /navigateTo\('\/marketer\/gallery'\)/)
 })
 
-test('gallery client matches the backend contract (GET list + PUT/DELETE result only)', { skip: backendSkip }, () => {
+test('gallery client matches the backend contract (GET list + PUT/DELETE result only)', { skip: !readFileSync(backendRoute, 'utf8') && 'backend not present' }, () => {
   const routes = readFileSync(backendRoute, 'utf8')
   assert.match(routes, /app\.get\('\/'/)
   assert.match(routes, /app\.put\('\/creatives\/:cid\/result'/)

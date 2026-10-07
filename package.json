@@ -2,13 +2,14 @@
   "name": "naka-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "NAKA-AI — user-facing frontend + Electron desktop app (backend: kimyohant/naka-ai-backend)",
+  "description": "NAKA-AI — AI short drama / product-video tool (backend + admin + frontend + desktop)",
   "scripts": {
-    "dev:backend": "cd ../naka-ai-backend/backend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:desktop": "cd desktop && npm run dev",
     "build:frontend": "cd frontend && npm run generate",
     "dist": "cd desktop && npm run dist",
-    "dev:admin": "cd ../naka-ai-backend/admin && npm run dev"
+    "dev:admin": "cd admin && npm run dev",
+    "build:admin": "cd admin && npm run generate"
   }
 }

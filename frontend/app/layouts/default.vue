@@ -101,7 +101,7 @@ const isSellerRoute = computed(() => route.path === '/seller' || route.path.star
 const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
 const isLiveRoute = computed(() => route.path === '/live')
 
-// ตั้งค่าระบบย้ายไปแอปผู้ดูแล (naka-ai-backend)
+// ตั้งค่าระบบย้ายไปแอปผู้ดูแล (admin/)
 const adminUrl = useAdminUrl()
 
 // สมาชิก naka-ai ที่ล็อกอินผ่าน SSO (null = ยังโหลด / โหมดผู้ใช้คนเดียวจะได้ sso:false)
