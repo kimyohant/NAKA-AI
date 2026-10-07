@@ -53,7 +53,7 @@ test('migration v14 adds influencer tables + influencer_id and stays idempotent'
     initSqliteSchema(sqlite)
     initSqliteSchema(sqlite) // replay — idempotent
     const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
+    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
     const projectCols = (sqlite.pragma('table_info(studio_projects)') as Array<{ name: string }>).map(r => r.name)
     assert.ok(projectCols.includes('influencer_id'), 'studio_projects missing influencer_id')
     for (const table of ['studio_influencers', 'studio_influencer_contents']) {
