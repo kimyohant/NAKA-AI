@@ -134,19 +134,20 @@ export function getTikTokSettings() {
 
 // ---------- naka-live-agent client ----------
 
-async function agent(path: string, opts: { method?: string; json?: unknown; sdp?: string; timeoutMs?: number } = {}) {
+async function agent(path: string, opts: { method?: string; json?: unknown; sdp?: string; form?: FormData; timeoutMs?: number } = {}) {
   const cfg = readConfig()
   if (!cfg.agentUrl || !cfg.token) throw new AppError('ยังไม่ได้ตั้งค่าเครื่อง AI Live (agent URL + token)', 'E_LIVE_NOT_CONFIGURED')
   let res: Response
   try {
     res = await fetch(cfg.agentUrl + path, {
-      method: opts.method || (opts.json !== undefined || opts.sdp !== undefined ? 'POST' : 'GET'),
+      method: opts.method || (opts.json !== undefined || opts.sdp !== undefined || opts.form ? 'POST' : 'GET'),
       headers: {
         Authorization: `Bearer ${cfg.token}`,
         ...(opts.json !== undefined ? { 'Content-Type': 'application/json' } : {}),
         ...(opts.sdp !== undefined ? { 'Content-Type': 'application/sdp' } : {}),
       },
-      body: opts.sdp !== undefined ? opts.sdp : opts.json !== undefined ? JSON.stringify(opts.json) : undefined,
+      // FormData sets its own multipart Content-Type with the boundary
+      body: opts.form ?? (opts.sdp !== undefined ? opts.sdp : opts.json !== undefined ? JSON.stringify(opts.json) : undefined),
       signal: AbortSignal.timeout(opts.timeoutMs ?? 20_000),
     })
   } catch (err: any) {
@@ -156,7 +157,8 @@ async function agent(path: string, opts: { method?: string; json?: unknown; sdp?
   return res
 }
 
-async function agentJson(path: string, opts: Parameters<typeof agent>[1] = {}) {
+/** call naka-live-agent and unwrap {ok, data}; also used by services/live-avatars.ts */
+export async function agentJson(path: string, opts: Parameters<typeof agent>[1] = {}) {
   const res = await agent(path, opts)
   const body: any = await res.json().catch(() => ({}))
   if (!res.ok || body?.ok === false) {

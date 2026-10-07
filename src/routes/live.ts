@@ -5,12 +5,14 @@
  * - POST /push/start /push/stop (RTMP ไปแพลตฟอร์ม) · POST /whep (SDP พรีวิว, text/plain ↔ application/sdp)
  * - POST /script (live_host) · POST /answer (live_responder) · POST /free-gpu (ปลดโมเดล Unsloth)
  * - POST /tiktok/connect /tiktok/disconnect · GET /tiktok/events?after= (คอมเมนต์ไลฟ์ TikTok)
+ * - POST /avatars {name, source: photo|video, path, consent} · GET /avatars/jobs (สร้างอวตารใหม่)
  */
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { success, badRequest } from '../utils/response.js'
 import * as live from '../services/ai-live.js'
 import * as tiktok from '../services/tiktok-live.js'
+import * as avatars from '../services/live-avatars.js'
 
 const app = new Hono()
 
@@ -40,6 +42,10 @@ app.post('/free-gpu', c => run(c, () => live.freeUnslothGpu()))
 
 app.post('/script', async c => { const b = await body(c); return run(c, () => live.writeHostScript(b)) })
 app.post('/answer', async c => { const b = await body(c); return run(c, () => live.answerComment(b)) })
+
+// New avatar from the user's photo (AI idle video first) or video (services/live-avatars.ts); poll /avatars/jobs
+app.post('/avatars', async c => { const b = await body(c); return run(c, () => avatars.createAvatar(b)) })
+app.get('/avatars/jobs', c => run(c, () => avatars.listAvatarJobs()))
 
 // TikTok LIVE comments (services/tiktok-live.ts): connect to a channel that is live, then poll events
 app.post('/tiktok/connect', async (c) => {
