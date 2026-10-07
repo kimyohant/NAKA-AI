@@ -790,6 +790,13 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
       deleted_at TEXT
     )`,
   ] },
+  // v19: AI นักขาย × คลังสกิล — ทำวิดีโอจากสกิล (เทมเพลต Studio) แล้วแนบเข้าโพสต์อัตโนมัติ
+  // video_auto=1 ระหว่างที่ระบบยังพาโปรเจกต์ Studio เดินต่อเอง (script → auto-render → แนบวิดีโอ)
+  { version: 19, columns: [
+    { table: 'seller_posts', column: 'video_template_id', ddl: 'ALTER TABLE seller_posts ADD COLUMN video_template_id TEXT' },
+    { table: 'seller_posts', column: 'video_auto', ddl: 'ALTER TABLE seller_posts ADD COLUMN video_auto INTEGER NOT NULL DEFAULT 0' },
+    { table: 'seller_posts', column: 'video_error', ddl: 'ALTER TABLE seller_posts ADD COLUMN video_error TEXT' },
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {
