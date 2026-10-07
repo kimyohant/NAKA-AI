@@ -2,6 +2,7 @@
  * AI นักขาย 路由 — /api/v1/seller (docs/ai-seller/PLAN.md)
  * - GET /options · GET/POST /posts · GET/PUT/DELETE /posts/:id
  * - POST /posts/:id/generate — AI เขียนแคปชั่น/แฮชแท็ก/คอมเมนต์ต่อช่องทาง (sync)
+ * - POST /posts/:id/video {templateId, avatarId?, influencerId?} — ทำวิดีโอจากคลังสกิล · POST /posts/:id/video/stop
  * - POST /ingest-url — ดึงข้อมูลสินค้าจากลิงก์ · GET /studio-videos — วิดีโอที่เสร็จแล้วใน Product Studio
  */
 import { Hono } from 'hono'
@@ -63,6 +64,25 @@ app.post('/posts/:id/generate', async (c) => {
   } catch (err: any) {
     return badRequest(c, err?.message || 'AI เขียนแคปชั่นไม่สำเร็จ', err?.errorCode)
   }
+})
+
+// คลังสกิล → วิดีโอ: สร้างโปรเจกต์ Studio จากสินค้าของโพสต์ + สกิล แล้ววิ่งเองจนแนบวิดีโอ (202)
+app.post('/posts/:id/video', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid post ID')
+  try {
+    const post = await seller.makeVideo(id, await body(c))
+    return post ? c.json({ code: 202, data: post, message: 'accepted' }, 202) : notFound(c, 'ไม่พบโพสต์')
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'ทำวิดีโอไม่สำเร็จ', err?.errorCode)
+  }
+})
+
+app.post('/posts/:id/video/stop', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'Invalid post ID')
+  const post = await seller.stopVideo(id)
+  return post ? success(c, post) : notFound(c, 'ไม่พบโพสต์')
 })
 
 app.post('/ingest-url', async (c) => {

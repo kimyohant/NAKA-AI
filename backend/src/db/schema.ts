@@ -622,6 +622,10 @@ export const sellerPosts = sqliteTable('seller_posts', {
   status: text('status').notNull().default('draft'),
   errorMsg: text('error_msg'),
   generatedAt: text('generated_at'),
+  // v19: ทำวิดีโอจากคลังสกิล
+  videoTemplateId: text('video_template_id'),
+  videoAuto: integer('video_auto', { mode: 'boolean' }).notNull().default(false),
+  videoError: text('video_error'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   deletedAt: text('deleted_at'),

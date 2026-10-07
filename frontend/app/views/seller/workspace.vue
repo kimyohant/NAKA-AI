@@ -77,6 +77,10 @@
             <div class="sw-video-row">
               <div class="sw-video-box">
                 <video v-if="draft.videoUrl" :src="`${draft.videoUrl}#t=0.1`" :poster="draft.productImages[0]" controls preload="metadata" />
+                <div v-else-if="post.videoJob?.running" class="sw-video-empty">
+                  <Loader2 :size="22" class="animate-spin" />
+                  <span>{{ t('seller.skillVideo.placeholder') }}</span>
+                </div>
                 <div v-else class="sw-video-empty">
                   <Video :size="24" :stroke-width="1.5" />
                   <span>{{ t('seller.video.none') }}</span>
@@ -93,11 +97,7 @@
                   <Clapperboard :size="13" :stroke-width="2" />
                   {{ t('seller.video.fromStudio') }}
                 </button>
-                <NuxtLink to="/studio" class="btn btn-ghost">
-                  <Wand2 :size="13" :stroke-width="2" />
-                  {{ t('seller.video.makeNew') }}
-                </NuxtLink>
-                <button v-if="draft.videoUrl" type="button" class="btn btn-ghost sw-danger" @click="draft.videoUrl = null; draft.studioProjectId = null">
+                <button v-if="draft.videoUrl" type="button" class="btn btn-ghost sw-danger" @click="setVideo(null, null)">
                   <Trash2 :size="13" :stroke-width="2" />
                   {{ t('seller.video.remove') }}
                 </button>
@@ -115,6 +115,16 @@
                 <span class="truncate">{{ v.title || v.productName }}</span>
               </button>
             </div>
+
+            <!-- คลังสกิล: ทำวิดีโอใหม่จากสินค้าของโพสต์นี้ แล้วแนบเข้าโพสต์เอง -->
+            <div id="skill-video" class="sw-divider"><span>{{ t('seller.skillVideo.divider') }}</span></div>
+            <SellerSkillVideo
+              :post="post"
+              :initial-skill="initialSkill"
+              :blocked="draft.productName.trim() ? '' : t('seller.copy.needProduct')"
+              :before-start="save"
+              @updated="onPostUpdated"
+            />
           </section>
 
           <!-- ===== 3. ช่องทาง + สไตล์ ===== -->
@@ -261,7 +271,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import {
   ArrowLeft, Check, Clapperboard, Copy, Download, DownloadCloud, ExternalLink, ImagePlus, Images, Loader2,
-  MessageSquareText, Package, Sparkles, Trash2, Upload, Video, Wand2, X, Zap,
+  MessageSquareText, Package, Sparkles, Trash2, Upload, Video, X, Zap,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { sellerAPI, uploadAPI, type SellerChannel, type SellerChannelContent, type SellerPost, type SellerStudioVideo, type SellerTone } from '~/composables/useApi'
@@ -319,8 +329,7 @@ function payload(): Partial<SellerPost> {
     affiliateUrl: draft.affiliateUrl.trim() || null,
     productDescription: draft.productDescription.trim() || null,
     productImages: draft.productImages,
-    videoUrl: draft.videoUrl,
-    studioProjectId: draft.studioProjectId,
+    // videoUrl/studioProjectId ไม่อยู่ใน autosave — เปลี่ยนผ่าน setVideo ทันที (กันค่าเก่าทับวิดีโอที่ระบบเพิ่งแนบจากคลังสกิล)
     channels: draft.channels,
     tone: draft.tone,
     language: draft.language,
@@ -418,8 +427,7 @@ async function uploadVideo(ev: Event) {
   uploadingVideo.value = true
   try {
     const res = await uploadAPI.video(file)
-    draft.videoUrl = res.url
-    draft.studioProjectId = null
+    await setVideo(res.url, null)
   } catch (e) {
     toastError(e)
   } finally {
@@ -437,11 +445,42 @@ async function toggleStudioPicker() {
   }
 }
 function pickStudioVideo(v: SellerStudioVideo) {
-  draft.videoUrl = v.videoUrl
-  draft.studioProjectId = v.projectId
+  void setVideo(v.videoUrl, v.projectId)
   if (!draft.productImages.length) draft.productImages = v.productImages.slice(0, MAX_IMAGES)
   showStudioPicker.value = false
 }
+
+/** เปลี่ยนวิดีโอของโพสต์ทันที (ไม่รอ autosave) */
+async function setVideo(videoUrl: string | null, studioProjectId: number | null) {
+  try {
+    onPostUpdated(await sellerAPI.update(id, { videoUrl, studioProjectId }))
+  } catch (e) {
+    toastError(e)
+  }
+}
+
+// ===== คลังสกิล → วิดีโอ: poll ระหว่างระบบทำวิดีโอ แล้วรับวิดีโอที่แนบเข้ามา =====
+const initialSkill = computed(() => (typeof route.query.skill === 'string' ? route.query.skill : ''))
+let videoPoll: ReturnType<typeof setInterval> | null = null
+
+function onPostUpdated(p: SellerPost) {
+  const wasRunning = !!post.value?.videoJob?.running
+  post.value = p
+  draft.videoUrl = p.videoUrl
+  draft.studioProjectId = p.studioProjectId
+  if (wasRunning && !p.videoJob?.running && p.videoJob?.stage === 'done') toast.success(t('seller.skillVideo.attached'))
+}
+
+watch(() => post.value?.videoJob?.running, (running) => {
+  if (running && !videoPoll) {
+    videoPoll = setInterval(async () => {
+      try { onPostUpdated(await sellerAPI.get(id)) } catch { /* ลองใหม่รอบถัดไป */ }
+    }, 5000)
+  } else if (!running && videoPoll) {
+    clearInterval(videoPoll)
+    videoPoll = null
+  }
+})
 
 // ===== copy generation =====
 function toggleChannel(ch: SellerChannel) {
@@ -519,6 +558,7 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => {
   if (saveTimer) save()
+  if (videoPoll) clearInterval(videoPoll)
 })
 </script>
 
@@ -588,6 +628,11 @@ onBeforeUnmount(() => {
 .sw-video-box video { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
 .sw-video-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-3); font-size: 11.5px; text-align: center; padding: 8px; }
 .sw-video-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.sw-divider {
+  display: flex; align-items: center; gap: 10px; margin-top: 4px;
+  font-size: 12px; font-weight: 700; color: var(--text-2);
+}
+.sw-divider::before, .sw-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .sw-studio { display: flex; gap: 8px; overflow-x: auto; padding: 2px; }
 .sw-studio-item {
   display: flex; flex-direction: column; gap: 4px; width: 92px; flex-shrink: 0; padding: 4px;

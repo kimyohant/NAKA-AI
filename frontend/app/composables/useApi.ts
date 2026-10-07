@@ -725,6 +725,16 @@ export interface SellerPost {
   ready: Partial<Record<SellerChannel, { post: string; comment: string }>>
   status: 'draft' | 'ready' | 'failed'; errorMsg: string | null
   generatedAt: string | null; createdAt: string; updatedAt: string
+  /** v19: วิดีโอที่ทำจากคลังสกิล (null = ไม่ได้ทำจากสกิล) */
+  videoJob: SellerVideoJob | null
+}
+export type SellerVideoStage = 'scripting' | 'keyframes' | 'videos' | 'merging' | 'done' | 'failed' | 'cancelled'
+export interface SellerVideoJob {
+  projectId: number; templateId: string
+  running: boolean; stage: SellerVideoStage
+  done: number; failed: number; total: number
+  /** "E_CODE: message" เมื่อไม่สำเร็จ */
+  error: string | null
 }
 export interface SellerStudioVideo {
   projectId: number; title: string; productName: string; productUrl: string | null; productDescription: string | null
@@ -741,6 +751,10 @@ export const sellerAPI = {
   del: (id: number) => api.del(`/seller/posts/${id}`),
   generate: (id: number, data: { channels?: SellerChannel[]; tone?: SellerTone; language?: string; notes?: string | null } = {}) =>
     api.post<SellerPost>(`/seller/posts/${id}/generate`, data),
+  // คลังสกิล → วิดีโอ (202): ระบบเขียนบท → สร้างภาพ/วิดีโอ → รวมคลิป แล้วแนบเข้าโพสต์เอง — poll get ระหว่าง videoJob.running
+  makeVideo: (id: number, data: { templateId: string; avatarId?: number | null; influencerId?: number | null }) =>
+    api.post<SellerPost>(`/seller/posts/${id}/video`, data),
+  stopVideo: (id: number) => api.post<SellerPost>(`/seller/posts/${id}/video/stop`, {}),
   ingestUrl: (url: string) => api.post<IngestResult>('/seller/ingest-url', { url }),
   studioVideos: () => api.get<SellerStudioVideo[]>('/seller/studio-videos'),
 }

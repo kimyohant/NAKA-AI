@@ -37,6 +37,7 @@ import { failStaleCampaigns } from './services/marketer.js'
 import { failStaleStudioProjects } from './services/studio.js'
 import { failStaleCloneAnalyzes, resumeStaleCloneRenders } from './services/clone.js'
 import { resumeStaleAutoRenders } from './services/studio-autorender.js'
+import { resumeSellerVideos } from './services/seller.js'
 import { recoverGenerationTasks } from './services/generation.js'
 import { DATA_ROOT } from './utils/paths.js'
 
@@ -183,6 +184,14 @@ try {
   if (n > 0) console.log(`🔁 resumed ${n} studio auto-render pipelines`)
 } catch (err: any) {
   console.error('resume studio auto-render failed:', err?.message)
+}
+
+// AI นักขาย: โพสต์ที่รอวิดีโอจากคลังสกิล — วน driver ต่อ (หลัง auto-render resume แล้ว)
+try {
+  const n = await resumeSellerVideos()
+  if (n > 0) console.log(`🔁 resumed ${n} seller video jobs`)
+} catch (err: any) {
+  console.error('resume seller videos failed:', err?.message)
 }
 
 // Viral Clone: render batch ค้างหลัง restart — driver วนเก็บ variant queued ต่อ (sys_task recover แล้ว)
