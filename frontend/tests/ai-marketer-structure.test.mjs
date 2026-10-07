@@ -84,8 +84,7 @@ test('marketer routes are registered and reachable', () => {
   assert.match(nuxtConfig, /name: 'marketer-campaign'/)
   assert.match(nuxtConfig, /path: '\/marketer\/:id'/)
   assert.match(nuxtConfig, /views\/marketer\/campaign\.vue/)
-  assert.match(layout, /to="\/marketer"/)
-  assert.match(layout, /layout\.nav\.marketer/)
+  // เมนูหลักเหลือ AI นักขายเมนูเดียว — หน้านี้เข้าทาง URL ได้ (ดู ai-seller-structure.test.mjs)
 })
 
 test('workspace implements the 5-step flow and polls the campaign while busy', () => {
