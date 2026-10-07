@@ -33,7 +33,7 @@
   },
   "layout": {
     "nav": {
-      "studio": "Product Studio",
+      "studio": "Skills Library",
       "projects": "Projects",
       "settings": "Settings",
       "home": "Drama Studio",
@@ -1765,10 +1765,11 @@
       "backToCampaign": "Source campaign"
     },
     "eyebrow": "NAKA-AI TECH",
-    "title": "Product Studio",
+    "title": "Skills Library",
     "subtitle": "Turn one product + one template into a ready-to-post review video with spoken audio — for TikTok, Shopee, Lazada and worldwide.",
     "creating": "Creating",
     "tabs": {
+      "skills": "Skills",
       "projects": "Projects",
       "avatars": "Avatars",
       "influencers": "Influencer"
@@ -2265,6 +2266,62 @@
       "instagram_reels": "Instagram Reels",
       "youtube_shorts": "YouTube Shorts",
       "amazon": "Amazon"
+    },
+    "library": {
+      "kicker": "NAKA Skills",
+      "title": "Skills Library",
+      "subtitle": "Creative workflows at your fingertips. Pick an AI skill for short dramas, ads, product reviews or live selling and start creating right away.",
+      "searchPlaceholder": "Search skills, e.g. review, unboxing, drama…",
+      "clearSearch": "Clear search",
+      "categoriesAria": "Skill categories",
+      "all": "All",
+      "workflowChip": "NAKA workflows",
+      "featuredTitle": "Featured workflows",
+      "featuredDesc": "End-to-end skills from every NAKA-AI studio",
+      "productTitle": "Product video skills",
+      "productDesc": "Pick a skill, add one product, and AI writes the script, makes the images and renders a voiced video.",
+      "badgeWorkflow": "Workflow",
+      "use": "Use this skill",
+      "useAria": "Use skill {name}",
+      "tagAvatar": "Presenter",
+      "tagHands": "Hands only",
+      "tagVoice": "Voiceover",
+      "tagNoVoice": "No dialogue",
+      "emptyTitle": "No skills found",
+      "emptyDesc": "Try another search or pick \"All\".",
+      "reset": "Clear filters",
+      "workflows": {
+        "drama": {
+          "name": "AI Short Drama",
+          "description": "Novel → script → characters & scenes → storyboard → video, all in one place.",
+          "tag": "Drama/anime"
+        },
+        "marketer": {
+          "name": "AI Marketer",
+          "description": "Research the market, plan a strategy and write ad creatives from one brief.",
+          "tag": "Ads"
+        },
+        "viralClone": {
+          "name": "Viral Clone",
+          "description": "Break down a viral clip and generate many versions of your own.",
+          "tag": "Social"
+        },
+        "live": {
+          "name": "AI Live",
+          "description": "Sell live with an AI host.",
+          "tag": "Live commerce"
+        },
+        "avatar": {
+          "name": "AI Avatar",
+          "description": "Create a consistent presenter you can reuse in every video.",
+          "tag": "Presenter"
+        },
+        "influencer": {
+          "name": "AI Influencer",
+          "description": "Create a virtual influencer with a persona, review images and scripts.",
+          "tag": "Creator"
+        }
+      }
     }
   },
   "viralClone": {
