@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "pages": {
+    "/openwiki/architecture/background-processing.md": {
+      "pageVersion": "sha256:820d2368732e3071eef3ad7af3645c696107fcf9377f6460001279ef8e1d0a67",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/architecture/data-model.md": {
+      "pageVersion": "sha256:d74bf9dd3ff6f206ef6cf3193c2c984c883d124da641f9a2def4900dc3210a99",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/architecture/frontend.md": {
+      "pageVersion": "sha256:5a8d8c584c486deb288953ee732582b8a7b0ebadcf4f2a3427cd658cf9d8f113",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/architecture/request-routing.md": {
+      "pageVersion": "sha256:8a91189701ad03e766c35865830053a5bf2eaca8de381d9d4c7b49444c9600ee",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/architecture/runtime-settings.md": {
+      "pageVersion": "sha256:45fadcfe7f35a92d46b321f23072ba99818b97b5262a993c8b09a5d58fe22633",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/operations/deployment-and-config.md": {
+      "pageVersion": "sha256:d23ae217b16f3964b8a2c974581fa16e3059547efb3eb042886e98236b918ab9",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/quickstart.md": {
+      "pageVersion": "sha256:a7e59809473aa1c183174fca35813d2d677ff70f762f0dfd9855761ca7c37e14",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/testing/test-suite.md": {
+      "pageVersion": "sha256:6759da165d3dc19e873d8adb4045581d0d7e5412f29fa1c524c90de274c72082",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/workflows/ai-marketer-and-video.md": {
+      "pageVersion": "sha256:a13185d612b752c138808fe5be11b0c5444a1c3d086e1a3ad4b8c1fc076b410e",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/workflows/authentication.md": {
+      "pageVersion": "sha256:d50c301760d1511aa6bddc02a7249fab78b94bb50ae70e2316fbed71f5ed377c",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/workflows/billing-and-receipts.md": {
+      "pageVersion": "sha256:4082a0d9c79e133884171c1ba1a92988a9729d7131690f7816cd385b73274317",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/workflows/line-sales-agent.md": {
+      "pageVersion": "sha256:45fbe17b32367207c3e78a401a058f1963fdf7fad8878b6a2fbfb3f06a0064e6",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    },
+    "/openwiki/workflows/social-and-inbox.md": {
+      "pageVersion": "sha256:91b7ce1eef651903ec7e57ce20b814e77f14ea00ccbd2842b99cfad03ed36cba",
+      "completedBy": "claude-code",
+      "completedRunId": "8615580a-c2a7-4c3a-9881-ce31bcad7906",
+      "gitHead": "602402a0381c85e9ac48ffa270d29df3723f075b",
+      "sourceFingerprint": "sha256:038372044ff3f69840e2aaf1d04de2a66006945e81ce0c42e4c378dd852bc4e1"
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:820d2368732e3071eef3ad7af3645c696107fcf9377f6460001279ef8e1d0a67",
+  "claims": [
+    {
+      "id": "claim_7e68338ec8fa40e2bf3d7f6e262dcb6f",
+      "statement": "enqueueJob inserts the credit hold and the job row in one D1 batch; the hold is written only if the balance covers the cost and the user is under the plan's max_parallel_jobs, and the job row only if its hold exists.",
+      "evidence": [
+        {
+          "resource": "repo://src/jobs.ts#L79-L109",
+          "version": "repo-lines-v1:sha256:732f8323810015b4d77f824ce3abe1d9e7baf2ee5e8521f5c7e39f7a79aa023f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkY2UwZDk5MDMzMWRiMmZlNmRlMGZkYzUzMmNlOTU1MjQzM2YyZTE2OTU1YmZkZWFmNjE2NjZiMWM0NjRiZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3ZTQ1YmVhYzQzY2RkMjNlMWFmOTVmZGViMjYwOWVmYWUzYmJhZGU5MTQzODliYTc2ZWZjZmRhNGIyNGVmMDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkNGM2NjUxOTkzOGZjMmRhMWNjNDA5NDA2YmExM2JjMjJhMzJlNDU2MTcyMDY1MTNjYzU5YjU5ZTQwOTM1NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f3c169283ea4434ca29d886ed94e8c3c",
+      "statement": "attempts acts as a fencing token: completeJob, failJob and deferJob only write when status is running and attempts equals the claimed value, so a worker that lost its lease cannot overwrite results.",
+      "evidence": [
+        {
+          "resource": "repo://src/jobs.ts#L111-L188",
+          "version": "repo-lines-v1:sha256:da1c6efde69c73d0faeae7f99cc1777b3293055cc815dba9bd13ded4d4b70503:eyJzZWxlY3RlZExpbmVDb3VudCI6NzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3ZGZjNzcwMGRhNTYzOTUyN2FhMzc5YTAxZTZhZDA2MmUxMDM1YTM3MGQzZmY1MGU1ZmI2NTNmYjAwOGNjOTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzNzRmMzNhNmNmMzRmY2VmZmZiYmRmODI3MmE3YjY2YTRiZWJhODk1ZDA4NzRkMTdmNWFhZjQwMzEwOWRkNTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2YWJkOTE4M2ZjMjllNmU5NGYwMjM0NjRhODVkNjdiMDNmZGQzOGQ0MWNkOGVlMmQ4OTg4OThjOGM4MzIzMmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_92b55fc9be6045be89f38a3ea74d1688",
+      "statement": "Failed jobs are refunded exactly once via an INSERT OR IGNORE job_refund ledger row guarded by a unique (job_id, reason) index and the attempts guard; retryable failures requeue with exponential backoff (30s base, 900s cap).",
+      "evidence": [
+        {
+          "resource": "repo://src/jobs.ts#L149-L171",
+          "version": "repo-lines-v1:sha256:e354ef5efdb77554a50d5fb4d94a29869a9b8d6fe4c61caa11ac218b87446d9c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3NDM1YWViYzI0MDBmYzYxMzliODQ4YTg4NjdiMzk0YTdiYjAyZjY5ZWIyNjVhZjk3NDlhZmQwYzZkYzE3MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwYjdlNTQzMWZjZmE0YzQwMWFiM2UzNTk0YTA2NzcyM2JmMDUyYWZhZjdmMzcwODFiZDQzOGEwNzZlOTg2ZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjM2FiNjY4ZDM2YzgzYjFmZjhiYTg5ODNkM2EwOTUyNTE2NDA3YWFlMjZmNjE0YmFkYjg1Zjg0NzNkYjFlYTgifQ"
+        },
+        {
+          "resource": "repo://src/jobs.ts#L267-L277",
+          "version": "repo-lines-v1:sha256:126adac0b04e82c55ebc721ddd32e5d5dc528755d5fd70845c04d0089e9f5525:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0MTAwNzllZGExMzk1MGI3MTdjOWFmNjU5OTNhOGU3MTFiZTdmNDM3YmI5ZWFkY2FjN2QyY2IzNGZiZDE4ZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhOWVlOWZiNGMyMmU3MDg5N2QyZTQ2YzdlZmUwNjE0ZTQ3ZjY3YjQxNDRiMGM0NGM4YWVmNWQ4YWU4NGU4ZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_aeb86f590a884b4fbaac501e22bf86c8",
+      "statement": "PermanentJobError skips retry and JobDeferredError requeues a job without spending a retry while keeping the credit hold; errorSummary stores only the error class and HTTP status to keep customer content out of logs.",
+      "evidence": [
+        {
+          "resource": "repo://src/jobs.ts#L226-L246",
+          "version": "repo-lines-v1:sha256:612abd1ab3c1a982f5beb9977a11812b51200c7003b9ea9f88e4a1ca69d84d64:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkN2ZjZmE5YThkMjkyMzAzNGJjMzA1ZjVkODNhYWU0MzBmYjM5ZTgxZDc0Y2RiMzc4MDZiNmUzNWE0NTU2YjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzZjliZjYyM2FiNzY1Mjk5NzNiNzJjMzJjNWQ4ZWExOWZjNTFkZDRlNzFmYzgyZTY5NjI2NzY1ZmJkMjY1ZDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzlhMDU0NmZjMmY3OTM5MTRhODM3OGM3MzY1N2I2Y2I5NzVkZWFkOTcwNjY2OTljNjc5MWRlMzgzZTBmNDIifQ"
+        },
+        {
+          "resource": "repo://src/jobs.ts#L43-L66",
+          "version": "repo-lines-v1:sha256:8dd4fcaae9bc5868faaf98a3cd957ee298c55aa83f5d5645d1ad2d8def5765f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiZjkyMTRkMWU4YjM0OTk5MWE5Mzk2N2QzOTdmMDgwMzhkMzIzZWY2NTEyYjIzZTFhOTk4YjFhNjM4NjI5ZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4YTA5MDgzYzkxOGEyNDBmMmM0MjBiYjZjOTcyY2Q4Njc3NjVhMzhhODQ4ZjJlNTQ0NDMwMDFmMDZlN2JmZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0ODJlMTVmMjE1ODBjYWI2M2Y2MDdkNGViNjAwZjEyOTYxMzYyZDQ3OGE1NDIyMTA4OWI4ZWRlYzcwMzEzN2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d0672c94cc2541ddb2a8880986d9501b",
+      "statement": "Credit balance is the sum of an append-only credit_ledger, and a user's plan is their active subscription's plan or 'free'.",
+      "evidence": [
+        {
+          "resource": "repo://src/credits.ts#L12-L28",
+          "version": "repo-lines-v1:sha256:d924531ceacf934d018982ff47504d55eb5e72d448a67d7981d44f62b5417ec5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljNWFmNmJiYjA1ZDBlMDQ4OTZkNjRhOTMyMjRhZTEyZjEwMjM1YWMxZmNkMTkyYTM5YzhiNTg5OGJkZGVmYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMzZTlmZTY4ZGY4YzYxY2UzNTNhZWE0MmU1YmQ3YWU3ZWE2OTEzMzI2NmQ3NWQwNmJiODI5N2I2ZTdiMDI0ODQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YWI1NzJlMzA3ZDc2Mjc2NzgzYzk0ZWYyOWViOTY1ZjEyOWEyOWJkMzZhNTU4MDkxOTJkMTI5OWZkYTdlMWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_056f11344bef48e1a0a9590e3a1eb49e",
+      "statement": "The per-minute cron runs queue, social publishing, billing, receipt backfill, trending sync (UTC minute 7) and inbox drain each in its own ctx.waitUntil, gated by feature flags where applicable; the cron queue run uses maxJobs 30 and concurrency 5.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L146-L183",
+          "version": "repo-lines-v1:sha256:df564cf47fbe714ff3f211c371932ed8d8e443020d368e45d9f06cb3aaee14da:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlMGVmYjJiMjFkMTRhOWYzN2Y4NTBjN2JjZDgzOWE2YTUzMTQ3NTI3OGRhY2I3MzRkY2U3MDNkZThmNTFjMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwYzk0OTg1NTI2YzFjNTdlZjAwYzAwZDNmNGRjOTA2MTU2NzdhMGEzNmE4Yjc5NWRmZjlhZmZkNTBmZTlmNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc3YWRlYjNkOTUzNjdmZTY1OGQ4NTVhODI0ZTcxZWEzMzc4NGY0NjZjYWFiYzliYzRjN2QwYjhhZWE1OTgzMTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlMjcyODY0Y2E2OGZmM2IxMWI3ZDYwNmFiNDgwNDMyMTM5NWM0M2VkNjdlNTQxYjYyOTRlN2E0YTNiM2YxY2EifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}

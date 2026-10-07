@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:8a91189701ad03e766c35865830053a5bf2eaca8de381d9d4c7b49444c9600ee",
+  "claims": [
+    {
+      "id": "claim_026237835e984d10b112295246236cc6",
+      "statement": "The Worker's fetch is a linear chain: settings overlay, www redirect, closedFeature, studio SSO, handleAuth, per-prefix API handlers, webhooks, admin API, then static assets fall-through.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L36-L144",
+          "version": "repo-lines-v1:sha256:821dd9a1aa5b926a1abd423b8d53ff323a306863a65b60e1adc55adddcdd7e81:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhYmY5ZGE1YWQwZDJmZmI3NTgxYTQ4MzFkYWQzMDA2ZmY4YTk1MzBkMjM4ODdjZWQyYTY3M2NlOWMzOGUzZTBmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiMGM5NDk4NTUyNmMxYzU3ZWYwMGMwMGQzZjRkYzkwNjE1Njc3YTBhMzZhOGI3OTVkZmY5YWZmZDUwZmU5ZjU4IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIzZjY5NTQ2MDIwMjI1NTc5YzIxZDk2YTIyMWUyMWVmNzkyODI0MzBhZDkxYWQ2NzI3OTBhMDM5YzlmZmY0MWRiIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2NGMzZDNmM2RkNTI3NmU5MzcyNTQ4NjdiMzg5M2IwN2VlODc0ZjA3MDM0Yzk3MGYxMGE1YWZiMzYzYzQ3NzY4In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_dd9e3c7377f4465ea57094f2ac03c5b6",
+      "statement": "Studio SSO runs before handleAuth because the token exchange is server-to-server with no Origin header.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L52-L57",
+          "version": "repo-lines-v1:sha256:fd069e028ef5d1a5d4a31eb30e50a041cd6fa030597695bdcbfbd19a45e81486:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmM2YWVkMWQ1OGU2YWEzZDA5ODNlYWQ2N2NhMGM4NjdiZWI1ODg5M2E5MzNmYTk1MmQ2YTQwOTZmNmJlZDk2NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjM5MTgwZDg5NjJhYTI5NzRiNzBlNmQzMjZkNWIxY2MyYTNjYjlhMjdhNTU1YTNmNTBjZTdkOTk4NGMxMmMwOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmVhYTZkNWVlNmMwODhjNjZiMjFjODc1N2RlZjkyMTBmZTgxN2NiODk5ZDZmYmYyZGFjMDVkODVmZTliYmZmZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDcyYTU0YzJmNzZhZGM0YzY3NjI1NTAwMzM5ODc3MGRmMTAwZTBmMmU0ZWY4NWQ4N2Y4ZWVkZjg3YWFmZmYyNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_441ee5c03c4847b0b268427b5812c976",
+      "statement": "closedFeature returns 503 for maintenance (all /api except admin, health and some auth routes) and for disabled clips, social and inbox features, while signed social media links stay open.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L190-L204",
+          "version": "repo-lines-v1:sha256:20481810ee144c5d39e38783306a834248bcdfffe853e34cbbe243e8333bee66:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3M2E3Y2Y4N2QxMDJhNjcyZDUyMzM3YWZmMDY4MTAxY2VmZmY3MDdlNmRlZjE0MGRlNDc4NWQ4MTgyMTdjMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1NWEwMmY5MmZiNTY1MWFkYTkzMjNlZGVlNDM3OGU2Njk1OGRkMzlmMzhjYTNiZjAwNGM2ZjE0NjczNjc5NjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhZThkMTZiMDI1YzRjZTBjMzM2MzllYzUxMmI1ZGUxYzExZmM3OTU4MWRmNGU5NDQ3ZGM0ZGMyODg4M2RiYWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e9cd2da94b12407fb1f5de4e544a0936",
+      "statement": "Webhooks for Stripe, Meta and LINE bypass sessions and are authenticated by signature; LINE bodies are capped at 256 KiB and handled in ctx.waitUntil after immediate acknowledgement.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L102-L106",
+          "version": "repo-lines-v1:sha256:301c07be6b48112b89b70f78b1abd6b22276460384f5972c93ca3393bdfd2717:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTUxN2FmMjAzNjY5YjA2OTMwMGNlODIzYTU1NGE5YTc0MDY2NTJhY2MzNDRlYjY3MDM3YjBlODJkZGRhNzZiMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWJmODUxMzhmZDgxOTY5ODVkZTllZDA4NjE2M2M0MDEyODA3ZGQ5MTA2YmU1ODc0Y2I3MGJjMzRlMTdlNjUzMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWI0ZGJiMTkxNWE5YjljODc3NmQyZWY2NWIyMjkxYjViOTg5OTk3MjgxMDIxMzkyNjkwNmNlOGJmYjg0ODM4NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDk3YWMzNmY1NGJkMDk3NzViMjUxZTZjNzE4NThlZjU5MWFlMTI4ZDMyMzcxMmUwZmI1NzgwMDEwYjQxZGFlMSJ9"
+        },
+        {
+          "resource": "repo://src/index.ts#L210-L224",
+          "version": "repo-lines-v1:sha256:802aacb3fa068dd7abcf06c60ad3fc57ae37e35e729ff9c6f60161c987f4bbd9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjNzVhM2MyYTU2NGFkMjlmNjU1OTRmOWE2MjRlMTExMTEzNTc1ZjBjNWMyZjczZTk0YTdjYmMzZGMxZmY1YjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEwNWFlYmY3MGY5NDhkZmYyMDczMjZiNjUzZmU2MDJlZjY4MDZiNmI1YWZjYzlmOTExNDdiZTgzNDVmN2UyYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5N2I3ZDRkZGMyZTYyMjFmNTMxNTBmYzAwMGNlNWE5M2YyZTlkNTkyYTA3OTNhZDlmOWU1YmVkZDIxYWNiMjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_de8a11d8d5c14f7fa1b13d2ab93fcc0b",
+      "statement": "Admin routes require checkAdmin (Google account in ADMIN_EMAILS or ADMIN_TOKEN break-glass), and the system panel receives the unmerged workerEnv.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L120-L142",
+          "version": "repo-lines-v1:sha256:b3c3f641a5faac7a59492cd31e817dd81bbd44b631cff762eb3830e666a2ee8f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4ZWY5YjgyYzcxMWYzMjI3ZDg5ZjRiMjdlYTljZjg1Y2MxOWEzNzU4NWEwNDA5YjhhNGEwYThiMmQ2ZTZmZDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiZDZkN2QyZTBhNDU4NDQ2NDkyYzJkM2ZjNzVlYzM1MTEwYWE5MDJhMGIxMDg0MDdiODE1ZjY3MTFhNTMzOWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc3YWRlYjNkOTUzNjdmZTY1OGQ4NTVhODI0ZTcxZWEzMzc4NGY0NjZjYWFiYzliYzRjN2QwYjhhZWE1OTgzMTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_92c066b0af9748afb052d78a3a5b9793",
+      "statement": "The marketer route leaves GET trending, image and media public and otherwise requires a session, and provides a kick that runs the queue with 2 jobs under ctx.waitUntil.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L70-L76",
+          "version": "repo-lines-v1:sha256:b537eec002f0defbc635a0b31d55037b44ce0d7975819b7a4a00489ae15c7231:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGJhZTllOWQyOTE0NzFjODhhMDhjNmUxOGZlNTMzOTM1YmYwZDA2ZDYyYTMzNGYzNTg1NTM2MDcxZDEyZDI3MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQxOWE2ZGNjMDRlMjEzYTNjN2E3N2E0NTZiMDFlNzZkMWVmNzhjZDAwYmJlYzFkOGY4MTQ1OGZlOTNlZGM1NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjc4ZGIzODYxMzdjOTBjMzVlOTNmYTE0MzNjZDAzY2YwNzI3YWQ3NTZlYWMxOTcwMDM3YzgyZDU0MjkxMGFmNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTRlN2QwMDM5MmEwMWIwNGNhYzVlMWQxZGQ5OGE1MjE3YjdlNDIyOGJlMWMxNzIzZjRiYmIzNGY4OGRlNDEyMCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}

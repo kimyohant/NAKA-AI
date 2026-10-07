@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:a13185d612b752c138808fe5be11b0c5444a1c3d086e1a3ad4b8c1fc076b410e",
+  "claims": [
+    {
+      "id": "claim_076473a6ef8c4caf8039ad66729d72a3",
+      "statement": "Marketer tasks are enqueued as insight, bulk or recreate jobs costing 1 credit with maxAttempts 2, returning 202 with the job id.",
+      "evidence": [
+        {
+          "resource": "repo://src/marketer/ai.ts#L9-L13",
+          "version": "repo-lines-v1:sha256:93d3b3c70d3e353f0eeb8e054c07552ffb0747ad8a3b7099eec66ae79e84752d:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTBhMzJlODg0MjE5YTI4OTdlNmFiODBhNTM4NWRmZjNmOWVmMjI2OTY3MDJjNzk0ZTQ3NTRkYmJlNTFlNzg4NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzU2OTlkOGU2MTcwYTkyMWE0NTIwZWQ2MzgwZjliYTVjZDNmZWQxNTI3NWNlMThkOGIzNTM1M2Q3N2FkM2QzNCJ9"
+        },
+        {
+          "resource": "repo://src/marketer/index.ts#L117-L125",
+          "version": "repo-lines-v1:sha256:760e716b3f179a82decb4c696109a74c0aebad54e1cd0178f2793987898c3a69:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWEzNzBhNWY4MTk2OTA2OWNhZmYyYjAxYWEzYjY1Y2JkZjQ2ZjYzZWVhOWEwM2I0MGYxOGY0Mzk3NDA2NzZiOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODFjNDE3ZjJiMWI1MTYyY2NkZmQ4MTQ1YWViMWZhN2NlNTk1YWVkZWU4YjJhYzYyNDRmOWJlZDA1Y2JlOGRkMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDA2OGJkNmRiZWY2MGI2M2NlMDdjMGQ4ZDY4MWM1YTFlZDZhNTJjMTY0MmUzOGVhMWRhODA0YTlmODk1ZDQ1YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTM0OGUzZjk0MTk4NzhmMTQxNTVjYzVhMGM1YjQwZjAzNWFiYTVjODdhMWQwYTAxZmVhMzIwNjQ2MzA1ZmU2MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5eb21fdaa1ba4ddba2ac40e59ba34f57",
+      "statement": "Product URL reading only accepts public https hosts and manually re-checks every redirect hop so a public link cannot redirect to a private network.",
+      "evidence": [
+        {
+          "resource": "repo://src/marketer/product.ts#L10-L30",
+          "version": "repo-lines-v1:sha256:62d3d8022052ad3b2c29025506359295b72646de2432ae3f0cad26aec6107be7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhMmRlYWY3NTAyNTQ3OGFkNGY3MjA4MmY1ZDgzNjhlMTdhMmI1MGIwMGUzZGFiNTY3MTIwZTQwODIwNjE5MGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmMjgwOWM5Nzg4YzA2ODE3MjRjZDMwZGM4Yjg1MWQ4NGRiYWEyODg2Y2Y3NmY0NjEwOGJkMDQ2NmMyMDZhODIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmZDU4OTIxYTU2MWU5MjE4MGFkNWY5YjAwNmE2ODE4NjZhZDEwNzExMWU0N2FjMGQ5ZThiNmQ3MjQ0NWY1ZTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1YTkzZGY2MDMxOWE1M2I0M2JjYmZiNzdmZGZkNDQ2NGMyNTUxNjI0OWJhZjk1MTdhNDE1ZGNiY2U0ZmEwYWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_497b21e5c77c4f76bd980bb6a1eb21e9",
+      "statement": "The cron syncs the trending API at UTC minute 7 and refreshes TikTok covers because the oEmbed covers are signed and expire.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L168-L177",
+          "version": "repo-lines-v1:sha256:1d5d2a207cd774fb2cbbb338e2f509982492351a7b72ffd53662ab9ebcc820eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5N2NkYmM4NjcxNTA0MjA3NmYwNzc0Zjk0MWMyODg4MTIzMGI4ZGFhNTllOGNmZDM3MjdjODM4ZDZjNDI0NWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwYjBkMWVmYmZiY2JjMjdlYzNhNjE3MTRhNmNmNGUyOTBiMTljYmVlYWEzODE1OWY2OWMyYmRkYzE3MmU3NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjViODFiY2YxNGY0N2NhZDcwNjk0MGJlZjRmOGUzOWRmNTNhZTM4OTEzYmZmMjMyNzRlZDY1MWVhNzMzYjYzYzIifQ"
+        },
+        {
+          "resource": "repo://src/marketer/trending.ts#L184-L237",
+          "version": "repo-lines-v1:sha256:18b7da3591579f61df34c78c67dab994e48a3c02d430083bab3efe80c5d939a2:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlZjM2NWU3M2NkNTNiZDgwZTllNWUxNmNlNzgyZjFhOGUzM2MwYzk4Y2I3NmIyMDQ5MWJhNGJhMGFiOTEzNTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmNmNjNmE5YmZjNGE0MWNlZTYyNGZkMTI1NjcxY2RhNTNiZTdiNmRiN2U5NjJjMzIyYTY3ODEyYjAyN2UwMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c7779333874e4cd8a61a2105911bbb83",
+      "statement": "AI video uploads are limited by type and size, verified by magic bytes, stored in R2 under the user's folder with a marketer_media row, and answer 503 when the MEDIA binding is absent.",
+      "evidence": [
+        {
+          "resource": "repo://src/video/index.ts#L23-L101",
+          "version": "repo-lines-v1:sha256:c2d93ea32024f1706c76d89d2bc4978b176aa896bac200ec6654a215b5cdfb3b:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZDIwNDc0MzQyMTlhMjkwZmUwN2Q2MTQ4Y2JmODAxYjM1Nzc0ZDVhOGQ0NjgwODUzMmNhZjhmY2U1NWJiYzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3ZTUxMDQxN2RlYWE0NmFhZWMwYTYzZjFjY2Y2ZWExYzg5ZjE4N2VmM2U2ZjYwNjg5NTNiNzc2OWQyYWI1NzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmNTMxODZjMDY3YWJlNTNhYzhkNTIyZWY5NjA0N2YwNjNhZDAxNzhhZWFiNGNjYTE3ZDRmNWQ3MjNmODk1NDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b21bc514ca724f9a99a833bbcc8331b1",
+      "statement": "The AI video job handler is a state machine on ai_videos.status (queued, submitting, submitted, done/failed) that defers with JobDeferredError between 30-second polls and gives up after 45 minutes.",
+      "evidence": [
+        {
+          "resource": "repo://src/video/index.ts#L245-L288",
+          "version": "repo-lines-v1:sha256:c4847e5ec35349df77f8c1e36dbb30f575f88a687f8117f0090f0f84ca80a5dd:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhOGI1MjExZjNiM2UyYjVjMGYzNWRmYWM5OWI1NmE2YzQ2ZmU2MWZlNWY2MjkxN2NmNDlmZDZiNjYwZTA3YzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2MDRkMTM1MTdhODI1NmMwNGI5MDA4NTlhMGZhMDhmOWJkMDhlOGFmYWFmYzllZTA2ODViY2ZiNmUyNTRjNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyM2NkODRjZDZkZjQwMjdmNWMyNmMwNjI0ZjI2ZWQ1M2EyYzFiNTY5YWQxMDE4NzQ2MWE2MDY1NDY4MWYwOWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6cbcd067eef94230815d6aa8a79d5c1e",
+      "statement": "A video job found in submitting status is failed as 'submit outcome unknown' instead of resubmitted so the provider is never paid twice; failures throw PermanentJobError so the queue refunds the credits.",
+      "evidence": [
+        {
+          "resource": "repo://src/video/index.ts#L221-L224",
+          "version": "repo-lines-v1:sha256:1036289f5c007c5211098ba76bbdceac750607aee44d644f5ac47bbc4f5d1eb3:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmIxYjBiMjNmYjIwOGNjNmQ0NDllZmU1MzdiN2M4Y2IwYTFkOGNiODU1YzNlOTI1OGYzMGIyYjU0NWE4MDg0YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2RkMGZmMzk0ZTI5Y2UyZWY5NmJmZThiODA3NWJmZGFmYzJlOWRmMzIwNmIyZDBiZmE0ODE5NzE3OTViNjUxYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjYzYzA1YmI5ODFlNjA3YzJjMjI1MDUzYzQ1YjI5OGE5MmQxZjMxNDY3MDMyNDVlYjlmY2I5N2EzZWQ3YmQ0NCJ9"
+        },
+        {
+          "resource": "repo://src/video/index.ts#L258-L275",
+          "version": "repo-lines-v1:sha256:4e49c2c2c9b530e6aa2a83be7aeaedcc661888dcdebbdf3a8d6aeff8b711d19b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhYjVjNjA3MjdjODM2NTQ3YzgyOTg1ZTc2MzFmNTQ2NzljNDFjNTQ2ZDFjZWQyMWVmMmY4YWUxMjAxMjk2N2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMTIzNmYyYWVhMWNlNDJmYTJiMGNjYjI3ODMyYzc4ZjVkOGMxYzE5MjM4YTI0MDkyMjEwNjYzZDUzOWVkNjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFmNTAyOTM0NTQ2YzdmZjg2ZmUxOTY2MWEyNGI2NWY5ZDIyYzgxYzAwM2QwNGIzZjczODc3YTA0ZmMyNTIwOTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1NzE0ZGIyODU4NzVkMzI3YTNiZjAzMjI5N2Y4MWE3ZTZiYjY2YjFhODAzYTk5ZjZlNjM0YmE3NzBlOTkzMDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ca453a2ed0514c9aabc28e637448cb33",
+      "statement": "Media links are HMAC-signed with an expiry of at most 6 hours, serveMedia validates key pattern, expiry and constant-time signature and requires a marketer_media row.",
+      "evidence": [
+        {
+          "resource": "repo://src/video/index.ts#L103-L138",
+          "version": "repo-lines-v1:sha256:b355c2e7b1ccdf623dba9215ddfd80e9d656a8cbe0a2659f1ac12b4848a1a277:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlZmQ3OWIxOGE1ZDc2MzdhZTM3M2Q1ZTk1MjgzMjEwM2MzN2ExMDIwYjg0ODliZmQwMjM0YjE2ZjA1NTE3MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5ZjJkYjIzYzdjMmY2YTM5ZGQzNjRiNWEwNmE1MTNjYzYzYmI3MDU3NDA4YzExYjg5MmVlY2YxNTdjNTU3NTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE0ZmEwZjc5NTdkODM1ZDEzMDlmMWRkZTlkNmNlZjE0ODljOTY3ZDZlNjdiZGM3OGM5ZjkxZDYzN2NmOTEwNDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb3f0ffa6d324b72b444988754c15722",
+      "statement": "Video providers implement the VideoProvider interface (submit, poll, limits, defaults) and register in VIDEO_PROVIDERS; the active one is chosen by VIDEO_PROVIDER.",
+      "evidence": [
+        {
+          "resource": "repo://src/video/index.ts#L28-L36",
+          "version": "repo-lines-v1:sha256:9d08a7ed344fa7c98cfc00f23938fc5df10e03f462dfee056e2a822785b30912:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTVhYjhhYTVhMDdmM2U5NDllY2VlOTNiNTc3NzA2NGFlMTg0OTIwZGZkODQ2OWVkZTc5Njg4N2Y1YjNmODk0OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTRjMTU3MGY3ZDUxNGY3YTk0ZDFkZDQ5NjJmMGQ5Zjg4ZmE3YzYxMTZjYWQ1OWZmZjdmNjZmOGY2M2M0ZTM2YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjA5YWZlYjkyNzBlMzE4NjcyNjBmNjU2MzZkY2RkMmE2ODBkZTBkYzU2ODExOTMzZTM4NWQzZTE1NWU3N2EwNyJ9"
+        },
+        {
+          "resource": "repo://src/video/provider.ts#L24-L42",
+          "version": "repo-lines-v1:sha256:679ab827e4bbf178dac7182f6c4ab2d8a9b4ea976fc898f67d247bf73a04f38b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmYjhhNjcwNWJkMWExZWMyMzI5MWRhZjkxOGI5ZTdiZTE0YjhlNzc0NGNhZTllMzM3MGEwNjYwYmRmZTMwOTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4YjMwYWM1ZmMzNjVlODk4ZmUzMDY1ZjViNWQzMGM3YzM3MGFhNTgzN2I3YmFmZTM1ZmYxODJhMTg2N2QxZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_32f18a661bbe46ec9154e639c8beeab4",
+      "statement": "createAiVideo enqueues an ai_video job costing AI_VIDEO_CREDITS (default 5), returning 402 for insufficient credits and 429 when the plan's parallel-job limit is reached.",
+      "evidence": [
+        {
+          "resource": "repo://src/video/index.ts#L165-L212",
+          "version": "repo-lines-v1:sha256:c1a7504b8de1337c1e3b207413f17f6886f3bf69596b234d7e41ada4a0b058cf:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmYjg3ZjBkNmU3YWFlOWQxMDc0ZjdmNmVhNjkxNmNkMmJkMTFjZDI0ZWQ0YjVmZGUxMTA4MWQ1NjU4YTUxODMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUyNjUwNWU0MTIwYzJlY2Q4NmI0OGY0YjhkOWNjYTJmY2QyNGE2NWIyZGY0ZDlmMTJiZDgyZTdiZmM5YjRkZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwMjNlOTM1N2JkODgwYmJhMGI5OTE5NmE2ZTM3MDRhNjQ0OTJlNWE5ODllNGRlNzA5YjQ1YjlhYjA2OGQ2ODMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dfd87f7a3be24f9caa4ca9203a769a52",
+      "statement": "The studio draft API returns 503 when ANTHROPIC_API_KEY is not configured.",
+      "evidence": [
+        {
+          "resource": "repo://src/studio.ts#L191-L211",
+          "version": "repo-lines-v1:sha256:dd6e5fbb8264355b967ae24951fb9b03ea61257f097784e9e2a0f5c7d8bc2bed:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5NzkyMTk0N2NhMWVjYmMwM2Q4NDMxOWJhNWYxNDBhNDM5MjY0NTM4ZjhhY2E2Y2JlMWVmMmNmNTNjZDk4MmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmZDEyYjBmMDBhMDBiZDVhMjA3MDVkMGYzYmFhNGQwMzM3NTliYjQyZTYxYTBhMTgxMTBhYTg4N2JkYjYzMTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2ZDcyNTJkMTJkNjk0NGNjYTY3NWU5YTM4ZWVhNTU0ZGU3NWViZTJmNjVhMmM4NTg2Mjc0YTAxMTNkZDFjMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQwODY4ZDY4Nzc3ZDY5YjYyYmQxZDc1MzY5Mzc3MWI5NGQ0MTUyYWU5MGZkN2I4NjgxNTNkMzg1YTJhNDA4NWIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}

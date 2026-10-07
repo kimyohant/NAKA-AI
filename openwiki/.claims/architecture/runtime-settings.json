@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:45fadcfe7f35a92d46b321f23072ba99818b97b5262a993c8b09a5d58fe22633",
+  "claims": [
+    {
+      "id": "claim_a03fc2af601a47f596dc138f94d185a6",
+      "statement": "withSettings resolves each registered key as saved panel value, then wrangler var/secret, then switch default; FEATURE_GOOGLE_LOGIN, FEATURE_LINE_LOGIN and FEATURE_TURNSTILE set to off blank their provider credentials.",
+      "evidence": [
+        {
+          "resource": "repo://src/system/store.ts#L75-L89",
+          "version": "repo-lines-v1:sha256:1a0722481f7a00dc040d2fdfc5cd06c3f5ac31ab1525bf6051f277bd847b164d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjYjMwMTQ3MmI5ZDgyNzQ3YWFlNjMxYWVkMzM1OTI5ZmI1OWNjMTk1YzVkZjNkZGVmZjU5ZjJkODFhYmRjYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwOWVkOWFlNWQxZWFmZjIwZTI1ZjRkMzViNzNkYjU5YjFhZDk4OThjNTRiOWE4MWU0ZDliMjkxMWNiNDVhYTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkYjQ0NGM4MzBjMjA1MGRiMWFmYzNkMTJhMDhiZjYxZmYzMjQ3YTBmNWQyMWZkMDBiMjI1MGNiMTU4NTMxM2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a3b79c910b2f4c92a14028d161f54c64",
+      "statement": "Secret settings are AES-GCM encrypted with SETTINGS_KEY, with additional authenticated data binding each ciphertext to its key name; rows with unknown keys or a secret flag that disagrees with the registry are ignored.",
+      "evidence": [
+        {
+          "resource": "repo://src/system/store.ts#L25-L63",
+          "version": "repo-lines-v1:sha256:eeed2272bc42356cc8d67add5335de162aecb98e74ccc023139dfd2934d5ee0b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4NWFlMmU5ZGU5MDY3Mjc3ZTdhMjNmZWJlZmNjMjUxOTkyZmQ1YzdhZTNjNjAyN2FlZjJjOGJlYWZiYTdhNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmYWU2MGM0YWRkMmVhZDIzMjk5YjQ0YjQ1MDVhYTEwYjVkZjRhZTI4YzJiZDVjNTVkNjJmNjgwNDM2YTEzZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhYWVjM2UxMTc4MGI3ZTc4MjU5Yjc4OTI4YWJhYThmMDFmMDgxYmUzMzFmNDhiMGI1MjI1OTM4NmI5OTg3MWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_96ecc3e13820411594f741d4c9f5a4bf",
+      "statement": "Saved settings are cached per D1 binding for 10 seconds per isolate, and an unreadable table falls back to wrangler config.",
+      "evidence": [
+        {
+          "resource": "repo://src/system/store.ts#L47-L73",
+          "version": "repo-lines-v1:sha256:2aa6d368b19b958854759d579755ef84a0550c14d964a502a816bbb61be91f47:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyODQzYWFlMDYyNWI0MjRkNjcyOTZlYzBkM2Y5NjZjNmE5Y2JiMmE2MDk0NDQ2NDJmYjE5MzUxOTVlZjNkNmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjY2U4OTkzMjg1ZDA5MWFmOTA0ZjhhN2VlNjQxZGZiZGE3OTQxYTgyNzY2NWM0MGI4NzE3MjY2NjExMTM2MjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4MzllZjYxYjNlYzc3NDhhZDc3MjQwOTNmZGNhZGFlMmU0OTkwYTBhOGY3NWYzZGNhYTU1YzI5YzQ1NmRmOTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0cde5d0a3f9f463f9e9f503d2ea0743b",
+      "statement": "Only keys listed in the registry are editable in the panel; bindings and root secrets such as SESSION_SECRET, ADMIN_TOKEN, SETTINGS_KEY, SOCIAL_TOKEN_KEY and APP_ORIGIN stay in wrangler config.",
+      "evidence": [
+        {
+          "resource": "repo://src/system/registry.ts#L1-L4",
+          "version": "repo-lines-v1:sha256:7bc312c4f2857dc0b826220f7f4c2b94e4e844d962e487ecaf4d6c2636562d23:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOThhNWRmMzM2MTQ2NjRjMGI0ZmM3NWEyZWY1ZWNhYmEwNjY5ZjgyMWFlNDdlMDk3ZTM4YTBhZTA0YTViMzg3ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDE4YjdjYzkwYjExZDFlNzMzYzBmMWM0ZGFiZjY2YmM5OThhZDE3M2NmMGNkMGNmNDVmZTU1ZDJhNTQxZWIxZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_dbc39617b60147f3a210402427d51112",
+      "statement": "featureOn treats a switch as on when its value is 'on' or unset with a registry default other than 'off'; FEATURE_MAINTENANCE and FEATURE_PAYMENTS default to off.",
+      "evidence": [
+        {
+          "resource": "repo://src/system/registry.ts#L25-L30",
+          "version": "repo-lines-v1:sha256:618b284dbe260259774b8a33dce949d141a359ce316c888c22185d7fbd375438:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmRlZmNjZjRkNWNmNjhhYWRjMWNhYzAzMmE3YTBkNWM4NGIwNWFmZTQyNjdjMjcxYTcxMDU5NjkwMmNhMzEwNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTg1YjZiODM1ZGNjNzJkZDFhYWIxODM4YTE5YzlkZDQ4OWYwMWMxYzA2NDNkOWNhMTNiM2IwYjA1OWI1ZGI3NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzAwYWM1NmQzYjU4NGZlNDg5MDQ5NmI0ZmIzOWM3YTEwMTIzZmIyMmRhMmU0YzYwNDViNjE2NmQ0OWIwZmI3MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmFlMjUxMjI5NmFhNjg1MTBiNzU1YmIzODEzYmUyN2FiNTg5ZmJiNDgzNDIwY2I0MmQ0ODQ5ZDBhOGRlMjYzYSJ9"
+        },
+        {
+          "resource": "repo://src/system/store.ts#L91-L95",
+          "version": "repo-lines-v1:sha256:01700be727a08c10f1b36da17c4c24a1dcaa77b8e6c1fa1e5f416947a435b73d:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzAyYjQ3MzJlYjk2ZWIyNGEyNGMwNmRhNmM0Zjg0MjhjYzljZmZhZDMyYjFiZGE3NGY5MDRmMDcyM2E1NzM4NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWI1MWQwMTQwNTQ5NDQ5MjJiZjFkYWIzYTZmYjBlODFmMmRlZTY0MGJiZWZhYTY3YzM0ZGQyZGYyNDhjM2Y3ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_eaecd1e0efbf43569cc0fdee3499b936",
+      "statement": "Admin setting changes (set, clear, import) write system_audit rows; the admin panel is handled by handleAdminSystem with PUT/DELETE per setting, a bulk import and an audit listing.",
+      "evidence": [
+        {
+          "resource": "repo://src/system/admin.ts#L227-L252",
+          "version": "repo-lines-v1:sha256:f9b852dd83bd63aa26aa407b083a9b8e4f39277505c60cb9f5230feccccde374:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0NGY2M2NhNTRkMDhlNGQwMjhmMjY0MzUzZmVjNjlkMmJkNDg0Yzk1NGVkODZhYTliNjA0YTljODViNGRmYzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmZDEyYjBmMDBhMDBiZDVhMjA3MDVkMGYzYmFhNGQwMzM3NTliYjQyZTYxYTBhMTgxMTBhYTg4N2JkYjYzMTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiMzhlMjI1MDQ5OGYzM2E5Yzg3ODRhM2I5MDVmOWU5ZDgzZjMxZmE5OGU0ODY1NzVjNzllZjY3ZWIwMmI1NDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYxZTljNzIxOTQwNTJiZDdiMDRiNDljNDZlZjA4YzI3MzU2OTkxOGVmNDY1N2ZlMDM2MDlhZTk3YTE0MTY3NjUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}

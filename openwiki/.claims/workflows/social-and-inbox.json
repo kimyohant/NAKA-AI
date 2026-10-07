@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:91b7ce1eef651903ec7e57ce20b814e77f14ea00ccbd2842b99cfad03ed36cba",
+  "claims": [
+    {
+      "id": "claim_3cf728f82f8447659f623946675b3d74",
+      "statement": "Meta page tokens are AES-GCM encrypted with SOCIAL_TOKEN_KEY, with AAD binding each ciphertext to user, platform and external account id.",
+      "evidence": [
+        {
+          "resource": "repo://src/social/crypto.ts#L1-L29",
+          "version": "repo-lines-v1:sha256:fb5ad912979e07313104f0f1bd4749cb6e32658cc771ac574a01ee0e32c6a9b1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhM2Q3MGNlZWJmNTM4MmU3ODQwMmE4YTIxMDI1ZGQ0YzdjZDY1M2ZiZDdmZWQwYjlkNzczOGQyZjRhNmI1NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhMzQyYjA5ZjgwZmM5NDQ3YzNhNmYwNjExMWFjNjY4ZjdlZjZmMzIyMGJjMGNjZDM3MDEyMjU4ZWYyYzBhN2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3NTk3NjEwYjBmNDJiOTg2MzlhMGU3YmI4ZWQ5MzIxNGNkMGQ1YmE3ZDljYWZiMGVkZjIwODIzNDcxMDgzZDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e5b629be3224536a95087e204f259d7",
+      "statement": "The Meta OAuth start stores a hashed one-time state with a 10-minute expiry and the callback consumes it with DELETE RETURNING, bound to the signed-in user and matching the state cookie.",
+      "evidence": [
+        {
+          "resource": "repo://src/social/oauth.ts#L6-L30",
+          "version": "repo-lines-v1:sha256:685a5c527dca6b720026bf9645b2058c60ae5e87958192c365362d0e33edcdf2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4OTljOWE3Yjc0ODlhOGUwNzhjZGNjMTZiNjM2NTRkZWY3MTEyOTQ4MWU1ZTkxOWNlNjk4ZjcxM2M1NzBhMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyM2JkZGMwMmNmNDE1YTIwYjhjZGRmYjZjMTkzNDZhZTFjYTUzYWRlM2ZlYjc0M2VmMTgyNDcwYTY1NmIwYzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZhYjllODI3MGE0YjlmYTFhOGEwNzlmMDlkNDQ1ZDU0MDJiZmIwNGY4MTE4NGJlNWI5ZDY1MDFmMzRkNzM0ZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3NjIwNDhjMWFiODUyNjNkM2Y3N2E2MzA3ZDU4OTk3MTNkYTM4NzhhMzRkMmUzYjBhZjc4OTMzMzgxMDBiYTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_61bc8babf88e454283628fcef5068fb7",
+      "statement": "publishDuePosts quarantines posts that crashed after the publish call was sent as publish_outcome_unknown instead of retrying, to avoid duplicate public posts.",
+      "evidence": [
+        {
+          "resource": "repo://src/social/posts.ts#L92-L100",
+          "version": "repo-lines-v1:sha256:6b1321d28b47774f289ace782143ab76447625941077ce511b6438bc9ee6b68c:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDZjNzQ0NjlmNzZhMGIxNDNjY2VmYzk3NTdhYjVlMWNiMmI1ODQ1OGMxMWMwZGJlODE2MDYyZmY3NWQ1ZTMxYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmI4ODRlNWYyNjMwNTg5NTgyMWE2NjNiYTZiZGU4OTI1OWVkNTBiNmYxODk2Njc3NWZiM2Q3MmQwNWU1ZTU1YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWY4NjAxMzUxMTdhODZmN2Q2NzBkYTc2ZmM4Njk4ZWFjNDgxNWZiNjZiNDIxMTkxNmM2MWY0ZDM4MzZmZjIwNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmVlMzk1YWZkYjgwOTZjOWQ1M2IzM2Y5ZDg3YmI1YjZjMDMwNjFmYmRhNDZlM2NlM2IzNDRiZTA0M2FlZDk2OSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_57499f74e62a4e10a9760561dcd3fd03",
+      "statement": "Post state writes are fenced by the current lease_id and lease_until, and Instagram publishing creates a container, polls it up to 30 times, then publishes once.",
+      "evidence": [
+        {
+          "resource": "repo://src/social/posts.ts#L47-L89",
+          "version": "repo-lines-v1:sha256:ce0f87ea59123aedab9fd97fbc15b2e94d093545cc2420c2f9d8eb0c59c7ca08:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyNmJjZmM5NGU0NmY4ZjgyZTFjZTc2MDQ5OTFjNmUxNDJjMzI0OTk5ZmU3YzBjNDhjY2YwZDBlMTFmNTQwZmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyOWM4MzJlYmViZWZkYjQ4OTQzOTg1MTlhZGU2NGU5NzM3MmY1M2QyOTYwZmM2NTM4OWY5OGU2YmY1ZTA0YmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVjNTgwOGM4ZTgzN2U5ODFlYTdjZTBkOWFiY2M0MDk5ODgxYjNlYmQwMjgyYWJlMzQzNzJjMzNkZGIwMDE4ZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjNlOWIyY2MxZjg2YzJiNjFhM2ZiMTZkMTNhM2JhYzE0ODI0YmY2NDkxYzUxYjRjMmUxNzA1YmVmNjM3NDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_de560c20f8e44d9082418f60ce6dc008",
+      "statement": "Failed post publishes are retried only in the safe prepare phase, up to 5 attempts with exponential backoff capped at one hour.",
+      "evidence": [
+        {
+          "resource": "repo://src/social/posts.ts#L101-L120",
+          "version": "repo-lines-v1:sha256:f4be374576e3eb8d2602bd4155f30acdffd9b9199696939b3b8f5317fb363d04:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjZmY0M2I3NDYwMDkwNGI0Y2MzZjM4MTRlMTkzNzYyZjRlMzkxNWQ3YmIxYTIyZjJjNDUxZTJjNDA4ZGU4M2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5NWU2M2VkNjU3ZTU5Njk2NjQ2ODI3ZTE0ZjkwMWRiNTRmZDI5NGIwOGZhYjY2NDk5NzViZTExNjkzZGNhMGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4NzVlMzRiZTNhYWM1NjAzMTFhZmEwNDBmNjcwMzE4OWE2YmU1NWFjZTkyZGIxMTFmY2U1ODgyNGE0YjFiNjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjZDdjYTg5MzMwNjgzNTM4YmMwZjEwYmU0OTQ4NzZkMWU1NWY4ZDU0YWU0MzFmZDg4MWQ4NDc2ZmZlZmVhMjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_408cd72dff0447ada55b06d0942dcc99",
+      "statement": "Disconnecting a social account blanks its token, marks it revoked and fails its queued posts in one batch.",
+      "evidence": [
+        {
+          "resource": "repo://src/social/index.ts#L30-L35",
+          "version": "repo-lines-v1:sha256:3c475c7145bacd5177bfcaf41540dbbc7a20c061aae8d675d25c8b32b4eb6005:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDNlOTUwMWM2OTY4NTQ5NjQyMGFiN2E2OTBkZWVlYjM1Y2QxMmRiODA3NDA4YTA2MWFkYWI3ZDA4OGM1MTE5NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDAyMWMwMWRhMzlmYWU2YzhhNmY5OTU3MjcwZTI3Zjc1YzM2NmZmOGU5ZWFkMDNjNGMwNjBkMjNkMzNlNzQzYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDcxNzU3NWNkYmFlYjRmYmJkYmJkNDA1YTI0M2U0YWI4ZDdiNTVmNGMyMWY3N2UyYzNhM2ViYjg3Y2U0YjA1ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODFkZTA2MjZmNWZhOTliN2RlYzZkYmRhNjkwODY5MWQ3ZTA2YTQ1YjQ1ZTk2NjQ1NzM5NzNmMzk4Y2Y0MDg2MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_79a05def5aba45209bd5ed758d72bf5b",
+      "statement": "The Meta webhook verifies X-Hub-Signature-256 over the original bytes (256 KiB cap), stores the raw body idempotently keyed by its SHA-256, and acknowledges only after the durable insert, returning 503 on database failure so Meta retries.",
+      "evidence": [
+        {
+          "resource": "repo://src/inbox/webhook.ts#L5-L43",
+          "version": "repo-lines-v1:sha256:ce08186bbd743f2dd96776b70ba27100774f448fa43b67bdb069830f01ce4496:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzYmViODU0ZDhhNTgzOWFmMzJiYzY1MjEyMGI5YWU4Nzc1MjE2NjRhMjg2MzZlZjQ0YmQ4ZjFmMDM5MjZlYzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI0M2E1ZjFlODc5YTM5YmI1Y2MyZTc5ZWQ2ZTUwMmYxMzFlZDdiZjhlNjcwZDVkYTYwYTJlMjYwZmFhZmMxYWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b1b084e47f8c403c93e1194f1be290fa",
+      "statement": "Inbox queue admission uses a 60-second queue_token lease and enqueues inbox jobs with cost 0 and countsTowardLimit false, so replies never consume plan parallel slots; stuck sends older than 120 seconds are marked uncertain and the thread is paused for a human.",
+      "evidence": [
+        {
+          "resource": "repo://src/inbox/queue.ts#L7-L58",
+          "version": "repo-lines-v1:sha256:ae2b76e78b5e9230e6e329753b29a1d0093911cb3e9ab063149c7ff7100dc9df:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlNThjZjRlYjc1ODlmYzM5YmJlMzU5Zjk3NzI5OTZiOGViOTYzM2EwM2JiOGZlZDYzN2MzM2M2OGM4YTIwZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzYjk3MTZjYzkzZGQ1ZmQyNWY1OTBjMWE4MmRjNjJjYTMwOGVhODQyZGZiMGQ4YzVjYzE5YmIzYjlkMDI3MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxNWUxZjZkZWIxN2E4NGE0ODI5MzBjMjRhZGU3YzQzYWJjZDY2YjM2N2I3NDRjNzAyNjY0YTJmZTA5ZjQ5ZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxZjc1YTBiMTA3N2E5YTViYjRlNGVhNTAzODcwODBkMTMyYmUyMDc4NGE2ZDM0MzU4NTYwOTkxZTlmOWVlMTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_778c19f67ee44b36a9775b6adf934686",
+      "statement": "Inbox drafting escalates to a human without calling the model for escalation keywords, injection phrases, attachments, private data in public comments, or an empty knowledge base, and converts replies containing numbers absent from the supplied facts into a handoff.",
+      "evidence": [
+        {
+          "resource": "repo://src/inbox/draft.ts#L60-L87",
+          "version": "repo-lines-v1:sha256:010a9ecd323c7a82704a701a1611c5d8a26e8a600ee984bc5b3a752d18947d7f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MmI0MTRkNzJiMjI3NTg3NDZlYjQ1MDM2NTQ4OGIzMTFhOGEyNDY5Y2E4NWM0ODhkOWIxNzVlNDcwODM0MDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwMzcyMTgyZWUyNGViNDJhM2FkOTFjYzMzOWE5MzY1Yjg0Njg3YWM2NTk1OTA5MTRhYTA2MjIxZjcwNDM0ZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5N2NlYThkMzhhZTI4NzVhYjNhZDJjOGU5M2FlNmNhZWYyMDRkNmJhZGNhMTYzZGMwMTFhYTc5ZWJkMWJjODQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2Yjc2ZmZlZGE4MTMwODliMjFlYWY3OWM4MzQ1ODNjYTg2ZjdjZmJlMmUyZjgyNjFmOWZmMzhiMjhmOWRjYjQifQ"
+        },
+        {
+          "resource": "repo://src/inbox/policy.ts#L1-L20",
+          "version": "repo-lines-v1:sha256:ef8cafa9d960be93b227a427e69a57502beac9efc1f8e05f6398c5fc0c59fda3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2MDY4ZDFmMjk1MzAwYjFjNGFhMjFlN2JkNzY3NjU4Njk4ODVhOTg3ZDg4ZGI4MGI3M2U5MGVhY2JiZDRiNjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4e98f445044a4ac08ea1685c4e6a42d3",
+      "statement": "Automatic sending happens only in auto mode with high confidence and no handoff; sendReply claims the message with a conditional UPDATE re-checking revisions and the 24-hour DM window, and an unconfirmed send is marked uncertain and pauses the thread with no automatic resend.",
+      "evidence": [
+        {
+          "resource": "repo://src/inbox/draft.ts#L88-L96",
+          "version": "repo-lines-v1:sha256:80873d7b6a7a69b8162ee2f67c2f5f2462a3d0f8537f4c802d10b97c9cdaba65:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDZiYTllMGE5OTFjYzlkYmM5OWVjZTAyMTg0NGJiZDQ5MGJmNDRhYzgyMzBlNDYwYWY4YzZhMGFmZGY3MWMwZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWQ1MmI2ODgxMTZjNjAwOTZmMGI2MzEwMGRjNTI5ODMzMDA5YThjODU5NDFlY2E4NDI3NWEzYmY2ZTFjNTM4OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjYxMGYwMjdkZWM5NDAyMzY4Y2EwNGFjMDk1M2JkYTU0NjQzMDM2YzQ0OTM2MDJlYWQzOTdkOTc4NTA1Mjg2YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2RiMTMyOWRiNTVlZmY0MzAwNDA5MDRkNmQ0MDhmOTRkZWYwYzM4MTBhNmI3ZjkyMmVjMDM2ZGM3ODQxNzlkNiJ9"
+        },
+        {
+          "resource": "repo://src/inbox/send.ts#L10-L66",
+          "version": "repo-lines-v1:sha256:42ba9076294f4dd52b3cc0f6df8b09a79200f77f37fcbbcfb80943c438d93c2e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmMDU5ZjNhYzZkYmJjOTlmYjY2NDIyZmYwZTE2NGJjNDY0ZjUzYzYwYzA3Y2U1Yzk2MGYxNDg1NjNlNjZiMWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjMTIwMDEwODc2NjIyNTQ5ZjBmZTgyOTUxMzZhZTk2NmI0MGI4MGQwMDcxYTJlNDNhZmJhY2YzNTExOGZlYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:45fbe17b32367207c3e78a401a058f1963fdf7fad8878b6a2fbfb3f06a0064e6",
+  "claims": [
+    {
+      "id": "claim_ee7c357835d544b4adc0277824995b25",
+      "statement": "The LINE webhook verifies an HMAC-SHA256 signature over the raw body, acknowledges immediately, and processes events in ctx.waitUntil; with FEATURE_LINE_BOT off it acknowledges and does nothing.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L210-L224",
+          "version": "repo-lines-v1:sha256:802aacb3fa068dd7abcf06c60ad3fc57ae37e35e729ff9c6f60161c987f4bbd9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjNzVhM2MyYTU2NGFkMjlmNjU1OTRmOWE2MjRlMTExMTEzNTc1ZjBjNWMyZjczZTk0YTdjYmMzZGMxZmY1YjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEwNWFlYmY3MGY5NDhkZmYyMDczMjZiNjUzZmU2MDJlZjY4MDZiNmI1YWZjYzlmOTExNDdiZTgzNDVmN2UyYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5N2I3ZDRkZGMyZTYyMjFmNTMxNTBmYzAwMGNlNWE5M2YyZTlkNTkyYTA3OTNhZDlmOWU1YmVkZDIxYWNiMjIifQ"
+        },
+        {
+          "resource": "repo://src/line.ts#L6-L17",
+          "version": "repo-lines-v1:sha256:d406a239f221ebaa45f45b34dd5aea7e6850c18b1bab0cb83a8a9c1d0572e764:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZGJjZWQ1MWZmZGFkMzJjZGMzMDVmMWRkYTBjMDlmOTM2ODk1NjliNGQzMTlkNzZhMWRjZGNhZGFhNjYyODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0NzBjNDI3OWU2MThiNmFjYmMzZGQ5NDdmMjc2NzM2YzQ4OGU0NGM2Mjk5YWJmZTJkZjNjYTQyOWE1ODI2N2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjExYmVhMzM2NDY3M2RmZmFiMDExODVhNWE1MjVkMjA3NDdlMGIzOWMyZmY4NTYwZjYxYjU5NzhlZmMyNmM0NmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_699badf297db4c37bfd678370159ca16",
+      "statement": "In human mode the bot only logs messages; an image message is treated as a likely payment slip and switches the conversation to human mode.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L226-L256",
+          "version": "repo-lines-v1:sha256:f9aba477a3086561974641a3df385bf661ed5300693e6f1b67112dc630abc93c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyNTBhNmU5ZWVmNzVjNGExYTc3OTBlNTJiZGUzZGRjYjdmNDgyYzhkNjEwNWQxNmU1Y2QzOTk3MWVkMmM1MmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxMzQ1MTgwMTA1YjBjNjZhNzdkYWQ1MWJiMzc5MDFhMzczMmM5NjU0YmE0ZGUzOTgxZjgxZTE4MTc1MjQ4YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjOTY5NTNmOTFjMTA3NWJkNjNhMmU3MWQ2MjQ1ODU2YTg2ZmE4ZWExZjVhZDM1MGI4MWRmZDExODhiYWE2NjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjMGE0NmJiN2YwZDAyNWVhNzcwZjM1MWY1ZWQzYzMzZmYyZDdmMTAwZDhhODdmY2ViNjBiMTFmYmQ0ZmQ5NmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bdfe2fa352304d3ba3ceec6fffd85d49",
+      "statement": "The sales agent runs a tool loop of up to 6 rounds with search_products, create_order, check_my_orders and handoff_to_human, takes prices and stock only from tools, and hands off to a human on model refusal.",
+      "evidence": [
+        {
+          "resource": "repo://src/agent.ts#L115-L175",
+          "version": "repo-lines-v1:sha256:9f09ff695097e24f954aa5413b33e08404bfb2c0dc0044cef146eb3af98121fa:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzYWFlNDVlZGRjMmUxMmYzZGVmNTA2MTc1OTlhMGFiOGE4OTdlM2U1OWE3ZTg4YzA3OWZiN2UyNTUyZThlOTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmMmRiOWVlOTk1ODM3ODdhM2MwZWRiZDhkZmZiZDc5MjVlYmU3Y2RjM2JiZGU0MWY5MzI4ZWM3MTVmNGMwOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/agent.ts#L12-L69",
+          "version": "repo-lines-v1:sha256:6f500b632c5358c7bd642de1286f23a0681d748e1e8ea4abcfb2704aa605aa78:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkYzYxYTZhMWI2Yjc1NzJmNDI2NmM1N2Q0ZjE5YzliODE2ZDMzNDY0NzYyNmMxMzIzZDU5OWJlOTQ1YTNiYTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4YzNiMzRjMDkxMzRmOTc3MGU5OGMzNTBmZjJiNjE2YmRjNjQ0MTgzOWQ2OGJiZjRhYmQyMjkzMTZlN2Y4NzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlZDJjODkzZjc2NTk3NDQ5ZjFjMGVjNGVmM2I1N2RhMzhhNDdiMDdkMzdjZTZmZjBiZDE2MTlkNGY2MWIxODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRkOThmNmM3YTVmZWU5MDUwMmYxYWQ3NDc2ZGNlNGI0MzYyMmFiYTE2M2M4YzA2NTgxNjQzYWQxNjEzNjg3ZjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2154f091154341458a6df55879e42f56",
+      "statement": "Tool errors are logged by class only and the model receives a generic Thai retry message, keeping database and provider error text out of the conversation.",
+      "evidence": [
+        {
+          "resource": "repo://src/agent.ts#L159-L168",
+          "version": "repo-lines-v1:sha256:64395481bb77b80289cc31f15a97c945e7c1b9dfbb62d329e26b2d1ccbd4a01d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1YTEzYzYyM2ZhOTJhMjAwNWExYTk1NjM5NTEyMjk4M2YxZTJiYmZlZGQ4YzkwYjQ4OGZmNTdlYjQwYmRhZmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5ZWI2MTU2ZWUzODYzZGFiOTg5NDUzNGYwZjcxODYwNzU0ZDM2Njg0YzY3ZjYxMjgzOTIxMTI0OWYxNDRjOTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFjZWE5YzMwNDRjNjQ3NzA5MjZlNmUwN2NmOGZiMTA0NjE4NDUzNjg1ZGZkMWYzNTNkNmI5ZTUzYTY2MTY1MjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3640909f77204039aa991faa1994f296",
+      "statement": "createOrder decrements stock with a guarded UPDATE per item and inserts the order in one batch, and compensates by restoring stock and deleting the order if a concurrent order took the stock.",
+      "evidence": [
+        {
+          "resource": "repo://src/db.ts#L35-L72",
+          "version": "repo-lines-v1:sha256:188129f29ffe7a292ce2ef8ee713ee0d9e40de5356878ac5dd2d55987ed2a7d3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3NjgzYjI0ZTQ0ZjE0NGUwMTFlOGVhZGRjZDZlZjI5ZDViMDhmNDhjYWY1ZDAxZWEyMzZkZTg5ODBlYTdjYmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5NjMxYWM1N2Y1NTA4NDE3NDUzNmRhZmU2MTUwNDA2NThmOWUwOGY4MjljYmVlMWE4MTQzN2EzZDg3YzkxYjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjMGUzYmMzZmU4NDRlMWExOWFmZTBiNTBmMGNhZDgxMjQxNTk5MDQ4NWUyNDZiOGZkN2JiMzQ2MzAxOThiZDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c062e3c1fe104f479a8602f095a2663f",
+      "statement": "saveConversation keeps only the last 20 history turns and drops leading non-user turns.",
+      "evidence": [
+        {
+          "resource": "repo://src/db.ts#L99-L112",
+          "version": "repo-lines-v1:sha256:9b4262d6af54bb6a5809d4016c26f125cc8931f00af2bf29c388521dbfabd460:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1OTIxNWViNzhhOTgwYjQ5MzY1MGQ2YjUxY2Q3ZjFkNzZhNDcyMmU4MWZjY2YxYWEyM2I2M2RkYmVjMDgxYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViMDZhZjM3NGU3MjhiODExYzc2NjY5ODI0YWE2ZmI5ZmI0YjRlODExNTdiYzVkMzRhYmU4OWZkZDljNjI0NWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0ZjM4MjUwMDA5NGVlMTVmZmE4NzUwYzY4NTA2NTM3MGViMDBkY2U4YjQyYmZmOWFjZDc5NThiYzQ4ZDk3NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dc0c3b248a174705ad111cd628e600d3",
+      "statement": "replyOrPush replies with the token and falls back to a push message, splitting text into at most five 5000-character chunks and logging only status codes.",
+      "evidence": [
+        {
+          "resource": "repo://src/line.ts#L19-L45",
+          "version": "repo-lines-v1:sha256:eeef1bed2d047c762c770194877982263e26ebc34750ec319979482428f36359:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhZDk1MWIwMWNjMWRlM2ZmY2Q5MTM3YjA0NTNmZTlhYTdiOGM0NjRlYzRlYjY1YThlMGQ3MzM5MzhiZDAxYzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNlOWJjYzcwNmJmOWEzNzAxZGE3NzhkMTA4NmZmMDQ5ZWNmOTIwNjJjNmQ2ZmEwOTA2Njg4MDQ5OThkNTUyZjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkMTIyZmJhOTBkZmU5OWNkNWRjZDdmMGUxMTE0Yzg3OTQ3NjI4NjY0MWRjN2U5MWNhMzJhMzA4MDc5ZTE2NDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3a28fcadc8764083a75251ae898f479a",
+      "statement": "The legacy admin handler manages products, orders (status pending/paid/shipped/cancelled), shop_name/shop_info settings, LINE conversations with human takeover and manual replies, manual credit grants, and a test chat.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L264-L388",
+          "version": "repo-lines-v1:sha256:d282174bde29712f81f3150dcddf20122deb988361f9d342d62274c1558e2707:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2MGVhY2U1YmFlN2NmNTFkZGE0MDU2ZGNiNmFmYTlkZjkwN2M1MWQ3ZjA3MGFlNGJhZWJiMGQ0MDE2OTkyNGJhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJlMjJmYWE1MzViZDJlYTNkNTJlNzQxZWQ0NTQ0MzViN2ZlNDllODM1ODZlOTQzZDk4ZDgyYmJmYjI0ZDFmNWM1IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1N2M3MWNhOGU0NjE5YmM0MWFiNzBmMjMzYTk5ODU5Y2Y5NDcwNTM1MmJmZTg4OTBjOGFjN2E5NzdmOGU4NzVkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}
