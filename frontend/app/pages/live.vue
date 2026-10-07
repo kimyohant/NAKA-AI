@@ -125,6 +125,40 @@
       <!-- ===== Comments: AI replies from shop facts ===== -->
       <section class="card lv-col" aria-labelledby="lv-comments">
         <h2 id="lv-comments" class="lv-col-title">{{ t('live.comments.title') }}</h2>
+
+        <!-- TikTok LIVE: comments / gifts / follows stream in from the channel that is live -->
+        <div class="lv-tiktok">
+          <div class="lv-tiktok-head">
+            <strong>{{ t('live.tiktok.title') }}</strong>
+            <span class="tag" :class="tiktokTagClass">{{ t(`live.tiktok.status.${tk.status}`) }}</span>
+            <span v-if="tk.status === 'connected'" class="lv-hint mono">👁 {{ tk.viewers }} · ♥ {{ tk.totalLikes }}</span>
+          </div>
+          <form class="lv-row" @submit.prevent="tiktokConnect">
+            <input v-model="tiktokUser" class="input lv-flex mono" maxlength="60" :placeholder="t('live.tiktok.usernamePh')" :disabled="tiktokBusy || tkActive" />
+            <button v-if="!tkActive" class="btn btn-primary btn-sm" type="submit" :disabled="tiktokBusy || !tiktokUser.trim()">
+              <Loader2 v-if="tiktokBusy" :size="12" class="animate-spin" /><Link2 v-else :size="12" /> {{ t('live.tiktok.connect') }}
+            </button>
+            <button v-else class="btn btn-sm" type="button" :disabled="tiktokBusy" @click="tiktokDisconnect"><Unlink :size="12" /> {{ t('live.tiktok.disconnect') }}</button>
+          </form>
+          <p v-if="tk.error && !tkActive" class="lv-error">{{ tk.error }}</p>
+          <label class="lv-check"><input v-model="autoAnswer" type="checkbox" /> {{ t('live.tiktok.autoAnswer') }}</label>
+          <label class="lv-check"><input v-model="autoThanks" type="checkbox" /> {{ t('live.tiktok.autoThanks') }}</label>
+          <ul v-if="feed.length" class="lv-feed" aria-live="polite">
+            <li v-for="e in feed" :key="e.id" :class="`k-${e.kind}`">
+              <template v-if="e.kind === 'chat'">
+                <span class="lv-feed-who">{{ e.user?.nickname }}</span> {{ e.text }}
+                <button class="lv-feed-btn" type="button" :disabled="answering" :title="t('live.tiktok.answerThis')" @click="answerTikTok(e)"><Sparkles :size="11" /></button>
+              </template>
+              <template v-else-if="e.kind === 'gift'">🎁 <span class="lv-feed-who">{{ e.user?.nickname }}</span> {{ e.gift?.name }}<span v-if="(e.gift?.count || 1) > 1"> ×{{ e.gift?.count }}</span></template>
+              <template v-else-if="e.kind === 'follow'">➕ <span class="lv-feed-who">{{ e.user?.nickname }}</span> {{ t('live.tiktok.followed') }}</template>
+              <template v-else-if="e.kind === 'share'">↗ <span class="lv-feed-who">{{ e.user?.nickname }}</span> {{ t('live.tiktok.shared') }}</template>
+              <template v-else-if="e.kind === 'member'"><span class="lv-feed-who">{{ e.user?.nickname }}</span> {{ t('live.tiktok.joined') }}</template>
+              <template v-else>{{ e.text }}</template>
+            </li>
+          </ul>
+          <p v-if="pendingChats.length" class="lv-hint">{{ t('live.tiktok.pending', { n: pendingChats.length }) }}</p>
+        </div>
+
         <label class="field">
           <span class="field-label">{{ t('live.comments.faq') }}</span>
           <textarea v-model="faq" class="input" rows="3" maxlength="3000" :placeholder="t('live.comments.faqPh')"></textarea>
@@ -141,7 +175,7 @@
 
         <ul class="lv-thread">
           <li v-for="item in thread" :key="item.id" class="lv-msg">
-            <p class="lv-msg-in"><strong>{{ item.viewer || t('live.comments.viewer') }}</strong> {{ item.comment }}</p>
+            <p class="lv-msg-in"><span v-if="item.source === 'tiktok'" class="tag lv-tag-tiktok">TikTok</span> <strong>{{ item.viewer || t('live.comments.viewer') }}</strong> {{ item.comment }}</p>
             <p v-if="item.reply" class="lv-msg-out">{{ item.reply }}</p>
             <p v-else class="lv-hint">{{ t('live.comments.ignored') }}</p>
             <div class="lv-msg-foot">
@@ -177,6 +211,15 @@
               <span class="field-hint">{{ t('live.settings.rtmpHint') }}</span>
             </label>
             <button v-if="status?.config.hasRtmpUrl" type="button" class="btn btn-ghost btn-sm lv-start" @click="form.rtmpUrl = null">{{ t('live.settings.rtmpClear') }}</button>
+            <label class="field">
+              <span class="field-label">{{ t('live.settings.tiktokUser') }}</span>
+              <input v-model="form.tiktokUsername" class="input mono" maxlength="60" placeholder="@nakashop" />
+            </label>
+            <label class="field">
+              <span class="field-label">{{ t('live.settings.tiktokSignKey') }}</span>
+              <input v-model="form.tiktokSignApiKey" class="input mono" type="password" autocomplete="off" :placeholder="status?.config.hasTiktokSignKey ? t('live.settings.saved') : t('live.settings.optional')" />
+              <span class="field-hint">{{ t('live.settings.tiktokHint') }}</span>
+            </label>
           </div>
           <div class="dialog-foot">
             <button type="button" class="btn" :disabled="saving" @click="showSettings = false">{{ t('common.cancel') }}</button>
@@ -202,13 +245,13 @@
 </template>
 
 <script setup lang="ts">
-import { Cpu, Hand, Loader2, MessageSquare, MonitorPlay, Pause, Play, Plus, Radio, Settings2, Sparkles, Square, Volume2, VolumeX, X } from 'lucide-vue-next'
+import { Cpu, Hand, Link2, Loader2, MessageSquare, MonitorPlay, Pause, Play, Plus, Radio, Settings2, Sparkles, Square, Unlink, Volume2, VolumeX, X } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import ConfirmDialog from '~/components/ConfirmDialog.vue'
 import { toastError } from '~/composables/useToast'
-import { liveAPI, type LiveStatus } from '~/composables/useApi'
-import { LIVE_VOICES, nextQueueIndex, waitUntilQuiet } from '~/utils/liveFlow'
+import { liveAPI, type LiveStatus, type TikTokEvent, type TikTokStatus } from '~/composables/useApi'
+import { LIVE_VOICES, enqueueLimited, isAnswerable, nextQueueIndex, thanksLine, waitUntilQuiet } from '~/utils/liveFlow'
 
 const { t } = useI18n()
 const VOICES = LIVE_VOICES
@@ -236,6 +279,7 @@ async function refresh() {
     if (first) {
       avatarId.value = s.config.avatarId || avatarId.value
       voice.value = s.config.voice || voice.value
+      tiktokUser.value = tiktokUser.value || s.config.tiktokUsername || ''
     }
     if (running.value && !previewOn.value && !previewConnecting) connectPreview()
     if (!running.value && previewOn.value) closePreview()
@@ -250,10 +294,12 @@ let statusTimer: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
   loadDraft()
   refresh()
+  pollTikTok() // pick up a connection that is still open on the backend
   statusTimer = setInterval(refresh, 5000)
 })
 onBeforeUnmount(() => {
   if (statusTimer) clearInterval(statusTimer)
+  stopTikTokPolling()
   playing.value = false
   closePreview()
 })
@@ -377,7 +423,7 @@ async function playQueue() {
 function pauseQueue() { playing.value = false }
 
 // ---------- comments ----------
-interface ThreadItem { id: number; viewer: string; comment: string; reply: string | null; handoff: boolean; reason: string; spoken: boolean }
+interface ThreadItem { id: number; viewer: string; comment: string; reply: string | null; handoff: boolean; reason: string; spoken: boolean; source?: 'manual' | 'tiktok' }
 const faq = ref('')
 const viewer = ref('')
 const comment = ref('')
@@ -389,7 +435,7 @@ async function answer() {
   answering.value = true
   try {
     const r = await liveAPI.answer({ comment: comment.value.trim(), viewer: viewer.value.trim(), product: { ...product }, faq: faq.value })
-    const item: ThreadItem = { id: ++threadId, viewer: viewer.value.trim(), comment: comment.value.trim(), ...r, spoken: false }
+    const item: ThreadItem = { id: ++threadId, viewer: viewer.value.trim(), comment: comment.value.trim(), ...r, spoken: false, source: 'manual' }
     thread.value.unshift(item)
     thread.value = thread.value.slice(0, 50)
     comment.value = ''
@@ -402,6 +448,88 @@ async function speakReply(item: ThreadItem) {
   if (!item.reply) return
   await sayNow(item.reply, true)
   item.spoken = true
+}
+
+// ---------- TikTok LIVE: comments / gifts / follows from the channel that is live ----------
+const tk = reactive<TikTokStatus>({ status: 'idle', username: '', error: '', connectedAt: null, viewers: 0, totalLikes: 0, lastEventId: 0 })
+const tkActive = computed(() => tk.status === 'connecting' || tk.status === 'connected')
+const tiktokTagClass = computed(() => (tk.status === 'connected' ? 'tag-success' : tk.status === 'error' ? 'lv-tag-warn' : ''))
+const tiktokUser = ref('')
+const tiktokBusy = ref(false)
+const autoAnswer = ref(true)
+const autoThanks = ref(true)
+const feed = ref<TikTokEvent[]>([])
+const pendingChats = ref<TikTokEvent[]>([])
+let lastEventId = 0
+let tkTimer: ReturnType<typeof setTimeout> | null = null
+let lastThanksAt = 0
+const particle = computed(() => (/Niwat/i.test(voice.value) ? 'ครับ' : 'ค่ะ'))
+
+async function tiktokConnect() {
+  tiktokBusy.value = true
+  try {
+    Object.assign(tk, await liveAPI.tiktokConnect(tiktokUser.value.trim()))
+    pollTikTok()
+  } catch (err) {
+    toastError(err)
+    await pollTikTok(true)
+  } finally { tiktokBusy.value = false }
+}
+async function tiktokDisconnect() {
+  tiktokBusy.value = true
+  try {
+    Object.assign(tk, await liveAPI.tiktokDisconnect())
+    pendingChats.value = []
+  } catch (err) { toastError(err) } finally { tiktokBusy.value = false }
+}
+function stopTikTokPolling() {
+  if (tkTimer) { clearTimeout(tkTimer); tkTimer = null }
+}
+/** poll every 1.5 s while connected; `once` refreshes the status without scheduling the next poll */
+async function pollTikTok(once = false) {
+  stopTikTokPolling()
+  try {
+    const { events, ...st } = await liveAPI.tiktokEvents(lastEventId)
+    Object.assign(tk, st)
+    if (events.length) {
+      lastEventId = events[events.length - 1].id
+      feed.value = [...events.slice().reverse(), ...feed.value].slice(0, 60)
+      for (const e of events) onTikTokEvent(e)
+    }
+  } catch { /* backend restarting; the next poll tries again */ }
+  if (!once && tkActive.value) tkTimer = setTimeout(() => pollTikTok(), 1500)
+}
+function onTikTokEvent(e: TikTokEvent) {
+  if (e.kind === 'chat' && autoAnswer.value && isAnswerable(e.text)) {
+    pendingChats.value = enqueueLimited(pendingChats.value, e, 5)
+    drainChats()
+  } else if ((e.kind === 'gift' || e.kind === 'follow') && autoThanks.value && running.value && Date.now() - lastThanksAt > 10_000) {
+    lastThanksAt = Date.now()
+    sayNow(thanksLine(e, particle.value)) // queued after the current line, no interrupt
+  }
+}
+/** one comment at a time, with a short gap so the avatar is not answering non-stop */
+let draining = false
+async function drainChats() {
+  if (draining) return
+  draining = true
+  try {
+    while (pendingChats.value.length && autoAnswer.value) {
+      const e = pendingChats.value.shift()!
+      await answerTikTok(e)
+      await new Promise(r => setTimeout(r, 6000))
+    }
+  } finally { draining = false }
+}
+async function answerTikTok(e: TikTokEvent) {
+  if (!product.name.trim()) { toast.error(t('live.comments.needProduct')); return }
+  answering.value = true
+  try {
+    const r = await liveAPI.answer({ comment: e.text || '', viewer: e.user?.nickname || '', product: { ...product }, faq: faq.value })
+    const item: ThreadItem = { id: ++threadId, viewer: e.user?.nickname || '', comment: e.text || '', ...r, spoken: false, source: 'tiktok' }
+    thread.value = [item, ...thread.value].slice(0, 50)
+    if (item.reply && running.value) await speakReply(item)
+  } catch (err) { toastError(err) } finally { answering.value = false }
 }
 
 // ---------- drafts (per browser; product/FAQ/lines survive a reload) ----------
@@ -421,17 +549,20 @@ watch([product, faq, lines], () => {
 // ---------- settings ----------
 const showSettings = ref(false)
 const saving = ref(false)
-const form = reactive<{ agentUrl: string; token: string; rtmpUrl: string | null }>({ agentUrl: '', token: '', rtmpUrl: '' })
+const form = reactive<{ agentUrl: string; token: string; rtmpUrl: string | null; tiktokUsername: string; tiktokSignApiKey: string }>({ agentUrl: '', token: '', rtmpUrl: '', tiktokUsername: '', tiktokSignApiKey: '' })
 function openSettings() {
   form.agentUrl = status.value?.config.agentUrl || ''
   form.token = ''
   form.rtmpUrl = ''
+  form.tiktokUsername = status.value?.config.tiktokUsername || ''
+  form.tiktokSignApiKey = ''
   showSettings.value = true
 }
 async function saveSettings() {
   saving.value = true
   try {
-    await liveAPI.saveConfig({ agentUrl: form.agentUrl, token: form.token, rtmpUrl: form.rtmpUrl, avatarId: avatarId.value, voice: voice.value })
+    await liveAPI.saveConfig({ agentUrl: form.agentUrl, token: form.token, rtmpUrl: form.rtmpUrl, avatarId: avatarId.value, voice: voice.value, tiktokUsername: form.tiktokUsername, tiktokSignApiKey: form.tiktokSignApiKey })
+    if (form.tiktokUsername && !tkActive.value) tiktokUser.value = form.tiktokUsername.replace(/^@/, '')
     showSettings.value = false
     toast.success(t('live.settings.savedToast'))
     status.value = null
@@ -487,6 +618,19 @@ async function saveSettings() {
 .lv-msg-in { color: var(--text-1); }
 .lv-msg-out { color: var(--text-0); padding-left: 10px; border-left: 2px solid var(--accent); }
 .lv-msg-foot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.lv-tiktok { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-soft); }
+.lv-tiktok-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lv-tiktok-head strong { font-size: 13px; }
+.lv-tag-tiktok { background: #111; color: #fff; border-color: #333; font-size: 10px; }
+.lv-feed { margin: 0; padding: 0; list-style: none; max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; font-size: 12px; line-height: 1.45; }
+.lv-feed li { display: block; padding: 3px 6px; border-radius: 6px; color: var(--text-1); }
+.lv-feed li.k-chat { background: var(--surface-raised); }
+.lv-feed li.k-gift { color: #f59e0b; }
+.lv-feed li.k-follow, .lv-feed li.k-share { color: var(--accent-text); }
+.lv-feed li.k-member, .lv-feed li.k-system { color: var(--text-3); font-size: 11px; }
+.lv-feed-who { font-weight: 700; }
+.lv-feed-btn { float: right; width: 22px; height: 20px; display: grid; place-items: center; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-2); cursor: pointer; }
+.lv-feed-btn:disabled { opacity: .4; }
 .lv-dialog { width: min(520px, 94vw); }
 .lv-dialog-body { display: flex; flex-direction: column; gap: 12px; }
 .lv-start { align-self: flex-start; }

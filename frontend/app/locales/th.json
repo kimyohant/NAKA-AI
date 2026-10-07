@@ -2501,12 +2501,37 @@
       "rtmpHint": "คัดลอกจากหน้า Live Producer ของ TikTok / Facebook — ใครได้ stream key ไปจะไลฟ์ในช่องของคุณได้",
       "rtmpClear": "ลบ stream key ที่บันทึกไว้",
       "save": "บันทึก",
-      "savedToast": "บันทึกการตั้งค่า AI Live แล้ว"
+      "savedToast": "บันทึกการตั้งค่า AI Live แล้ว",
+      "tiktokUser": "ช่อง TikTok ที่จะดึงคอมเมนต์",
+      "tiktokSignKey": "Euler Stream API key (ไม่บังคับ)",
+      "optional": "ไม่บังคับ",
+      "tiktokHint": "ใช้โปรแกรม tiktok-live-connector (ไม่เป็นทางการ) ผ่าน sign server ของ Euler Stream — ใช้ฟรีได้แต่จำกัดจำนวนครั้ง ใส่ key ถ้าเชื่อมบ่อย"
     },
     "voices": {
       "premwadee": "เปรมวดี (หญิง)",
       "achara": "อัจฉรา (หญิง)",
       "niwat": "นิวัฒน์ (ชาย)"
+    },
+    "tiktok": {
+      "title": "คอมเมนต์จากไลฟ์ TikTok",
+      "status": {
+        "idle": "ยังไม่เชื่อม",
+        "connecting": "กำลังเชื่อม…",
+        "connected": "เชื่อมแล้ว",
+        "disconnected": "หลุดการเชื่อมต่อ",
+        "ended": "ไลฟ์จบแล้ว",
+        "error": "เชื่อมไม่สำเร็จ"
+      },
+      "usernamePh": "ชื่อช่อง TikTok ที่กำลังไลฟ์ (เช่น nakashop)",
+      "connect": "เชื่อม",
+      "disconnect": "ตัดการเชื่อม",
+      "autoAnswer": "ให้ AI ตอบคอมเมนต์ TikTok อัตโนมัติ",
+      "autoThanks": "ให้อวตารขอบคุณคนส่งของขวัญ / กดติดตาม",
+      "answerThis": "ให้ AI ตอบคอมเมนต์นี้",
+      "followed": "กดติดตาม",
+      "shared": "แชร์ไลฟ์",
+      "joined": "เข้ามาในไลฟ์",
+      "pending": "คอมเมนต์รอตอบ {n} ข้อความ"
     }
   }
 }

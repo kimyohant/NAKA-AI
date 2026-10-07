@@ -630,6 +630,8 @@ export interface LiveConfig {
   hasRtmpUrl: boolean
   rtmpHost: string
   configured: boolean
+  tiktokUsername: string
+  hasTiktokSignKey: boolean
 }
 export interface LiveAgentHealth {
   livetalking: { running: boolean; since: number | null; avatar: string | null; voice: string | null; model: string | null }
@@ -639,12 +641,30 @@ export interface LiveAgentHealth {
   models_ready: boolean
 }
 export interface LiveStatus { config: LiveConfig; online: boolean; agent: LiveAgentHealth | null; error?: string }
+export type TikTokEventKind = 'chat' | 'gift' | 'follow' | 'share' | 'member' | 'system'
+export interface TikTokEvent {
+  id: number
+  at: number
+  kind: TikTokEventKind
+  user?: { uniqueId: string; nickname: string }
+  text?: string
+  gift?: { name: string; count: number; diamonds: number }
+}
+export interface TikTokStatus {
+  status: 'idle' | 'connecting' | 'connected' | 'disconnected' | 'ended' | 'error'
+  username: string
+  error: string
+  connectedAt: number | null
+  viewers: number
+  totalLikes: number
+  lastEventId: number
+}
 export interface LiveProductInput { name: string; details?: string; price?: string; promo?: string; shop?: string }
 
 export const liveAPI = {
   config: () => api.get<LiveConfig>('/live/config'),
   // token / rtmpUrl: '' keeps the stored value, null clears it (they are never sent back)
-  saveConfig: (data: { agentUrl?: string; token?: string | null; avatarId?: string; voice?: string; rtmpUrl?: string | null }) => api.put<LiveConfig>('/live/config', data),
+  saveConfig: (data: { agentUrl?: string; token?: string | null; avatarId?: string; voice?: string; rtmpUrl?: string | null; tiktokUsername?: string; tiktokSignApiKey?: string | null }) => api.put<LiveConfig>('/live/config', data),
   status: () => api.get<LiveStatus>('/live/status'),
   start: (data: { avatarId?: string; voice?: string } = {}) => api.post<{ ready: boolean }>('/live/start', data),
   stop: () => api.post('/live/stop', {}),
@@ -657,6 +677,10 @@ export const liveAPI = {
   script: (product: LiveProductInput, opts: { tone?: string; minutes?: number } = {}) => api.post<{ lines: string[] }>('/live/script', { product, ...opts }),
   answer: (data: { comment: string; viewer?: string; product: LiveProductInput; faq?: string }) =>
     api.post<{ reply: string | null; handoff: boolean; reason: string }>('/live/answer', data),
+  // TikTok LIVE comments (unofficial tiktok-live-connector on the backend)
+  tiktokConnect: (username?: string) => api.post<TikTokStatus>('/live/tiktok/connect', username ? { username } : {}),
+  tiktokDisconnect: () => api.post<TikTokStatus>('/live/tiktok/disconnect', {}),
+  tiktokEvents: (after: number) => api.get<TikTokStatus & { events: TikTokEvent[] }>(`/live/tiktok/events?after=${after}`),
   /** WHEP preview: raw SDP in, raw SDP out (not the JSON envelope) */
   async whep(offer: string): Promise<string> {
     const resp = await fetch(`${BASE}/live/whep`, { method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: offer })

@@ -74,3 +74,28 @@ test('sidebar links to /live; every t() key on the page exists in th and en', ()
     assert.equal(typeof get(en, k), 'string', `en missing ${k}`)
   }
 })
+
+test('TikTok helpers: answerable comments, bounded queue, fixed thank-you lines', async () => {
+  const { isAnswerable, enqueueLimited, thanksLine } = await import('../app/utils/liveFlow.js')
+  assert.equal(isAnswerable('ราคาเท่าไหร่คะ'), true)
+  assert.equal(isAnswerable('ok'), true)
+  assert.equal(isAnswerable('5555'), false)
+  assert.equal(isAnswerable('❤️❤️🔥'), false)
+  assert.equal(isAnswerable('ก'), false)
+  let q = []
+  for (let i = 1; i <= 7; i++) q = enqueueLimited(q, i, 5)
+  assert.deepEqual(q, [3, 4, 5, 6, 7])
+  assert.equal(thanksLine({ kind: 'gift', user: { nickname: 'Bob' }, gift: { name: 'Rose', count: 3 } }, 'ค่ะ'), 'ขอบคุณคุณBob สำหรับRose 3 ชิ้นนะค่ะ')
+  assert.equal(thanksLine({ kind: 'follow', user: { nickname: 'Ann' } }, 'ครับ'), 'ขอบคุณคุณAnn ที่กดติดตามนะครับ')
+  assert.equal(thanksLine({ kind: 'member', user: { nickname: 'x' } }), '')
+})
+
+test('TikTok on the page: connect/poll/auto-answer wiring and API routes', () => {
+  for (const p of ['/live/tiktok/connect', '/live/tiktok/disconnect', '/live/tiktok/events?after=']) assert.ok(api.includes(p), `missing ${p}`)
+  assert.match(page, /liveAPI\.tiktokEvents\(lastEventId\)/)
+  assert.match(page, /setTimeout\(\(\) => pollTikTok\(\), 1500\)/)
+  assert.match(page, /enqueueLimited\(pendingChats\.value, e, 5\)/)
+  assert.match(page, /source: 'tiktok'/)
+  assert.match(page, /stopTikTokPolling\(\)/)
+  assert.match(page, /v-model="form\.tiktokSignApiKey"[^>]*type="password"/)
+})

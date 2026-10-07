@@ -33,3 +33,33 @@ export async function waitUntilQuiet(isSpeaking, keepGoing, opts = {}) {
   }
   return false
 }
+
+// ---------- TikTok LIVE events → avatar ----------
+
+/** worth sending to the AI: at least 2 letters/digits, not just emoji or "555" laughter */
+export function isAnswerable(text) {
+  const t = String(text || '').trim()
+  const letters = t.replace(/[^\p{L}\p{N}]/gu, '')
+  if (letters.length < 2) return false
+  if (/^5{3,}$/.test(letters)) return false
+  return true
+}
+
+/** keep at most `max` pending comments, dropping the oldest (the avatar answers what is current) */
+export function enqueueLimited(queue, item, max = 5) {
+  const next = [...queue, item]
+  return next.length > max ? next.slice(next.length - max) : next
+}
+
+/** fixed thank-you line for a gift or a follow (no LLM, so it is instant and never invents anything) */
+export function thanksLine(event, particle = 'ค่ะ') {
+  const name = (event?.user?.nickname || event?.user?.uniqueId || '').trim()
+  const who = name ? `คุณ${name} ` : ''
+  if (event?.kind === 'gift') {
+    const g = event.gift || {}
+    const count = Number(g.count) > 1 ? ` ${g.count} ชิ้น` : ''
+    return `ขอบคุณ${who}สำหรับ${g.name || 'ของขวัญ'}${count}นะ${particle}`
+  }
+  if (event?.kind === 'follow') return `ขอบคุณ${who}ที่กดติดตามนะ${particle}`
+  return ''
+}

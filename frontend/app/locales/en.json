@@ -2501,12 +2501,37 @@
       "rtmpHint": "Copy it from TikTok / Facebook Live Producer — anyone with the stream key can broadcast on your channel",
       "rtmpClear": "Remove the saved stream key",
       "save": "Save",
-      "savedToast": "AI Live settings saved"
+      "savedToast": "AI Live settings saved",
+      "tiktokUser": "TikTok channel to read comments from",
+      "tiktokSignKey": "Euler Stream API key (optional)",
+      "optional": "Optional",
+      "tiktokHint": "Uses the unofficial tiktok-live-connector through the Euler Stream sign server — free but rate limited; add a key if you connect often"
     },
     "voices": {
       "premwadee": "Premwadee (female)",
       "achara": "Achara (female)",
       "niwat": "Niwat (male)"
+    },
+    "tiktok": {
+      "title": "TikTok LIVE comments",
+      "status": {
+        "idle": "Not connected",
+        "connecting": "Connecting…",
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "ended": "Live ended",
+        "error": "Connection failed"
+      },
+      "usernamePh": "TikTok channel that is live (e.g. nakashop)",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "autoAnswer": "AI answers TikTok comments automatically",
+      "autoThanks": "Avatar thanks gifts and new followers",
+      "answerThis": "Answer this comment with AI",
+      "followed": "followed",
+      "shared": "shared the live",
+      "joined": "joined",
+      "pending": "{n} comment(s) waiting"
     }
   }
 }

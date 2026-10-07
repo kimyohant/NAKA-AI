@@ -4,11 +4,13 @@
  * - GET/PUT /config · GET /status · POST /start /stop /say /interrupt · GET /speaking
  * - POST /push/start /push/stop (RTMP ไปแพลตฟอร์ม) · POST /whep (SDP พรีวิว, text/plain ↔ application/sdp)
  * - POST /script (live_host) · POST /answer (live_responder) · POST /free-gpu (ปลดโมเดล Unsloth)
+ * - POST /tiktok/connect /tiktok/disconnect · GET /tiktok/events?after= (คอมเมนต์ไลฟ์ TikTok)
  */
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { success, badRequest } from '../utils/response.js'
 import * as live from '../services/ai-live.js'
+import * as tiktok from '../services/tiktok-live.js'
 
 const app = new Hono()
 
@@ -38,6 +40,20 @@ app.post('/free-gpu', c => run(c, () => live.freeUnslothGpu()))
 
 app.post('/script', async c => { const b = await body(c); return run(c, () => live.writeHostScript(b)) })
 app.post('/answer', async c => { const b = await body(c); return run(c, () => live.answerComment(b)) })
+
+// TikTok LIVE comments (services/tiktok-live.ts): connect to a channel that is live, then poll events
+app.post('/tiktok/connect', async (c) => {
+  const b = await body(c)
+  return run(c, async () => {
+    const saved = live.getTikTokSettings()
+    const username = String(b.username || saved.username || '')
+    const status = await tiktok.connectTikTok({ username, signApiKey: saved.signApiKey })
+    if (b.username) live.saveLiveConfig({ tiktokUsername: status.username }) // remember the last channel
+    return status
+  })
+})
+app.post('/tiktok/disconnect', c => run(c, () => tiktok.disconnectTikTok()))
+app.get('/tiktok/events', c => run(c, () => tiktok.tiktokEvents(c.req.query('after'))))
 
 // WHEP: the browser posts its raw SDP offer; we answer with the raw SDP from SRS
 app.post('/whep', async (c) => {

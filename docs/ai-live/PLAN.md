@@ -46,8 +46,25 @@ browser ◀── WebRTC media (SRS :8000 tcp/udp) ── SDP via backend → ag
 - **Secrets in Studio:** the token and the RTMP URL (it contains the stream key) live only in the backend. The API returns `hasToken`, `hasRtmpUrl` and `rtmpHost` instead.
 - **Going live** asks for confirmation (ConfirmDialog) because it broadcasts publicly.
 
+## TikTok LIVE comments
+
+- **Library:** `tiktok-live-connector@2.5.0` (zerodytrash). It is **AGPL-3.0-only**, unofficial and reverse engineered, and signs requests through the Euler Stream server. It was added at the owner's request for study. Before offering Studio to customers, review the AGPL obligations or move this file into a separate service.
+- **Isolation:** the library is imported only in `backend/src/services/tiktok-live.ts`, so removing that file and its 3 routes removes it completely.
+- **Connection:** read only and anonymous, for a channel that is live. Events go into an in-memory ring buffer of 300, and the page polls `GET /live/tiktok/events?after=<id>` every 1.5 s. There is no automatic reconnect, to respect sign-server rate limits.
+- **Events kept:**
+  - chat
+  - gift, once per streak, with its name, count and diamonds
+  - follow, share, member
+  - viewer count and total likes
+  - stream end and disconnect
+- **Page behaviour:**
+  - comments worth answering (`isAnswerable`) queue up, newest 5 kept;
+  - `live_responder` answers one comment at a time with a 6 s gap, and the reply interrupts the script;
+  - gifts and follows get a fixed thank-you line (`thanksLine`, no LLM), at most one every 10 s.
+- **Settings:** `tiktokUsername` is saved; `tiktokSignApiKey` is a secret that is never returned (`hasTiktokSignKey`).
+
 ## Not in this round
 
-- reading comments automatically from TikTok/Facebook (comments are pasted)
+- Facebook live comments (TikTok is read automatically, see above)
 - several simultaneous sessions (`--max_session 1`)
 - MuseTalk avatars (the agent accepts the model name, but the UI starts wav2lip)
