@@ -76,6 +76,26 @@
               :busy="creatingVariants"
               @create="createVariants"
             />
+            <label class="field wc-engine">
+              <span class="field-label">{{ t('viralClone.variants.engineLabel') }}</span>
+              <select
+                class="input"
+                :value="detail.renderEngine || 'naka'"
+                :disabled="savingEngine || anyVariantBusy"
+                @change="changeEngine($event.target.value)"
+              >
+                <option value="naka">{{ t('viralClone.variants.engineNaka') }}</option>
+                <option value="hypit" :disabled="hypit && !hypit.available && detail.renderEngine !== 'hypit'">
+                  {{ t('viralClone.variants.engineHypit') }}
+                </option>
+              </select>
+              <span class="field-hint">
+                {{ detail.renderEngine === 'hypit' ? t('viralClone.variants.engineHypitHint') : t('viralClone.variants.engineNakaHint') }}
+              </span>
+              <span v-if="hypit && !hypit.available" class="field-hint wc-engine-warn">
+                {{ t('viralClone.variants.engineHypitUnavailable', { reason: hypit.reason || '' }) }}
+              </span>
+            </label>
             <button
               v-if="variants.length"
               class="btn btn-primary wc-render-all" type="button"
@@ -163,6 +183,8 @@ const savingBlueprint = ref(false)
 const creatingVariants = ref(false)
 const renderingAll = ref(false)
 const savingRef = ref(false)
+const savingEngine = ref(false)
+const hypit = ref(null)
 const deletingVariant = ref(false)
 const delTarget = ref(null)
 
@@ -275,6 +297,27 @@ async function createVariants(matrix) {
   }
 }
 
+async function loadHypitStatus() {
+  try {
+    hypit.value = await cloneAPI.hypitStatus()
+  } catch {
+    hypit.value = null
+  }
+}
+
+async function changeEngine(engine) {
+  if (!detail.value || engine === detail.value.renderEngine) return
+  savingEngine.value = true
+  try {
+    await cloneAPI.update(projectId, { renderEngine: engine })
+    await refresh(true)
+  } catch (e) {
+    toastError(e)
+  } finally {
+    savingEngine.value = false
+  }
+}
+
 async function renderVariant(variantId) {
   try {
     await cloneAPI.renderVariant(variantId)
@@ -335,6 +378,7 @@ async function saveReference() {
 onMounted(() => {
   refresh()
   loadMeta()
+  loadHypitStatus()
 })
 onBeforeUnmount(() => {
   if (pollTimer) clearTimeout(pollTimer)
@@ -453,6 +497,8 @@ onBeforeUnmount(() => {
 /* === Variants === */
 .wc-variants-side { display: flex; flex-direction: column; gap: 14px; }
 .wc-render-all { align-self: flex-start; }
+.wc-engine { max-width: 320px; }
+.wc-engine-warn { color: var(--warning, #b7791f); }
 .wc-variant-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));

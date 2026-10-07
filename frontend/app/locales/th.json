@@ -2382,7 +2382,13 @@
       "deleteTitle": "ลบตัวแปร",
       "deleteMessage": "ลบตัวแปร “{label}”? วิดีโอที่เรนเดอร์แล้วจะเรียกดูจากหน้านี้ไม่ได้อีก",
       "deleted": "ลบตัวแปรแล้ว",
-      "noneYet": "ยังไม่มีตัวแปร — เลือก hook/สินค้า/ภาษา แล้วกดสร้าง"
+      "noneYet": "ยังไม่มีตัวแปร — เลือก hook/สินค้า/ภาษา แล้วกดสร้าง",
+      "engineLabel": "เอนจินเรนเดอร์ขั้นสุดท้าย",
+      "engineNaka": "NAKA (ffmpeg + ซับ)",
+      "engineHypit": "Hypit (HyperFrames)",
+      "engineNakaHint": "ต่อคลิปด้วย ffmpeg แล้วฝังซับ ASS — ค่าเริ่มต้น",
+      "engineHypitHint": "ต่อคลิปและวาดซับด้วย Hypit (headless Chromium) — ล้มเมื่อไหร่จะถอยกลับเอนจิน NAKA ให้อัตโนมัติ · Powered by Hypit (hypit.ai)",
+      "engineHypitUnavailable": "Hypit ยังไม่พร้อมในเครื่องนี้: {reason}"
     },
     "reference": {
       "transcriptTitle": "Transcript",

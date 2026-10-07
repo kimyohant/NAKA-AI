@@ -760,6 +760,10 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     )`,
     `CREATE INDEX IF NOT EXISTS idx_creative_results_creative ON creative_results (creative_id)`,
   ] },
+  // v17: Viral Clone เลือก engine render ขั้นสุดท้ายต่อโปรเจกต์ — 'naka' (ffmpeg merge + ASS) | 'hypit' (study/hypit, HyperFrames)
+  { version: 17, columns: [
+    { table: 'clone_projects', column: 'render_engine', ddl: "ALTER TABLE clone_projects ADD COLUMN render_engine TEXT NOT NULL DEFAULT 'naka'" },
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {

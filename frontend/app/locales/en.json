@@ -2382,7 +2382,13 @@
       "deleteTitle": "Delete variant",
       "deleteMessage": "Delete variant “{label}”? Its rendered video will no longer be reachable here",
       "deleted": "Variant deleted",
-      "noneYet": "No variants yet — pick hooks/products/languages and create"
+      "noneYet": "No variants yet — pick hooks/products/languages and create",
+      "engineLabel": "Final render engine",
+      "engineNaka": "NAKA (ffmpeg + captions)",
+      "engineHypit": "Hypit (HyperFrames)",
+      "engineNakaHint": "Joins clips with ffmpeg and burns ASS captions — default",
+      "engineHypitHint": "Joins clips and draws captions with Hypit (headless Chromium) — falls back to the NAKA engine automatically on failure · Powered by Hypit (hypit.ai)",
+      "engineHypitUnavailable": "Hypit is not ready on this machine: {reason}"
     },
     "reference": {
       "transcriptTitle": "Transcript",
