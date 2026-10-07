@@ -3,7 +3,7 @@
 // ADMIN_TOKEN, SETTINGS_KEY, SOCIAL_TOKEN_KEY, APP_ORIGIN) stays in wrangler config — see LOCKED.
 
 export type SettingKind = 'secret' | 'text' | 'select' | 'number' | 'switch';
-export type SettingGroup = 'features' | 'general' | 'payments' | 'ai' | 'email' | 'login' | 'sms' | 'line_bot' | 'meta';
+export type SettingGroup = 'features' | 'general' | 'payments' | 'ai' | 'video' | 'email' | 'login' | 'sms' | 'line_bot' | 'meta';
 
 export interface SettingDef {
   key: string;
@@ -23,7 +23,8 @@ const feature = (key: string, label: string, help: string, fallback: 'on' | 'off
 
 export const SETTINGS: readonly SettingDef[] = [
   feature('FEATURE_MAINTENANCE', 'โหมดปิดปรับปรุง', 'เปิดแล้ว API ของลูกค้าตอบ "ปิดปรับปรุงชั่วคราว" ทั้งหมด (หลังร้านและ webhook ยังทำงาน)', 'off'),
-  feature('FEATURE_PAYMENTS', 'ชำระเงินออนไลน์ (Stripe)', 'ปิดแล้วลูกค้าเริ่มจ่ายเงินใหม่ไม่ได้ รายการที่จ่ายไปแล้วยังเข้าระบบตามปกติ'),
+  // Off by default since 2026-10-06: naka-ai runs as a non-commercial study project (the AI video code it may use is CC BY-NC-SA).
+  feature('FEATURE_PAYMENTS', 'ชำระเงินออนไลน์ (Stripe)', 'ปิดแล้วลูกค้าเริ่มจ่ายเงินใหม่ไม่ได้ รายการที่จ่ายไปแล้วยังเข้าระบบตามปกติ', 'off'),
   feature('FEATURE_CLIPS', 'สร้างคลิปรีวิว', 'ปิดแล้วลูกค้าส่งงานสร้างคลิปใหม่ไม่ได้ งานที่อยู่ในคิวยังทำต่อจนเสร็จ'),
   feature('FEATURE_SOCIAL', 'โพสต์โซเชียลอัตโนมัติ', 'ปิดแล้วหยุดโพสต์ตามเวลาและปิดหน้าเชื่อมเพจ'),
   feature('FEATURE_INBOX', 'AI Inbox', 'ปิดแล้วหยุดตอบแชตเพจอัตโนมัติ ข้อความใหม่ยังถูกเก็บไว้'),
@@ -49,6 +50,12 @@ export const SETTINGS: readonly SettingDef[] = [
   { key: 'TRENDING_API_URL', group: 'ai', kind: 'text', label: 'API คลิปมาแรง (FastMoss / Kalodata)', help: 'https ที่ตอบ JSON รายการคลิป · ระบบดึงทุกชั่วโมง · ว่าง = ใช้เฉพาะคลิปที่คัดเองและไฟล์นำเข้า', pattern: /^https:\/\/[^\s]+$/, max: 500 },
   { key: 'TRENDING_API_KEY', group: 'ai', kind: 'secret', label: 'คีย์ API คลิปมาแรง', help: 'ส่งเป็น Authorization: Bearer' },
   { key: 'TRENDING_API_USD_RATE', group: 'ai', kind: 'number', label: 'อัตราแลกเปลี่ยน USD → บาท ของ API คลิปมาแรง', help: 'ใส่เมื่อ API ส่งยอดขายเป็นดอลลาร์ · ว่าง = เป็นบาทอยู่แล้ว', max: 1000 },
+  { key: 'VIDEO_PROVIDER', group: 'video', kind: 'select', label: 'ผู้ให้บริการวิดีโอ AI', help: 'สำหรับทำซ้ำคลิปไวรัล เปลี่ยนคน/สินค้า และโฆษณาหลายแบบ · ต้องเปิด R2 ด้วย', options: ['off', 'seedance', 'wan', 'minimax'] },
+  { key: 'VIDEO_API_KEY', group: 'video', kind: 'secret', label: 'คีย์ผู้ให้บริการวิดีโอ AI' },
+  { key: 'VIDEO_BASE_URL', group: 'video', kind: 'text', label: 'Base URL', help: 'ว่าง = ค่าเริ่มต้นของผู้ให้บริการ (ภูมิภาคสากล)', pattern: /^https:\/\/[^\s]+$/, max: 200 },
+  { key: 'VIDEO_MODEL', group: 'video', kind: 'text', label: 'รุ่นโมเดล', help: 'ว่าง = รุ่นเริ่มต้นของผู้ให้บริการ', pattern: /^[\w.:-]{2,80}$/, max: 80 },
+  { key: 'VIDEO_RESOLUTION', group: 'video', kind: 'select', label: 'ความละเอียด', help: '720p คมกว่า แต่ต้นทุนสูงกว่า 480p ราว 2 เท่า', options: ['720p', '480p'] },
+  { key: 'AI_VIDEO_CREDITS', group: 'general', kind: 'number', label: 'เครดิตต่อวิดีโอ AI', help: 'ว่าง = 5 · ตั้งตามต้นทุนจริงของผู้ให้บริการ', max: 100 },
   { key: 'EMAIL_PROVIDER', group: 'email', kind: 'select', label: 'ระบบส่งอีเมล (ลืมรหัสผ่าน)', help: 'resend = เปิดลืมรหัสผ่านทางอีเมล', options: ['off', 'resend'] },
   { key: 'RESEND_API_KEY', group: 'email', kind: 'secret', label: 'Resend API key', pattern: /^re_[A-Za-z0-9_]{10,}$/ },
   { key: 'EMAIL_FROM', group: 'email', kind: 'text', label: 'อีเมลผู้ส่ง', help: 'เช่น naka-ai <no-reply@naka-ai.com>', max: 120,

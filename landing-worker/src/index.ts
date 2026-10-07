@@ -17,6 +17,7 @@ import { handleSocial, publishDuePosts } from "./social";
 import { handleStudio } from "./studio";
 import { handleMarketer, makeMarketerHandlers, refreshTrendingCovers, syncTrendingApi } from "./marketer";
 import { handleAdminMarketer } from "./marketer/admin";
+import { AI_VIDEO_JOB_KIND, makeAiVideoHandler } from "./video";
 import { handleAdminSystem } from "./system/admin";
 import { featureOn, withSettings } from "./system/store";
 import type { Env } from "./types";
@@ -63,7 +64,7 @@ export default {
     }
     if (url.pathname === "/api/marketer" || url.pathname.startsWith("/api/marketer/")) {
       // Config, trending and signed images are public; tasks and product lookups need a session.
-      const user = /^\/api\/marketer\/(trending|image)$/.test(url.pathname) ? null : await requireUser(request, env);
+      const user = /^\/api\/marketer\/(trending|image|media\/.+)$/.test(url.pathname) && request.method === "GET" ? null : await requireUser(request, env);
       const kick = () => ctx.waitUntil(runQueue(env.DB, jobHandlers(env), { maxJobs: 2, concurrency: 2 })
         .catch((err) => console.error("queue kick failed", errorSummary(err))));
       return (await handleMarketer(request, env, url, user, kick)) ?? json({ error: "not found" }, 404);
@@ -198,7 +199,7 @@ function closedFeature(env: Env, url: URL, method: string): Response | null {
 }
 
 function jobHandlers(env: Env): Record<string, JobHandler> {
-  return { [AFFILIATE_JOB_KIND]: makeAffiliateHandler(env), [INBOX_JOB_KIND]: makeInboxHandler(env), ...makeMarketerHandlers(env) };
+  return { [AFFILIATE_JOB_KIND]: makeAffiliateHandler(env), [INBOX_JOB_KIND]: makeInboxHandler(env), ...makeMarketerHandlers(env), [AI_VIDEO_JOB_KIND]: makeAiVideoHandler(env) };
 }
 
 const LINE_WEBHOOK_MAX_BYTES = 256 * 1024; // LINE payloads are small; anything larger is refused unread

@@ -6,6 +6,7 @@ import { CATEGORIES, EXPERTS, GROUPS, TEMPLATES } from "./catalog";
 import { MARKETER_COST_CREDITS, MARKETER_JOB_KINDS, MarketerInputError, parseMarketerInput, type MarketerKind } from "./ai";
 import { ProductUrlError, proxyImage, readProductPage } from "./product";
 import { listTrending, VIEW_BANDS } from "./trending";
+import { activeProvider, aiVideoCredits, createAiVideo, listAiVideos, serveMedia, uploadMedia, VideoError } from "../video";
 
 export { makeMarketerHandlers } from "./ai";
 export { refreshTrendingCovers, syncTrendingApi } from "./trending";
@@ -25,6 +26,15 @@ async function readJson(request: Request, max: number): Promise<unknown> {
   const bytes = await readBodyBytes(request, max);
   if (bytes === null) throw new MarketerError(413, "ข้อมูลใหญ่เกินไป");
   try { return JSON.parse(new TextDecoder().decode(bytes)); } catch { throw new MarketerError(400, "ข้อมูลไม่ถูกต้อง"); }
+}
+
+/** Whether AI video is ready, and what it costs — the page hides or explains the video buttons. */
+function videoConfig(env: Env) {
+  try {
+    const { provider } = activeProvider(env);
+    if (!env.MEDIA) return { enabled: false, reason: "ยังไม่ได้เปิดที่เก็บไฟล์ (R2)" };
+    return { enabled: true, credits: aiVideoCredits(env), provider: provider.label, limits: provider.limits };
+  } catch (error) { return { enabled: false, reason: error instanceof VideoError ? error.message : "ยังไม่พร้อม" }; }
 }
 
 const KIND_BY_JOB = new Map<string, MarketerKind>(Object.entries(MARKETER_JOB_KINDS).map(([k, v]) => [v, k as MarketerKind]));
@@ -78,7 +88,7 @@ export async function handleMarketer(request: Request, env: Env, url: URL, user:
     if (path === "/config" && method === "GET") {
       return json({ ai: !!env.ANTHROPIC_API_KEY?.trim(), cost: MARKETER_COST_CREDITS, categories: CATEGORIES, groups: GROUPS,
         experts: Object.fromEntries(Object.entries(EXPERTS).map(([k, v]) => [k, v.label])), templates: TEMPLATES,
-        viewBands: Object.keys(VIEW_BANDS), signedIn: !!user });
+        viewBands: Object.keys(VIEW_BANDS), signedIn: !!user, video: videoConfig(env) });
     }
     if (path === "/trending" && method === "GET") {
       const q = url.searchParams;
@@ -86,6 +96,12 @@ export async function handleMarketer(request: Request, env: Env, url: URL, user:
         days: q.get("days") ?? undefined, sort: q.get("sort") ?? undefined, region: q.get("region") ?? undefined }) }, 200, "public, max-age=120");
     }
     if (path === "/image" && method === "GET") return proxyImage(env, url);
+    const media = path.match(/^\/media\/(.+)$/);
+    if (media && method === "GET") {
+      let key: string;
+      try { key = decodeURIComponent(media[1]); } catch { return json({ error: "ลิงก์ไม่ถูกต้อง" }, 400); }
+      return await serveMedia(request, env, url, key);
+    }
 
     if (!user) throw new MarketerError(401, "กรุณาเข้าสู่ระบบก่อนใช้งาน");
     if (method !== "GET" && (request.headers.get("Origin") !== url.origin || request.headers.get("Sec-Fetch-Site") === "cross-site")) {
@@ -109,11 +125,14 @@ export async function handleMarketer(request: Request, env: Env, url: URL, user:
       return json({ jobId: result.jobId, cost: MARKETER_COST_CREDITS }, 202);
     }
     if (path === "/tasks" && method === "GET") return await tasks(env, user.id);
+    if (path === "/media" && method === "POST") return await uploadMedia(request, env, url, user.id);
+    if (path === "/videos" && method === "POST") return await createAiVideo(request, env, user.id, kick);
+    if (path === "/videos" && method === "GET") return json({ videos: await listAiVideos(env, user.id) });
     const one = path.match(/^\/tasks\/([0-9a-f-]{36})$/);
     if (one && method === "GET") return await task(env, user.id, one[1]);
     return json({ error: "ไม่พบเส้นทางนี้" }, 404);
   } catch (error) {
-    if (error instanceof MarketerError) return json({ error: error.message }, error.status);
+    if (error instanceof MarketerError || error instanceof VideoError) return json({ error: error.message }, error.status);
     if (error instanceof MarketerInputError || error instanceof ProductUrlError) return json({ error: error.message }, 400);
     console.error("marketer error", error instanceof Error ? error.name : typeof error); // no detail: bodies carry seller content
     return json({ error: "ระบบขัดข้อง กรุณาลองใหม่" }, 500);
