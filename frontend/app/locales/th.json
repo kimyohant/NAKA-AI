@@ -2296,7 +2296,8 @@
       "openAria": "เปิดโปรเจกต์ {name}",
       "delete": "ลบโปรเจกต์",
       "deleted": "ลบโปรเจกต์แล้ว",
-      "beats": "{n} beat"
+      "beats": "{n} beat",
+      "noBlueprint": "ยังไม่มีโครงคลิป"
     },
     "create": {
       "title": "สร้างโปรเจกต์โคลน",
@@ -2357,7 +2358,11 @@
       "total": "รวม {n}s",
       "invalid": "ยังสมบูรณ์ไม่พอบันทึก — ตรวจ role/ความยาวของทุก beat",
       "save": "บันทึก Blueprint",
-      "saved": "บันทึก Blueprint แล้ว"
+      "saved": "บันทึก Blueprint แล้ว",
+      "reanalyze": "วิเคราะห์ใหม่",
+      "unsaved": "มีการแก้ไขที่ยังไม่บันทึก",
+      "moveUp": "เลื่อนขึ้น",
+      "moveDown": "เลื่อนลง"
     },
     "variants": {
       "needBlueprint": "ต้องมี Blueprint ก่อน — ไปแท็บ Blueprint แล้วกดวิเคราะห์",
@@ -2388,7 +2393,14 @@
       "engineHypit": "Hypit (HyperFrames)",
       "engineNakaHint": "ต่อคลิปด้วย ffmpeg แล้วฝังซับ ASS — ค่าเริ่มต้น",
       "engineHypitHint": "ต่อคลิปและวาดซับด้วย Hypit (headless Chromium) — ล้มเมื่อไหร่จะถอยกลับเอนจิน NAKA ให้อัตโนมัติ · Powered by Hypit (hypit.ai)",
-      "engineHypitUnavailable": "Hypit ยังไม่พร้อมในเครื่องนี้: {reason}"
+      "engineHypitUnavailable": "Hypit ยังไม่พร้อมในเครื่องนี้: {reason}",
+      "matrixTitle": "สร้างตัวแปร (Matrix)",
+      "matrixHint": "โครงคลิปเดิมทั้งหมด — เปลี่ยนเฉพาะส่วนที่เลือก",
+      "queueTitle": "คิวเรนเดอร์",
+      "statAll": "ทั้งหมด {n}",
+      "statBusy": "กำลังทำ {n}",
+      "statDone": "เสร็จ {n}",
+      "statFailed": "ล้ม {n}"
     },
     "reference": {
       "transcriptTitle": "Transcript",
@@ -2397,6 +2409,50 @@
       "saved": "บันทึก Transcript แล้ว",
       "videoTitle": "คลิปต้นแบบ",
       "noVideo": "ไม่ได้แนบคลิปต้นแบบ"
+    },
+    "steps": {
+      "reference": "ต้นแบบ",
+      "blueprint": "โครงคลิป",
+      "variants": "ตัวแปร",
+      "results": "ผลลัพธ์",
+      "referenceSub": "Transcript",
+      "referenceSubVideo": "Transcript + คลิป",
+      "blueprintSub": "{n} beat · {s}s",
+      "variantsSub": "{n} ตัวแปร",
+      "resultsSub": "เสร็จ {n} คลิป"
+    },
+    "flow": {
+      "aria": "ขั้นตอนการโคลน",
+      "reference": "วาง transcript และแนบคลิปต้นแบบ",
+      "blueprint": "AI แยก beat ที่ยึดกับคำพูด แก้และพรีวิวได้",
+      "variants": "สลับ hook สินค้า ผู้พูด ภาษา เป็น matrix",
+      "results": "เรนเดอร์ทั้งชุดด้วย NAKA หรือ Hypit"
+    },
+    "timeline": {
+      "title": "ไทม์ไลน์ (ยึดกับคำพูด)",
+      "hint": "แต่ละช่องคือ beat — กว้างตามความยาว ภายในคือคำพูดที่ภาพและซับยึดอยู่ คลิกเพื่อแก้",
+      "aria": "ไทม์ไลน์ {n} beat ยาว {s} วินาที"
+    },
+    "preview": {
+      "title": "พรีวิว 9:16",
+      "play": "เล่น",
+      "pause": "หยุด",
+      "prev": "beat ก่อนหน้า",
+      "next": "beat ถัดไป"
+    },
+    "captions": {
+      "title": "ซับในคลิป",
+      "enabled": "เปิด/ปิดซับ",
+      "style": "สไตล์ซับ",
+      "bold": "ขอบหนา",
+      "clean": "เงานุ่ม",
+      "boxed": "กล่องทึบ"
+    },
+    "results": {
+      "empty": "ยังไม่มีคลิปที่เรนเดอร์เสร็จ",
+      "goVariants": "ไปที่ตัวแปร",
+      "poweredHypit": "เรนเดอร์ขั้นสุดท้ายด้วย Hypit (hypit.ai) · ถอยกลับ NAKA อัตโนมัติเมื่อไม่พร้อม",
+      "poweredNaka": "เรนเดอร์ขั้นสุดท้ายด้วยเอนจิน NAKA (ffmpeg + ซับ)"
     }
   },
   "live": {
