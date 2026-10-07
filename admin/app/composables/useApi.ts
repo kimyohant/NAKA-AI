@@ -53,8 +53,16 @@ export const api = {
 }
 
 /** login check: 200 with a valid token (or when the backend runs without ADMIN_TOKEN) */
+/** naka-ai SSO status: sso=true → admins sign in with their naka-ai account (Google in ADMIN_EMAILS) */
+export async function ssoStatus(): Promise<{ sso: boolean; admin: boolean }> {
+  const r = await fetch(`${base()}/auth/naka/me`, { credentials: 'include' })
+  const j = await r.json().catch(() => ({}))
+  return { sso: !!j?.data?.sso, admin: r.ok && j?.data?.user?.admin === true && j?.data?.sso === true }
+}
+export const ssoLoginUrl = (next = '/admin/') => `${base()}/auth/naka/login?next=${encodeURIComponent(next)}`
+
 export const adminAPI = {
-  session: (token: string) => fetch(`${base()}/admin/session`, { headers: token ? { 'X-Admin-Token': token } : {} })
+  session: (token: string) => fetch(`${base()}/admin/session`, { headers: token ? { 'X-Admin-Token': token } : {}, credentials: 'include' })
     .then(r => handle<{ admin: boolean; guard: boolean }>(r, 'GET', '/admin/session')),
 }
 

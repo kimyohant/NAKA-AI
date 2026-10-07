@@ -6,6 +6,7 @@
  * mergeEpisodeVideos, task-prep, product-visuals, budget guard ใน createTask
  */
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
+import { ownedBy } from '../auth/owner-context.js'
 import { db, getInsertId, schema } from '../db/index.js'
 import { AppError, now } from '../utils/response.js'
 import { getActiveConfig } from './ai.js'
@@ -266,7 +267,7 @@ export async function getProjectRow(id: number): Promise<ProjectRow | null> {
 
 export async function listProjects() {
   const rows = await db.select().from(schema.studioProjects)
-    .where(isNull(schema.studioProjects.deletedAt))
+    .where(and(isNull(schema.studioProjects.deletedAt), ownedBy(schema.studioProjects.ownerUserId)))
     .orderBy(desc(schema.studioProjects.updatedAt))
   return rows.map(toProjectJson)
 }
@@ -547,6 +548,7 @@ async function ensureDramaAndEpisode(row: ProjectRow): Promise<{ dramaId: number
   if (!dramaId) {
     const ts = now()
     const res = await db.insert(schema.dramas).values({
+      ownerUserId: row.ownerUserId,
       title: row.title,
       aspectRatio: row.aspectRatio,
       metadata: JSON.stringify({ studioProjectId: row.id }),
@@ -1122,7 +1124,7 @@ export async function createProjectFromCampaign(body: any) {
 
 export async function listAvatars() {
   const rows = await db.select().from(schema.studioAvatars)
-    .where(isNull(schema.studioAvatars.deletedAt))
+    .where(and(isNull(schema.studioAvatars.deletedAt), ownedBy(schema.studioAvatars.ownerUserId)))
     .orderBy(desc(schema.studioAvatars.updatedAt))
   return Promise.all(rows.map(async (row) => {
     const [task] = row.imageTaskId

@@ -236,6 +236,8 @@ async function createTask(
       type,
       ...fields,
       dramaId,
+      // a project's tasks belong to the project's member, also when a startup resume creates them
+      ...(drama ? { ownerUserId: drama.ownerUserId } : {}),
       provider: config.provider,
       configId: config.id,
       params: JSON.stringify(params),

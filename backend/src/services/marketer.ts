@@ -6,6 +6,7 @@
  * 对外 JSON 统一 camelCase（docs/ai-marketer/PLAN.md ข้อ 4 API Contract）。
  */
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
+import { ownedBy } from '../auth/owner-context.js'
 import { db, getInsertId, schema } from '../db/index.js'
 import { AppError, now } from '../utils/response.js'
 import { getTextConfig, getActiveConfigId, getActiveConfig } from './ai.js'
@@ -168,7 +169,7 @@ async function getCampaignRow(id: number): Promise<CampaignRow | null> {
 
 export async function listCampaigns(opts: { status?: string; dramaId?: number } = {}) {
   const rows = await db.select().from(schema.campaigns)
-    .where(isNull(schema.campaigns.deletedAt))
+    .where(and(isNull(schema.campaigns.deletedAt), ownedBy(schema.campaigns.ownerUserId)))
     .orderBy(desc(schema.campaigns.updatedAt))
   let filtered = rows
   if (opts.status) filtered = filtered.filter(r => r.status === opts.status)
@@ -769,6 +770,7 @@ export async function produceCreative(campaignId: number, creativeId: number) {
   if (!dramaId) {
     const ts = now()
     const res = await db.insert(schema.dramas).values({
+      ownerUserId: campaign.ownerUserId,
       title: campaign.title,
       style: campaign.style,
       aspectRatio: campaign.aspectRatio,

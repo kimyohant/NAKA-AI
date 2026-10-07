@@ -12,6 +12,7 @@ import fs from 'fs'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
+import { ownedBy } from '../auth/owner-context.js'
 import { db, getInsertId, schema } from '../db/index.js'
 import { AppError, now } from '../utils/response.js'
 import { generateImage, generateVideo } from './generation.js'
@@ -326,14 +327,17 @@ async function getCloneVariantRow(id: number): Promise<CloneVariantRow | null> {
 }
 
 export async function listCloneProjects() {
-  const rows = await db.select().from(schema.cloneProjects).orderBy(desc(schema.cloneProjects.updatedAt))
+  const rows = await db.select().from(schema.cloneProjects)
+    .where(ownedBy(schema.cloneProjects.ownerUserId))
+    .orderBy(desc(schema.cloneProjects.updatedAt))
   return rows.map(toCloneProjectJson)
 }
 
 /** หน้าแรกของสตูดิโอโคลน: สถิติรวม + ตัวแปรต่อโปรเจกต์ + คลิปที่เรนเดอร์ล่าสุด */
 export async function getCloneOverview(recentLimit = 8) {
   const [projects, variants] = await Promise.all([
-    db.select({ id: schema.cloneProjects.id, name: schema.cloneProjects.name }).from(schema.cloneProjects),
+    db.select({ id: schema.cloneProjects.id, name: schema.cloneProjects.name }).from(schema.cloneProjects)
+      .where(ownedBy(schema.cloneProjects.ownerUserId)),
     db.select().from(schema.cloneVariants).orderBy(desc(schema.cloneVariants.updatedAt)),
   ])
   const names = new Map(projects.map(p => [p.id, p.name]))
@@ -954,6 +958,7 @@ async function renderSingleVariant(project: CloneProjectRow, variant: CloneVaria
     // drama/episode ของตัวแปร (reuse pipeline ของ Studio — storyboards เป็นที่อยู่ของงาน image/video)
     const ts = now()
     const dramaRes = await db.insert(schema.dramas).values({
+      ownerUserId: project.ownerUserId,
       title: `${project.name} — ${variant.label}`,
       aspectRatio: '9:16',
       metadata: JSON.stringify({ cloneProjectId: project.id, cloneVariantId: variant.id }),

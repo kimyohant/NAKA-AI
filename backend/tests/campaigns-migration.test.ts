@@ -19,7 +19,7 @@ test('migration v6 creates campaign tables and stays idempotent', () => {
     initSqliteSchema(sqlite)
     initSqliteSchema(sqlite) // 幂等重放
     const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
 
     const campaignCols = (sqlite.pragma('table_info(campaigns)') as Array<{ name: string }>).map(r => r.name)
     for (const col of ['product_url', 'product_name', 'product_images', 'brand_notes', 'market', 'platforms',

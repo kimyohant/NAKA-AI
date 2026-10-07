@@ -4,6 +4,7 @@
  * กฎตั้งใจ: ไม่ดึงข้อมูลจากแพลตฟอร์มทุกกรณี — ตัวเลขทั้งหมดเป็น Evidence ที่ผู้ใช้กรอกจากต้นทาง
  */
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
+import { ownedBy } from '../auth/owner-context.js'
 import { db, schema } from '../db/index.js'
 import { AppError, now } from '../utils/response.js'
 
@@ -81,7 +82,7 @@ export async function listGalleryEntries(): Promise<{ entries: GalleryEntry[]; s
     .from(schema.campaignCreatives)
     .innerJoin(schema.campaigns, eq(schema.campaignCreatives.campaignId, schema.campaigns.id))
     .leftJoin(schema.creativeResults, eq(schema.creativeResults.creativeId, schema.campaignCreatives.id))
-    .where(and(inArray(schema.campaignCreatives.status, GALLERY_STATUSES), isNull(schema.campaigns.deletedAt)))
+    .where(and(inArray(schema.campaignCreatives.status, GALLERY_STATUSES), isNull(schema.campaigns.deletedAt), ownedBy(schema.campaigns.ownerUserId)))
     .orderBy(desc(schema.campaignCreatives.id))
 
   const entries: GalleryEntry[] = rows.map(({ creative, campaign, result }) => ({

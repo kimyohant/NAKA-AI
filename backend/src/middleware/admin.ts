@@ -11,6 +11,7 @@
  */
 import type { Context, Next } from 'hono'
 import { timingSafeEqual } from 'node:crypto'
+import { currentUser, ssoEnabled } from '../auth/naka-sso.js'
 
 const MIN_TOKEN_LENGTH = 16
 
@@ -55,10 +56,18 @@ export function needsAdmin(method: string, apiPath: string): boolean {
   return ADMIN_ONLY_PREFIXES.some(prefix => under(p, prefix))
 }
 
-/** Mounted on /api/v1/* — 401 E_ADMIN_REQUIRED when an admin-only call has no valid token. */
+/** naka-ai admins (Google account in the Worker's ADMIN_EMAILS) signed in through SSO */
+export function isSsoAdmin(c: Context): boolean {
+  return ssoEnabled() && currentUser(c)?.admin === true
+}
+
+/** guard is on with ADMIN_TOKEN, and always when members sign in through SSO (members must not edit AI keys) */
+export const guardOn = () => adminGuardEnabled() || ssoEnabled()
+
+/** Mounted on /api/v1/* — 401 E_ADMIN_REQUIRED when an admin-only call has no valid token / admin session. */
 export async function adminGuard(c: Context, next: Next) {
-  if (!adminGuardEnabled() || c.req.method === 'OPTIONS') return next()
+  if (!guardOn() || c.req.method === 'OPTIONS') return next()
   const apiPath = c.req.path.replace(/^\/api\/v1/, '')
-  if (!needsAdmin(c.req.method, apiPath) || isAdminRequest(c)) return next()
+  if (!needsAdmin(c.req.method, apiPath) || isAdminRequest(c) || isSsoAdmin(c)) return next()
   return c.json({ code: 401, message: 'ต้องเข้าสู่ระบบผู้ดูแล (admin token)', errorCode: 'E_ADMIN_REQUIRED' }, 401)
 }

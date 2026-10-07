@@ -7,6 +7,7 @@
  * → auto-render → แนบวิดีโอที่รวมเสร็จเข้าโพสต์เอง (driveVideo วนเช็กทุก 5s + getPost sync ซ้ำ กันหลุดหลัง restart)
  */
 import { and, desc, eq, isNull } from 'drizzle-orm'
+import { ownedBy, ownerScope, runAsOwner } from '../auth/owner-context.js'
 import { db, getInsertId, schema } from '../db/index.js'
 import { AppError, now } from '../utils/response.js'
 import { getActiveConfig, getTextConfig } from './ai.js'
@@ -157,7 +158,7 @@ export function getSellerOptions() {
 
 export async function listPosts() {
   const rows = await db.select().from(schema.sellerPosts)
-    .where(isNull(schema.sellerPosts.deletedAt))
+    .where(and(isNull(schema.sellerPosts.deletedAt), ownedBy(schema.sellerPosts.ownerUserId)))
     .orderBy(desc(schema.sellerPosts.updatedAt))
   return Promise.all(rows.map(withVideoJob))
 }
@@ -445,7 +446,8 @@ export async function makeVideo(id: number, body: { templateId?: unknown; avatar
 
   const post = toPostJson(row)
   const optionalId = (v: unknown) => (v === undefined || v === null || v === '' ? undefined : Number(v))
-  const project = await createProject({
+  // the Studio project belongs to the post's member (also when an admin starts it for them)
+  const project = await runAsOwner({ ownerId: row.ownerUserId, admin: ownerScope()?.admin ?? true }, () => createProject({
     title: row.title || row.productName,
     productName: row.productName,
     productUrl: row.productUrl,
@@ -458,7 +460,7 @@ export async function makeVideo(id: number, body: { templateId?: unknown; avatar
     avatarId: optionalId(body.avatarId),
     influencerId: optionalId(body.influencerId),
     notes: row.notes || undefined,
-  })
+  }))
   if (!project) throw new AppError('สร้างโปรเจกต์วิดีโอไม่สำเร็จ', 'E_SELLER_VIDEO_FAILED')
   try {
     await startStudioScript(project.id)

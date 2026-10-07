@@ -5,6 +5,7 @@
  * ห้าม import services/studio.ts กลับ (studio.ts อ้างมาที่นี่ — กัน dependency cycle)
  */
 import { and, desc, eq, isNull } from 'drizzle-orm'
+import { ownedBy } from '../auth/owner-context.js'
 import { db, getInsertId, schema } from '../db/index.js'
 import { AppError, now } from '../utils/response.js'
 import { getActiveConfig } from './ai.js'
@@ -173,7 +174,7 @@ function reviewImageSize(aspectRatio: string | undefined): string {
 
 export async function listInfluencers() {
   const rows = await db.select().from(schema.studioInfluencers)
-    .where(isNull(schema.studioInfluencers.deletedAt))
+    .where(and(isNull(schema.studioInfluencers.deletedAt), ownedBy(schema.studioInfluencers.ownerUserId)))
     .orderBy(desc(schema.studioInfluencers.updatedAt))
   return Promise.all(rows.map(async (row) => {
     const [task] = row.imageTaskId

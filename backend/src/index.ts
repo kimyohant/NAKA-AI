@@ -33,7 +33,9 @@ import seller from './routes/seller.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
-import { adminGuard, adminGuardEnabled, assertAdminTokenConfig, isAdminRequest } from './middleware/admin.js'
+import { adminGuard, assertAdminTokenConfig, guardOn, isAdminRequest } from './middleware/admin.js'
+import nakaSso, { requireSession, ssoConfig, ssoEnabled } from './auth/naka-sso.js'
+import { ownership } from './auth/ownership.js'
 import { failStaleRunningTasks } from './services/pipeline-tasks.js'
 import { failStaleCampaigns } from './services/marketer.js'
 import { failStaleStudioProjects } from './services/studio.js'
@@ -51,11 +53,12 @@ const hostname = process.env.NAKA_HOST || '127.0.0.1'
 const authUser = process.env.NAKA_AUTH_USER || 'admin'
 const authPassword = process.env.NAKA_AUTH_PASSWORD || ''
 const isLoopback = ['127.0.0.1', 'localhost', '::1'].includes(hostname)
-if (!isLoopback && !authPassword) {
-  throw new Error('NAKA_AUTH_PASSWORD is required when NAKA_HOST is not loopback')
+ssoConfig() // throws on a half/invalid NAKA_SSO_URL / NAKA_SSO_SECRET instead of silently running open
+if (!isLoopback && !authPassword && !ssoEnabled()) {
+  throw new Error('NAKA_AUTH_PASSWORD (or naka-ai SSO: NAKA_SSO_URL + NAKA_SSO_SECRET) is required when NAKA_HOST is not loopback')
 }
 assertAdminTokenConfig()
-if (!isLoopback && !adminGuardEnabled()) {
+if (!isLoopback && !guardOn()) {
   console.warn('⚠️ ADMIN_TOKEN is not set — the settings API (AI keys, models, prompts) is open to every signed-in user')
 }
 // back-office app (repo naka-ai-backend) hosted on another origin: comma-separated origins
@@ -69,7 +72,8 @@ function matchesCredential(actual: string, expected: string): boolean {
 
 // Middleware
 app.use('*', async (c, next) => {
-  if (!authPassword || c.req.path === '/api/v1/health' || c.req.method === 'OPTIONS') return next()
+  // members sign in through naka-ai SSO instead of the shared Basic Auth (requireSession below)
+  if (!authPassword || ssoEnabled() || c.req.path === '/api/v1/health' || c.req.method === 'OPTIONS') return next()
   if (isAdminRequest(c)) return next() // admin token is a stronger credential than the shared Basic Auth
   const header = c.req.header('Authorization') || ''
   let username = ''
@@ -104,11 +108,14 @@ app.get('/api/v1/health', (c) => c.json({
 }))
 
 // API routes
-// system-settings API is for the back-office app only (middleware/admin.ts)
+// members (naka-ai SSO) → each member's own data (auth/ownership.ts) → system-settings API for admins only (middleware/admin.ts)
+app.use('/api/v1/*', requireSession(() => ['http://localhost:3013', 'http://localhost:3014', ...adminOrigins], isAdminRequest))
+app.use('/api/v1/*', ownership)
 app.use('/api/v1/*', adminGuard)
 const api = new Hono()
 // back-office login check: 401 E_ADMIN_REQUIRED unless the token is valid (guard off → always ok)
-api.get('/admin/session', c => c.json({ code: 200, data: { admin: true, guard: adminGuardEnabled() }, message: 'success' }))
+api.get('/admin/session', c => c.json({ code: 200, data: { admin: true, guard: guardOn(), sso: ssoEnabled() }, message: 'success' }))
+api.route('/auth/naka', nakaSso)
 api.route('/dramas', dramas)
 api.route('/episodes', episodes)
 api.route('/storyboards', storyboards)
