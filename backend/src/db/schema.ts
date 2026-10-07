@@ -544,6 +544,7 @@ export const cloneProjects = sqliteTable('clone_projects', {
   errorCode: text('error_code'),
   errorMsg: text('error_msg'),
   renderState: text('render_state'),
+  renderEngine: text('render_engine').notNull().default('naka'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })

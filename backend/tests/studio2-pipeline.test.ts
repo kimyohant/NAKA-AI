@@ -55,7 +55,7 @@ test('migration v11: คอลัมน์ captions/auto_render/source_campaign_
   const mergeCols = sqlite.pragma('table_info(video_merges)').map(r => r.name)
   assert.ok(mergeCols.includes('captioned') && mergeCols.includes('subtitle_url'))
   const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all().map(r => r.version)
-  assert.deepEqual(versions, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+  assert.deepEqual(versions, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
   sqlite.close()
 })
 

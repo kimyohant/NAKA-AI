@@ -556,6 +556,7 @@ export const studioAPI = {
 // ===== Viral Clone Studio (สตูดิโอโคลนไวรัล) — สัญญา docs/viral-clone/PLAN.md §3, JSON camelCase =====
 export type CloneProjectStatus = 'draft' | 'analyzing' | 'ready' | 'error'
 export type CloneVariantStatus = 'draft' | 'queued' | 'rendering' | 'completed' | 'failed'
+export type CloneRenderEngine = 'naka' | 'hypit'   // naka = ffmpeg merge + ซับ ASS · hypit = Hypit/HyperFrames (study/hypit)
 export type CloneBeatRole = 'hook' | 'demo' | 'proof' | 'offer' | 'cta'
 export type CloneBeatVisual = 'product' | 'avatar' | 'broll' | 'text'
 
@@ -599,6 +600,7 @@ export interface CloneProject {
   referencePath: string | null  // /static/... คลิปต้นแบบ (ผู้ใช้อัปโหลดเอง — ระบบไม่ดึงจากแพลตฟอร์ม)
   transcript: string
   language: StudioLanguage
+  renderEngine: CloneRenderEngine
   blueprint: CloneBlueprint | null
   errorCode: string | null; errorMsg: string | null
   createdAt: string; updatedAt: string
@@ -610,7 +612,7 @@ export const cloneAPI = {
   list: () => api.get<CloneProject[]>('/clone/projects'),
   create: (data: { name: string; transcript: string; language?: StudioLanguage; referencePath?: string | null }) => api.post<CloneProject>('/clone/projects', data),
   get: (id: number) => api.get<CloneDetail>(`/clone/projects/${id}`),
-  update: (id: number, data: Partial<Pick<CloneProject, 'name' | 'transcript' | 'language'>>) => api.put<CloneProject>(`/clone/projects/${id}`, data),
+  update: (id: number, data: Partial<Pick<CloneProject, 'name' | 'transcript' | 'language' | 'renderEngine'>>) => api.put<CloneProject>(`/clone/projects/${id}`, data),
   // async (202) — poll get จน status ไม่ใช่ analyzing
   analyze: (id: number, asyncMode = true) => api.post<CloneProject>(`/clone/projects/${id}/analyze`, { async: asyncMode }),
   saveBlueprint: (id: number, blueprint: CloneBlueprint) => api.put<CloneProject>(`/clone/projects/${id}/blueprint`, { blueprint }),
@@ -619,6 +621,7 @@ export const cloneAPI = {
   renderAll: (id: number, asyncMode = true) => api.post<{ queued: number }>(`/clone/projects/${id}/render-all`, { async: asyncMode }),
   del: (id: number) => api.del(`/clone/projects/${id}`),
   delVariant: (variantId: number) => api.del(`/clone/variants/${variantId}`),
+  hypitStatus: () => api.get<{ available: boolean; reason: string | null }>('/clone/hypit/status'),
 }
 
 // ---------- AI Live (backend /api/v1/live → naka-live-agent on the GPU box; docs/ai-live/PLAN.md) ----------

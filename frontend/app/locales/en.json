@@ -2296,7 +2296,8 @@
       "openAria": "Open project {name}",
       "delete": "Delete project",
       "deleted": "Project deleted",
-      "beats": "{n} beats"
+      "beats": "{n} beats",
+      "noBlueprint": "No blueprint yet"
     },
     "create": {
       "title": "New clone project",
@@ -2357,7 +2358,11 @@
       "total": "Total {n}s",
       "invalid": "Not ready to save — check every beat's role and duration",
       "save": "Save blueprint",
-      "saved": "Blueprint saved"
+      "saved": "Blueprint saved",
+      "reanalyze": "Re-analyze",
+      "unsaved": "Unsaved changes",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     },
     "variants": {
       "needBlueprint": "A blueprint is required first — open the Blueprint tab and analyze",
@@ -2382,7 +2387,20 @@
       "deleteTitle": "Delete variant",
       "deleteMessage": "Delete variant “{label}”? Its rendered video will no longer be reachable here",
       "deleted": "Variant deleted",
-      "noneYet": "No variants yet — pick hooks/products/languages and create"
+      "noneYet": "No variants yet — pick hooks/products/languages and create",
+      "engineLabel": "Final render engine",
+      "engineNaka": "NAKA (ffmpeg + captions)",
+      "engineHypit": "Hypit (HyperFrames)",
+      "engineNakaHint": "Joins clips with ffmpeg and burns ASS captions — default",
+      "engineHypitHint": "Joins clips and draws captions with Hypit (headless Chromium) — falls back to the NAKA engine automatically on failure · Powered by Hypit (hypit.ai)",
+      "engineHypitUnavailable": "Hypit is not ready on this machine: {reason}",
+      "matrixTitle": "Build variants (matrix)",
+      "matrixHint": "Same structure throughout — only the chosen parts change",
+      "queueTitle": "Render queue",
+      "statAll": "{n} total",
+      "statBusy": "{n} running",
+      "statDone": "{n} done",
+      "statFailed": "{n} failed"
     },
     "reference": {
       "transcriptTitle": "Transcript",
@@ -2391,6 +2409,50 @@
       "saved": "Transcript saved",
       "videoTitle": "Reference clip",
       "noVideo": "No reference clip attached"
+    },
+    "steps": {
+      "reference": "Reference",
+      "blueprint": "Blueprint",
+      "variants": "Variants",
+      "results": "Results",
+      "referenceSub": "Transcript",
+      "referenceSubVideo": "Transcript + clip",
+      "blueprintSub": "{n} beats · {s}s",
+      "variantsSub": "{n} variants",
+      "resultsSub": "{n} rendered"
+    },
+    "flow": {
+      "aria": "Clone workflow",
+      "reference": "Paste the transcript and attach the reference clip",
+      "blueprint": "AI splits word-anchored beats you can edit and preview",
+      "variants": "Swap hook, product, presenter and language as a matrix",
+      "results": "Render the whole batch with NAKA or Hypit"
+    },
+    "timeline": {
+      "title": "Timeline (anchored to words)",
+      "hint": "Each block is a beat — width follows its length, inside are the words its picture and captions anchor to. Click to edit.",
+      "aria": "Timeline of {n} beats, {s} seconds"
+    },
+    "preview": {
+      "title": "9:16 preview",
+      "play": "Play",
+      "pause": "Pause",
+      "prev": "Previous beat",
+      "next": "Next beat"
+    },
+    "captions": {
+      "title": "Captions",
+      "enabled": "Toggle captions",
+      "style": "Caption style",
+      "bold": "Bold outline",
+      "clean": "Soft shadow",
+      "boxed": "Boxed"
+    },
+    "results": {
+      "empty": "No rendered clips yet",
+      "goVariants": "Go to variants",
+      "poweredHypit": "Final render by Hypit (hypit.ai) · falls back to NAKA automatically when unavailable",
+      "poweredNaka": "Final render by the NAKA engine (ffmpeg + captions)"
     }
   },
   "live": {

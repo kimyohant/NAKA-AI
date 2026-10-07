@@ -14,6 +14,7 @@ frontend/  — Nuxt 3 + Vue 3 + TypeScript，ssr:false（纯 CSS，无 UI 框架
 desktop/   — Electron 桌面版：主进程 + esbuild 打包脚本 + electron-builder 配置
 data/      — SQLite 数据库（naka.sqlite3）+ 生成的静态文件（static/）
 configs/   — 遗留死配置，代码零引用
+study/hypit/ — Hypit（hypit-ai/hypit @ 7f730ab）全量源码，Viral Clone「Hypit」渲染引擎经 CLI 子进程调用；仅限内部使用，许可见 study/README.md
 ```
 
 ## Commands
@@ -45,6 +46,7 @@ configs/   — 遗留死配置，代码零引用
 - **AI Agents**: Mastra，4 个 agent（script_rewriter / extractor / storyboard_breaker / prompt_generator），instructions 从 `workspace/prompts/*.md` + skills 动态拼接，模型按请求解析；fetch 补丁链适配国内中转站（关思考/温度/max_tokens）
 - **媒体生成**: `services/generation.ts` 统一任务生命周期（sys_task 表），适配器模式：图片 openai/gemini/volcengine，视频 volcengine/minimax
 - **视频拼接**: `services/ffmpeg-merge.ts`，FFmpeg 二进制内置（ffmpeg-static），可用 `FFMPEG_BIN`/`FFPROBE_BIN` 覆盖
+- **Hypit 渲染引擎**: `services/hypit-render.ts`，Viral Clone 项目 `render_engine='hypit'` 时由 beat 片段生成 SVML 并 spawn `study/hypit/bin/hypit.mjs build`；不可用或失败自动回退 ffmpeg 路径
 
 ### Frontend
 - Nuxt 3 SPA，动态路由在 `nuxt.config.ts` 的 `pages:extend` 手动注册（views/drama/）

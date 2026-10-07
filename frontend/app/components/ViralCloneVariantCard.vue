@@ -1,5 +1,15 @@
 <template>
-  <article class="vc-card">
+  <article class="vc-card" :class="`st-${variant.status}`">
+    <div class="vc-media">
+      <video v-if="variant.status === 'completed' && variant.outputPath" class="vc-video" :src="variant.outputPath" controls preload="metadata" playsinline />
+      <div v-else class="vc-placeholder">
+        <Loader2 v-if="busy" :size="22" :stroke-width="1.6" class="animate-spin" />
+        <TriangleAlert v-else-if="variant.status === 'failed'" :size="22" :stroke-width="1.6" />
+        <Clapperboard v-else :size="22" :stroke-width="1.5" />
+        <span>{{ t(`viralClone.status.${variant.status}`) }}</span>
+        <span v-if="queuePosition" class="vc-queue mono">{{ t('viralClone.variants.queuePosition', { n: queuePosition }) }}</span>
+      </div>
+    </div>
     <div class="vc-head">
       <span class="vc-label truncate">{{ variant.label }}</span>
       <span class="tag" :class="statusClass">
@@ -9,15 +19,8 @@
     </div>
 
     <div class="vc-meta">
-      <span v-if="queuePosition" class="tag tag-info vc-queue">
-        <Clock :size="10" :stroke-width="2" />
-        {{ t('viralClone.variants.queuePosition', { n: queuePosition }) }}
-      </span>
       <span v-for="chip in metaChips" :key="chip" class="tag">{{ chip }}</span>
     </div>
-
-    <!-- พรีวิวเมื่อ render เสร็จ -->
-    <video v-if="variant.status === 'completed' && variant.outputPath" class="vc-video" :src="variant.outputPath" controls preload="metadata" />
 
     <p v-if="errorText" class="vc-error">{{ errorText }}</p>
 
@@ -43,7 +46,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Clock, Clapperboard, Download, Loader2, Trash2 } from 'lucide-vue-next'
+import { Clapperboard, Download, Loader2, Trash2, TriangleAlert } from 'lucide-vue-next'
 import { cloneErrorCodeOf, isCloneVariantBusy } from '~/utils/viralCloneFlow'
 
 const props = defineProps({
@@ -95,20 +98,34 @@ const errorText = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 14px;
+  padding: 10px 10px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--surface-soft);
+  background: var(--surface-raised);
+  transition: border-color 0.15s var(--ease-out);
 }
-.vc-head { display: flex; align-items: center; gap: 8px; }
+.vc-card:hover { border-color: var(--border-strong); }
+.vc-media { border-radius: 12px; overflow: hidden; background: var(--bg-2); }
+.vc-video { display: block; width: 100%; aspect-ratio: 9 / 16; max-height: 320px; background: #000; object-fit: contain; }
+.vc-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  aspect-ratio: 9 / 16; max-height: 320px; width: 100%;
+  color: var(--text-3); font-size: 12px; font-weight: 600;
+  background:
+    radial-gradient(100% 60% at 50% 0%, var(--accent-bg) 0%, transparent 70%),
+    var(--bg-2);
+}
+.st-rendering .vc-placeholder, .st-queued .vc-placeholder { color: var(--tag-info-text, var(--info)); }
+.st-failed .vc-placeholder { color: var(--error); background: var(--error-bg); }
+.vc-queue { font-size: 11px; font-weight: 500; }
+.vc-head { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
 .vc-label { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: var(--text-0); }
-.vc-meta { display: flex; flex-wrap: wrap; gap: 6px; }
-.vc-meta .tag { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; }
-.vc-queue { font-variant-numeric: tabular-nums; }
-.vc-video { width: 100%; aspect-ratio: 9 / 16; max-height: 300px; border-radius: 10px; background: var(--bg-2); object-fit: contain; }
-.vc-error { margin: 0; font-size: 11.5px; color: var(--danger, #e5484d); }
-.vc-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; }
-.vc-dur { font-size: 11.5px; color: var(--text-3); }
+.vc-head .tag { display: inline-flex; align-items: center; gap: 4px; }
+.vc-meta { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 2px; }
+.vc-meta .tag { max-width: 100%; }
+.vc-error { margin: 0; padding: 0 2px; font-size: 11.5px; color: var(--error); }
+.vc-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 0 2px; }
+.vc-dur { font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
 .vc-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 .vc-del {
   display: flex; align-items: center; justify-content: center;

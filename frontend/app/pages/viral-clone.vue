@@ -13,6 +13,17 @@
       </button>
     </header>
 
+    <!-- ===== ลำดับงาน (แนวคิด Hypit: โคลนทั้ง workflow ไม่ใช่แค่สคริปต์) ===== -->
+    <ol class="vc-flow" :aria-label="t('viralClone.flow.aria')">
+      <li v-for="(step, i) in FLOW" :key="step.key" class="vc-flow-step">
+        <span class="vc-flow-icon"><component :is="step.icon" :size="16" :stroke-width="1.9" /></span>
+        <span class="vc-flow-copy">
+          <span class="vc-flow-title"><span class="vc-flow-num">{{ i + 1 }}</span>{{ t(`viralClone.steps.${step.key}`) }}</span>
+          <span class="vc-flow-desc">{{ t(`viralClone.flow.${step.key}`) }}</span>
+        </span>
+      </li>
+    </ol>
+
     <!-- ===== Project grid ===== -->
     <div v-if="loading" class="vc-grid" aria-hidden="true">
       <div v-for="i in 3" :key="i" class="vc-card skeleton-card">
@@ -37,7 +48,7 @@
       >
         <div class="vc-card-top">
           <div class="vc-thumb" aria-hidden="true">
-            <img v-if="p.referencePath" :src="p.referencePath" alt="" loading="lazy" />
+            <video v-if="p.referencePath" :src="p.referencePath" muted preload="metadata" playsinline></video>
             <Copy v-else :size="16" :stroke-width="1.8" />
           </div>
           <div class="vc-card-heading">
@@ -53,12 +64,15 @@
             <AppMenuItem danger @click="menuId = null; toDelete = p">{{ t('viralClone.list.delete') }}</AppMenuItem>
           </AppMenu>
         </div>
+        <ViralCloneTimeline v-if="p.blueprint?.beats?.length" compact :beats="p.blueprint.beats" :language="p.language" />
+        <div v-else class="vc-card-notl">{{ t('viralClone.list.noBlueprint') }}</div>
         <div class="vc-card-tags">
           <span class="tag" :class="statusTagClass(p.status)">
             <Loader2 v-if="isCloneProjectBusy(p.status)" :size="10" class="animate-spin" />
             {{ t(`viralClone.status.${p.status}`) }}
           </span>
           <span v-if="p.blueprint?.beats?.length" class="tag">{{ t('viralClone.list.beats', { n: p.blueprint.beats.length }) }}</span>
+          <span class="tag" :class="p.renderEngine === 'hypit' ? 'tag-accent' : ''">{{ p.renderEngine === 'hypit' ? 'Hypit' : 'NAKA' }}</span>
         </div>
         <div class="vc-card-foot">
           <Clock :size="11" :stroke-width="1.8" />
@@ -155,13 +169,20 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Check, Clock, Copy, Loader2, MoreHorizontal, Plus, TriangleAlert, Upload, X } from 'lucide-vue-next'
+import { Check, Clapperboard, Clock, Copy, FileText, Layers, Loader2, MoreHorizontal, Plus, TriangleAlert, Upload, Waypoints, X } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { cloneAPI, uploadAPI } from '~/composables/useApi'
 import { toastError } from '~/composables/useToast'
 import { CLONE_LANGUAGES, CLONE_POLL_INTERVAL_MS, isCloneProjectBusy } from '~/utils/viralCloneFlow'
 
 const { t, locale } = useI18n()
+
+const FLOW = [
+  { key: 'reference', icon: FileText },
+  { key: 'blueprint', icon: Waypoints },
+  { key: 'variants', icon: Layers },
+  { key: 'results', icon: Clapperboard },
+]
 
 const projects = ref([])
 const loading = ref(true)
@@ -316,6 +337,38 @@ onBeforeUnmount(() => {
   max-width: 560px;
 }
 
+/* === Flow strip === */
+.vc-flow {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 0;
+}
+.vc-flow-step {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-soft);
+  min-width: 0;
+}
+.vc-flow-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; flex-shrink: 0;
+  border-radius: 10px; background: var(--accent-bg); color: var(--accent-text);
+}
+.vc-flow-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vc-flow-title { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--text-0); }
+.vc-flow-num { font-size: 11px; font-weight: 800; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.vc-flow-desc { font-size: 11.5px; line-height: 1.5; color: var(--text-3); }
+.vc-card-notl {
+  height: 6px; border-radius: 3px;
+  background: repeating-linear-gradient(90deg, var(--bg-3) 0 10px, transparent 10px 14px);
+  font-size: 0;
+}
+
 /* === Grid & cards === */
 .vc-grid {
   display: grid;
@@ -359,7 +412,7 @@ onBeforeUnmount(() => {
   background: var(--bg-2);
   color: var(--text-3);
 }
-.vc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vc-thumb img, .vc-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .vc-card-heading { flex: 1; min-width: 0; }
 .vc-card-title {
   margin: 0;
@@ -480,5 +533,6 @@ onBeforeUnmount(() => {
   .vc-head { flex-direction: column; align-items: stretch; }
   .vc-create-row { flex-direction: column; }
   .vc-lang-field { width: 100%; }
+  .vc-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 </style>
