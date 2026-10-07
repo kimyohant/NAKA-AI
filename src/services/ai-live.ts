@@ -26,9 +26,13 @@ export interface LiveConfig {
   avatarId: string
   voice: string
   rtmpUrl: string
+  /** TikTok channel whose live comments feed the AI (services/tiktok-live.ts) */
+  tiktokUsername: string
+  /** optional Euler Stream sign-server key (secret, raises the free rate limit) */
+  tiktokSignApiKey: string
 }
 
-/** สิ่งที่ส่งให้ frontend — ไม่มี token / stream key */
+/** สิ่งที่ส่งให้ frontend — ไม่มี token / stream key / sign key */
 export interface PublicLiveConfig {
   agentUrl: string
   avatarId: string
@@ -37,9 +41,11 @@ export interface PublicLiveConfig {
   hasRtmpUrl: boolean
   rtmpHost: string
   configured: boolean
+  tiktokUsername: string
+  hasTiktokSignKey: boolean
 }
 
-const DEFAULTS: LiveConfig = { agentUrl: '', token: '', avatarId: 'wav2lip256_avatar1', voice: 'th-TH-PremwadeeNeural', rtmpUrl: '' }
+const DEFAULTS: LiveConfig = { agentUrl: '', token: '', avatarId: 'wav2lip256_avatar1', voice: 'th-TH-PremwadeeNeural', rtmpUrl: '', tiktokUsername: '', tiktokSignApiKey: '' }
 
 function readConfig(): LiveConfig {
   const row = db.select().from(schema.appSettings).where(eq(schema.appSettings.key, SETTINGS_KEY)).get()
@@ -71,6 +77,8 @@ export function toPublic(cfg: LiveConfig): PublicLiveConfig {
     hasRtmpUrl: !!cfg.rtmpUrl,
     rtmpHost: rtmpHost(cfg.rtmpUrl),
     configured: !!cfg.agentUrl && !!cfg.token,
+    tiktokUsername: cfg.tiktokUsername,
+    hasTiktokSignKey: !!cfg.tiktokSignApiKey,
   }
 }
 
@@ -107,8 +115,21 @@ export function saveLiveConfig(input: Record<string, unknown>): PublicLiveConfig
     if (!/^rtmps?:\/\/\S+$/.test(u)) throw new AppError('RTMP URL ต้องขึ้นต้นด้วย rtmp:// หรือ rtmps://', 'E_LIVE_CONFIG')
     cfg.rtmpUrl = u
   }
+  if (input.tiktokUsername !== undefined) {
+    const u = String(input.tiktokUsername || '').trim().replace(/^@/, '')
+    if (u && !/^[A-Za-z0-9._]{2,24}$/.test(u)) throw new AppError('ชื่อช่อง TikTok ไม่ถูกต้อง', 'E_LIVE_CONFIG')
+    cfg.tiktokUsername = u
+  }
+  if (input.tiktokSignApiKey === null) cfg.tiktokSignApiKey = ''
+  else if (typeof input.tiktokSignApiKey === 'string' && input.tiktokSignApiKey.trim()) cfg.tiktokSignApiKey = input.tiktokSignApiKey.trim().slice(0, 200)
   writeConfig(cfg)
   return toPublic(cfg)
+}
+
+/** TikTok channel + sign key for services/tiktok-live.ts (backend only) */
+export function getTikTokSettings() {
+  const cfg = readConfig()
+  return { username: cfg.tiktokUsername, signApiKey: cfg.tiktokSignApiKey }
 }
 
 // ---------- naka-live-agent client ----------
