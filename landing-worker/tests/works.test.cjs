@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { publicPath, skipNoPublic } = require('./helpers/landing.cjs');
 const { after, beforeEach, test } = require('node:test');
 const { execFileSync } = require('node:child_process');
 const { readFileSync, rmSync } = require('node:fs');
@@ -102,7 +103,7 @@ test('45 jobs with matching timestamps paginate in descending order without gaps
   assert.deepEqual(ids, [...descendingIds(34, 0), ...descendingIds(44, 35)]);
 });
 
-test('review page immediately fetches ?job= on load and shows the existing job status', async () => {
+test('review page immediately fetches ?job= on load and shows the existing job status', { skip: skipNoPublic }, async () => {
   class Element {
     constructor() { this.hidden = false; this.textContent = ''; this.listeners = {}; this.style = {}; this.value = ''; }
     addEventListener(name, callback) { this.listeners[name] = callback; }
@@ -113,7 +114,7 @@ test('review page immediately fetches ?job= on load and shows the existing job s
   const document = { getElementById(id) { if (!nodes.has(id)) nodes.set(id, new Element()); return nodes.get(id); }, createElement: () => new Element() };
   const requests = [];
   const timers = [];
-  vm.runInNewContext(readFileSync(path.join(root, 'public/review/review.js'), 'utf8'), {
+  vm.runInNewContext(readFileSync(publicPath('review/review.js'), 'utf8'), {
     document, location: { search: '?job=saved-123', href: 'https://naka.test/review/?job=saved-123' },
     URLSearchParams, URL, Date, Array, FormData, encodeURIComponent,
     setTimeout: (fn, delay) => { timers.push({ fn, delay }); return timers.length; }, clearTimeout: () => {},
@@ -127,7 +128,7 @@ test('review page immediately fetches ?job= on load and shows the existing job s
   assert.deepEqual(timers.map(t => t.delay), [3000]);
 });
 
-test('review page puts a successfully submitted job into the refreshable URL', async () => {
+test('review page puts a successfully submitted job into the refreshable URL', { skip: skipNoPublic }, async () => {
   class Element {
     constructor() { this.hidden = false; this.textContent = ''; this.listeners = {}; this.style = {}; this.value = ''; this.files = []; }
     addEventListener(name, callback) { this.listeners[name] = callback; }
@@ -141,7 +142,7 @@ test('review page puts a successfully submitted job into the refreshable URL', a
   class FakeURL extends URL {}
   FakeURL.createObjectURL = () => `blob:${++nextBlob}`;
   FakeURL.revokeObjectURL = () => {};
-  vm.runInNewContext(readFileSync(path.join(root, 'public/review/review.js'), 'utf8'), {
+  vm.runInNewContext(readFileSync(publicPath('review/review.js'), 'utf8'), {
     document, location: { search: '?name=สบู่', href: 'https://naka.test/review/?name=%E0%B8%AA%E0%B8%9A%E0%B8%B9%E0%B9%88' },
     history: { replaceState: (...args) => replaced.push(args) },
     URLSearchParams, URL: FakeURL, Date, Array, encodeURIComponent,

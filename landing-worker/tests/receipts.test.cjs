@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { publicPath, skipNoPublic } = require('./helpers/landing.cjs');
 const { after, afterEach, beforeEach, test } = require('node:test');
 const { execFileSync } = require('node:child_process');
 const { readFileSync, rmSync } = require('node:fs');
@@ -260,13 +261,13 @@ async function page({ data, status = 200, search = '?id=receipt-id', authStatus 
       if (networkFailure) throw new Error('network details must not leak');
       return Response.json(url === '/api/auth/me' ? { user: { id: 'u1' } } : data ?? {}, { status: url === '/api/auth/me' ? authStatus : status });
     } };
-  vm.runInNewContext(readFileSync(path.join(root, 'public/app/receipts/receipts.js'), 'utf8'), context);
+  vm.runInNewContext(readFileSync(publicPath('app/receipts/receipts.js'), 'utf8'), context);
   for (let i = 0; i < 20 && get('main').attributes['aria-busy'] !== 'false'; i++) await new Promise(resolve => setImmediate(resolve));
   assert.equal(get('main').attributes['aria-busy'], 'false', 'page settles');
   return { get, requests, document, redirect, prints: () => prints };
 }
 
-test('receipt page renders snapshots as text, reveals VAT and invokes printing', async () => {
+test('receipt page renders snapshots as text, reveals VAT and invokes printing', { skip: skipNoPublic }, async () => {
   const data = await detail((await issueReceipt(env, payment('p1'))).id);
   data.seller.name = '<img src=x onerror=alert(1)>';
   const ui = await page({ data });
@@ -282,14 +283,14 @@ test('receipt page renders snapshots as text, reveals VAT and invokes printing',
   assert.ok(ui.requests.every(r => r.options.credentials === 'same-origin' && r.options.cache === 'no-store'));
 });
 
-test('unregistered receipt page hides all VAT lines and empty optional contacts', async () => {
+test('unregistered receipt page hides all VAT lines and empty optional contacts', { skip: skipNoPublic }, async () => {
   env.RECEIPT_VAT_REGISTERED = '0'; delete env.RECEIPT_SELLER_TAX_ID;
   const data = await detail((await issueReceipt(env, payment('p1', { user: 'u2' }))).id, 'u2');
   const ui = await page({ data });
   for (const id of ['vat-row', 'subtotal-row', 'vat-note', 'seller-tax-row', 'buyer-phone-row', 'buyer-email-row']) assert.equal(ui.get(id).hidden, true);
 });
 
-test('receipt page redirects expired sessions preserving the full return path', async () => {
+test('receipt page redirects expired sessions preserving the full return path', { skip: skipNoPublic }, async () => {
   for (const options of [{ authStatus: 401 }, { status: 401 }]) {
     const ui = await page({ ...options, search: '?id=abc&from=billing' });
     assert.equal(ui.redirect, '/login/?next=' + encodeURIComponent('/app/receipts/?id=abc&from=billing'));
@@ -297,7 +298,7 @@ test('receipt page redirects expired sessions preserving the full return path', 
   }
 });
 
-test('missing IDs, 404 and network failure show safe messages without a printable receipt', async () => {
+test('missing IDs, 404 and network failure show safe messages without a printable receipt', { skip: skipNoPublic }, async () => {
   for (const options of [{ search: '' }, { status: 404 }, { networkFailure: true }, { status: 500 }]) {
     const ui = await page(options);
     assert.equal(ui.get('receipt').hidden, true);

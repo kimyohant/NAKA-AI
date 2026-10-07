@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { publicPath, skipNoPublic } = require('./helpers/landing.cjs');
 const { after, beforeEach, mock, test } = require('node:test');
 const { execFileSync } = require('node:child_process');
 const { readFileSync, rmSync } = require('node:fs');
@@ -197,15 +198,15 @@ test('migration preserves phone and Google identities, uniqueness, indexes and f
   } finally { sqlite.close(); }
 });
 
-test('login page shows LINE only when config explicitly enables it and explains LINE callback errors', async () => {
-  const html = readFileSync(path.join(root, 'public/login/index.html'), 'utf8');
+test('login page shows LINE only when config explicitly enables it and explains LINE callback errors', { skip: skipNoPublic }, async () => {
+  const html = readFileSync(publicPath('login/index.html'), 'utf8');
   assert.ok(html.indexOf('id="line-button"') < html.indexOf('id="google-button"'));
   assert.match(html, /id="line-button"[^>]*hidden/);
   async function page(config, search = '') {
     class Element { constructor() { this.hidden = true; this.listeners = {}; this.textContent = ''; } addEventListener(name, fn) { this.listeners[name] = fn; } }
     const nodes = new Map();
     const document = { getElementById(id) { if (!nodes.has(id)) nodes.set(id, new Element()); return nodes.get(id); }, createElement: () => new Element(), head: { appendChild() {} } };
-    vm.runInNewContext(readFileSync(path.join(root, 'public/login/login.js'), 'utf8'), {
+    vm.runInNewContext(readFileSync(publicPath('login/login.js'), 'utf8'), {
       window: { NakaAuth: { safeNext: () => '/app/', mockMode: () => false, me: async () => ({ status: 'signed-out' }) } },
       document, location: { search }, URLSearchParams, Date,
       fetch: async () => Response.json(config), clearInterval() {}, setInterval() {},

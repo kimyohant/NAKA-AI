@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { publicPath, skipNoPublic } = require('./helpers/landing.cjs');
 const { test, beforeEach, afterEach, after } = require('node:test');
 const { execFileSync } = require('node:child_process');
 const { readFileSync, readdirSync, rmSync } = require('node:fs');
@@ -239,7 +240,7 @@ function ui(fetcher) {
   const document = { getElementById: $, createElement: tag => new Element(tag), querySelectorAll: q => q === '.actions fieldset' ? fields : $('customer-list').children };
   const storage = new Map(), requests = [];
   const fetch = async (url, options) => { requests.push({ url, options }); return fetcher(url, options); };
-  vm.runInNewContext(readFileSync(path.join(root, 'public/admin/customers/customers.js'), 'utf8'), {
+  vm.runInNewContext(readFileSync(publicPath('admin/customers/customers.js'), 'utf8'), {
     document, fetch, sessionStorage: { getItem: k => storage.get(k), setItem: (k,v) => storage.set(k,v), removeItem: k => storage.delete(k) },
     Date, Number, Error, encodeURIComponent, URLSearchParams, location: { search: '' },
   });
@@ -256,7 +257,7 @@ async function signInAndOpen(page) {
   assert.equal(page.$('customer-title').textContent, 'ร้านทดสอบ');
 }
 
-test('all three UI forms require in-page confirmation, use bearer session storage, and refresh real handler results', async () => {
+test('all three UI forms require in-page confirmation, use bearer session storage, and refresh real handler results', { skip: skipNoPublic }, async () => {
   const page = ui(frontendApi); await signInAndOpen(page);
   assert.equal(page.storage.get('naka_admin_customers'), TOKEN); assert.equal(page.$('token').value, '');
   page.$('amount').value = '30'; page.$('credits-note').value = 'ทดสอบฟอร์มเครดิต';
@@ -279,14 +280,14 @@ test('all three UI forms require in-page confirmation, use bearer session storag
   await page.$('logout').fire('click'); assert.equal(page.storage.size, 0); assert.equal(page.$('app').hidden, true);
 });
 
-test('401 clears token and hides all customer information', async () => {
+test('401 clears token and hides all customer information', { skip: skipNoPublic }, async () => {
   let denied = false;
   const page = ui((url, options) => denied ? Response.json({ error: 'เข้าสู่ระบบใหม่' }, { status: 401 }) : frontendApi(url, options));
   await signInAndOpen(page); denied = true; await page.$('search-form').fire('submit'); await page.settle();
   assert.equal(page.storage.size, 0); assert.equal(page.$('app').hidden, true); assert.equal(page.$('login').hidden, false);
 });
 
-test('rapid confirmation clicks send once; an ambiguous network result requires reloading rather than a blind retry', async () => {
+test('rapid confirmation clicks send once; an ambiguous network result requires reloading rather than a blind retry', { skip: skipNoPublic }, async () => {
   let release;
   const page = ui(async (url, options) => {
     if (options.method === 'POST') { await new Promise(resolve => { release = resolve; }); throw new Error('network'); }

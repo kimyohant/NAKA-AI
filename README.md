@@ -1,10 +1,14 @@
 # naka-ai-backend
 
-Server side of **NAKA-AI** — moved out of [kimyohant/naka-drama-studio](https://github.com/kimyohant/naka-drama-studio),
+All server code of **NAKA-AI**. Unified design: the naka-ai.com Worker (`landing-worker/`) is the account hub
+(members, login, credits, payments, admin); the Studio engine (`backend/`) does the AI production and trusts the Worker
+through SSO. Server side of **NAKA-AI** — moved out of [kimyohant/naka-drama-studio](https://github.com/kimyohant/naka-drama-studio),
 which now keeps only the user-facing frontend and the Electron desktop app.
 
 ```
-backend/   Hono API + Drizzle ORM (better-sqlite3) + Mastra AI agents, FFmpeg merge, media generation
+landing-worker/  naka-ai.com Cloudflare Worker — accounts, login, credits, Stripe, LINE/Meta, admin APIs (D1)
+                 (moved with history from naka-ai-landing; its pages stay there)
+backend/   Studio engine: Hono API + Drizzle ORM (better-sqlite3) + Mastra AI agents, FFmpeg merge, media generation
            (moved with its full git history via git subtree)
 admin/     NAKA Admin — back-office SPA for system settings (AI services, styles, agents, storage, update),
            served by the backend at /admin

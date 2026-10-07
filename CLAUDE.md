@@ -8,7 +8,10 @@ desktop app live in kimyohant/naka-drama-studio; check it out next to this repo 
 ## Structure
 
 ```
-backend/   — Hono + Drizzle ORM (better-sqlite3) + Mastra (AI agents); full history imported from naka-drama-studio
+landing-worker/ — naka-ai.com Cloudflare Worker (D1): accounts, login, credits, Stripe, receipts, LINE, Meta, admin APIs, cron.
+                  Imported with history from naka-ai-landing; pages stay there (assets.directory → ../../naka-ai-landing/public).
+                  Read landing-worker/docs/ (DEPLOY.md, studio-sso.md, system-control.md) before changing it. Tests: npm test (node 24)
+backend/   — Studio engine: Hono + Drizzle ORM (better-sqlite3) + Mastra (AI agents); full history imported from naka-drama-studio
 backend/workspace/ — Agent working directory (Mastra Workspace jail root); skills/ + prompts/
 admin/     — NAKA Admin: Nuxt 3 SPA (ssr:false), system settings, served at /admin (base path /admin/)
 study/     — Hypit render engine notes (source in study/hypit, not committed)
@@ -29,6 +32,8 @@ docker/, Dockerfile, docker-compose.yml — all-in-one image (backend + admin + 
 - `npm test` — structure tests
 
 ## Architecture
+- **Unified system**: the Worker is the account hub (members, credits, payments, the one admin); the Studio engine signs members
+  in through the Worker's studio SSO and keeps data per member. Production naka-ai.com still deploys from naka-ai-landing until switched
 - **HTTP**: Hono (`backend/src/index.ts`), routes at `/api/v1`, `/static` serves DATA_ROOT, `/admin` serves the admin build,
   everything else serves the user-facing frontend build (`FRONTEND_DIST`, default `../naka-drama-studio/frontend/.output/public`)
 - **Admin guard**: `backend/src/middleware/admin.ts` — `ADMIN_TOKEN` (≥ 16 chars) protects the system-settings API;

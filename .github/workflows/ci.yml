@@ -37,3 +37,20 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run generate
+
+  landing-worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: landing-worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # tests use node:sqlite
+          cache: npm
+          cache-dependency-path: landing-worker/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      # page-script checks skip themselves (naka-ai-landing/public is not checked out here)
+      - run: npm test
