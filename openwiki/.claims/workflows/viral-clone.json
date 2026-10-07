@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:d902ddfabeabba9436ce9b9a0b6bc47604997b1ea3a5cced5c137a8fbab0da8e",
+  "claims": [
+    {
+      "id": "claim_57ac46d26fc34ddcb50a5a1f088a446a",
+      "statement": "Blueprint analysis runs the tool-less viral_cloner agent, validates the JSON, and makes exactly one repair attempt with the validation errors before failing the project with E_CLONE_ANALYZE_FAILED.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/clone.ts#L466-L513",
+          "version": "repo-lines-v1:sha256:fc108779370e514c5f80d2aad98aefeaa9dd4194163cd98b4baf25fca450387d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDEzNDZhN2NjNmZiNDJiNTUwYmYzMTVjYjA5NzIxZjQ0ZWJmZDM3Nzc1ZDQxYjQ3NzJmNDEzOWJmMjRlNWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzYmQ5MDU5NmE4YzE1NWNkMTVkOGNiNzdjMzg5NWM4ZGViZGM2YTc1ODE5ZTM1MWYzMDhhNDliYWVhZGY3ZjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyNmM0YzE5NzEzNzM1MWI1NWZhNGVjOWIzMjlhMGUxODkyNTc0OTU0ZWY2MjlhN2RiMTA1MTdlOGFlZmZlMDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_106e468ce0894eab9dfa773b7c531a01",
+      "statement": "The variant matrix is the Cartesian product of hook, product, avatar and language angles where an empty angle counts as a single default option, capped at 12 combinations.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/clone.ts#L255-L292",
+          "version": "repo-lines-v1:sha256:1fb9f4c3852c8322e817b1e7952c27d3d95c20b8cfed1b3b98c9d0c6c0c541a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1ZTg1MDhkMzUwODQxM2MyOTBkMDJhMzYyMTNhNzU2NDc1OWMwYjc0ZWY2OWQ4YzU2Mjg2NzYzNzY5NDA0YTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2MzYzYjkzODlkNGM2OTQ1NTU2YjdjMGU0Y2YxNjljN2ZhYjFlZGU5OTNlZmJlMTZlMjNiZGM5ZTExY2NhODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5MjcwZjhiMzYwNDBhZDVjNTEyMTBmNGZhZDFmMmRiYTVhNmI5ZDgyOGFhMDUyZDA5NjhjZTA4ZWQ2MDcxMTQifQ"
+        },
+        {
+          "resource": "repo://backend/src/services/clone.ts#L36-L36",
+          "version": "repo-lines-v1:sha256:59a194f76cc4b1598dd18cb556b1ec21b5816c7e845bc481d2c62bd5c3f563a9:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTlhMTk0Zjc2Y2M0YjE1OThkZDE4Y2I1NTZiMWVjMjFiNTgxNmM3ZTg0NWJjNDgxZDJjNjJiZDVjM2Y1NjNhOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTlhMTk0Zjc2Y2M0YjE1OThkZDE4Y2I1NTZiMWVjMjFiNTgxNmM3ZTg0NWJjNDgxZDJjNjJiZDVjM2Y1NjNhOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGEzYmY4MWJlNzkxMTIzODgxMzBiNWU3MjlmY2M4NWVhNTUxZDViZmI4YzIyOTk3MTQ4NDQyYWNiMzdjNTAzNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjYzZWNjOTAyOWVlODRkMzU2NDg0ODg5MTUwYTc4YjQ1NWMxMGI4NzllMDYwNGUzOGE3YjI5ZjdiMzI2NjEzZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d07e38fcde3c48c5a5710a3d0ee9dd47",
+      "statement": "A project-level clone_render lock and driver loop renders queued variants one at a time, returns early if a driver is already running, and on cancel returns queued variants to draft while letting a rendering variant finish.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/clone.ts#L1045-L1124",
+          "version": "repo-lines-v1:sha256:346e4dd965a0cce085ed6fcd6a9bc7b53bc36ddcdb6a67e5ccaa78ef8c7eff27:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjY2JlN2UxNmNkYWQ2OTg0OWYwMjJiNTA4ODMwN2YxYjg1M2ZkMzJjZjhkMjc5OGJhNTMwZWVlODgyZDZmNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzMzE5ZDllYmM2MDM1NDIwZjAzOTlmZjlhYzA4YjYxNzgyYmYyZTdjMzU4YmFmM2EzNWNiZGFiMjFlN2UxZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1MmUyZWVhYmZhZTkxZGFmNTc1ZWEyMWMxMjU1MTA3YmQ1N2UyMGE4MDViNjQ1NGY2MjNkNjgzYjM4Y2QwMTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_16ca9c38ff9f404a9bf1818c2d11868b",
+      "statement": "Variant render proceeds through prepare, keyframes, videos and merge stages that are persisted for restart, and a failed variant is marked failed with an error code while the batch continues; boot resumes stale clone_render drivers.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/clone.ts#L1126-L1145",
+          "version": "repo-lines-v1:sha256:c0eebeaf02ef44d6d3f673ee28dfb5e21d8119418db9e03c4713843bc8ed9687:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmYzE2MzM0YWZmN2VmZjkwZmY4NDY0MjcxYjQwZjU3ZDU1NDVhNmNmY2VkM2Y0MDNlYmUyZjNmOTg4ZTY3MzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2ZGJiYTgyZDMwOTRmNmY4MTQ3NzQ3MTIxMTQ3YzczOGI2YjhhNjc2MTE0MjY0MGEyMGZhOTRmYWI4YjFiYmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://backend/src/services/clone.ts#L891-L1043",
+          "version": "repo-lines-v1:sha256:eb3a4e403eb859d07dea42f77c1a7259541a8c891e0dea7755e4dccd0878282e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4ZDA1MDNjMDc2MzA1OTg3MDQ1ZmRlZTdmZDkzMjVmZTQ1ZmMwZTcyOTRiMmNlNjMwZWZiZDM1MmZkYWE3YWFmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIzNzMyNTcyMDRkYzM0MTY1NjRhNDA1NzVjMzU0YWViMjQwMTMwZDJiZDM5NTI0OGY1MThmMjBmYThjOGEzOTliIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5M2Q2N2M4NzIwOTA2MTM4OTA5YmM3MmE1NTQ3NjZmMmI0OTQ3YmRlNjQ1MDU2Y2YyNTg3ZTUxM2JlYmJlODljIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJkNmNkMmE4YjFlMjgwYmMxZTQ0ZTZmZDk5ZjhiODg0ZGI2ZGY5NjNiN2ZiMDQyZjk0M2NiNjZlZmM0OWI0YWJmIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_14bdb5e5fcc640eaa5f1f45c5ee07941",
+      "statement": "With the hypit engine, rendering falls back to the ffmpeg merge path whenever Hypit is unavailable or throws, and with the ffmpeg path a caption failure still delivers the variant without captions.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/clone.ts#L1003-L1025",
+          "version": "repo-lines-v1:sha256:8f9560d931f19bdbdfe1cb78d5b168c2fe358d830746d230bc655b54492dd67f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxNzNkYTZiZjY5M2QwM2I1Y2E5MjQ3YTEwNWQzYjY1MjVlNDMxNzA2ODVkYzYwYWViYWNmMTUzZWViZDRjMGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2MTc4YzRhYjgxYjU1OGM0NWEzZDFmZjY2MzYzZDJkMTM4YjI0MTgxYzg5NzMxNjQxOTgxZTc2YjdlYzM1NWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkNzNkNzJmNDY1Y2UwNDcwN2JmMzk0MjkzMzc2OWJlZGNhNmRhMmFiYmJiZTdhZDU2NzkzMzM0ZGE0NThmMWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjNzA3NWVkNWZiMTcyN2Y3NDk3MDJkNGU5ZGVmZWE4NTY0MzZiYjI3NjI2ZDcyYzhjOWViNWVhY2NhZmJhYWMifQ"
+        },
+        {
+          "resource": "repo://backend/src/services/clone.ts#L840-L883",
+          "version": "repo-lines-v1:sha256:c5f888fbf5a69ab6690567f51b4e61ee3dd614ed6c63179bebc9c1d0f311d82f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZGIyZTIwNjJkNTIyMzY3MjczMzE1OTQyODhiMDkyMzUyZTg1NmE4OTg2MzFhNWZlNGM3YmUwZDI5NDNkYTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmNTU1MGZmOTkwYjI1ZTg3MWZiMzFiM2QxNzRhNmU3N2QxZWRiNzI4Y2U3MTQyNjQ1NDFjN2I5ODg2ODg3NjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzZDkxYzFmMDQ5NTJhZTA5MDc5NDRmOWI3OGIzODA4OGI0MGE2NGJlNTM5YmU3MTI1YjZlYTFlMGJiODY3YzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_af632d9a01b94e0daf659caf33984cf0",
+      "statement": "Hypit is run as a separate Node CLI process in a temporary workdir with a timeout, its runtime worker is always shut down and the workdir removed, and availability requires the binary, its node_modules and a configured Chromium.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/hypit-render.ts#L319-L378",
+          "version": "repo-lines-v1:sha256:9b9e834befdce8aeb53cb9cc3afa43006c9414f718b446cf375f196461ae78b6:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhMWVlZGM1NzAwZjQyMzdhYzZjMWUyODIxZDNkMDIxNmVhZTdhYTZiMDFhOWRiNjM4ZGNkNzUxOWY0ZmRlMjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ0N2YyMjAzZGUzYWNhNjVhNjVhNjFmYjU3MmVmOTRkMTA5YzQ3OWZiNDQzMjZkMThhZWEzNGU2YjhiNTM5YjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://backend/src/services/hypit-render.ts#L62-L80",
+          "version": "repo-lines-v1:sha256:701bfa54dd34aced4a885f73b5690b0acf76a8ef742736e46b98c3e9430213c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3YmVkNmI2NDljMzQzYjY1NzU2ZTgyYzc2NTJmNThlMTlkZDZmNmQ2OTFkYzIyNTYxODMwOTIxMGYyNjNkNWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE4NDhiZjIzNzMyOGVlY2U2NzVkMDk4Yjk0YTRhZTczZTRkMjJiMGE0ZGQ3OTEwMjRiNjY0YWI5ZTk2ZjA4MzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2MzEyYTFkYjU1NzE2YTM5OGQ2ZjE1ZmVmYzAzNDQ4NDgxZmZhNGFhYzk1MThjNTQ4Yjk2MGNiODg4ZTcwZWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5d3ee382cb1745e88e1b796a18dc477a",
+      "statement": "Hypit is vendored for internal use only and must not be redistributed commercially or offered as multi-tenant hosted service without a commercial license.",
+      "evidence": [
+        {
+          "resource": "repo://study/README.md",
+          "version": "repo-file-v1:sha256:036217f46408969bb971b6684c3cb632c1175ba416cdf7cf509ac0cd767ba4d4"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

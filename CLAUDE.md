@@ -1,67 +1,77 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ## Project Overview
 
-NAKA-AI TECH— AI 短剧/漫剧一站式制作工具。全 TypeScript 栈：小说 → 剧本改写 → 资产提取 → 生图 → 分镜拆解 → 生视频 → FFmpeg 拼接导出。支持 Electron 桌面版（macOS dmg）与服务器部署。
+NAKA-AI TECH — an all-in-one production tool for AI short dramas / motion comics. Full TypeScript stack: novel → script rewrite → asset extraction → image generation → storyboard breakdown → video generation → FFmpeg merge & export. Ships as an Electron desktop app (macOS dmg) and as a server deployment.
 
 ## Structure
 
 ```
 backend/   — Hono + Drizzle ORM (better-sqlite3) + Mastra (AI agents)
-backend/workspace/ — Agent 工作目录（Mastra Workspace jail 根）
-backend/workspace/skills/ — Agent SKILL.md definitions（设置页可在线编辑）
-frontend/  — Nuxt 3 + Vue 3 + TypeScript，ssr:false（纯 CSS，无 UI 框架）
-desktop/   — Electron 桌面版：主进程 + esbuild 打包脚本 + electron-builder 配置
-data/      — SQLite 数据库（naka.sqlite3）+ 生成的静态文件（static/）
-configs/   — 遗留死配置，代码零引用
-study/hypit/ — Hypit（hypit-ai/hypit @ 7f730ab）全量源码，Viral Clone「Hypit」渲染引擎经 CLI 子进程调用；仅限内部使用，许可见 study/README.md
+backend/workspace/ — Agent working directory (root of the Mastra Workspace jail)
+backend/workspace/skills/ — Agent SKILL.md definitions (editable online from the Settings page)
+frontend/  — Nuxt 3 + Vue 3 + TypeScript, ssr:false (plain CSS, no UI framework)
+desktop/   — Electron desktop app: main process + esbuild bundling scripts + electron-builder config
+data/      — SQLite database (naka.sqlite3) + generated static files (static/)
+configs/   — Legacy dead config, zero references in code
+study/hypit/ — Full source of Hypit (hypit-ai/hypit @ 7f730ab); the Viral Clone "Hypit" render engine calls it via a CLI subprocess; internal use only, see study/README.md for the license
 ```
 
 ## Commands
 
 ### Backend (`backend/`)
-- `npm run dev` — tsx watch 开发服务（端口 5679）
-- `npm start` — tsx 生产启动
-- `npm run typecheck` — TypeScript 类型检查
-- `npm run backfill-artwork` — 存量图片/视频补缩略图与海报帧
+- `npm run dev` — tsx watch dev server (port 5679)
+- `npm start` — tsx production start
+- `npm run typecheck` — TypeScript type check
+- `npm run backfill-artwork` — backfill thumbnails and poster frames for existing images/videos
 
 ### Frontend (`frontend/`)
-- `npm run dev` — Vite 开发服务（端口 3013，代理 /api 与 /static 到 5679）
-- `npm run generate` — 产出含 index.html 的静态站点（`.output/public`；`nuxt build` 不产 index.html，不能用于静态托管）
+- `npm run dev` — Vite dev server (port 3013, proxies /api and /static to 5679)
+- `npm run generate` — produce a static site containing index.html (`.output/public`; `nuxt build` does not emit index.html and cannot be used for static hosting)
 
-### Desktop (`desktop/`，根目录 `npm run dist` 串联全流程)
-- `npm run dev` — 打包后端 bundle + Electron 窗口运行
-- `npm run build:backend` — esbuild 打包 backend/src → build/backend.mjs（ESM；externals: sharp/better-sqlite3/ffmpeg-static/ffprobe-static）
-- `npm run build:main` — 打包主进程 → dist/main.js
-- `npm run rebuild:native` — better-sqlite3 按 Electron ABI 重编（原生模块 ABI 变化后必须执行；postinstall 已自动做）
-- `npm run dist` — prepare-resources + electron-builder 出 arm64/x64 dmg → release/
-- `npm run dist:win` — 交叉打包 Windows NSIS 安装器（win-x64）；win 版 ffmpeg.exe 缓存在 build/win-bin/（缺失时脚本提示下载地址）
+### Desktop (`desktop/`; `npm run dist` at the repo root chains the whole flow)
+- `npm run dev` — bundle the backend + run in an Electron window
+- `npm run build:backend` — esbuild bundles backend/src → build/backend.mjs (ESM; externals: sharp/better-sqlite3/ffmpeg-static/ffprobe-static)
+- `npm run build:main` — bundle the main process → dist/main.js
+- `npm run rebuild:native` — rebuild better-sqlite3 for the Electron ABI (required whenever the native module ABI changes; postinstall already does it)
+- `npm run dist` — prepare-resources + electron-builder produces arm64/x64 dmg → release/
+- `npm run dist:win` — cross-build the Windows NSIS installer (win-x64); the Windows ffmpeg.exe is cached in build/win-bin/ (the script prints a download URL if it is missing)
 
 ## Architecture
 
 ### Backend
-- **HTTP**: Hono（入口 `src/index.ts`），路由挂 `/api/v1`，`/static` 服务 DATA_ROOT，生产托管前端静态目录
-- **Database**: SQLite（better-sqlite3 + WAL），`SQLITE_PATH` 覆盖库文件位置；DDL 在 `src/db/sqlite-schema.ts`，启动时幂等重放；Drizzle 表定义 `src/db/schema.ts`（sqlite-core）
-- **路径锚点**: `src/utils/paths.ts` 统一解析 DATA_ROOT/STORAGE_ROOT；桌面版由 Electron 主进程注入 env（`HUOBAO_DATA_DIR`/`SQLITE_PATH`/`WORKSPACE_PATH`/`FRONTEND_DIST`/`FFMPEG_BIN`/`FFPROBE_BIN`），dev 走仓库相对路径默认值
-- **AI Agents**: Mastra，4 个 agent（script_rewriter / extractor / storyboard_breaker / prompt_generator），instructions 从 `workspace/prompts/*.md` + skills 动态拼接，模型按请求解析；fetch 补丁链适配国内中转站（关思考/温度/max_tokens）
-- **媒体生成**: `services/generation.ts` 统一任务生命周期（sys_task 表），适配器模式：图片 openai/gemini/volcengine，视频 volcengine/minimax
-- **视频拼接**: `services/ffmpeg-merge.ts`，FFmpeg 二进制内置（ffmpeg-static），可用 `FFMPEG_BIN`/`FFPROBE_BIN` 覆盖
-- **Hypit 渲染引擎**: `services/hypit-render.ts`，Viral Clone 项目 `render_engine='hypit'` 时由 beat 片段生成 SVML 并 spawn `study/hypit/bin/hypit.mjs build`；不可用或失败自动回退 ffmpeg 路径
+- **HTTP**: Hono (entry `src/index.ts`), routes mounted at `/api/v1`, `/static` serves DATA_ROOT, production serves the frontend static directory
+- **Database**: SQLite (better-sqlite3 + WAL); `SQLITE_PATH` overrides the DB file location; DDL lives in `src/db/sqlite-schema.ts` and is replayed idempotently at startup; Drizzle table definitions in `src/db/schema.ts` (sqlite-core)
+- **Path anchors**: `src/utils/paths.ts` resolves DATA_ROOT/STORAGE_ROOT in one place; the desktop app injects env from the Electron main process (`HUOBAO_DATA_DIR`/`SQLITE_PATH`/`WORKSPACE_PATH`/`FRONTEND_DIST`/`FFMPEG_BIN`/`FFPROBE_BIN`); dev uses repo-relative defaults
+- **AI Agents**: Mastra, 4 agents (script_rewriter / extractor / storyboard_breaker / prompt_generator); instructions are assembled dynamically from `workspace/prompts/*.md` + skills, and the model is resolved per request; a chain of fetch patches adapts to domestic (China) relay providers (disable thinking / temperature / max_tokens)
+- **Media generation**: `services/generation.ts` owns the unified task lifecycle (sys_task table), using an adapter pattern: image — openai/gemini/volcengine; video — volcengine/minimax
+- **Video merge**: `services/ffmpeg-merge.ts`; FFmpeg binaries are bundled (ffmpeg-static), overridable via `FFMPEG_BIN`/`FFPROBE_BIN`
+- **Hypit render engine**: `services/hypit-render.ts`; when a Viral Clone project has `render_engine='hypit'`, SVML is generated from the beat segments and `study/hypit/bin/hypit.mjs build` is spawned; if unavailable or failing it automatically falls back to the ffmpeg path
 
 ### Frontend
-- Nuxt 3 SPA，动态路由在 `nuxt.config.ts` 的 `pages:extend` 手动注册（views/drama/）
-- `app/composables/useApi.ts` 统一 fetch 客户端（全相对路径，生产与后端同源）
-- 核心工作台 `app/views/drama/episode.vue`（剧本→制作→导出流水线）
+- Nuxt 3 SPA; dynamic routes are registered manually in `pages:extend` in `nuxt.config.ts` (views/drama/)
+- `app/composables/useApi.ts` is the unified fetch client (all relative paths, same origin as the backend in production)
+- Core workbench `app/views/drama/episode.vue` (script → production → export pipeline)
 
 ### Desktop
-- 主进程 `desktop/src/main.ts`：单实例锁 → 空闲端口 → userData 准备（workspace 模板 copy-once + `.template-version` 版本标记）→ `utilityProcess.fork` 后端 → 轮询 health → BrowserWindow
-- userData：打包版 `~/Library/Application Support/NakaAi/`，dev 版 `NakaAi-Dev/`（互不干扰）
-- 后端 bundle 在 asar 内（externals 经 asar node_modules 解析，.node 自动重定向 unpacked）
+- Main process `desktop/src/main.ts`: single-instance lock → free port → userData preparation (workspace template copy-once + `.template-version` marker) → `utilityProcess.fork` the backend → poll health → BrowserWindow
+- userData: packaged build `~/Library/Application Support/NakaAi/`, dev build `NakaAi-Dev/` (kept separate)
+- The backend bundle lives inside the asar (externals resolve through the asar node_modules; `.node` files are redirected to unpacked automatically)
 
 ## Database
-SQLite 单文件（默认 `data/naka.sqlite3`，桌面版在 userData）。启动时 `initSqliteSchema` 幂等建表 + 风格预设种子。MySQL→SQLite 一次性迁移：`cd backend && npx tsx scripts/import-mysql-to-sqlite.ts [--force]`（逐表行数校验、写前备份）。
+Single SQLite file (default `data/naka.sqlite3`; in userData for the desktop app). `initSqliteSchema` idempotently creates tables and seeds style presets at startup. One-off MySQL→SQLite migration: `cd backend && npx tsx scripts/import-mysql-to-sqlite.ts [--force]` (per-table row-count verification, backup before writing).
 
 ## Key Config
-- AI 服务配置存 DB（`ai_service_configs` 表），设置页维护，不在配置文件
-- 环境变量全集见 README「环境变量」；`configs/config.yaml` 是死配置（勿参考）
-- `PUBLIC_BASE_URL`：Seedance 引用本地参考资源需公网地址，桌面版无此能力（有中文报错）
+- AI service configs are stored in the DB (`ai_service_configs` table) and maintained from the Settings page, not in config files
+- The full list of environment variables is in the README ("环境变量" section); `configs/config.yaml` is dead config (do not reference it)
+- `PUBLIC_BASE_URL`: Seedance needs a public address to reference local assets; the desktop app cannot provide one (it shows a Chinese error message)
+
+<!-- OPENWIKI:START -->
+
+## OpenWiki
+
+@AGENTS.md
+
+<!-- OPENWIKI:END -->
