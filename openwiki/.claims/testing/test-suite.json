@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:6759da165d3dc19e873d8adb4045581d0d7e5412f29fa1c524c90de274c72082",
+  "claims": [
+    {
+      "id": "claim_9f177a28ef3e4b53914065d3ab0462df",
+      "statement": "The npm test script runs node --test over tests/*.test.cjs and the auth, social and inbox test directories under src.",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L9-L9",
+          "version": "repo-lines-v1:sha256:778c4ac94960fb03199e61d2188f0e2110af8bf64bf0d6f71d7c49da2f01b23f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzc4YzRhYzk0OTYwZmIwMzE5OWU2MWQyMTg4ZjBlMjExMGFmOGJmNjRiZjBkNmY3MWQ3YzQ5ZGEyZjAxYjIzZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzc4YzRhYzk0OTYwZmIwMzE5OWU2MWQyMTg4ZjBlMjExMGFmOGJmNjRiZjBkNmY3MWQ3YzQ5ZGEyZjAxYjIzZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmYzYmVkYzc5MzlhMThhODE1Y2U1MGQ4ODQ0ZmVjNWE5M2QzNjliZDIzNzU5Y2IyYzFmOWViMWY1NTMyOTg2MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiNjY2NGU4NjlkZDY5YWM3NDc5NGEyODk0NzJiYzBkZGI0NTUyMzYwYmFlYTlhY2I4MjZiNTEzMmI1NDEyYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_27f2399d2ba24e138105757fb769ff94",
+      "statement": "Billing tests compile src with the project's tsc into a per-process .wrangler build directory and mock Stripe at fetch.",
+      "evidence": [
+        {
+          "resource": "repo://tests/billing.test.cjs#L8-L18",
+          "version": "repo-lines-v1:sha256:e4cb475df547c52bc90f2181cb8e467b26b7c84109692f0cd8212f12a1ef4f8e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1NjE3ZmFlYmMzZTI0ZWQwNDYxNTU2NTY2N2ViNjg2NzRkY2Q0YzIzMWQzYWJlZjc5Mjc1NjBkNmZiZGMzZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU0NDc0OWJkYWJiMTZhMTQ4MTZiZGI2NzAyMDJmNzU2ODlmOWY1YmVlMTI4OTE1MjlmMGZlYTY1NmI4OTNiNTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2MmQzNWRkMDU3MDI3OTVkMmI4ZDFhMzlmY2NjMzYyYmU2MTFjMTk4OTMwODg0ODAyNDJkYTkxN2I5ODU0N2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7f9ca1bc36549478641d055a8df113e",
+      "statement": "Auth runtime tests bundle with esbuild and run in Miniflare.",
+      "evidence": [
+        {
+          "resource": "repo://src/auth/tests/runtime.test.cjs#L1-L8",
+          "version": "repo-lines-v1:sha256:37efcc8f135cf57d8dd0c3642f0a42c3545cf32d5698f0f2e5434cd952f87f1e:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWZlY2FiMDJlZmFkYzY1MTUzZmFlOGNhZmUxMWQ2YjUyYmUwMDZmNzdkMDYyYWJiZWNlOGNmMTM0YTIyMDViZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmFlMTZkMDY0ZTIzYmI0MjU1MTUzMWUyNGI2MjQ5NzMwZTIwNDQ1Mzg4MjI3YTRlZTgzNGY5ZDlmMTNhZGNhNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmNiZDU2ZTVkYmZmYmNhMDZlMzA3NzdjMmFmZTllZDYyODliN2Q4ZGU1YjQ5MWQ0MmNmZDIyYzA1ZTMyNTY2YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_aa6c7624470b4d72a7c5a567fdd834a0",
+      "statement": "The test D1 shim implements prepare/bind/first/all/run and a transactional batch with rollback on error over node:sqlite, and migratedDb applies named migrations to an in-memory database.",
+      "evidence": [
+        {
+          "resource": "repo://tests/helpers/d1.cjs#L1-L42",
+          "version": "repo-lines-v1:sha256:88917017d0ca4596863e8f8753a1ac2bd0c00b7c6caf32c6dd93b199725db489:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0ZWFiMDBjNTIyMWI0ZDlhYzU1MDc0MTdlODBlZmU2NjY0NDU4YTNhNGZlMGZlMzVmNWJmMWViZmQ0ODg5MzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwNmZjZjQzNWQ5YTdiMGU2OTk3NWZmZGViMzI1MDkxMTFlZGFjZmVkMjkyYzQ3NmEzMWFkYTk5Nzc4ZmFkMWEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}

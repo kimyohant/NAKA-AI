@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4082a0d9c79e133884171c1ba1a92988a9729d7131690f7816cd385b73274317",
+  "claims": [
+    {
+      "id": "claim_d2e68d50164d4213b676586993144da8",
+      "statement": "Plan prices always come from the plans table (only price_thb > 0 and on_sale = 1), and yearly billing charges ten months.",
+      "evidence": [
+        {
+          "resource": "repo://src/billing/index.ts#L33-L43",
+          "version": "repo-lines-v1:sha256:b88b6e750feab744fa6beb81b889baa12fa5bf056e583ccc0e13a5f28d65a042:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0NTQzMzllODJlMjBlMzhmNDA2ZGIzN2IyNmU2NTQyM2JkNzA1M2JkYWQ5NzZhYjQxYjliNzgwZTRmNWFjZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0ZTA3YmU2OGFlMmVhYjQyNDkwNmRmYTVhNzcxMTE2YTdmYTVlMTdhMDVlNDc0NjY1ODlmOWVmNjljMjFiNzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhhYTliMWRjMTA1NzhjMDM1MWIyZTVhMDMyZDI3NmViOWM2YWZmNDg1ODU1ODdiMzk3MDQ0YTkxOWM2NmMxY2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_41db8bc4a4e94d638a3146efddeaebca",
+      "statement": "Online payment requires FEATURE_PAYMENTS not off plus STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET; otherwise checkout answers 503.",
+      "evidence": [
+        {
+          "resource": "repo://src/billing/index.ts#L158-L160",
+          "version": "repo-lines-v1:sha256:36296ea5210e41cdc5f6d6800fb088d050ca971249310db67cd807a014efd893:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjE5ZmMwZjFkYzUxMDM2MmE4Yjc2ZTQ1MWUxNTRkYTZhY2JkN2ZhMWZmY2E0YTI2MWRjNDZmNWU5MWRiNTBhZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzEzNDUxODAxMDViMGM2NmE3N2RhZDUxYmIzNzkwMWEzNzMyYzk2NTRiYTRkZTM5ODFmODFlMTgxNzUyNDhiZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2Q3NzEyNTk3MmMwYTc4MmFkNGY3ZDE2ZTg3MjVhOThlYmEyZjQxNGQ4ZDFlMjIxZDQ3N2MxNDAxZTcxNThmMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWViNTkyNjU2ZTk1ZWMxNDE2NDhhNGFiMDViNDE0ZDMxZmM5NTU5ODUwZDVlZjgwZGM3MmI4YTZiMTY5MGY5YiJ9"
+        },
+        {
+          "resource": "repo://src/billing/index.ts#L229-L232",
+          "version": "repo-lines-v1:sha256:7a4b3c195ef1665a907577b05a665c2f5eb0a235c1a82d74566c7628932d95ab:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzI2N2U2ZjQ2YmMxNGVjYmMwMDIzNzI4ODdkMjdjMzExNzk2MmI1YTc4NGQwZjY3ZTAwNTczNDE4MWZhY2ViMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzEzNDUxODAxMDViMGM2NmE3N2RhZDUxYmIzNzkwMWEzNzMyYzk2NTRiYTRkZTM5ODFmODFlMTgxNzUyNDhiZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjc0ZTQwMWJlNDNmZWU1YWM0ZDNmNTc0NWM4YmFkMGY3NzliOTc1NGE0MWUzYTNjOTM1YzZmMmFlOTViYWUzMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDRkZmY2MzY3MjUxM2NkZjViYWUxOGU4YWU4NzZlMDE3NTJjOWI1NDlhZWRhZDY5ZmZkNzY2ZmYyODY4MjJlMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8c0be40cc0614dc3be9614956028f10d",
+      "statement": "Checkout inserts a pending payment only if the user has fewer than 5 pending payments in the last hour, counted inside the insert statement itself.",
+      "evidence": [
+        {
+          "resource": "repo://src/billing/index.ts#L152-L161",
+          "version": "repo-lines-v1:sha256:40dbd729d3f64baaa69738cc15920e885e2477a3a7c79b1f58a661605e5d8ee2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMDU5YzhjZmI1YTA3MmM2ZjY0ZGQzZDFiZmRiYzM1NmZiZWM5M2FlZWM4ODc5MWRhN2VkYmE4OWMwODg1ZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4ZWJkM2Q5OGVkMjlmMDIwYTM0OWIxZGFhNDBkOTY4MjJjMmUwYmM3ZDcyMDIwMWYyY2RiOTcyZDhlNjA4MWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkMGNiNDZkYTQ1NjY4NTQ3YjdlNDNiOTZhMjQxNzAyZDZlNmE0OGMyMjgzY2I2ZWJhZjBjNTk0Yjg2YzM5MjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJlZWQ1NDFhMmE0NDY3ODgzN2M4NGIxNWM3N2IzZDRmNjI0ZDE0N2IyMGJkNGIwMzZhM2JmOTQ4ZGFlMTIxNTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3b901863ee7d42efb7d973380302b469",
+      "statement": "A Stripe session from a webhook is re-fetched from Stripe and reconciled only if its id, amount, THB currency, client_reference_id and metadata payment id match the stored payment; only complete and paid sessions are applied.",
+      "evidence": [
+        {
+          "resource": "repo://src/billing/index.ts#L249-L274",
+          "version": "repo-lines-v1:sha256:aef529ae2953a5f0d64fe1749169b9aee9d917ec477bfa7266ef63408e61d3a9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxYzkwYmRhZDk3MjFkNDk4ZjExODdjZGUwYzJiY2VkYzczMDkyN2ZmODcwNmY0ZTU1OTkzNTcxODI0ZDZjNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmMmI2ZGU4YzAwMjIyYTNiYzRlMGYwZjZmZTI1MDFmNTVjNmVjYmE3ZjQzNmVlZDAzOGYxOTlhZjk1ZmMyMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5MTA2ZjA2ZjQ1NmFhOTk2NjczMjlkYTc2N2NhNDc2ODM3ZDdmMGRhMWMyZWFmOTYxMjhiNGRjYzIyNTA5M2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4YWFmMmU3MGFiMTk4MmVjODVkNDEyODdhZTE0MWY2ZDVjMmVjMzMyZTllNzMxMGY4YWY3ZDViOTMxNTA0ZmQifQ"
+        },
+        {
+          "resource": "repo://src/billing/index.ts#L98-L119",
+          "version": "repo-lines-v1:sha256:f6c80af86d8acbd142df524a94cd26fae02575136e41d69cda258f726829a768:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhZjE5NzU0YzU2Y2M4YTVlMjIwYTQ0NzU0N2RmYWVhNDFmMTgwODU2NGNkMTNlNWMzYWM0MjQ3M2FiYjc1OGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzMTNlM2YzMjRmMDA3MjE1MGZjOTUwMzU4YmU1NmZjNDA4NjhjYTRiZWFkZjU4MDExYjgyODRiYmExMWE3MTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJlMjcwMGY5MWJjYmQ3NWYzM2VhZjE2ZWQ0MzUyOWI1Y2RkMDU0OTc1ZDJjNDkxYjAwOGNhY2U4YWY1OTI1YjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhNzhiYWE5Nzc2M2ZiMWZmMjcxYzJhN2E3NmY0NGU4MGQ0ZTE2MWM2MDBiMzJiMGQwM2I2MWYyNTU1NTI3MjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a3cf667d35294d81b8aa8df048d99527",
+      "statement": "applyPayment claims the payment with an apply_token and writes the top-up and subscription in one D1 batch, so a payment is applied exactly once, and paying again for the same active plan extends it.",
+      "evidence": [
+        {
+          "resource": "repo://src/billing/index.ts#L44-L84",
+          "version": "repo-lines-v1:sha256:d251d894f4d1e2f3c27dd9a5a58206de3d44671072ae676375484245dcfcea41:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiNTI2ODBjNmM2MjgwNTMyOGJiZDcyODdiNWRiMjFmYTFhMjEwMDhkOGJkNjU0OWRlNjE4MzRmOWEwZDIwNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUwZGE1M2VlZTEwNzgyOTNlMDgzY2M1YjZiODEzZWRkM2ZlOWJhOTdjZWUxMWE0MzM0ZTFhMzU3NGNlNjc0NWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwOTViZTllYjlkMWIyNTEwNDdlNWYzYjE4YzZmYmI2YzQ2YWRjYTRkMDViYjBhOGQ4NjZiY2M3M2Q1MTVkN2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d0e0ade910674a4b883289ace29ef708",
+      "statement": "Credit top-ups bring the balance up to the plan's monthly credits and never remove credits.",
+      "evidence": [
+        {
+          "resource": "repo://src/billing/index.ts#L86-L95",
+          "version": "repo-lines-v1:sha256:2449f11a9120bb6cc3477093da55e03c13a9dc11e98aac7b5bc773a91b423520:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyNjVlMzA5NGFiNWQ4NDgxNzIxOTRkZmMyYmE5ZDgwZmMzYWU5MDNhNzJiYzQ3NDcyNGE0YzZkYWI4NTA0MzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0OTYxMGJjZmY4YTMwYzc1MmIwNGI2YTE1NGQyMTk3N2JhZDg2ZTUzZjczZjU3ZTEyNTQ2OGFmMzcyYjRjMmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRhMjgxMGMzN2I2ZmRjODY3MjdiMGFkN2M0MjhjMWQ5ZWE2YzRjYzMzZWFmODVkN2RhMzgzNWVjOWZjNTUyZmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYyZDkxMWZhOTUyODFmZmE4ZDQ2OWE0MTViZjg0YTNkZjg4NjE3MGM3ZTQwODY0YmY4ZmI0OGFiN2MxYWVhZTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_030d3c1dd2114ce199bfc303c8300de2",
+      "statement": "The billing cron expires lapsed subscriptions, closes pending payments one day after checkout expiry, and tops up due subscriptions with a guarded batch that advances next_credit_at so overlapping runs cannot double-credit.",
+      "evidence": [
+        {
+          "resource": "repo://src/billing/index.ts#L277-L290",
+          "version": "repo-lines-v1:sha256:540434c552833b99db53e52f2272f05576a2f203a5fa6f52c124ee7998382082:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyZjhmMGY4YWIzZjk5MzFhNzkwZTc3ODVlZTJiNzIxY2U4MTRmYjMzNWUzOTkwM2FhODZmOTIyYzBhMTlmZmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1ZGY4NmI5ZGM5N2ZhNWJmMDlkZWJmMTAzMzU4MDRlZTNmZTQ4ODgwZGU3ZGVkOThjYWRjZWM4ODhlNzU1ZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_78402737ba444bddbfd2b763f7c61be2",
+      "statement": "Stripe webhook bodies are capped at 256 KiB and the signature is verified over the raw bytes with Web Crypto; Stripe fetch failures return 503 so Stripe retries.",
+      "evidence": [
+        {
+          "resource": "repo://src/billing/index.ts#L249-L274",
+          "version": "repo-lines-v1:sha256:aef529ae2953a5f0d64fe1749169b9aee9d917ec477bfa7266ef63408e61d3a9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxYzkwYmRhZDk3MjFkNDk4ZjExODdjZGUwYzJiY2VkYzczMDkyN2ZmODcwNmY0ZTU1OTkzNTcxODI0ZDZjNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmMmI2ZGU4YzAwMjIyYTNiYzRlMGYwZjZmZTI1MDFmNTVjNmVjYmE3ZjQzNmVlZDAzOGYxOTlhZjk1ZmMyMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5MTA2ZjA2ZjQ1NmFhOTk2NjczMjlkYTc2N2NhNDc2ODM3ZDdmMGRhMWMyZWFmOTYxMjhiNGRjYzIyNTA5M2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4YWFmMmU3MGFiMTk4MmVjODVkNDEyODdhZTE0MWY2ZDVjMmVjMzMyZTllNzMxMGY4YWY3ZDViOTMxNTA0ZmQifQ"
+        },
+        {
+          "resource": "repo://src/billing/stripe.ts#L66-L75",
+          "version": "repo-lines-v1:sha256:599a8e3e4b903d02a7842e49a326de2f1dd2494131d88785de8dddfb2a6d3f31:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljZmJiY2MzZmE3NDU5YzZkNjg2YjI2YWFmZDNmYjM4ZjMwY2RhYjQwMmM2ZTRkOGE1MjM3ZTFlYTRjZDdlMmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiMmY4NzcwYjVkMzczY2ZlMDIwZDhiNzRmNWYxZDQ5Y2Q3MGM4YmY2ODlkOGI4M2VkNDllZmMwYjFmYzVmYjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0f975e0d459846d4a990f826b4bc8617",
+      "statement": "Receipts are issued idempotently with a frozen JSON snapshot and a per-year sequence number allocated in the same INSERT statement, and only when RECEIPT_SELLER_NAME is set.",
+      "evidence": [
+        {
+          "resource": "repo://src/receipts/index.ts#L42-L104",
+          "version": "repo-lines-v1:sha256:d86772f281b5b29c436600d47c45b2c4d70e05cedd6d7a5c7b80a7f78f50a4c7:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyYzdjNTg1NTdhMmYzZGUyODc2NzA0MjQzMGY0OTU0OWRlMDYwNDNlNjFiZTAyYjUzYWIwM2ZjOTkzZGNkMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4MTFhYjdkOTY1N2JmMWQ3MGE0Y2JlNTI1NTc4MTg3OGJmMGVhNTI2OGQ2NjRhODE1ZGY3NGU2NjI1M2JiZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmZGZlNzM5NDFmYTkzOThiZGFjNWRmZWFiNzQ2OGJlOGQzMDU4MmQ3YjA4YjkxMDYxYzZhM2EzODQ3MzRmOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkYjU4MDY0Yzk4YTU5OTg2ODQ4N2EzMmEzMTA2ZmZlYzM0ZjYyOTY1ZjA0Y2Q3NWNlODY3OTY1Zjg4ZTAyOTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_616fa67de6bc4f7791f5025d79802092",
+      "statement": "backfillReceipts issues receipts for successful payments of active users that lack one, up to a per-run maximum.",
+      "evidence": [
+        {
+          "resource": "repo://src/receipts/index.ts#L112-L127",
+          "version": "repo-lines-v1:sha256:2a83d6106ef7da044ed9cf95a3b0774af4296a2e00c3c6c8b15fbf1424baeb8f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0MTNjMGI4YmFhYWUyZGEwZGE2MzIyNzc0ZDAxZTMzZDNmYzJmNGU4N2EwMTE4ODFkZWVjMDZhMGZmODEzMDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxMzQ1MTgwMTA1YjBjNjZhNzdkYWQ1MWJiMzc5MDFhMzczMmM5NjU0YmE0ZGUzOTgxZjgxZTE4MTc1MjQ4YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhZjM5YjIzYTY0N2ZmOWUzMDJmZjcxZWJhMWI2MDY4MWYxOTNkNjk2NzliYjVjMDdjNzMzYWFhOWFkZTY3ZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlMjA2NTE0YzQ2NDQzZWJkMjE3NzhjNGUyOTYwNDkyNjdkMjBlZDEyMTBkNDM1MjZmNWY2MjdhZmJmMGNiZWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a3103a39319c4f0188b3dfcd9f48d8c7",
+      "statement": "Receipt VAT is computed as inclusive 7% with exact integer BigInt arithmetic when RECEIPT_VAT_REGISTERED is 1.",
+      "evidence": [
+        {
+          "resource": "repo://src/receipts/index.ts#L68-L72",
+          "version": "repo-lines-v1:sha256:d20e434ee9078a7700a813bf05322460a03c590554e74377cd237bddec32e954:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDljNTc5Yzc2MTAwMDM3MWI5NjA2YTlhZjc3NjMyYzlhMjI0ZmI1ZWFlNDgwMDlmZGY2OTNmOTc3OTcwYmYzMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTFkNTkwYmM1MjA0Yzg1YjA0Y2EzOGE4OWNiYTM4ODdmNjAxMTgwYzViMzZiZTU4M2U1ZDQ5MWE0ZTFjNmVmNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTc1NGMxMzAyMmI1ZDM5MGU2NzlhMTgxZDQxZmRjMGRkNWEzYTNkNDAyNWZjMDkwNGVlZWY0MjkzNzBhZmM1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMThlZTNlN2FmYjFkYzllMTk5NDNhYzJjMTU4NmM3YjJmZDFhMmQ3ZTY5ZmFjODNkZTdiN2U0MTdjN2JkMGFkZSJ9"
+        },
+        {
+          "resource": "repo://src/receipts/money.ts#L35-L38",
+          "version": "repo-lines-v1:sha256:b4093a05fe1e1ef183b4df849a7a825c45ca648bc378365fd3ea75b66a5791a9:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTU2ODQwZDQ0MTM0ZjZkNjRmYWQ1YzA5NjNlYTlmZGFmYzc1Nzc1YzQwNWVlOTI3NzExZWY0YWEzNzA0ZmE0MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGYxN2I2NGZhNmY1MzZjZjA1NGY0YzE4ZWJkMzA3YTg5YjEzNTdiNDI3ZTgyZGYwODM3Njg5ZjQ5MDEzMGRlYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}

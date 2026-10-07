@@ -1,0 +1,7 @@
+# Files
+
+- [AI Marketer and AI Video](ai-marketer-and-video.md) - How the AI marketer turns seller input into queued Claude tasks (insight, bulk plans, recreate), pulls trending videos, reads product URLs safely, and how AI video jobs submit to a pluggable provider, poll without blocking the queue, and store results in R2.
+- [Authentication and Sessions](authentication.md) - How customers sign in (Google, LINE, phone OTP, email+password with reset, Turnstile), how D1-backed sessions work, how admin access and the naka-studio SSO are authorized, and the abuse limits built into each flow.
+- [Billing, Plans and Receipts](billing-and-receipts.md) - How prepaid packages are sold through Stripe Checkout, how payments are reconciled by webhook or polling and applied exactly once, how the billing cron expires packages and tops up monthly credits, and how numbered receipts are issued and backfilled.
+- [LINE Sales Agent and Admin Back Office](line-sales-agent.md) - The original naka-ai product — a Claude-powered sales agent on a LINE Official Account with product search, stock-safe order creation, human handoff, plus the legacy admin REST endpoints and test chat.
+- [Social Publishing and Inbox Replies](social-and-inbox.md) - How sellers connect Facebook/Instagram through Meta OAuth, how scheduled clips are published with leases and never double-posted, and how the Meta webhook feeds an AI Inbox that drafts, guards and optionally auto-sends replies.
