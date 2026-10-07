@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
+import { ownedBy } from '../auth/owner-context.js'
 import { db, schema } from '../db/index.js'
 import { success, created, badRequest } from '../utils/response.js'
 import { generateImage, generateVideo, resumeGenerationTask, videoQueuePosition } from '../services/generation.js'
@@ -129,7 +130,7 @@ app.get('/', async (c) => {
   const storyboardId = c.req.query('storyboard_id')
   const dramaId = c.req.query('drama_id')
 
-  let rows = await db.select().from(schema.sysTask)
+  let rows = await db.select().from(schema.sysTask).where(ownedBy(schema.sysTask.ownerUserId))
 
   if (type) rows = rows.filter(r => r.type === type)
   if (storyboardId) rows = rows.filter(r => r.storyboardId === Number(storyboardId))

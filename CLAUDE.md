@@ -36,10 +36,15 @@ docker/, Dockerfile, docker-compose.yml — all-in-one image (backend + admin + 
   in through the Worker's studio SSO and keeps data per member. Production naka-ai.com still deploys from naka-ai-landing until switched
 - **HTTP**: Hono (`backend/src/index.ts`), routes at `/api/v1`, `/static` serves DATA_ROOT, `/admin` serves the admin build,
   everything else serves the user-facing frontend build (`FRONTEND_DIST`, default `../naka-drama-studio/frontend/.output/public`)
+- **Per-member data**: `backend/src/auth/ownership.ts` (after requireSession) checks every id a request names — path segments and
+  parent ids in query/JSON body — and answers 404 `E_FORBIDDEN_OWNER` for another member's rows. Top-level tables carry
+  `owner_user_id` (stamped on insert from `auth/owner-context.ts`, an AsyncLocalStorage scope); children resolve through their parent.
+  List queries add `ownedBy(table.ownerUserId)`. New top-level table → add the column, an `OWNER_SQL`/`PATH_KINDS` entry and the list
+  filter. Admins open anything and list their own + legacy `'local'` rows; SSO off = everyone is `'local'`, nothing filtered
 - **Admin guard**: `backend/src/middleware/admin.ts` — `ADMIN_TOKEN` (≥ 16 chars) protects the system-settings API;
   admin-only calls need `X-Admin-Token`. Open to the app: AI config list (keys stripped), style preset list, `/settings/*` prefs
 - **Database**: SQLite (better-sqlite3 + WAL); DDL + idempotent migrations in `backend/src/db/sqlite-schema.ts`; Drizzle tables in `schema.ts`.
-  Adding a migration: bump the pinned migration lists in the tests (`grep -rn "16, 17, 18" backend/tests`)
+  Adding a migration: bump the pinned migration lists in the tests (`grep -rn "19, 20, 21" backend/tests`)
 - **AI agents**: Mastra; instructions from `workspace/prompts/*.md` + skills; model resolved per request
 - **Media generation**: `services/generation.ts` (sys_task lifecycle, adapter pattern); FFmpeg merge in `services/ffmpeg-merge.ts`
 - **Cross-repo contracts**: tests reading the frontend use `backend/tests/_frontend.mjs` (skip when the sibling repo is missing)

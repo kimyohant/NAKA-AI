@@ -35,6 +35,7 @@ import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
 import { adminGuard, assertAdminTokenConfig, guardOn, isAdminRequest } from './middleware/admin.js'
 import nakaSso, { requireSession, ssoConfig, ssoEnabled } from './auth/naka-sso.js'
+import { ownership } from './auth/ownership.js'
 import { failStaleRunningTasks } from './services/pipeline-tasks.js'
 import { failStaleCampaigns } from './services/marketer.js'
 import { failStaleStudioProjects } from './services/studio.js'
@@ -107,8 +108,9 @@ app.get('/api/v1/health', (c) => c.json({
 }))
 
 // API routes
-// members (naka-ai SSO) → then system-settings API for admins only (middleware/admin.ts)
+// members (naka-ai SSO) → each member's own data (auth/ownership.ts) → system-settings API for admins only (middleware/admin.ts)
 app.use('/api/v1/*', requireSession(() => ['http://localhost:3013', 'http://localhost:3014', ...adminOrigins], isAdminRequest))
+app.use('/api/v1/*', ownership)
 app.use('/api/v1/*', adminGuard)
 const api = new Hono()
 // back-office login check: 401 E_ADMIN_REQUIRED unless the token is valid (guard off → always ok)

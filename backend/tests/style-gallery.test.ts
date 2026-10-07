@@ -59,7 +59,7 @@ test('migration v13 adds style gallery columns and stays idempotent', () => {
     initSqliteSchema(sqlite)
     initSqliteSchema(sqlite) // replay — idempotent
     const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
+    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
     const cols = (sqlite.pragma('table_info(style_presets)') as Array<{ name: string }>).map(r => r.name)
     for (const col of ['preview_path', 'category', 'source']) {
       assert.ok(cols.includes(col), `style_presets missing column ${col}`)
