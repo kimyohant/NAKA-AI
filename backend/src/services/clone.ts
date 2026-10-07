@@ -330,6 +330,46 @@ export async function listCloneProjects() {
   return rows.map(toCloneProjectJson)
 }
 
+/** หน้าแรกของสตูดิโอโคลน: สถิติรวม + ตัวแปรต่อโปรเจกต์ + คลิปที่เรนเดอร์ล่าสุด */
+export async function getCloneOverview(recentLimit = 8) {
+  const [projects, variants] = await Promise.all([
+    db.select({ id: schema.cloneProjects.id, name: schema.cloneProjects.name }).from(schema.cloneProjects),
+    db.select().from(schema.cloneVariants).orderBy(desc(schema.cloneVariants.updatedAt)),
+  ])
+  const names = new Map(projects.map(p => [p.id, p.name]))
+  const stats = { projects: projects.length, variants: 0, completed: 0, busy: 0, failed: 0, renderedSec: 0 }
+  const perProject: Record<number, { total: number; completed: number; busy: number; failed: number; latestOutput: string | null }> = {}
+  const recent: Array<{ id: number; projectId: number; projectName: string; label: string; outputPath: string | null; durationSec: number | null; updatedAt: string }> = []
+  for (const v of variants) {
+    if (!names.has(v.projectId)) continue
+    const bucket = perProject[v.projectId] ??= { total: 0, completed: 0, busy: 0, failed: 0, latestOutput: null }
+    bucket.total += 1
+    stats.variants += 1
+    if (v.status === 'completed') {
+      bucket.completed += 1
+      stats.completed += 1
+      stats.renderedSec += v.durationSec ?? 0
+      if (v.outputPath) {
+        bucket.latestOutput ??= slashPath(v.outputPath)
+        if (recent.length < recentLimit) {
+          recent.push({
+            id: v.id, projectId: v.projectId, projectName: names.get(v.projectId) ?? '', label: v.label,
+            outputPath: slashPath(v.outputPath), durationSec: v.durationSec, updatedAt: v.updatedAt,
+          })
+        }
+      }
+    } else if (v.status === 'queued' || v.status === 'rendering') {
+      bucket.busy += 1
+      stats.busy += 1
+    } else if (v.status === 'failed') {
+      bucket.failed += 1
+      stats.failed += 1
+    }
+  }
+  stats.renderedSec = Math.round(stats.renderedSec * 10) / 10
+  return { stats, perProject, recent }
+}
+
 function parseRenderEngine(raw: unknown): typeof CLONE_RENDER_ENGINES[number] {
   if (typeof raw !== 'string' || !CLONE_RENDER_ENGINES.includes(raw as any)) {
     throw new AppError(`renderEngine ต้องเป็น ${CLONE_RENDER_ENGINES.join('|')}`, 'E_INVALID_FIELD')

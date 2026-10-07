@@ -2523,6 +2523,48 @@
       "goVariants": "Go to variants",
       "poweredHypit": "Final render by Hypit (hypit.ai) · falls back to NAKA automatically when unavailable",
       "poweredNaka": "Final render by the NAKA engine (ffmpeg + captions)"
+    },
+    "home": {
+      "statsAria": "Clone Studio overview",
+      "statProjects": "Clone projects",
+      "statVariants": "Total variants",
+      "statVariantsBusy": "{n} rendering now",
+      "statCompleted": "Clips rendered · {d} total",
+      "engineReady": "Hypit ready",
+      "engineReadyHint": "Render with NAKA or Hypit",
+      "engineNakaOnly": "NAKA",
+      "engineNakaOnlyHint": "Hypit is not installed on this machine",
+      "templatesTitle": "Start from a template",
+      "templatesSub": "Proven viral structures — pick one to create a project with a sample transcript, then make it yours",
+      "useTemplate": "Use this template",
+      "recentTitle": "Recently rendered",
+      "recentSub": "Across all projects — click a name to open its project",
+      "projectsTitle": "Your projects",
+      "variantProgress": "{done}/{total} variants done",
+      "seconds": "{n}s",
+      "minutes": "{n} min"
+    },
+    "templates": {
+      "ugcReview": {
+        "title": "UGC product review",
+        "desc": "A real person with the product: open with the pain, show the result, close with the offer — built for TikTok Shop",
+        "transcript": "Who else has dull skin? Hands up!\nI have used this for two weeks, morning and night. Light, absorbs fast, never sticky.\nLook at my face now. Brighter, and friends notice every day.\nToday it is half price with free shipping.\nTap the cart below — it sells out fast."
+      },
+      "podcast": {
+        "title": "Podcast debate",
+        "desc": "Two hosts argue on mic: a punchy first line, then evidence flips the argument",
+        "transcript": "You still skip protein in the morning? Are you serious?\nIt is not necessary. Breakfast fills me up.\nStudies say muscles repair best in the morning. I tried it for three months and I am clearly stronger.\nThirty seconds to mix. Done.\nLink in bio. Try it, then come back and argue."
+      },
+      "streetInterview": {
+        "title": "Street interview",
+        "desc": "Ask someone who looks successful and reveal the answer one rule at a time",
+        "transcript": "Quick question — what do you do to afford this car?\nI sell online. Started from zero.\nRule one: post every day. Rule two: test lots of hooks.\nRule three matters most: use a system that makes clips in bulk.\nWant to know which one? Check the first comment."
+      },
+      "ranking": {
+        "title": "Tier list ranking",
+        "desc": "Rank items one by one so viewers argue in the comments, ending on the top pick",
+        "transcript": "Ranking every sunscreen I have used. Disagree? Fight me.\nC tier: this one, a bit sticky.\nB tier: this one, light but wears off.\nS tier: this one. Feels like nothing, sweat and water proof.\nWhat is your number one? Comment below."
+      }
     }
   },
   "live": {

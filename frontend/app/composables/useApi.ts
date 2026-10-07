@@ -606,6 +606,12 @@ export interface CloneProject {
   createdAt: string; updatedAt: string
 }
 export type CloneDetail = CloneProject & { variants: CloneVariant[] }
+export interface CloneOverview {
+  stats: { projects: number; variants: number; completed: number; busy: number; failed: number; renderedSec: number }
+  perProject: Record<number, { total: number; completed: number; busy: number; failed: number; latestOutput: string | null }>
+  recent: Array<{ id: number; projectId: number; projectName: string; label: string; outputPath: string | null; durationSec: number | null; updatedAt: string }>
+  hypit: { available: boolean; reason: string | null }
+}
 export interface CloneMatrix { hookIndexes: number[]; productIds: number[]; avatarIds: number[]; languages: StudioLanguage[] }
 
 export const cloneAPI = {
@@ -622,6 +628,7 @@ export const cloneAPI = {
   del: (id: number) => api.del(`/clone/projects/${id}`),
   delVariant: (variantId: number) => api.del(`/clone/variants/${variantId}`),
   hypitStatus: () => api.get<{ available: boolean; reason: string | null }>('/clone/hypit/status'),
+  overview: () => api.get<CloneOverview>('/clone/overview'),
 }
 
 // ---------- AI Live (backend /api/v1/live → naka-live-agent on the GPU box; docs/ai-live/PLAN.md) ----------
