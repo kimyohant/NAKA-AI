@@ -68,6 +68,20 @@ docker compose up -d --build  # needs ../naka-drama-studio/frontend (build.addit
 
 Without compose: `docker buildx build --build-context frontend=../naka-drama-studio/frontend -t kimyohant/naka-ai .`
 
+## Upgrading a server that ran from naka-drama-studio
+
+The backend used to live in `naka-drama-studio/backend`. Existing data keeps working — it just has to be pointed at:
+
+- **Windows (scripts\redeploy.ps1)** — clone this repo next to `naka-drama-studio`, pull both, run
+  `powershell -ExecutionPolicy Bypass -File scripts\redeploy.ps1` in `naka-drama-studio`. The script keeps using
+  `naka-drama-studio\data\` (SQLite, files, a writable `data\workspace` seeded once from the old `backend\workspace`)
+  and copies the old `backend\.env` here once. Copy `naka-drama-studio\backend\workspace` aside **before** pulling if
+  skills were edited online and git refuses the pull.
+- **Docker** — run `docker compose up -d --build` from this repo. The compose project is pinned to `naka-drama-studio`,
+  so the same `naka-drama-studio_naka-data` volume is used and the old containers are replaced.
+- **Plain node** — set `NAKA_DATA_DIR` and `SQLITE_PATH` to the old `data/` folder (and `WORKSPACE_PATH` if skills were
+  edited online), otherwise the backend starts on an empty `naka-ai-backend/data/`.
+
 ## Tests
 
 ```bash

@@ -6,6 +6,11 @@
 #   3. 访问 http://localhost:5679 ，设置页「关于更新」可检查/一键更新
 #
 # 数据持久化在命名卷 naka-data（SQLite + 生成的图片/视频 + 可在线编辑的 workspace/skills）。
+#
+# Project name stays "naka-drama-studio" (this file used to live in that repo): the volume is still
+# naka-drama-studio_naka-data and `docker compose up -d` here replaces the old containers instead of
+# starting a second stack on an empty volume. Change it only for a fresh install.
+name: naka-drama-studio
 
 services:
   app:
