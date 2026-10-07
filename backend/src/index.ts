@@ -28,6 +28,7 @@ import gallery from './routes/gallery.js'
 import studio from './routes/studio.js'
 import clone from './routes/clone.js'
 import live from './routes/live.js'
+import seller from './routes/seller.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
@@ -116,6 +117,7 @@ api.route('/gallery', gallery)
 api.route('/studio', studio)
 api.route('/clone', clone)
 api.route('/live', live)
+api.route('/seller', seller)
 api.route('/server-update', serverUpdate)
 
 app.route('/api/v1', api)

@@ -25,8 +25,12 @@
           <span class="side-label">{{ t('layout.nav.marketer') }}</span>
         </NuxtLink>
         <NuxtLink to="/studio" class="side-link" :class="{ active: isProductStudioRoute }" :title="t('layout.nav.studio')" @click="navOpen = false">
-          <ShoppingBag :size="17" :stroke-width="1.8" />
+          <LayoutGrid :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.studio') }}</span>
+        </NuxtLink>
+        <NuxtLink to="/seller" class="side-link" :class="{ active: isSellerRoute }" :title="t('layout.nav.seller')" @click="navOpen = false">
+          <Store :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.seller') }}</span>
         </NuxtLink>
         <NuxtLink to="/viral-clone" class="side-link" :class="{ active: isViralCloneRoute }" :title="t('layout.nav.viralClone')" @click="navOpen = false">
           <Copy :size="17" :stroke-width="1.8" />
@@ -90,7 +94,7 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, ShoppingBag, Copy, Radio } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, LayoutGrid, Copy, Radio, Store } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI } from '~/composables/useApi'
 import brandLogo from '~/assets/brand-logo.svg'
@@ -103,6 +107,7 @@ const navOpen = ref(false)
 const isStudioRoute = computed(() => route.path === '/' || route.path.startsWith('/drama/'))
 const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.startsWith('/marketer/'))
 const isProductStudioRoute = computed(() => route.path === '/studio' || route.path.startsWith('/studio/'))
+const isSellerRoute = computed(() => route.path === '/seller' || route.path.startsWith('/seller/'))
 const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
 const isLiveRoute = computed(() => route.path === '/live')
 const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))

@@ -1,13 +1,13 @@
 <template>
   <div class="page page-enter">
-    <!-- ===== Header ===== -->
-    <header class="ps-head">
+    <!-- ===== Header (แท็บคลังสกิลมี hero ของตัวเอง) ===== -->
+    <header v-if="tab !== 'skills'" class="ps-head">
       <div class="ps-head-copy">
         <p class="eyebrow">{{ t('productStudio.eyebrow') }}</p>
         <h1 class="ps-title">{{ t('productStudio.title') }}</h1>
         <p class="ps-sub">{{ t('productStudio.subtitle') }}</p>
       </div>
-      <button class="btn btn-primary" type="button" @click="openCreate">
+      <button class="btn btn-primary" type="button" @click="openCreate()">
         <Plus :size="15" :stroke-width="2.2" />
         {{ headerCreateLabel }}
       </button>
@@ -15,6 +15,10 @@
 
     <!-- ===== Tabs ===== -->
     <div class="ps-tabs" role="tablist" :aria-label="t('productStudio.title')">
+      <button type="button" role="tab" :aria-selected="tab === 'skills'" :class="['ps-tab', { on: tab === 'skills' }]" @click="switchTab('skills')">
+        <LayoutGrid :size="14" :stroke-width="2" />
+        {{ t('productStudio.tabs.skills') }}
+      </button>
       <button type="button" role="tab" :aria-selected="tab === 'projects'" :class="['ps-tab', { on: tab === 'projects' }]" @click="switchTab('projects')">
         <ShoppingBag :size="14" :stroke-width="2" />
         {{ t('productStudio.tabs.projects') }}
@@ -29,8 +33,17 @@
       </button>
     </div>
 
+    <!-- ===== Skills Library ===== -->
+    <StudioSkillsLibrary
+      v-if="tab === 'skills'"
+      :templates="templates"
+      :loading="optionsLoading"
+      @use-template="useTemplate"
+      @go-tab="switchTab"
+    />
+
     <!-- ===== Projects ===== -->
-    <template v-if="tab === 'projects'">
+    <template v-else-if="tab === 'projects'">
       <div v-if="loading" class="ps-grid" aria-hidden="true">
         <div v-for="i in 3" :key="i" class="ps-card skeleton-card">
           <div class="skeleton-line w-60"></div>
@@ -94,7 +107,7 @@
         <ShoppingBag :size="26" :stroke-width="1.5" />
         <p class="ps-empty-title">{{ t('productStudio.list.emptyTitle') }}</p>
         <p class="ps-empty-desc">{{ t('productStudio.list.emptyDesc') }}</p>
-        <button class="btn btn-primary" type="button" @click="openCreate">
+        <button class="btn btn-primary" type="button" @click="openCreate()">
           <Plus :size="15" :stroke-width="2.2" />
           {{ t('productStudio.list.new') }}
         </button>
@@ -125,7 +138,7 @@
         <UserRound :size="26" :stroke-width="1.5" />
         <p class="ps-empty-title">{{ t('productStudio.avatars.emptyTitle') }}</p>
         <p class="ps-empty-desc">{{ t('productStudio.avatars.emptyDesc') }}</p>
-        <button class="btn btn-primary" type="button" @click="openCreate">
+        <button class="btn btn-primary" type="button" @click="openCreate()">
           <Plus :size="15" :stroke-width="2.2" />
           {{ t('productStudio.avatars.create') }}
         </button>
@@ -157,7 +170,7 @@
         <Sparkles :size="26" :stroke-width="1.5" />
         <p class="ps-empty-title">{{ t('productStudio.influencers.emptyTitle') }}</p>
         <p class="ps-empty-desc">{{ t('productStudio.influencers.emptyDesc') }}</p>
-        <button class="btn btn-primary" type="button" @click="openCreate">
+        <button class="btn btn-primary" type="button" @click="openCreate()">
           <Plus :size="15" :stroke-width="2.2" />
           {{ t('productStudio.influencers.create') }}
         </button>
@@ -335,24 +348,26 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import { Clock, ImagePlus, Loader2, MoreHorizontal, Package, Plus, ShoppingBag, Sparkles, UserRound } from 'lucide-vue-next'
+import { Clock, ImagePlus, LayoutGrid, Loader2, MoreHorizontal, Package, Plus, ShoppingBag, Sparkles, UserRound } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { studioAPI, uploadAPI, type StudioAvatar, type StudioInfluencer, type StudioProject, type StudioTemplate } from '~/composables/useApi'
 import { toastError } from '~/composables/useToast'
 import { isAutoRenderActive, autoRenderProgress, SCRIPT_POLL_INTERVAL_MS } from '~/utils/studioFlow'
 
-type Tab = 'projects' | 'avatars' | 'influencers'
+type Tab = 'skills' | 'projects' | 'avatars' | 'influencers'
+const TABS: Tab[] = ['skills', 'projects', 'avatars', 'influencers']
+const isTab = (v: unknown): v is Tab => TABS.includes(v as Tab)
 
 const NICHES = ['beauty', 'fashion', 'food', 'tech', 'fitness', 'lifestyle', 'gaming', 'travel', 'home', 'mom_baby'] as const
 
 const { t, locale } = useI18n()
 const route = useRoute()
 
-const tab = ref<Tab>(route.query.tab === 'avatars' || route.query.tab === 'influencers' ? route.query.tab : 'projects')
+const tab = ref<Tab>(isTab(route.query.tab) ? route.query.tab : 'skills')
 function switchTab(v: Tab) {
   tab.value = v
 }
-watch(() => route.query.tab, (v) => { if (v === 'avatars' || v === 'projects' || v === 'influencers') tab.value = v })
+watch(() => route.query.tab, (v) => { if (isTab(v)) tab.value = v })
 
 // ===== data =====
 const projects = ref<StudioProject[]>([])
@@ -362,6 +377,7 @@ const influencers = ref<StudioInfluencer[]>([])
 const options = ref<any>(null)
 const markets = computed(() => (options.value?.markets || []).map((m: any) => m.id))
 const loading = ref(true)
+const optionsLoading = ref(true)
 const avatarsLoading = ref(false)
 const influencersLoading = ref(false)
 const menuId = ref<number | null>(null)
@@ -412,11 +428,16 @@ const canCreate = computed(() => tab.value === 'avatars'
     ? !!influencerForm.value.name.trim()
     : !!(projectForm.value.productName.trim() || projectForm.value.productUrl.trim()))
 
-function openCreate() {
-  projectForm.value = { productName: '', productUrl: '', templateId: templates.value[0]?.id || '' }
+function openCreate(templateId?: string) {
+  projectForm.value = { productName: '', productUrl: '', templateId: templateId || templates.value[0]?.id || '' }
   avatarForm.value = { name: '', description: '', locale: '', imageUrl: '' }
   influencerForm.value = { name: '', appearance: '', persona: '', niche: '', locale: '', imageUrl: '' }
   showCreate.value = true
+}
+// คลังสกิล → เลือกสกิลวิดีโอสินค้า = เปิดฟอร์มสร้างโปรเจกต์โดยเลือกเทมเพลตนั้นไว้แล้ว
+function useTemplate(tpl: StudioTemplate) {
+  tab.value = 'projects'
+  openCreate(tpl.id)
 }
 function closeCreate() {
   if (!creating.value) showCreate.value = false
@@ -616,6 +637,8 @@ async function loadOptions() {
     templates.value = tpls || []
   } catch {
     // options/templates โหลดไม่ได้ไม่บล็อกหน้า — ฟอร์มแก้ค่าใน workspace แทน
+  } finally {
+    optionsLoading.value = false
   }
 }
 
@@ -667,9 +690,11 @@ onBeforeUnmount(() => {
 }
 
 /* === Tabs === */
-.ps-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+.ps-tabs { display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; padding: 3px; margin-left: -3px; margin-right: -3px; scrollbar-width: none; }
+.ps-tabs::-webkit-scrollbar { display: none; }
 .ps-tab {
   display: inline-flex; align-items: center; gap: 6px;
+  flex-shrink: 0; white-space: nowrap;
   padding: 8px 16px; border-radius: 999px;
   border: 1px solid var(--border); background: var(--surface-raised);
   font: 600 13px var(--font-body); color: var(--text-2); cursor: pointer;

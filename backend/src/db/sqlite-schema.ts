@@ -764,6 +764,32 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
   { version: 17, columns: [
     { table: 'clone_projects', column: 'render_engine', ddl: "ALTER TABLE clone_projects ADD COLUMN render_engine TEXT NOT NULL DEFAULT 'naka'" },
   ] },
+  // v18 (docs/ai-seller/PLAN.md): AI นักขาย — โพสต์ขายสินค้า (สินค้า+รูป+ลิงก์+วิดีโอ) และแคปชั่น/คอมเมนต์แยกตามช่องทาง
+  { version: 18, columns: [], statements: [
+    `CREATE TABLE IF NOT EXISTS seller_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL DEFAULT '',
+      product_name TEXT NOT NULL DEFAULT '',
+      product_url TEXT,
+      product_price TEXT,
+      product_description TEXT,
+      product_images TEXT NOT NULL DEFAULT '[]',
+      affiliate_url TEXT,
+      video_url TEXT,
+      studio_project_id INTEGER,
+      channels TEXT NOT NULL DEFAULT '[]',
+      language TEXT NOT NULL DEFAULT 'th',
+      tone TEXT NOT NULL DEFAULT 'casual',
+      notes TEXT,
+      content TEXT NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'draft',
+      error_msg TEXT,
+      generated_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    )`,
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {

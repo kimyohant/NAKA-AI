@@ -708,3 +708,39 @@ export const liveAPI = {
     return text
   },
 }
+
+// ===== AI นักขาย (docs/ai-seller/PLAN.md) =====
+export type SellerChannel = 'tiktok' | 'shopee' | 'facebook' | 'instagram'
+export type SellerTone = 'casual' | 'fun' | 'pro' | 'urgent'
+export interface SellerChannelContent { caption: string; hashtags: string[]; comment: string }
+export interface SellerPost {
+  id: number; title: string
+  productName: string; productUrl: string | null; productPrice: string | null; productDescription: string | null
+  productImages: string[]
+  affiliateUrl: string | null
+  videoUrl: string | null; studioProjectId: number | null
+  channels: SellerChannel[]; language: 'th' | 'en'; tone: SellerTone; notes: string | null
+  content: Partial<Record<SellerChannel, SellerChannelContent>>
+  /** ข้อความพร้อมคัดลอก: post = แคปชั่น + แฮชแท็ก, comment = คอมเมนต์ + ลิงก์ (backend ประกอบ) */
+  ready: Partial<Record<SellerChannel, { post: string; comment: string }>>
+  status: 'draft' | 'ready' | 'failed'; errorMsg: string | null
+  generatedAt: string | null; createdAt: string; updatedAt: string
+}
+export interface SellerStudioVideo {
+  projectId: number; title: string; productName: string; productUrl: string | null; productDescription: string | null
+  productImages: string[]; videoUrl: string; createdAt: string
+}
+export interface SellerOptions { channels: SellerChannel[]; tones: SellerTone[]; languages: string[]; hashtagLimits: Record<SellerChannel, number> }
+
+export const sellerAPI = {
+  options: () => api.get<SellerOptions>('/seller/options'),
+  list: () => api.get<SellerPost[]>('/seller/posts'),
+  create: (data: Partial<SellerPost>) => api.post<SellerPost>('/seller/posts', data),
+  get: (id: number) => api.get<SellerPost>(`/seller/posts/${id}`),
+  update: (id: number, data: Partial<SellerPost>) => api.put<SellerPost>(`/seller/posts/${id}`, data),
+  del: (id: number) => api.del(`/seller/posts/${id}`),
+  generate: (id: number, data: { channels?: SellerChannel[]; tone?: SellerTone; language?: string; notes?: string | null } = {}) =>
+    api.post<SellerPost>(`/seller/posts/${id}/generate`, data),
+  ingestUrl: (url: string) => api.post<IngestResult>('/seller/ingest-url', { url }),
+  studioVideos: () => api.get<SellerStudioVideo[]>('/seller/studio-videos'),
+}
