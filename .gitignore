@@ -6,3 +6,9 @@ node_modules
 data/
 # Hypit render engine source (installed separately, see study/README.md)
 study/hypit/
+
+# landing-worker (Cloudflare Worker): local secrets + wrangler state — never commit
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.wrangler/

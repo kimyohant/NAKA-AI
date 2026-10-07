@@ -9,6 +9,14 @@
         </div>
       </div>
       <p class="login-desc">{{ t('admin.login.desc') }}</p>
+      <template v-if="sso">
+        <a :href="ssoLoginUrl()" class="btn btn-primary login-submit">
+          <LogIn :size="14" :stroke-width="2" />
+          {{ t('admin.login.sso') }}
+        </a>
+        <p class="field-hint">{{ t('admin.login.ssoHint') }}</p>
+        <p class="login-or"><span>{{ t('admin.login.or') }}</span></p>
+      </template>
       <p v-if="route.query.expired" class="login-warn" role="alert">{{ t('admin.login.expired') }}</p>
       <label class="field">
         <span class="field-label">{{ t('admin.login.token') }}</span>
@@ -30,11 +38,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { LogIn, Loader2 } from 'lucide-vue-next'
 import brandLogo from '~/assets/brand-logo.svg'
-import { adminAPI } from '~/composables/useApi'
+import { adminAPI, ssoLoginUrl, ssoStatus } from '~/composables/useApi'
 import { guardOff, saveAdminToken, signedIn } from '~/composables/useAdminAuth'
 
 definePageMeta({ layout: false })
@@ -45,6 +53,21 @@ const token = ref('')
 const remember = ref(false)
 const busy = ref(false)
 const error = ref('')
+const sso = ref(false)
+
+// naka-ai SSO on → admins sign in with their naka-ai account; already signed in as admin → straight in
+onMounted(async () => {
+  try {
+    const s = await ssoStatus()
+    sso.value = s.sso
+    if (s.admin) {
+      const session = await adminAPI.session('')
+      guardOff.value = !session.guard
+      signedIn.value = true
+      navigateTo('/')
+    }
+  } catch { /* backend unreachable → token form still works */ }
+})
 
 async function submit() {
   const value = token.value.trim()
@@ -86,7 +109,9 @@ async function submit() {
 .login-warn { margin: 0; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; background: var(--warn-bg); color: var(--warn-text); }
 .login-error { margin: 0; font-size: 12.5px; color: var(--error); }
 .login-remember { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-1); }
-.login-submit { justify-content: center; height: 42px; }
+.login-submit { justify-content: center; height: 42px; text-decoration: none; }
+.login-or { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 11.5px; color: var(--text-3); }
+.login-or::before, .login-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field-label { font-size: 11.5px; font-weight: 600; color: var(--text-1); }
 .field-hint { margin: 0; font-size: 11px; line-height: 1.5; color: var(--text-3); }

@@ -797,6 +797,18 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     { table: 'seller_posts', column: 'video_auto', ddl: 'ALTER TABLE seller_posts ADD COLUMN video_auto INTEGER NOT NULL DEFAULT 0' },
     { table: 'seller_posts', column: 'video_error', ddl: 'ALTER TABLE seller_posts ADD COLUMN video_error TEXT' },
   ] },
+  // v20 (unified system): members who signed in through naka-ai.com SSO (id = naka-ai user id; 'local' = single-user mode)
+  { version: 20, columns: [], statements: [
+    `CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      display_name TEXT NOT NULL DEFAULT '',
+      email TEXT,
+      is_admin INTEGER NOT NULL DEFAULT 0,
+      last_login_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {

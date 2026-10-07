@@ -630,3 +630,14 @@ export const sellerPosts = sqliteTable('seller_posts', {
   updatedAt: text('updated_at').notNull(),
   deletedAt: text('deleted_at'),
 })
+
+// v20: members signed in through naka-ai.com SSO ('local' in single-user mode)
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  displayName: text('display_name').notNull().default(''),
+  email: text('email'),
+  isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+  lastLoginAt: text('last_login_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})

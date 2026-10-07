@@ -50,6 +50,8 @@ Without `ADMIN_TOKEN` the settings API is open (fine for local dev); the admin a
 | `NAKA_HOST` | `0.0.0.0` | listen on all interfaces (requires `NAKA_AUTH_PASSWORD`) |
 | `NAKA_AUTH_PASSWORD` | — | site-wide Basic Auth |
 | `ADMIN_TOKEN` | `openssl rand -hex 24` | sign-in for `/admin`; guards the system-settings API (≥ 16 chars) |
+| `NAKA_SSO_URL` | `https://naka-ai.com` | **members sign in through naka-ai.com** (unified system). With SSO on, every API needs a member session, Basic Auth is not used, and naka-ai admins (Google account in the Worker's `ADMIN_EMAILS`) get the settings API and `/admin` |
+| `NAKA_SSO_SECRET` | same as the Worker's `STUDIO_SSO_SECRET` | ≥ 32 chars `A-Za-z0-9_-`; set together with `NAKA_SSO_URL` |
 | `FRONTEND_DIST` | `/srv/naka-drama-studio/frontend/.output/public` | user-facing app (default: the sibling checkout) |
 | `ADMIN_DIST` | `/srv/naka-ai-backend/admin/.output/public` | back-office (default: `admin/.output/public` when built) |
 

@@ -34,7 +34,7 @@ const { mastra } = await import('../src/mastra/index.js')
   sqlite.pragma('journal_mode = WAL')
   initSqliteSchema(sqlite)
   const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-  assert.deepEqual(versions.map(r => r.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], 'migrations applied through v13')
+  assert.deepEqual(versions.map(r => r.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], 'migrations applied through v13')
   for (const table of ['clone_projects', 'clone_variants']) {
     const cols = (sqlite.pragma(`table_info(${table})`) as Array<{ name: string }>).map(r => r.name)
     assert.ok(cols.length > 5, `${table} exists`)

@@ -20,7 +20,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       # frontend contract checks skip themselves here (naka-drama-studio is not checked out next to this repo)
-      - run: npx tsx --test tests/sqlite-migration-backup.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts
+      - run: npx tsx --test tests/sqlite-migration-backup.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts
 
   admin:
     runs-on: ubuntu-latest

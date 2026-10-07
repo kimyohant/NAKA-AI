@@ -12,6 +12,10 @@ naka-studio page (no session)
   → studio session cookie, signed, 12 h
 ```
 
+Studio side: `backend/src/auth/naka-sso.ts` in this repo (tests: `backend/tests/naka-sso.test.ts`, which also checks this
+Worker's `src/auth/studio.ts` for the same paths and token shape). Members get a signed 12 h cookie; the Studio UI shows
+the member and a sign-out button; naka-ai admins (`admin: true`) also get the Studio's system settings (`/admin`).
+
 ## Who may enter
 
 `STUDIO_ACCESS` (admin panel → naka-studio):
