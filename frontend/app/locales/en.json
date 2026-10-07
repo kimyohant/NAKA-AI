@@ -41,7 +41,8 @@
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
       "marketer": "AI Marketer",
-      "viralClone": "Viral Clone Studio"
+      "viralClone": "Viral Clone Studio",
+      "live": "AI Live"
     },
     "banner": {
       "missing": "{types} model not configured yet. AI features are unavailable.",
@@ -2390,6 +2391,179 @@
       "saved": "Transcript saved",
       "videoTitle": "Reference clip",
       "noVideo": "No reference clip attached"
+    }
+  },
+  "live": {
+    "eyebrow": "AI Live",
+    "title": "Live selling with an AI avatar",
+    "subtitle": "A Thai-speaking avatar that sells from a script, answers comments from your shop facts, and can go live on TikTok / Facebook",
+    "status": {
+      "online": "GPU box online",
+      "offline": "GPU box offline",
+      "avatarOn": "Avatar running",
+      "avatarOff": "Avatar off",
+      "pushing": "Live on platform",
+      "notPushing": "Not live",
+      "unreachable": "Cannot reach the AI Live box:"
+    },
+    "setup": {
+      "title": "AI Live box not connected",
+      "desc": "Install deploy/ai-live on the GPU box, then enter its address and the token printed by the installer",
+      "cta": "Connect"
+    },
+    "stage": {
+      "title": "Live stage",
+      "off": "Start the avatar to see the preview",
+      "connecting": "Opening preview…",
+      "mute": "Mute preview",
+      "unmute": "Unmute preview",
+      "speaking": "Speaking",
+      "avatar": "Avatar",
+      "voice": "Voice",
+      "start": "Start avatar",
+      "starting": "Starting (about 1–3 min)…",
+      "stop": "Stop avatar",
+      "started": "Avatar is ready",
+      "startedSlow": "Started; the avatar is still loading",
+      "freeGpu": "Unload Unsloth models",
+      "freeGpuHint": "Unload Unsloth image/video models from the GPU so the avatar has enough memory",
+      "freedGpu": "Unload sent to {n} server(s)",
+      "noUnsloth": "No Unsloth configuration found",
+      "vram": "{free} / {total} GB free",
+      "noModel": "wav2lip.pth is missing on the GPU box (see deploy/ai-live/README.md)",
+      "previewFailed": "Preview failed — check that port 8000 (TCP/UDP) is open"
+    },
+    "push": {
+      "title": "Go live on a platform",
+      "target": "Sends to {host}",
+      "noTarget": "No RTMP URL + stream key yet (in settings)",
+      "start": "Go live",
+      "starting": "Going live…",
+      "stop": "Stop live",
+      "started": "Live stream started",
+      "confirmTitle": "Go live now?",
+      "confirmMessage": "The avatar video and audio will be broadcast publicly on {host} right away"
+    },
+    "say": {
+      "title": "Type for the avatar to say",
+      "placeholder": "e.g. Thanks for following!",
+      "now": "Say it",
+      "hush": "Stop talking"
+    },
+    "script": {
+      "title": "Sales script",
+      "write": "Write with AI",
+      "rewrite": "Rewrite",
+      "writing": "AI is writing…",
+      "sayLine": "Say this line",
+      "removeLine": "Remove line",
+      "play": "Play script",
+      "pause": "Pause",
+      "loop": "Loop",
+      "addLine": "Add line"
+    },
+    "product": {
+      "name": "Product name",
+      "namePh": "e.g. Handmade jasmine soap",
+      "details": "Details / selling points",
+      "detailsPh": "Ingredients, size, how to use, verifiable selling points",
+      "price": "Price",
+      "pricePh": "e.g. 129 THB",
+      "promo": "Promotion",
+      "promoPh": "e.g. Buy 3 get 1 free, live only",
+      "shop": "Shop name"
+    },
+    "comments": {
+      "title": "Answer comments",
+      "faq": "Shop facts the AI may use",
+      "faqPh": "Shipping fee, delivery time, payment, return policy, sizes/colours",
+      "viewerPh": "Viewer name",
+      "commentPh": "Paste a live comment",
+      "answer": "Answer with AI",
+      "needProduct": "Enter the product name first so the AI answers from real facts",
+      "autoSpeak": "Avatar says the answer right away (cuts into the script)",
+      "viewer": "Viewer",
+      "ignored": "AI skipped this comment (spam / unrelated)",
+      "handoff": "Hand to admin",
+      "spoken": "Spoken",
+      "speak": "Say it"
+    },
+    "settings": {
+      "open": "Settings",
+      "title": "Connect the AI Live box",
+      "desc": "Address and token come from the installer on the GPU box (deploy/ai-live/install.sh) — the token and stream key stay on the server and are never shown again",
+      "agentUrl": "Box address (agent)",
+      "token": "Token",
+      "tokenPh": "Paste the 48-character token",
+      "saved": "Saved (leave empty to keep it)",
+      "rtmp": "Platform RTMP URL + stream key",
+      "rtmpSaved": "Saved ({host})",
+      "rtmpHint": "Copy it from TikTok / Facebook Live Producer — anyone with the stream key can broadcast on your channel",
+      "rtmpClear": "Remove the saved stream key",
+      "save": "Save",
+      "savedToast": "AI Live settings saved",
+      "tiktokUser": "TikTok channel to read comments from",
+      "tiktokSignKey": "Euler Stream API key (optional)",
+      "optional": "Optional",
+      "tiktokHint": "Uses the unofficial tiktok-live-connector through the Euler Stream sign server — free but rate limited; add a key if you connect often"
+    },
+    "voices": {
+      "premwadee": "Premwadee (female)",
+      "achara": "Achara (female)",
+      "niwat": "Niwat (male)"
+    },
+    "tiktok": {
+      "title": "TikTok LIVE comments",
+      "status": {
+        "idle": "Not connected",
+        "connecting": "Connecting…",
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "ended": "Live ended",
+        "error": "Connection failed"
+      },
+      "usernamePh": "TikTok channel that is live (e.g. nakashop)",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "autoAnswer": "AI answers TikTok comments automatically",
+      "autoThanks": "Avatar thanks gifts and new followers",
+      "answerThis": "Answer this comment with AI",
+      "followed": "followed",
+      "shared": "shared the live",
+      "joined": "joined",
+      "pending": "{n} comment(s) waiting"
+    },
+    "avatar": {
+      "create": "New avatar from a photo / video",
+      "title": "Create your avatar",
+      "desc": "Upload a photo or video of yourself; it becomes an avatar that lip-syncs Thai speech on the live stream",
+      "source": "Create from",
+      "fromPhoto": "Photo",
+      "fromVideo": "Video",
+      "name": "Avatar name",
+      "nameHint": "Lowercase letters, digits, _ or -, 3–41 characters, e.g. naka_host_ann",
+      "photo": "Your photo (JPG / PNG / WebP)",
+      "video": "Your video (MP4 / MOV / WebM, up to 50 MB)",
+      "tipPhoto1": "Face the camera, shoulders visible, mouth closed, even light, nothing covering the face",
+      "tipPhoto2": "AI first makes a ~10 s idle video from the photo (breathing, blinking, a small smile); about 20–30 minutes in total",
+      "tipPhoto3": "Making the video uses the whole GPU, so stop the running avatar first",
+      "tipVideo1": "10–60 seconds, facing the camera, still or talking softly, steady camera",
+      "tipVideo2": "Face clearly visible in every frame, no profile shots, nothing covering the mouth",
+      "tipVideo3": "Vertical 9:16 fits mobile live best; building takes a few minutes",
+      "stopFirst": "Stop the avatar before creating one from a photo",
+      "consent": "I confirm this is my own face, or its owner has agreed to it being used as an avatar",
+      "submit": "Create avatar",
+      "uploading": "Uploading…",
+      "startedPhoto": "Started: AI is making a video from the photo (about 20–30 min)",
+      "startedVideo": "Avatar build started (a few minutes)",
+      "ready": "Avatar {name} is ready",
+      "stage": {
+        "video": "AI is making the video",
+        "upload": "Sending to the GPU box",
+        "building": "Building the avatar",
+        "done": "Ready",
+        "failed": "Failed"
+      }
     }
   }
 }

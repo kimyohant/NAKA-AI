@@ -27,6 +27,7 @@ import trending from './routes/trending.js'
 import gallery from './routes/gallery.js'
 import studio from './routes/studio.js'
 import clone from './routes/clone.js'
+import live from './routes/live.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
@@ -114,6 +115,7 @@ api.route('/trending-videos', trending)
 api.route('/gallery', gallery)
 api.route('/studio', studio)
 api.route('/clone', clone)
+api.route('/live', live)
 api.route('/server-update', serverUpdate)
 
 app.route('/api/v1', api)

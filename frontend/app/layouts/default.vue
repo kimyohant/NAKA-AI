@@ -32,6 +32,10 @@
           <Copy :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.viralClone') }}</span>
         </NuxtLink>
+        <NuxtLink to="/live" class="side-link" :class="{ active: isLiveRoute }" :title="t('layout.nav.live')" @click="navOpen = false">
+          <Radio :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.live') }}</span>
+        </NuxtLink>
       </nav>
 
       <div class="side-divider"></div>
@@ -86,7 +90,7 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, ShoppingBag, Copy } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, ShoppingBag, Copy, Radio } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI } from '~/composables/useApi'
 import brandLogo from '~/assets/brand-logo.svg'
@@ -100,6 +104,7 @@ const isStudioRoute = computed(() => route.path === '/' || route.path.startsWith
 const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.startsWith('/marketer/'))
 const isProductStudioRoute = computed(() => route.path === '/studio' || route.path.startsWith('/studio/'))
 const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
+const isLiveRoute = computed(() => route.path === '/live')
 const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))
 
 const settingsItems = computed(() => [
