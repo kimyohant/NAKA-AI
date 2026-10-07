@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "pages": {
+    "/openwiki/architecture/ai-agents.md": {
+      "pageVersion": "sha256:0d318fc8a77fc9831d20df9145f960ca6f730c2cf40516b867a8d6228d8e8215",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/architecture/backend-server.md": {
+      "pageVersion": "sha256:4a0dd45cc1b977184b907fce26b9359bf4f30cc74d865107d25dc7da00e69ea6",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/architecture/database.md": {
+      "pageVersion": "sha256:df15c8c9a5a94d7202eab0df43ad7bfeb5eb1d792d12a511a1cd634c3b612dcc",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/architecture/desktop-app.md": {
+      "pageVersion": "sha256:3461a35c90ee28adf7dac598859cdd795fa610e6d397f3cdf9db707f43199bf8",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/architecture/frontend.md": {
+      "pageVersion": "sha256:1f0db9b42fa5c1104511a736080457995eae82c33331f056b4725f9317779cb0",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/operations/server-update.md": {
+      "pageVersion": "sha256:95c4a0ea47f1a92dc0a310894ab5fbf6b8edbf8678153c5a58f9b7c62deb81d9",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/quickstart.md": {
+      "pageVersion": "sha256:39e5ee601cec67cd9c407eabc2e5559a86236e97cc177b24c4a42dcda66c71d4",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/testing/test-suite.md": {
+      "pageVersion": "sha256:9d175c8d451849e5ad556ca52dda30781e6d0e065e30531cc26b7de6c97fdaad",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/workflows/drama-pipeline.md": {
+      "pageVersion": "sha256:22d0918abd5d4e8b5edb01f316e8f7ee5927a46015460cf03ffde9afbcb1317d",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/workflows/marketing-suite.md": {
+      "pageVersion": "sha256:470aee7a87889387de76eb8f0ced16f64e8030162376321f45b6eeeb445f949b",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/workflows/media-generation.md": {
+      "pageVersion": "sha256:a70f3c477ce1a1703c168c3aeb37cfadfe01049b1e7f50cff03417c1ca71a0ef",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    },
+    "/openwiki/workflows/viral-clone.md": {
+      "pageVersion": "sha256:d902ddfabeabba9436ce9b9a0b6bc47604997b1ea3a5cced5c137a8fbab0da8e",
+      "completedBy": "claude-code",
+      "completedRunId": "d144c46f-bc1c-4d52-86c2-375e9a0fd5c6",
+      "gitHead": "29fbc53c7659ae8d5d26dadb9ad0d25d9d9d8429",
+      "sourceFingerprint": "sha256:f032fe79dc47acb8ea4a880f596753b46d385a5aae67f8bd08856038189204c5"
+    }
+  }
+}

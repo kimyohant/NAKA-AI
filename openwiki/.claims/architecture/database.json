@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:df15c8c9a5a94d7202eab0df43ad7bfeb5eb1d792d12a511a1cd634c3b612dcc",
+  "claims": [
+    {
+      "id": "claim_053878ade6dd46a8a080b71a5cab6da7",
+      "statement": "The SQLite connection uses WAL, busy_timeout 5000 and synchronous NORMAL, and initialization plus the MySQL auto-import run at module import time.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/db/index.ts#L16-L35",
+          "version": "repo-lines-v1:sha256:ef0d11de024ea1e01da74edd1b59abd75015adb0f9321c086656b791eedde0ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhOWQ5NmY0ZWVjMDZhOTJmMmMwNzVhMjk0MTdhZjc1ZWM5YzBmOTU4OTBkMmZmMjE4ZjlkYzUxNjQ3ZTA2YmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0YTFkMTEyOTIwZjRkNTczYjY4N2NiZWI1OGFkOWI4ZDUwNDdkYzhhOGVlZWU5ZmU1NmY2MzU0YmI5ZDFkMmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2NTM2ODE5ZTJiOGVkNmRlOGY1ZTkxM2I2YWNkNTk5NzMwZTQ1YjRiMWQyNTljMjQ2Zjg2MmY2Yzk0NzBiNzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiZGYwOGVjNTNkYTIwMTQ2ZjU4NWM5YjgzYjc4Y2Q4ODg0NzE4NzM2YzkwZDcwNDhkYTQ2NzQxYjRjMTkwMTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c6e323b1abc14afaa80866734bdda731",
+      "statement": "initSqliteSchema replays idempotent CREATE TABLE statements, applies versioned column migrations in one transaction guarded by schema_migrations and PRAGMA table_info, then seeds style presets.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/db/sqlite-schema.ts#L802-L838",
+          "version": "repo-lines-v1:sha256:d20202703d418998e9ceee327efea7972f6c23845b34df6ce64383de0e3a28f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3MWY3NjE0MzkxODZkNjU4MTNkNzQ5NmVhOTViNjg4MDQyNGU3Y2U3Y2UzN2ZkNDg5MTUyZDI5ZDQyOTVhYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI3ZmQwMDg3MGQ5YTlkYmUyODlkNWQ0NmE3YWMyZTdkOTUxNTExOWU1NzQxNDc5NDUzZGZmZjUzNzg2OTg0NDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2ef378f6a93d4d039d1d86cf2a8b1407",
+      "statement": "Seeded style presets are upgraded or removed only when the stored prompt still equals the known seed text, preserving user edits.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/db/sqlite-schema.ts#L820-L838",
+          "version": "repo-lines-v1:sha256:f697fefbdd7d7fd212d6c33ba2166b71f2ec171cf5c0c7f4b44cc2ce3f0b12ff:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiYjY1YzQyODhjZjc5ZTdkZTRlNjk0NWQzODdkY2ViZjhiYTUwOTE5ODVkZWMxYTI3M2YzYzVmNTdhYzBjNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiODg3OGU3MDJiM2YzZTliNjZmZWFjODlhOTZiOTM4YWVjZTI1MTBkMzZlNDM3NDkzNmEzMmJlNzU3ZDA4NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1eb5d987733840d982c5ce7d55add291",
+      "statement": "backupSqlite integrity-checks the source, snapshots via better-sqlite3 online backup to a partial temp file, integrity-checks the snapshot, then renames it, refusing an existing destination.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/db/backup.ts#L1-L30",
+          "version": "repo-lines-v1:sha256:4e304c2f2d4a4579280b8c13928c6edad76daab4b01888227d74a8eadbb7d573:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhODc5N2NiNmI5NTY0MjczNTQzNmY5MDkyZThhZDk5MjNkYjA2OGJiM2NkYWJlODQ2ZmY5MzUxYjRkNGZmYWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a496f24dd13d47f4bc09b1554a328427",
+      "statement": "MySQL auto-import runs only when explicitly configured, SQLite business tables are empty and no marker file exists; it never blocks startup and writes in a single rolled-back-on-failure transaction.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/db/mysql-import.ts#L1-L14",
+          "version": "repo-lines-v1:sha256:a10bcff650972bb5f186339bccff22cbfd26a120f980193797c1053e672da28f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0YTczZGY2OGNmYzZiNGE1YWU2YjhkYzBjMzUwMzQ0ZjIzZjY4NDA3ZDAzNjRmYWU4M2ZjNDMxM2ZhYWZiOGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5ZDNlMWU2Yzk0NzdiMTJhM2ZmOGRkMGRjNzY1YzhjNDc1ZjhjMmRlNDJhNDU5ODVmYzJmMGFmNjg5NGMxMGMifQ"
+        },
+        {
+          "resource": "repo://backend/src/db/mysql-import.ts#L124-L175",
+          "version": "repo-lines-v1:sha256:398e7b5e493212045efb90989a0cd960eafb0a6b397d7d831cb03f534bede40e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwNGE3MGY2YmVmMTZjMjUyODM0MmZiN2I3ZWU0ZGNhNDIyMTU4MDcxZDkzNTIxNjE4NTA2ZDY2OTk5MWI5ZDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

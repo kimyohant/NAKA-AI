@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:95c4a0ea47f1a92dc0a310894ab5fbf6b8edbf8678153c5a58f9b7c62deb81d9",
+  "claims": [
+    {
+      "id": "claim_01f7828b9c8845d19a8bda9cdd7111d4",
+      "statement": "Server updates never happen in-process: POST /apply only triggers Watchtower's HTTP API with a bearer token, and is available only when NAKA_WATCHTOWER_URL is set, otherwise the mode is manual.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/server-update.ts#L1-L12",
+          "version": "repo-lines-v1:sha256:1c7e24c218563d6a8e11a55efb1944d5473806c9c2720cd810b0b3576523be03:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3YTJjNjNmZTk0MGQ4OWQ5MDNjNmEwZmI0NDdiYjA4YWY2NWFlZWM4MWU0M2U2MWJhOWE5NjAwYjM2ZmJjM2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlM2QyZGExZTY0MjAyZjM2ZGZmNGJiZmU3OTUwYTNjOGFmN2NjZjA3YzM0NDM5MzU1NTJkOWM1OTkzNDdjOWIifQ"
+        },
+        {
+          "resource": "repo://backend/src/services/server-update.ts#L108-L120",
+          "version": "repo-lines-v1:sha256:3350ccaa3f09bb6198dbfae07e3857ba83e03cc3a24b7547ecc9f674a9504a02:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwYmEzYWY0ZjBhMzc5NWI1NWYyYWU4NzAwMmJkMWQ4MjE0NTUwZjdkMjQwMDA5MWM1YzUyYTNkZmZkNzdkOTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://backend/src/services/server-update.ts#L50-L52",
+          "version": "repo-lines-v1:sha256:7bc3654c7e746ecce1da75be4a0b7fc76730f0c3cb3dd44bc74bdf6ce6da85da:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmI0MTExODBjOWZlZGQxMGUwYmI1NTYyN2YxODg0NTJmZmZhYjg5Y2I5NTM4MWQ3M2JkYTBhM2I0NDU2NmY4ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTdiNDkyNGY4ZGQ1ODU3YThmYjQ3ZGE4MTU5OGRmOTkwNGQ3YjliM2E1NGM0MmZhMzliOTJmYTk0MWU3ODg3MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzNkOThlZmM3YmY3NjhlYmU0M2VmNjdkYWNmNTdhN2E1YmIzNTM4NGQ0ODczODZmZTU1ZTViMWMzYzU0ZTQ5MyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_86f222c8f09643f28dabbd955982935f",
+      "statement": "Version checking tries each manifest feed URL in order with a 15s timeout, takes the first valid manifest, and keeps the result only in process memory.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/server-update.ts#L70-L106",
+          "version": "repo-lines-v1:sha256:0c3a09dcfd0d4c845c93dc0bdf2950ace3f065379355b9bb587836a5afbb5aa4:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkYjdlNThjZjYzZDkwNDZmZjY4MDg2YTQ0OTA4MGUzY2ViMThiYTcwNzc1OTBiY2Y5MDViODcwYTc4YmEyYWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUxNjRkYTY1NDliNGNhZmZjNzkxMTY1MzgxN2JiZjlkZGYwODVlYTBmOWI5Mzg3ZGI4N2RiNDIyYTZhMzg2M2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA0YzU1MDQzNGMyMmFmYWMxYzhkOGQzMjIyZjZmYzZhOWIzMWZlMzc4ZWJmMjM3OTIxYTg1MDAyM2QyYWNjNjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1e724a6f483a4fe3a56743d12220cbc8",
+      "statement": "In docker-compose the app requires NAKA_AUTH_PASSWORD, publishes only on 127.0.0.1:5679, stores state in the naka-data volume, and Watchtower is limited by label to the labeled app container but mounts the Docker socket.",
+      "evidence": [
+        {
+          "resource": "repo://docker-compose.yml",
+          "version": "repo-file-v1:sha256:0fb75b456a95b8e993aab849093f33f9ba837ac8dc8d0fcbc49d3b902ee075db"
+        }
+      ]
+    },
+    {
+      "id": "claim_cf01dad296404b47ad7060956b45a0ac",
+      "statement": "safeFetch validates the destination against the DNS result used for the actual connection, re-validates every manual redirect (max 5), and bounds time across hops and decompressed body size.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/utils/safe-fetch.ts#L1-L10",
+          "version": "repo-lines-v1:sha256:206c8273ce6297aec59b5269409f3bc078cb6589afd0e6434abb457d8ad12b99:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkYjU0NGE1ODg2MzQzNTBjMTkxNjlhODI0M2I1MzFiZjMwOTVlYjU3YzhmYjAzZTQ0ODM2OTQzZjA4MTY4ODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3ZTE5MDY2YTBmODMxNDliNGQ5NzMzNjgzMWE5NjEzZDIxNGI5N2FhOTNhMDYxYzdlYjE1MzkwZjljNjhjNDIifQ"
+        },
+        {
+          "resource": "repo://backend/src/utils/safe-fetch.ts#L121-L133",
+          "version": "repo-lines-v1:sha256:eb5460ecdd02dbebecc91c93d34f2ea2deb2eb561c3ad8901d8bf5c4ec58d2ff:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNjBiYzRiNWZiZWJlOThlYjkwMDY4OGFjMmI4MmE4YzQ2ZWNjZTFhOThmNTIxYzc2MDdkMjAzMjEwMWM2M2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA3OTUwNzIwNjI2ZmJhN2I1ZWU4OWJlMTEzYTdmYTJiOWU3MDE4MjFhYTU0Y2U4ZjZmMWU5Y2U2MTUxYWUwZDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2YzcxMDIyZTEzMzcxODk1YzI1NGU2YWRhYjQwMDUzMjI1YWZmNzUyYzRiNDM4OTEyN2NjZjIyYWY5MWRhZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2Y2ExYTM1MmM1NmFiNTFkMTNkMDJlYTJhOWVjOTc2NzA5MmRiNTA0NzEzOTg3ZTUzYmQ5ZWNhN2ZlM2I0YTEifQ"
+        },
+        {
+          "resource": "repo://backend/src/utils/safe-fetch.ts#L190-L218",
+          "version": "repo-lines-v1:sha256:2d5961e4322e776cf456aa829fc3e59c4fb02153d7157170abcba2101f44ffb7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwZWU0YWNkNWQ2MmI2MGZlNjA5YmI0NDFhNzZlYWZhZDM0NTVkNWJlMGE2YzZiODAwYmZkMjhlZTcwYzU1YWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdiNjMwZThkNTJkODNjOGVmMDk4NGI3MzY1Yzk2NmIwYjYzMjU0MzZiNDMzNmRlZTA5YTk1N2UxN2QzNmUwZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bf24688f079f4fd480fe91f880405f75",
+      "statement": "isBlockedAddress blocks special-use IPv4/IPv6 ranges, unwraps IPv4-mapped and NAT64 addresses to test the embedded IPv4, and treats unparseable input as blocked.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/utils/safe-fetch.ts#L40-L120",
+          "version": "repo-lines-v1:sha256:c2c4d5bcd2202581b2157806c71fcc512d8dd523187f82e7df831867a486f7d5:eyJzZWxlY3RlZExpbmVDb3VudCI6ODEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3OTYwNTZiYmM5YTUyNjg3ZTFlOGUzYzg2NjE1NTViNjc1YjBiNWY4YzIyNWJlYjk5OTkyZjcxZDZkMjc4YzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZjRiOWU3YjAxOWIwMGIzYzgxYzIyNzgxNjY1NzEwNzAwOThkNGY1MjFlYTVjMTkxMmEyOTE2NTMxNTA2OTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY2ZjYzYjA5MDY0NWY1ZDAzOWU4NDM1OTQ5YTM0NDA3MDRjMzM5M2Y4ZGIxZmJlMzY1ZDU4M2U1YWRmYzAzOTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MTI1ZjVkOGIxMDFiMTk4OWJlNTExZWEzMjI3NDQ0ZmQ0MDJjOTBkOTA0ZmNiNDA1MTZmYTYzZGE1MDQ4YzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_060eb6bf30044ff5b6391c7c0b2d54a7",
+      "statement": "The AI Live GPU agent requires a token for commands while LiveTalking and SRS accept traffic only from localhost.",
+      "evidence": [
+        {
+          "resource": "repo://deploy/ai-live/README.md#L1-L12",
+          "version": "repo-lines-v1:sha256:3e5ac8b360566c2c2e74f830fc2b0dbef98658c335ded463df39e158fe36faee:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlNmRjODQyMjJiYzFlMGZlZjBmZjJlOTgwODUzODYwYmVhMzlkMWE0NTMzNjg3NzIwY2Q4YjU4M2UxNWNkOTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzYmQxMGY5NTQwODZlM2RkNzI0MDIzZGM1MDVmYWEzNjRiMmVlYTM2ZmM3MDc4OWMyODQ4OWM5ZjJhYTg5MGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRkOWRhM2M0ZGEzMDZlYjI1YzA1NzBlYWEzYzJiMDM4OWFlOWMyNmQxZWNmNWI3NzY2NmRmNWQxYzc2Y2E4NzMifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

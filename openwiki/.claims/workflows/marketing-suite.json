@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:470aee7a87889387de76eb8f0ced16f64e8030162376321f45b6eeeb445f949b",
+  "claims": [
+    {
+      "id": "claim_f8a53f9b655d40d19ca8d16e4020fad6",
+      "statement": "Marketer campaign status is a polled state machine, with a pipeline_tasks row as the mutual-exclusion lock, and in-progress campaigns are failed at boot by failStaleCampaigns.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/marketer.ts#L1-L8",
+          "version": "repo-lines-v1:sha256:8b0f74debecff4b509ea12795f81d45a3d670a27a214d87914d2890f5a684bfd:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDVkNWFiYWNhMjI2ODBhZTk1MzM2NzAwZGY3NjYzNjE5N2E3Y2I2YzAwNGY0Y2Q3OWFjMWIxZmQyZjBhYzRhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWY4ZDc2NGNjZmZiNGMzMWQ0MWE4MjgyY2Y0Y2M1NGYwMDM1N2Q0MzFlNmMyMTc1Njc3YWQwZTQxMjcxMjU1YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2IzMGI3OWFhODY1Y2FiNDYzYWVkMTk1NDBkMmE0YmY5NTBmODk5MDRhZjJhOTkzY2E4ZmQzN2ZjMjQ5MmZiNyJ9"
+        },
+        {
+          "resource": "repo://backend/src/services/marketer.ts#L38-L45",
+          "version": "repo-lines-v1:sha256:abacfe7878aace9f6236a1a99b989edc0171d6b40125d93535b739c29f7b4910:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNlNGQ0YzBhN2M0OGNjOTFlZjNiYmIxZTdmMjVkMGY0YmM2YjYzNzkzOTAyNjc0ZjA5MmMyYzA0ZjY3MDY3YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2YxZTdmYWJjYjVkN2Y2MzBkYTFlMGNlMjkyYzczMjQ1ZWYxZDZmMmI5NTE1NGFhOGNiOWEwM2I4ZWZhYjhkNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2E2MmM5MjhhZjg2YjNhYWE3MDU5MmVmOTAwNzE2OTE2OTUwMDU4MDZkMTVjOTU1YjgyMmQ5ZDM1ZGQxMTAxNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTEzMDBiZDdmZGJhMGZlMmM3MWNlMWI2Nzc4Nzk1NjE5OGFhMTg1NzVmOWRmOWJhYmE1YjMwNTcxMjk0MGQyOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_58d444333bd84a249d3a75a7506e0015",
+      "statement": "Trending data is a curated read-only list with a deliberate rule against scraping platforms, and gallery performance numbers are entered manually by users.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/gallery.ts#L1-L6",
+          "version": "repo-lines-v1:sha256:ffb7abdb0ea4684dc9a0d956d0aa69c18602468aad7770d0cf69c4b93f4750c8:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDVkNWFiYWNhMjI2ODBhZTk1MzM2NzAwZGY3NjYzNjE5N2E3Y2I2YzAwNGY0Y2Q3OWFjMWIxZmQyZjBhYzRhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWY4ZDc2NGNjZmZiNGMzMWQ0MWE4MjgyY2Y0Y2M1NGYwMDM1N2Q0MzFlNmMyMTc1Njc3YWQwZTQxMjcxMjU1YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTYyY2E1YTEyNjc2OWMyNDVmMjk5MDUwOWQ5MTdiY2ZiZmIzNzk2MGE3MTlkZmYxNjI2Yjg4NTVlNmVmY2Q1ZiJ9"
+        },
+        {
+          "resource": "repo://backend/src/services/trending.ts#L1-L8",
+          "version": "repo-lines-v1:sha256:7e59d3cf2ccf88339cd8770bf241cdf1bc7c5516265496f64b6d712cd5bc6733:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDVkNWFiYWNhMjI2ODBhZTk1MzM2NzAwZGY3NjYzNjE5N2E3Y2I2YzAwNGY0Y2Q3OWFjMWIxZmQyZjBhYzRhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjk4MGQzMzJjMzlhZTE0NmU1ZDVkOTk1YTRkNjQ0Y2RiZDdkNTBjZWIzNDdmZjc5MThmZmMxMDUxNjRkNGViNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d60bc8336d55429f801d62ecd93bd985",
+      "statement": "A Product Studio project is backed by a system-created drama and episode, with shots stored as ordinary storyboards so existing generation, budget guard and merge logic are reused.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/studio.ts#L1-L8",
+          "version": "repo-lines-v1:sha256:994947cfce3e17734ebac588cf8cb3110b17a39dd38ded41253176faa5c1e167:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDVkNWFiYWNhMjI2ODBhZTk1MzM2NzAwZGY3NjYzNjE5N2E3Y2I2YzAwNGY0Y2Q3OWFjMWIxZmQyZjBhYzRhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWY4ZDc2NGNjZmZiNGMzMWQ0MWE4MjgyY2Y0Y2M1NGYwMDM1N2Q0MzFlNmMyMTc1Njc3YWQwZTQxMjcxMjU1YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTQ2MDFiYWYwY2ZmZGRlNmIwZjQ3ZjI3YWIxYzMwYjkwOTJhZDBlMDIwZmY3N2NmMWJlNmI2MTA1NGU3MmEzNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_25d1b1a1365f48f8b029096c3e25fcfe",
+      "statement": "Studio auto-render advances keyframes, videos and merge stages by polling sys_task every 5 seconds, tolerates failed shots, honours cancel before the next stage, and resumes or fails with E_TASK_INTERRUPTED at boot.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/studio-autorender.ts#L1-L25",
+          "version": "repo-lines-v1:sha256:818efdaebb24413a2adc1ac935a8ac9734b7564d56fe523f2cec23d40ee115ad:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRkNGExNjdmZmRkY2ZmODk3N2VlMmYzM2I2YWY0ZGIyNzFiYjVhZGRmMDkwN2M3YTk0M2ZhYjUxZTUxODM5MDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_625f655dc6824800b48f62cfd8b3f228",
+      "statement": "Seller copy links are appended to the pinned comment by the backend rather than generated by the model.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/seller.ts#L104-L115",
+          "version": "repo-lines-v1:sha256:dba25de606e67b513ca521098a15be75a761f60a92cc13b17c798070bcec4ebe:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlZmQ2YzU3NTA4MTBlNDgxN2ZiMjAzMjQ0NWNmMTRlYzM4MGY2MDUyOGJjYjQ0NDUyY2RhNjgzZDM0Y2IzNzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4MTU1ZjViMDA1YTNiMWExMjM3NzA1MjhlZjEyNjJmNzgyNmZiY2U1MjUxMzY2MWM2YTNkNGQ3Y2JkZDEyNDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxOWYwMDc2YmJjNTMxZTkxZTQxMjUwZmY5MDYzZmE3OTczODUyMGFiZWMwMmRkMmYzYTI5MjczYTg3MjYxYWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_707f78a0d3e44447a27769de68ed13bf",
+      "statement": "Seller video generation runs a single driver loop per post that repeatedly calls an idempotent syncVideo, and drivers are restarted at boot for posts still awaiting video.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/seller.ts#L400-L432",
+          "version": "repo-lines-v1:sha256:870598df5d1926f98f3cad229f7f4c60ffa5eb4bc2a8eda219d283b6a174457d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyNTM2NTA1OTkwOWE5YzA3OTc0YjVhNzk4Njk1MjZiM2NmNDEzM2VlM2Y1NDg2Y2FkOTM4Njk5MTM3OWY0ODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiMzE2OWQ5NGM0NGY1MGE4ODIwZmI3NWY5MzA2NDEyMmFmN2EzZjVkNWQyNzc0M2U3YjdhOTAzMjk0MGE5NDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhNjZmOTlhYWY5ZTY3NzU1ODY2Yzc2N2YzYjBlMmNiMGEwODlhM2RjNDBiN2MyMDdiYTVkYjE0MGJiYWFmNGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a49bf84071fd4bf4a32a82fba6b5ca26",
+      "statement": "Installing a library skill writes a normal SKILL.md into the agent workspace, refuses duplicates, and refreshes skill workspaces so no restart is needed.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/agents/skill-library.ts#L1-L20",
+          "version": "repo-lines-v1:sha256:1e3c674503d1ead332a196e9166597e4a94ce6a0781df4a31fd3e037f3f5b0ee:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlYmEwNzBjYzMxM2QxODk4ZWIyMGVhZGE3MTQxODc3NzI4ZjYxM2JlN2I4YzNmYmExMzZjMGVlZDE0MmQ0MjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4YjUyNjU2OTQ3MWQ2MzVhZmE0OTAyZTA4Y2EzMGY5OGEyYmRlYjEyNzQ1MTU0ZDc5NzU5MjZmNDY5NGM1YTgifQ"
+        },
+        {
+          "resource": "repo://backend/src/routes/skills.ts#L56-L65",
+          "version": "repo-lines-v1:sha256:45ac21c2ff9e53385a4fcc9a366239fcc5a3279e70c239ab8a3a8b5ce6b82676:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhZmRiNjQxMDUwNTQ5YjlmMDQwMGViZTdhYmE3ZDQ5ZjU1MWQ3OGI1ZmEzOTljMTYxYWY2M2M1NDM4ZjFjNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmZDNmNDdkM2VkYzhjZTVhYTAxYWNjZjczOGI1NWI0NGQyODRjOWE3MTgxOTRlM2RkZGZkNDJhNWE3NmFkZmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1M2JlZDk4YWYyMTFkZWJlMjU4NWM5ZmQyMTk3MmVlNWJiZGVlMjNhZGQ4YTZhMzVjZmFlYTE3NWVmZGI3NDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b7180929e7cd43f889bba86bbbb0822e",
+      "statement": "AI Live commands go through naka-live-agent with a Bearer token; the token and RTMP stream URL are kept in app_settings and not returned to the frontend.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/ai-live.ts#L1-L12",
+          "version": "repo-lines-v1:sha256:47e7e4db09ae633ada51c011a22873f13a6ee81e69b42158826cf818107b54b1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyNGU4MjYxMzIwNTYyOTkxNjczYjUyMTJhODgzMmExMWY4MmNmMWMwNWVhNmRlOTNlODVmMGQzNTRkYWI3YmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzNTBmMDMwZTEyOWI0ZWRkN2M2MzY0YzQ5YzRmZWE5YTBhNDRmYTc0ZTA3NGZkZjQ5ODA0YzQ0ZTQyZGExMGMifQ"
+        },
+        {
+          "resource": "repo://backend/src/services/ai-live.ts#L150-L168",
+          "version": "repo-lines-v1:sha256:1bbf4e37cd8398a838b89c7ad8db8f9c1652647a329e9d9d70b3560775d80d8a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3Y2I5ZDFlOWJlYWJlZjlkMzk2ZDE4NjVmMWM4OGU2ZDc0YzQ5N2E1Nzg1NzdhMGRlMTQ1OTUwOGI0ODQ5NWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxMjE1Yzg3NjQxYmMzZWRmMzhlZmQ3ZWE3NDg0ODU2YWIzNzE0NjQzZGUzMDk4ZTZmNjBhMmU5NjdlNjA1YzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlNzE2YmIxNGQ1ZGViYjcyNjFkZGM5NmUwNTIwZTRjNDgyZWRlMDUzMTQxZmMyNjdkNmFlYWQzYTQxMDFjOGMifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

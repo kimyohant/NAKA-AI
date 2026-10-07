@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:22d0918abd5d4e8b5edb01f316e8f7ee5927a46015460cf03ffde9afbcb1317d",
+  "claims": [
+    {
+      "id": "claim_639376fc68a044fabf8f928e43bc91f4",
+      "statement": "Pipeline step status is derived from stored data (script content, extracted assets, storyboards with images/videos, latest merge) rather than a separate workflow state.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/routes/episodes.ts#L281-L314",
+          "version": "repo-lines-v1:sha256:538401434e9e66ac23c1b1fe88368bc3ede624f562ef5cb79d21e5f591fd8ba4:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkN2FjM2NmYzZlM2YwNTBmMzEzOTFlZTFmZmIxMWEzNThiYTUwY2NkNTQzZjg4MWYxMWE5MGI0MTk1NTQ1NjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5ZTIwMmM1YjBkY2I4MzQ0ZGM1OTFkOTAzNTAyMjA2ZmQ5MTdmNGZmN2I3MmI5MzY1NTRlNTczYjU5MzhiODAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwNTAwYmMyOTA2YWIwN2E1MWZmZTQzYzY0ZmZmODVlNmVlMzhhMjE0YThiNjA5ZDc2Njc5ZmMyYjA1M2QzZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2ead14827f9e4de8836869930fd34bd4",
+      "statement": "Long-running agent jobs are tracked in the pipeline_tasks table keyed uniquely per job; startTask refuses a duplicate while a running row exists and resets finished rows in place.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/pipeline-tasks.ts#L1-L112",
+          "version": "repo-lines-v1:sha256:e47850a4d0d3df7f58cc06016ca40fe560b22d00f1a1acaa678e2926ca65b58c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0NWQ1YWJhY2EyMjY4MGFlOTUzMzY3MDBkZjc2NjM2MTk3YTdjYjZjMDA0ZjRjZDc5YWMxYjFmZDJmMGFjNGE1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIxMzMwZTRkY2JjYzNkMzA4MGQ0OWE5MzBmMGVlNGIzYWE4YzhhOTJmMzlkYjQ4ZjZjNGNiNTMwODFjOGE0ZDUyIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2ZGI5ODg2YjFjZmQwMWZiZTFiYjI4MDQ2Y2Q2ODQxNjE0MzlmOGJjMDMzZmQ1NTMxMDE2YzcyNTc0YmNhZWY1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_87ab0a847c404c0091c3cf2e02344356",
+      "statement": "Extraction runs per target (characters, scenes, props) as independent async tasks, with cooperative cancellation checked only before the agent call.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/extraction.ts#L1-L60",
+          "version": "repo-lines-v1:sha256:81d1814cd31a94b557c7e5c16b4c758a1aedb04db1e3a013d336ba1150d09694:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkMzc3NmZkOTc4Y2MyNTUzYWZmOWEwZmE1ODRkYzM4ZWYwOWE5M2FmY2E4N2RmNjVkYmM3MzM4NWRiMDc2OTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE4MzBjMWI4MTcyMWI2OTdlNGI2OWE1YTI5MmQxMTM2Y2Y5MzQ4NzZlZGM5ZTJiMDFkZTIyMDRjYTJhNjgzYTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a3fb837ee01148beb02202968a20a4f2",
+      "statement": "Batch video prompt generation runs prompt_generator per shot, checks cancellation between shots, and judges success by whether video_prompt is non-empty in the database afterwards.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/video-prompts.ts#L28-L113",
+          "version": "repo-lines-v1:sha256:6b2833f6c32e43416467442add23a7b639d393b77cf9fb3828127362d9adf443:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4NjFmNjgyZjZiMzZjYWU0YzAyMmRlZDk2MzcyMjczM2MzYmU3NThkYTc2ZDFkMmMwZjE5NGIwNWFiNTI0NjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4MDE5YzA3ZWZkM2Y2YmRjZjk1YTdjZjg5YzhlY2VlYjE3MjI1YTM5MWU3NTVlYzgxZGU0NWJhMmM0N2Q4NzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4MjY4MjJmMTNlZDk5ZDk1NDI5OWYyZTQ3ZjlkNTMzMzM1NDYwZmNmNDIzODY2NWEzZGY3ZGZkMWIzMzRkYjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVmMDFkNzAwNjhiZGJkZjEzMjQwMmE5ZjA1ZGQxMTdiODkyYmQwNzA4OGU5YjI5M2FjYWFiMGFhZmIyM2IzMGUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7bf148cce0cf43398a761bd130ee75a8",
+      "statement": "Storyboard readiness reports blockers for missing prompt or reference images and for unselected completed image candidates, with character look assignments overriding default character images.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/storyboard-readiness.ts#L14-L59",
+          "version": "repo-lines-v1:sha256:6d601ff5fafcb600cd844e449b6adc03471af354d702b790dde4fe0fa867e4d5:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhZTFhMmM0ZGM3NmViZDgwMDZkYmNlNTc1ZmM1MmI5YTEwMjFmYTlhNzM2YzZhNGE0NWQ3ZDcyYTU0YmE2NGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMWZjODM0N2UzMDBmNTI2YmM5NmE4NjQ4MGEzZmQ3YmY4MWRmZDFhNzI4OWE5NzYyNWU0ODBmMDI0MjJlNDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_58391e29a5ff439cb2a9df20676f19f8",
+      "statement": "Export health classifies missing or unreadable clips as errors and stale sources, missing audio, duration mismatch and mixed aspect ratios as warnings; ready requires at least one clip and zero errors.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/export-health.ts#L34-L91",
+          "version": "repo-lines-v1:sha256:2d93aea49f161d22793d24033674b71de61c663f952faa18fbba1b1eff735ada:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzMzczY2U3NjEzMmUxZWYzMmM1ZWIyZjY5Y2E4YWE4Yzg3MzBhYWM3MzMwMzk5OGRiMWU2ZTQ4MTRmY2Y0ZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUxMDU1NTI5MzVkNjkxZjY3YTgwZjBmZTZlNWQzMzczYmJiZDA0Zjc0NTQ1YzEzOGFhYWE5YWZiOTdlMjZhYmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d9c2d3cee19d48a09460a09d1ab174bb",
+      "statement": "Episode merge validates selection, ffmpeg availability, file existence and export health, then asynchronously concatenates clips to H.264/AAC mp4, verifies the output, extracts a poster and updates the episode video URL.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/ffmpeg-merge.ts#L25-L172",
+          "version": "repo-lines-v1:sha256:48d8f1811ba2f813a48e8784847db5c7926f59ff1ec1db09543a2ff2f3f45106:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5NTIwOTI3M2M3YzgzM2Y3MTNkNDE0NWRiZmM5ZjA2ODI1NzQ5NWYxNjJiMWMyZDU4OWNiOTUzZTMzMmY3ZmJjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJlMjJmYWE1MzViZDJlYTNkNTJlNzQxZWQ0NTQ0MzViN2ZlNDllODM1ODZlOTQzZDk4ZDgyYmJmYjI0ZDFmNWM1IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJhMjVjNDQ4MTVkN2RkOTQ3NjFjMDlhYTk5MTA0NTY4MmFhZDcyMDNjOWE1MjkwZTgxNzZlYjRkYjY0YTAwYTRjIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_5d4cdc39f32249bb86fdf935c10fcded",
+      "statement": "The chat endpoint prepends the drama creative context to the user message and runs the agent with maxSteps 20, returning text plus normalized tool calls and results.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/routes/agent.ts#L33-L112",
+          "version": "repo-lines-v1:sha256:c768af7f09e31f7de0dc4e1e97457b0fb54509baf82affc83f0b8359237fa0dc:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4YWI5ZGMzYmUwMWUyZmZmN2IzMWJhN2ZiYjFmZjhmZjkzNDAyY2VhODc1ODZiZWMzNTdhYWRmM2MxZDQ3MDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmM2RkNDcwYzA5NmFiNWYxZjkxMzJkYzk0ODc2ZTZhMGE3OTcyMGE2ZDE0NzI5YjIyYjc0OTRlNTM4ZjE2ZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3NjNiNDNiOTFkMjk3ZjUzZDBjZTg2OWE0YmNjYTM3ZTY4NWUyZjdmZDFmMDRlMGVhZmU0MzJiZTdjODFjZjEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}
