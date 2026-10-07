@@ -1,39 +1,39 @@
-/* Phase 5B welcome card — same glass language as public/app/app.css
-   (navy theme, Anuphan/IBM Plex Sans Thai, 22px radius panels). */
+/* Phase 5B welcome card — light naka-ai look (tokens in public/member.css). */
 
 .onboarding-card { margin: 26px 0 0; }
 
 .onboarding-inner {
-  background: linear-gradient(150deg, #234d9430, #ffffff0a 55%);
-  border: 1px solid #8dddff3d;
+  background: linear-gradient(150deg, #eef3ff, #ffffff 60%);
+  border: 1px solid #d4e0f7;
   border-radius: 22px;
   padding: 22px 24px 18px;
+  box-shadow: var(--m-shadow-sm);
 }
 
 .onboarding-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
 .onboarding-head h2 {
   margin: 0;
-  font-family: "IBM Plex Sans Thai", sans-serif;
+  font-family: var(--m-display);
   font-size: 19px;
   line-height: 1.45;
   letter-spacing: -.02em;
-  color: #fff;
+  color: var(--m-ink);
 }
 .onboarding-hide {
   flex-shrink: 0;
-  background: none;
-  border: 1px solid #ffffff30;
+  background: #fff;
+  border: 1px solid var(--m-line);
   border-radius: 999px;
-  color: #b9cdec;
+  color: var(--m-ink-2);
   font-size: 11.5px;
   font-weight: 600;
   padding: 6px 13px;
   cursor: pointer;
   transition: background .18s ease, border-color .18s ease, color .18s ease;
 }
-.onboarding-hide:hover { background: #ffffff12; border-color: #ffffff5c; color: #fff; }
+.onboarding-hide:hover { background: var(--m-bg); border-color: var(--m-line-strong); color: var(--m-ink); }
 
-.onboarding-progress { margin: 8px 0 0; color: #9fb4d6; font-size: 12px; }
+.onboarding-progress { margin: 8px 0 0; color: var(--m-ink-3); font-size: 12px; }
 
 .onboarding-steps { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 9px; }
 .onboarding-step {
@@ -41,11 +41,11 @@
   align-items: center;
   gap: 12px;
   padding: 11px 13px;
-  border: 1px solid #ffffff1c;
+  border: 1px solid var(--m-line);
   border-radius: 14px;
-  background: #ffffff08;
+  background: #fff;
 }
-.onboarding-step.is-done { border-color: #8dddff4d; background: #8dddff10; }
+.onboarding-step.is-done { border-color: #bfe8d4; background: var(--m-ok-bg); }
 
 .onboarding-mark {
   display: inline-grid;
@@ -54,31 +54,30 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 1.5px dashed #ffffff4d;
-  color: #8dddff;
+  border: 1.5px dashed var(--m-line-strong);
+  color: var(--m-ok);
   font-size: 14px;
   font-weight: 700;
 }
-.onboarding-step.is-done .onboarding-mark { border: 0; background: #8dddff26; }
+.onboarding-step.is-done .onboarding-mark { border: 0; background: #c9eedb; }
 
-.onboarding-label { flex: 1; min-width: 0; font-size: 14px; color: #e6eefc; }
-.onboarding-step.is-done .onboarding-label { color: #b9cdec; }
+.onboarding-label { flex: 1; min-width: 0; font-size: 14px; color: var(--m-ink); }
+.onboarding-step.is-done .onboarding-label { color: var(--m-ink-2); }
 
 .onboarding-go {
   flex-shrink: 0;
-  color: #a9e2fb;
+  color: var(--m-brand);
   font-size: 12.5px;
   font-weight: 700;
   text-decoration: none;
   padding: 7px 12px;
-  border: 1px solid #8dddff4d;
+  border: 1px solid #c8d6f3;
   border-radius: 999px;
+  background: #fff;
   transition: background .18s ease, color .18s ease;
 }
-.onboarding-go:hover { background: #8dddff26; color: #fff; }
-.onboarding-step.is-done .onboarding-go { color: #9fb4d6; border-color: #ffffff26; }
-
-a:focus-visible, button:focus-visible { outline: 3px solid #87d9fa; outline-offset: 3px; }
+.onboarding-go:hover { background: var(--m-blue-soft); color: var(--m-brand-ink); }
+.onboarding-step.is-done .onboarding-go { color: var(--m-ink-3); border-color: var(--m-line); }
 
 @media (prefers-reduced-motion: reduce) {
   .onboarding-hide, .onboarding-go { transition: none; }

@@ -1,21 +1,13 @@
-/* /app/ dashboard — navy glass theme shared with the home page. */
+/* /app/ dashboard — the light naka-ai look of the landing page (tokens in public/member.css). */
 
-:root { font-family: "Anuphan", sans-serif; color: #eaf3ff; }
 * { box-sizing: border-box; }
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at 82% 8%, #22468a, #0c1d43 44%, #081631 86%);
-  color: #eaf3ff;
-}
 a { color: inherit; text-decoration: none; }
 button { font: inherit; cursor: pointer; }
 img { max-width: 100%; display: block; }
 .shell { width: min(100% - 48px, 1080px); margin-inline: auto; }
 
-.skip-link { position: absolute; top: -80px; left: 12px; padding: 12px 18px; background: #fff; color: #122851; z-index: 100; border-radius: 10px; }
+.skip-link { position: absolute; top: -80px; left: 12px; padding: 12px 18px; z-index: 100; border-radius: 10px; }
 .skip-link:focus { top: 12px; }
-a:focus-visible, button:focus-visible { outline: 3px solid #87d9fa; outline-offset: 3px; }
 
 /* ---- topbar ---- */
 .app-topbar {
@@ -26,43 +18,47 @@ a:focus-visible, button:focus-visible { outline: 3px solid #87d9fa; outline-offs
   padding: 0 max(24px, calc((100vw - 1080px) / 2));
   white-space: nowrap;
 }
-.brand { display: inline-flex; align-items: center; gap: 9px; font-family: "IBM Plex Sans Thai", sans-serif; font-size: 23px; font-weight: 700; letter-spacing: -.05em; }
+.brand { display: inline-flex; align-items: center; gap: 9px; font-family: var(--m-display); font-size: 23px; font-weight: 700; letter-spacing: -.05em; }
 .brand img { border-radius: 11px; }
 .brand-accent { font-weight: 500; }
-.brand b { color: #84d9f2; }
-.header-divider { width: 1px; height: 22px; background: #ffffff2e; }
-.topbar-label { color: #9fb4d6; font-size: 13.5px; }
-.topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 24px; font-size: 13.5px; color: #c8d8ef; }
-.topbar-nav a { min-height: 44px; display: inline-flex; align-items: center; }
-.topbar-nav a:hover { color: #fff; }
+.header-divider { width: 1px; height: 22px; background: var(--m-line); }
+.topbar-label { color: var(--m-ink-3); font-size: 13.5px; }
+.topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--m-ink-2); }
+.topbar-nav a { min-height: 40px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; transition: background .18s ease, color .18s ease; }
+.topbar-nav a:hover { color: var(--m-ink); background: rgba(13, 27, 51, .05); }
+.topbar-nav a[aria-current="page"] { color: var(--m-brand-ink); background: var(--m-blue-soft); }
+.topbar-nav .nav-studio { color: #fff; background: var(--m-grad); box-shadow: 0 6px 16px rgba(36, 89, 214, .28); }
+.topbar-nav .nav-studio:hover { color: #fff; background: var(--m-grad); box-shadow: 0 8px 20px rgba(36, 89, 214, .38); }
+.topbar-nav .nav-studio[hidden] { display: none; }
 
 /* ---- main ---- */
-.app-loading { padding: 64px 0; text-align: center; color: #9fb4d6; font-size: 14px; }
-.mode-note { display: inline-flex; align-items: center; gap: 8px; margin: 26px 0 0; padding: 7px 13px; border: 1px solid #ffffff24; border-radius: 999px; background: #ffffff0a; color: #b9cdec; font-size: 12px; }
+.app-loading { padding: 64px 0; text-align: center; color: var(--m-ink-3); font-size: 14px; }
+.mode-note { display: inline-flex; align-items: center; gap: 8px; margin: 26px 0 0; padding: 7px 13px; border: 1px solid var(--m-line); border-radius: 999px; background: #fff; color: var(--m-ink-2); font-size: 12px; }
 .mode-dot { width: 7px; height: 7px; border-radius: 50%; background: #f4b860; }
 
 .greeting { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: 26px 0 26px; }
-.greeting h1 { margin: 0 0 8px; font-family: "IBM Plex Sans Thai", sans-serif; font-size: clamp(28px, 4vw, 40px); letter-spacing: -.045em; }
-.greeting p { margin: 0; color: #c4d7ec; font-size: 15px; line-height: 1.7; }
-.greeting-mascot { width: 108px; filter: drop-shadow(0 16px 18px rgba(2, 10, 26, .5)); flex-shrink: 0; }
+.greeting h1 { margin: 0 0 8px; font-family: var(--m-display); font-size: clamp(28px, 4vw, 40px); letter-spacing: -.045em; color: var(--m-ink); }
+.greeting p { margin: 0; color: var(--m-ink-2); font-size: 15px; line-height: 1.7; }
+.greeting-mascot { width: 108px; filter: drop-shadow(0 16px 20px rgba(20, 45, 110, .2)); flex-shrink: 0; }
 
 .dashboard-grid { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 20px; align-items: start; }
-.panel-label { margin: 0 0 14px; color: #95d5f4; font-size: 12.5px; font-weight: 700; letter-spacing: .04em; }
+.panel-label { margin: 0 0 14px; color: var(--m-brand); font-size: 12.5px; font-weight: 700; letter-spacing: .04em; }
 
 .credits-card, .workflow-card {
-  background: rgba(255, 255, 255, .055);
-  border: 1px solid #ffffff22;
+  background: var(--m-surface);
+  border: 1px solid var(--m-line);
   border-radius: 22px;
+  box-shadow: var(--m-shadow-sm);
 }
 .credits-card { padding: 24px 24px 20px; }
-.credits-number { margin: 0 0 12px; font-family: "IBM Plex Sans Thai", sans-serif; font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -.04em; color: #a9e2fb; }
-.credits-number small { font-size: 15px; font-weight: 600; color: #c8d8ef; letter-spacing: 0; }
-.credits-help { margin: 0 0 16px; color: #9fb4d6; font-size: 12.5px; line-height: 1.75; }
-.credits-help a { color: #a9e2fb; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
-.signout-button { background: none; border: 1px solid #ffffff38; border-radius: 999px; color: #dbe7fa; font-size: 12.5px; font-weight: 600; padding: 9px 16px; transition: background .18s ease, border-color .18s ease; }
-.signout-button:hover { background: #ffffff12; border-color: #ffffff66; }
+.credits-number { margin: 0 0 12px; font-family: var(--m-display); font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -.04em; color: var(--m-brand); }
+.credits-number small { font-size: 15px; font-weight: 600; color: var(--m-ink-2); letter-spacing: 0; }
+.credits-help { margin: 0 0 16px; color: var(--m-ink-2); font-size: 12.5px; line-height: 1.75; }
+.credits-help a { color: var(--m-brand); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.signout-button { background: #fff; border: 1px solid var(--m-line); border-radius: 999px; color: var(--m-ink-2); font-size: 12.5px; font-weight: 600; padding: 9px 16px; transition: background .18s ease, border-color .18s ease; }
+.signout-button:hover { background: var(--m-bg); border-color: var(--m-line-strong); color: var(--m-ink); }
 .signout-button:disabled { opacity: .6; cursor: wait; }
-.signout-status { min-height: 20px; margin: 8px 0 0; color: #ffb4a6; font-size: 12px; }
+.signout-status { min-height: 20px; margin: 8px 0 0; color: var(--m-danger); font-size: 12px; }
 
 /* Shown when /api/auth/me cannot be reached — the user stays on the page. */
 .app-error {
@@ -70,22 +66,34 @@ a:focus-visible, button:focus-visible { outline: 3px solid #87d9fa; outline-offs
   max-width: 460px;
   padding: 28px 26px;
   text-align: center;
-  background: rgba(255, 255, 255, .055);
-  border: 1px solid #ffffff22;
+  background: var(--m-surface);
+  border: 1px solid var(--m-line);
   border-radius: 22px;
+  box-shadow: var(--m-shadow-sm);
 }
-.app-error p { margin: 0 0 16px; color: #dbe7fa; font-size: 14px; line-height: 1.8; }
+.app-error p { margin: 0 0 16px; color: var(--m-ink-2); font-size: 14px; line-height: 1.8; }
 
 .workflow-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.workflow-card { display: flex; flex-direction: column; gap: 7px; padding: 20px 20px 18px; transition: transform .18s ease, background .18s ease, border-color .18s ease; }
-.workflow-card:hover { transform: translateY(-2px); background: #ffffff0d; border-color: #ffffff44; }
-.card-index { color: #84d9f2; font-size: 11px; font-weight: 700; letter-spacing: .05em; }
-.workflow-card strong { font-size: 17px; letter-spacing: -.02em; }
-.workflow-card small { color: #aebfda; font-size: 13px; line-height: 1.65; }
-.card-go { margin-top: auto; padding-top: 10px; color: #a9e2fb; font-size: 12.5px; font-weight: 700; }
+.workflow-card { display: flex; flex-direction: column; gap: 7px; padding: 20px 20px 18px; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.workflow-card:hover { transform: translateY(-2px); border-color: #c4d3f0; box-shadow: var(--m-shadow-lg); }
+.card-index { justify-self: start; align-self: flex-start; padding: 1px 7px; border-radius: 6px; background: var(--m-ink); color: #fff; font: 700 10.5px/1.6 ui-monospace, Consolas, monospace; letter-spacing: .05em; }
+.workflow-card strong { font-size: 17px; letter-spacing: -.02em; color: var(--m-ink); }
+.workflow-card small { color: var(--m-ink-2); font-size: 13px; line-height: 1.65; }
+.card-go { margin-top: auto; padding-top: 10px; color: var(--m-brand); font-size: 12.5px; font-weight: 700; }
 .card-go span { margin-left: 6px; font-weight: 400; }
 
-.jobs-note { margin: 26px 0 60px; color: #7e93b8; font-size: 12px; text-align: center; }
+/* naka-studio entry on the dashboard (shown when the member has studio access) */
+.studio-card { position: relative; overflow: hidden; color: #fff; background: var(--m-grad); border: 0; }
+.studio-card strong, .studio-card small, .studio-card .card-go { color: #fff; }
+.studio-card small { opacity: .9; }
+.studio-card .card-index { background: rgba(255, 255, 255, .22); }
+.studio-card:hover { border-color: transparent; box-shadow: 0 18px 40px rgba(36, 89, 214, .35); }
+.studio-card[hidden] { display: none; }
+.workflow-cards .studio-card { grid-column: 1 / -1; }
+.studio-notice { margin: 16px 0 0; padding: 11px 16px; border: 1px solid #f3dca3; border-radius: 14px; background: var(--m-warn-bg); color: var(--m-warn); font-size: 13.5px; font-weight: 600; }
+.studio-notice[hidden] { display: none; }
+
+.jobs-note { margin: 26px 0 60px; color: var(--m-ink-3); font-size: 12px; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) {
   .workflow-card { transition: none; }
@@ -100,10 +108,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid #87d9fa; outline-offs
 }
 @media (max-width: 560px) {
   /* Two rows on phones: brand + account menu, then the nav, so nothing overflows 360px. */
-  .app-topbar { height: auto; flex-wrap: wrap; padding: 10px 18px 0; gap: 0 12px; }
+  .app-topbar { height: auto; flex-wrap: wrap; padding: 10px 18px 6px; gap: 0 12px; }
   .header-divider, .topbar-label { display: none; }
   .app-topbar [data-account-menu] { margin-left: auto; }
-  .topbar-nav { order: 1; width: 100%; margin-left: 0; justify-content: space-between; gap: 12px; font-size: 12.5px; overflow-x: auto; }
+  .topbar-nav { order: 1; width: 100%; margin-left: 0; justify-content: space-between; gap: 4px; font-size: 12.5px; overflow-x: auto; }
+  .topbar-nav a { padding: 0 9px; }
   .workflow-cards { grid-template-columns: 1fr; }
   .greeting { flex-direction: column-reverse; }
   .greeting-mascot { align-self: flex-end; }

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#091736">
+  <meta name="theme-color" content="#f7f8fb">
   <title>พื้นที่ของร้าน — naka-ai</title>
   <meta name="description" content="แดชบอร์ด naka-ai: เครดิตคงเหลือและจุดเริ่มงาน 4 แบบของร้าน คลิปขาย ละครสั้น AI ไลฟ์ และบอตตอบลูกค้า">
   <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/glass-nav.css">
   <link rel="stylesheet" href="/account-menu.css">
+  <link rel="stylesheet" href="/member.css">
   <link rel="stylesheet" href="/app/app.css">
   <link rel="stylesheet" href="/app/onboarding.css">
   <link rel="stylesheet" href="/app/works.css">
@@ -22,17 +23,17 @@
   <script src="/app/onboarding.js" defer></script>
   <script src="/app/works.js" defer></script>
 </head>
-<body>
+<body class="member-ui">
   <a class="skip-link" href="#main">ข้ามไปที่เนื้อหา</a>
   <header class="app-topbar glass-nav">
     <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" width="36" height="36" alt=""><span>naka<span class="brand-accent">-ai</span><b>.</b></span></a>
     <span class="header-divider" aria-hidden="true"></span>
     <span class="topbar-label">พื้นที่ของร้าน</span>
     <nav class="topbar-nav" aria-label="เมนูหลัก">
-      <a href="/">หน้าแรก</a>
+      <a href="/app/" aria-current="page">พื้นที่ของร้าน</a>
       <a href="/app/inbox/">กล่องข้อความ</a>
       <a href="/app/billing/">แพ็กเกจ</a>
-      <a href="/studio/">สตูดิโอ</a>
+      <a class="nav-studio" href="#" data-studio-link hidden>Naka Studio ↗</a>
     </nav>
     <div data-account-menu></div>
   </header>
@@ -48,6 +49,7 @@
     <div id="app-content" hidden>
       <div id="onboarding-card" class="onboarding-card" hidden></div>
       <p class="mode-note"><span class="mode-dot" aria-hidden="true"></span><span id="mode-text">โหมดทดลอง · ข้อมูลตัวอย่าง</span></p>
+      <p id="studio-notice" class="studio-notice" role="status" hidden></p>
 
       <section class="greeting" aria-labelledby="greeting-title">
         <div>
@@ -73,6 +75,7 @@
             <a class="workflow-card" href="/create/?workflow=drama"><span class="card-index">02</span><strong>ละครสั้น AI</strong><small>พล็อต ตัวละคร และเสียงพากย์ เป็นวิดีโอสั้นของร้าน</small><span class="card-go">เริ่มทำละคร <span aria-hidden="true">↗</span></span></a>
             <a class="workflow-card" href="/create/?workflow=live"><span class="card-index">03</span><strong>AI Live</strong><small>อวตาร AI ช่วยแนะนำสินค้าและคุยกับคนดูระหว่างไลฟ์</small><span class="card-go">เริ่มไลฟ์ <span aria-hidden="true">↗</span></span></a>
             <a class="workflow-card" href="/app/inbox/"><span class="card-index">04</span><strong>ตอบลูกค้าอัตโนมัติ</strong><small>ตอบคอมเมนต์และแชตด้วยข้อมูลและน้ำเสียงของร้าน</small><span class="card-go">เปิดกล่องข้อความ <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card studio-card" href="#" data-studio-link hidden><span class="card-index">STUDIO</span><strong>Naka Studio</strong><small>สตูดิโอเต็มรูปแบบ: ละครหลายตอน นักการตลาด AI และโคลนคลิปไวรัล ล็อกอินด้วยบัญชีนี้ได้เลย</small><span class="card-go">เปิด Naka Studio <span aria-hidden="true">↗</span></span></a>
           </div>
         </section>
       </div>

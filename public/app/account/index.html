@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#091736">
+  <meta name="theme-color" content="#f7f8fb">
   <title>บัญชีของฉัน — naka-ai</title>
   <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
   <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
@@ -13,12 +13,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/glass-nav.css">
   <link rel="stylesheet" href="/account-menu.css">
+  <link rel="stylesheet" href="/member.css">
   <link rel="stylesheet" href="/app/app.css">
   <link rel="stylesheet" href="/app/account/account.css">
   <script src="/account-menu.js" defer></script>
   <script src="/app/account/account.js" defer></script>
 </head>
-<body>
+<body class="member-ui">
   <a class="skip-link" href="#main">ข้ามไปที่เนื้อหา</a>
   <header class="app-topbar glass-nav">
     <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" width="36" height="36" alt=""><span>naka<span class="brand-accent">-ai</span><b>.</b></span></a>
@@ -28,6 +29,7 @@
       <a href="/app/">พื้นที่ของร้าน</a>
       <a href="/app/inbox/">กล่องข้อความ</a>
       <a href="/app/billing/">แพ็กเกจ</a>
+      <a class="nav-studio" href="#" data-studio-link hidden>Naka Studio ↗</a>
     </nav>
     <div data-account-menu></div>
   </header>
@@ -50,7 +52,7 @@
         <p class="account-row"><span>ชื่อที่แสดง</span><strong id="account-name"></strong></p>
         <p class="account-row"><span>เข้าสู่ระบบด้วย</span><strong id="account-contact"></strong></p>
         <p class="account-row"><span>เครดิตคงเหลือ</span><strong><span id="account-credits"></span> เครดิต</strong></p>
-        <a class="account-billing-link" href="/app/billing/">เติมเครดิต / ซื้อแพ็กเกจ <span aria-hidden="true">↗</span></a>
+        <a class="account-billing-link" href="/app/billing/">เติมเครดิต / ซื้อแพ็กเกจ <span aria-hidden="true">→</span></a>
       </section>
 
       <section class="account-card" id="password-section" aria-labelledby="password-title" hidden>

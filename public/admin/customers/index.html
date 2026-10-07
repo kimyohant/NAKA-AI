@@ -13,16 +13,20 @@
 </head>
 <body>
   <a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
-  <header class="topbar"><a href="/admin/">naka-ai · หลังร้าน</a><button id="logout" type="button" hidden>ออกจากระบบ</button></header>
+  <header class="topbar"><a href="/admin/">naka-ai · หลังร้าน</a><a href="/admin/system/" class="topbar-link">ตั้งค่าระบบ</a><button id="logout" type="button" hidden>ออกจากระบบ</button></header>
   <main id="main">
     <section id="login" class="card login" aria-labelledby="login-title">
       <h1 id="login-title">เข้าสู่หน้าจัดการลูกค้า</h1>
-      <p class="muted">ใช้โทเคนผู้ดูแลระบบ ข้อมูลเข้าสู่ระบบจะเก็บเฉพาะแท็บนี้</p>
-      <form id="login-form">
-        <label for="token">โทเคนผู้ดูแลระบบ</label>
-        <input id="token" type="password" autocomplete="off" required>
-        <button class="primary" type="submit">เข้าสู่ระบบ</button>
-      </form>
+      <p class="muted">ใช้บัญชี Google ของผู้ดูแลระบบ</p>
+      <a class="button-link primary" href="/api/auth/google/start?next=%2Fadmin%2Fcustomers%2F">เข้าสู่ระบบด้วย Google</a>
+      <details class="break-glass">
+        <summary>เข้าด้วยโทเคนฉุกเฉิน</summary>
+        <form id="login-form">
+          <label for="token">ADMIN_TOKEN (เก็บเฉพาะแท็บนี้)</label>
+          <input id="token" type="password" autocomplete="off" required>
+          <button type="submit">เข้าด้วยโทเคน</button>
+        </form>
+      </details>
       <p id="login-status" role="status" aria-live="polite"></p>
     </section>
     <div id="app" hidden>

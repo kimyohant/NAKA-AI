@@ -168,3 +168,50 @@
     });
   });
 })();
+
+// ---- pricing: live names, prices and credits from /api/plans (edited in /admin/system/) ----
+// The HTML keeps today's figures as the fallback; a plan taken off sale is hidden, a new one is added.
+(function () {
+  'use strict';
+  var grid = document.querySelector('#pricing .plan-grid');
+  if (!grid || grid.closest('[hidden]') || !window.fetch) return;
+  var baht = function (n) { return Math.round(n).toLocaleString('en-US'); };
+  function fill(article, plan) {
+    article.querySelector('h3').textContent = plan.name;
+    var amount = article.querySelector('.amount');
+    amount.dataset.monthly = baht(plan.monthly);
+    amount.dataset.yearly = baht(plan.yearly / 12);
+    article.querySelector('.plan-bill').dataset.yearly = 'ชำระ ฿' + baht(plan.yearly) + ' ต่อปี';
+    var credits = article.querySelector('li b');
+    if (credits) credits.textContent = plan.monthlyCredits.toLocaleString('en-US') + ' เครดิต';
+    article.querySelectorAll('li').forEach(function (li) {
+      if (!li.querySelector('*') && /ครั้งละ \d+ งาน/.test(li.textContent)) li.textContent = li.textContent.replace(/ครั้งละ \d+ งาน/, 'ครั้งละ ' + plan.parallelJobs + ' งาน');
+    });
+    var cta = article.querySelector('.plan-cta');
+    cta.dataset.plan = plan.id;
+  }
+  fetch('/api/plans', { headers: { Accept: 'application/json' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
+    if (!data || !Array.isArray(data.plans) || !data.plans.length) return;
+    var byId = {};
+    data.plans.forEach(function (p) { byId[p.id] = p; });
+    var articles = Array.prototype.slice.call(grid.querySelectorAll('.plan'));
+    var template = grid.querySelector('.plan:not(.plan-featured)');
+    articles.forEach(function (article) {
+      var id = article.querySelector('.plan-cta').dataset.plan;
+      if (byId[id]) { fill(article, byId[id]); delete byId[id]; } else article.style.display = 'none'; // .plan sets display, so not [hidden]
+    });
+    // Packages added in the panel get a card in price order, with the basics they include.
+    data.plans.forEach(function (plan) {
+      if (!byId[plan.id] || !template) return;
+      var card = template.cloneNode(true);
+      card.querySelector('.plan-for').textContent = 'แพ็กเกจ ' + plan.name;
+      card.querySelector('ul').innerHTML = '<li><b></b>ต่อเดือน</li><li>คลิปรีวิว affiliate + เสียงพากย์ไทย</li><li>สร้างได้ครั้งละ 1 งาน</li>';
+      fill(card, plan);
+      grid.appendChild(card);
+    });
+    var pressed = document.querySelector('.billing-toggle [aria-pressed="true"]');
+    var mode = pressed ? pressed.dataset.billing : 'monthly';
+    grid.querySelectorAll('.plan [data-monthly]').forEach(function (el) { el.textContent = el.dataset[mode]; });
+    grid.querySelectorAll('.plan-cta[data-plan]').forEach(function (a) { a.href = '/app/billing/?plan=' + a.dataset.plan + '&period=' + mode; });
+  }).catch(function () { /* keep the built-in figures */ });
+})();

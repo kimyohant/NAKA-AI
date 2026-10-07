@@ -21,18 +21,25 @@
   function el(tag, text, className) { var node = document.createElement(tag); if (text != null) node.textContent = String(text); if (className) node.className = className; return node; }
   function message(id, text, error) { $(id).textContent = text; $(id).className = error ? 'error' : ''; }
   function saveToken(value) { token = value; try { if (value) sessionStorage.setItem(KEY, value); else sessionStorage.removeItem(KEY); } catch { /* token remains in this page only */ } }
+  var googleError = new URLSearchParams(location.search).get('error') === 'google' ? 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองอีกครั้ง' : '';
   function login(messageText) {
     authVersion++; listVersion++; detailVersion++; saveToken(''); customer = null; selectedId = null; pending = null;
     $('app').hidden = true; $('detail').hidden = true; $('confirmation').hidden = true; $('logout').hidden = true;
     $('login').hidden = false; $('token').value = ''; $('customer-list').replaceChildren();
-    message('login-status', messageText || '', !!messageText);
+    var text = messageText || googleError;
+    message('login-status', text, !!text);
   }
   async function api(route, data) {
     var version = authVersion;
     var response = await fetch('/api/admin/customers' + route, { method: data ? 'POST' : 'GET', cache: 'no-store', credentials: 'same-origin',
-      headers: { Authorization: 'Bearer ' + token, ...(data ? { 'Content-Type': 'application/json' } : {}) }, body: data ? JSON.stringify(data) : undefined });
+      headers: { ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(data ? { 'Content-Type': 'application/json' } : {}) }, body: data ? JSON.stringify(data) : undefined });
     if (version !== authVersion) throw new Error('stale');
-    if (response.status === 401) { login('โทเคนไม่ถูกต้องหรือหมดอายุ กรุณาเข้าสู่ระบบใหม่'); throw new Error('signed-out'); }
+    // 401/403: not signed in, not an admin, or the 12-hour admin sign-in ran out (src/admin/auth.ts).
+    if (response.status === 401 || response.status === 403) {
+      var denied = await response.clone().json().catch(function () { return {}; });
+      if (denied.reason === 'origin') { var refused = new Error(denied.error); refused.status = 403; throw refused; } // a refused write, not a sign-out
+      login(denied.reason === 'signin' ? '' : denied.error || 'กรุณาเข้าสู่ระบบใหม่'); throw new Error('signed-out');
+    }
     var result = await response.json().catch(function () { return {}; });
     if (version !== authVersion) throw new Error('stale');
     if (!response.ok) { var error = new Error(typeof result.error === 'string' ? result.error : 'โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่'); error.status = response.status; throw error; }
@@ -101,6 +108,7 @@
     history('social', data.socialAccounts, function (item, row) { item.append(el('strong', row.name), el('p', label(row.platform) + ' · ' + label(row.status)), el('p', row.id, 'muted')); });
     history('audit', data.audit, function (item, row) {
       item.append(el('strong', label(row.action) + ' · ' + date(row.createdAt)), el('p', row.note, 'preserve-lines'));
+      if (row.actor) item.append(el('p', 'โดย ' + row.actor, 'muted'));
       var input = row.detail.input;
       item.append(el('p', row.action === 'credits' ? 'เติม ' + num(input.amount) + ' เครดิต' : row.action === 'package' ? 'แพ็กเกจ ' + label(input.planId) + ' · ' + num(input.months) + ' เดือน' : 'สถานะ ' + label(input.status)));
       var disclosure = el('details'), table = el('table'), head = el('tr');
@@ -183,7 +191,10 @@
   $('reload-detail').addEventListener('click', function () { if (selectedId) openCustomer(selectedId, false).catch(function () {}); });
   $('search-form').addEventListener('submit', function (event) { event.preventDefault(); if (!busy) loadCustomers().catch(function () {}); });
   $('reset-search').addEventListener('click', function () { if (busy) return; $('query').value = ''; loadCustomers().catch(function () {}); });
-  $('logout').addEventListener('click', function () { if (!busy) { login(); $('token').focus(); } });
+  $('logout').addEventListener('click', function () {
+    if (busy) return;
+    login(); fetch('/api/auth/logout', { method: 'POST' }).catch(function () {});
+  });
   $('login-form').addEventListener('submit', async function (event) {
     event.preventDefault(); var value = $('token').value.trim(); if (!value || busy || signingIn) return;
     signingIn = true; authVersion++; saveToken(value); $('token').value = ''; message('login-status', 'กำลังตรวจสอบ…');
@@ -192,5 +203,6 @@
     finally { signingIn = false; }
   });
   try { token = sessionStorage.getItem(KEY) || ''; } catch { /* storage unavailable */ }
-  if (token) loadCustomers().then(function () { $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false; }).catch(function (error) { if (usableError(error)) login('เชื่อมต่อไม่ได้ กรุณาลองเข้าสู่ระบบอีกครั้ง'); });
+  // A Google admin session (cookie) or a stored break-glass token.
+  loadCustomers().then(function () { $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false; }).catch(function (error) { if (usableError(error)) login('เชื่อมต่อไม่ได้ กรุณาลองเข้าสู่ระบบอีกครั้ง'); });
 })();

@@ -20,9 +20,21 @@
   var signoutButton = document.getElementById("signout-button");
   var signoutStatus = document.getElementById("signout-status");
 
+  // Back from naka-studio's sign-in without access (/api/sso/studio/authorize → /app/?studio=…)
+  var studioNotice = document.getElementById("studio-notice");
+  var studioReason = new URLSearchParams(location.search).get("studio");
+  var STUDIO_NOTES = {
+    denied: "บัญชีนี้ยังไม่ได้รับสิทธิ์เข้า Naka Studio ติดต่อทีมงานหากต้องการใช้งาน",
+    off: "Naka Studio ยังไม่เปิดให้ใช้งานในตอนนี้",
+  };
+
   auth.me().then(function (state) {
     loading.hidden = true;
     if (state.status === "signed-in") {
+      if (studioNotice && STUDIO_NOTES[studioReason]) {
+        studioNotice.textContent = STUDIO_NOTES[studioReason];
+        studioNotice.hidden = false;
+      }
       var user = state.user;
       var firstName = String(user.displayName || "").split(" ")[0] || "ผู้ใช้";
       greetingName.textContent = ", " + firstName;
