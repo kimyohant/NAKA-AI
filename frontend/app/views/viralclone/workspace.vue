@@ -76,8 +76,8 @@
               :busy="creatingVariants"
               @create="createVariants"
             />
-            <label class="field wc-engine">
-              <span class="field-label">{{ t('viralClone.variants.engineLabel') }}</span>
+            <label class="wc-engine">
+              <span class="wc-engine-label">{{ t('viralClone.variants.engineLabel') }}</span>
               <select
                 class="input"
                 :value="detail.renderEngine || 'naka'"
@@ -89,10 +89,10 @@
                   {{ t('viralClone.variants.engineHypit') }}
                 </option>
               </select>
-              <span class="field-hint">
+              <span class="wc-engine-hint">
                 {{ detail.renderEngine === 'hypit' ? t('viralClone.variants.engineHypitHint') : t('viralClone.variants.engineNakaHint') }}
               </span>
-              <span v-if="hypit && !hypit.available" class="field-hint wc-engine-warn">
+              <span v-if="hypit && !hypit.available" class="wc-engine-hint wc-engine-warn">
                 {{ t('viralClone.variants.engineHypitUnavailable', { reason: hypit.reason || '' }) }}
               </span>
             </label>
@@ -497,8 +497,10 @@ onBeforeUnmount(() => {
 /* === Variants === */
 .wc-variants-side { display: flex; flex-direction: column; gap: 14px; }
 .wc-render-all { align-self: flex-start; }
-.wc-engine { max-width: 320px; }
-.wc-engine-warn { color: var(--warning, #b7791f); }
+.wc-engine { display: flex; flex-direction: column; gap: 6px; max-width: 360px; }
+.wc-engine-label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.wc-engine-hint { font-size: 11.5px; line-height: 1.5; color: var(--text-3); }
+.wc-engine-warn { color: var(--warning, #d69e2e); }
 .wc-variant-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
