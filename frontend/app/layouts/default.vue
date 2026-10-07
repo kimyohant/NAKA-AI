@@ -15,11 +15,27 @@
         </button>
       </div>
 
-      <!-- เมนูหลักเหลือ AI นักขายเมนูเดียว (โมดูลอื่นยังเข้าได้ทาง URL: /drama /marketer /studio /viral-clone /live) -->
+      <!-- เมนูหลัก (คลังสกิลไม่อยู่ในเมนู — รวมอยู่ใน AI นักขายแล้ว; /studio ยังเข้าทาง URL ได้) -->
       <nav class="side-nav">
+        <NuxtLink to="/drama" class="side-link" :class="{ active: isDramaRoute }" :title="t('layout.nav.home')" @click="navOpen = false">
+          <Clapperboard :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.home') }}</span>
+        </NuxtLink>
+        <NuxtLink to="/marketer" class="side-link" :class="{ active: isMarketerRoute }" :title="t('layout.nav.marketer')" @click="navOpen = false">
+          <Megaphone :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.marketer') }}</span>
+        </NuxtLink>
         <NuxtLink to="/seller" class="side-link" :class="{ active: isSellerRoute }" :title="t('layout.nav.seller')" @click="navOpen = false">
           <Store :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.seller') }}</span>
+        </NuxtLink>
+        <NuxtLink to="/viral-clone" class="side-link" :class="{ active: isViralCloneRoute }" :title="t('layout.nav.viralClone')" @click="navOpen = false">
+          <Copy :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.viralClone') }}</span>
+        </NuxtLink>
+        <NuxtLink to="/live" class="side-link" :class="{ active: isLiveRoute }" :title="t('layout.nav.live')" @click="navOpen = false">
+          <Radio :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.live') }}</span>
         </NuxtLink>
       </nav>
 
@@ -75,7 +91,7 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Store } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, Copy, Radio, Store } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI } from '~/composables/useApi'
 import brandLogo from '~/assets/brand-logo.svg'
@@ -85,7 +101,11 @@ const route = useRoute()
 const showBrandImage = ref(true)
 const navOpen = ref(false)
 
+const isDramaRoute = computed(() => route.path === '/drama' || route.path.startsWith('/drama/'))
+const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.startsWith('/marketer/'))
 const isSellerRoute = computed(() => route.path === '/seller' || route.path.startsWith('/seller/'))
+const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
+const isLiveRoute = computed(() => route.path === '/live')
 const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))
 
 const settingsItems = computed(() => [
