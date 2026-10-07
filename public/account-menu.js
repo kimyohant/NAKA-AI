@@ -102,8 +102,19 @@
   // Mock mode reads only the local mock session. Real mode trusts the API:
   // 401 means signed out (never swapped for mock data), anything else that
   // is not a valid session means the API is unavailable.
+  // Callers on the same page load (this menu, app.js, login.js, billing.js …) share one request
+  // while it is in flight instead of each hitting /api/auth/me.
+  var mePending = null;
   async function me() {
     if (mockMode()) return localSession();
+    if (!mePending) {
+      mePending = fetchMe();
+      mePending.then(function () { mePending = null; }, function () { mePending = null; });
+    }
+    return mePending;
+  }
+
+  async function fetchMe() {
     var res;
     try {
       res = await fetch("/api/auth/me", { headers: { accept: "application/json" } });
