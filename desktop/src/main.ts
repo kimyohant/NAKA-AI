@@ -24,6 +24,8 @@ const DESKTOP_ROOT = path.resolve(__dirname, '..')
 // dev 模式下仓库各目录
 const REPO_ROOT = path.resolve(DESKTOP_ROOT, '..')
 const BACKEND_BUNDLE = path.join(DESKTOP_ROOT, 'build', 'backend.mjs')
+// dev: backend repo checked out next to this one (kimyohant/naka-ai-backend), override NAKA_BACKEND_DIR
+const DEV_BACKEND_DIR = path.resolve(process.env.NAKA_BACKEND_DIR || path.join(REPO_ROOT, '..', 'naka-ai-backend', 'backend'))
 
 /** workspace 模板版本：内置模板更新时递增，触发向用户目录补缺失文件 */
 const TEMPLATE_VERSION = '4'
@@ -177,6 +179,10 @@ function startBackend(): void {
     SQLITE_PATH: path.join(currentDataDir, 'naka.sqlite3'),
     WORKSPACE_PATH: currentWorkspaceDir,
     FRONTEND_DIST: currentFrontendDist,
+    // back-office (system settings) at /admin — no ADMIN_TOKEN on desktop, so it opens without sign-in
+    ADMIN_DIST: app.isPackaged
+      ? path.join(resolveResourceDir(), 'admin')
+      : path.join(DEV_BACKEND_DIR, '..', 'admin', '.output', 'public'),
   }
   if (app.isPackaged) {
     const exe = process.platform === 'win32' ? '.exe' : ''
@@ -223,7 +229,9 @@ function createWindow() {
   // 外链一律交给系统浏览器：应用内不弹新窗（如设置页「前往 api.firemux.com 获取 Key」）
   const isAppUrl = (url: string) => url.startsWith(`http://127.0.0.1:${backendPort}`)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//i.test(url) && !isAppUrl(url)) void shell.openExternal(url)
+    // in-app pages opened as a new tab on the web (e.g. "Open Admin" → /admin/) open in this window instead
+    if (isAppUrl(url)) void mainWindow?.loadURL(url)
+    else if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
     return { action: 'deny' }
   })
   // 主窗口意外导航到外部地址时同样拦下并转浏览器
@@ -253,7 +261,7 @@ async function bootstrap() {
     const resources = resolveResourceDir()
     const templateDir = app.isPackaged
       ? path.join(resources, 'workspace-template')
-      : path.join(REPO_ROOT, 'backend', 'workspace')
+      : path.join(DEV_BACKEND_DIR, 'workspace')
     currentWorkspaceDir = app.isPackaged
       ? path.join(userData, 'workspace')
       : templateDir

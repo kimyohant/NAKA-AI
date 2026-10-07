@@ -39,13 +39,21 @@ NAKA-AI TECH is an AI-powered short-drama production platform that automates the
 
 ### 🛠️ Architecture
 
+NAKA-AI is split across two repositories — check them out **side by side**:
+
 ```
-frontend/   — Nuxt 3 + Vue 3 + TypeScript (pure CSS, no UI framework)
-backend/    — Hono + Drizzle ORM + Mastra AI Agents + better-sqlite3
-backend/workspace/skills/ — Agent skill definitions (SKILL.md, editable in the UI)
-desktop/    — Electron desktop app (main process + esbuild + electron-builder dmg/exe)
-data/       — Generated assets and the SQLite database
+work/
+├── naka-drama-studio/   (this repo)
+│   ├── frontend/        — user-facing app: Nuxt 3 + Vue 3 + TypeScript (pure CSS, no UI framework)
+│   └── desktop/         — Electron desktop app (main process + esbuild + electron-builder dmg/exe)
+└── naka-ai-backend/     (https://github.com/kimyohant/naka-ai-backend, private)
+    ├── backend/         — Hono + Drizzle ORM + Mastra AI Agents + better-sqlite3 (API, DB, media generation)
+    ├── admin/           — NAKA Admin: system settings back-office, served at /admin
+    └── Dockerfile, docker-compose.yml — server deployment (builds the frontend from this repo)
 ```
+
+> The backend (with its git history), the Docker deployment and the system-settings page moved to **naka-ai-backend**.
+> Server setup, environment variables and Docker are documented in that repo's README.
 
 ---
 
@@ -114,6 +122,7 @@ The interface ships in **中文 / English / 日本語 / 한국어**, with a glob
 
 ### ⚙️ Environment Variables
 
+These are read by the **backend** (now in [naka-ai-backend](https://github.com/kimyohant/naka-ai-backend), whose README is the source of truth).
 No config files — everything is set via environment variables (all have defaults; local dev needs zero configuration):
 
 | Variable | Default | Description |
@@ -122,8 +131,8 @@ No config files — everything is set via environment variables (all have defaul
 | `PORT` | `5679` | Backend service port |
 | `STORAGE_PATH` | `<repo>/data/static` | Generated-file storage directory |
 | `NAKA-AI_DATA_DIR` | — | Injected by the Electron main process (userData data root) |
-| `WORKSPACE_PATH` | `backend/workspace` | Agent skills/prompts directory (desktop: writable copy under userData) |
-| `FRONTEND_DIST` | `frontend/dist` | Frontend static build directory |
+| `WORKSPACE_PATH` | `naka-ai-backend/backend/workspace` | Agent skills/prompts directory (desktop: writable copy under userData) |
+| `FRONTEND_DIST` | `../naka-drama-studio/frontend/.output/public` | Frontend static build directory (default: this repo checked out next to naka-ai-backend) |
 | `FFMPEG_BIN` / `FFPROBE_BIN` | bundled npm binaries | Custom ffmpeg/ffprobe executable paths |
 | `PUBLIC_BASE_URL` | — | Public URL Seedance needs to reference local assets (server deployments) |
 | `HYPIT_ROOT` | `<repo>/study/hypit` | Hypit installation used by the Viral Clone "Hypit" render engine (run `pnpm install` there) |
@@ -132,7 +141,7 @@ No config files — everything is set via environment variables (all have defaul
 | `HYPIT_WORKERS` / `HYPIT_TIMEOUT_MS` | `2` / 30 min | Hypit render browser workers / per-command timeout |
 | `HYPIT_KEEP_WORKDIR` | — | `1` keeps the generated Hypit project under `data/hypit/` for debugging |
 | `ADMIN_TOKEN` | — | Admin password (≥ 16 chars) for the back-office app [naka-ai-backend](https://github.com/kimyohant/naka-ai-backend). When set, the system-settings API (AI services, styles, agent prompts/skills, storage, server update) requires the `X-Admin-Token` header. Unset = open (dev/desktop) |
-| `ADMIN_DIST` | — | Built back-office app (`naka-ai-backend/.output/public`); when set the backend serves it at `/admin` |
+| `ADMIN_DIST` | `naka-ai-backend/admin/.output/public` when built | Back-office build, served at `/admin` |
 | `ADMIN_ORIGINS` | — | Comma-separated origins allowed to call the API when the back-office app is hosted elsewhere |
 
 > **Note**: AI service API keys, base URLs, and model parameters are configured in the back-office app **naka-ai-backend** (system settings, served at `/admin`) and stored in the database — never in config files or environment variables. The user-facing app no longer has a Settings menu.
@@ -140,54 +149,41 @@ No config files — everything is set via environment variables (all have defaul
 ### 📥 Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/chatfire-AI/naka-ai.git
-cd naka-ai
+mkdir naka && cd naka
+git clone https://github.com/kimyohant/naka-drama-studio.git
+git clone https://github.com/kimyohant/naka-ai-backend.git   # private — needs access
 
-# Install backend dependencies
-cd backend && npm install
-
-# Install frontend dependencies
-cd ../frontend && npm install
+cd naka-ai-backend/backend && npm install
+cd ../admin && npm install
+cd ../../naka-drama-studio/frontend && npm install
 ```
 
 ### 🎯 Running
 
 #### Option 1: Development mode (recommended)
 
-Frontend and backend run separately with hot reload:
-
 ```bash
-# Terminal 1: backend
-cd backend
-npm run dev
+# Terminal 1: backend API (naka-ai-backend)
+cd naka-ai-backend/backend && npm run dev            # http://localhost:5679/api/v1
 
-# Terminal 2: frontend
-cd frontend
-npm run dev
+# Terminal 2: user-facing app (this repo)
+cd naka-drama-studio/frontend && npm run dev         # http://localhost:3013 (proxies /api and /static)
+
+# Terminal 3 (optional): system settings back-office
+cd naka-ai-backend/admin && npm run dev              # http://localhost:3014/admin/
 ```
-
-- Frontend: `http://localhost:3013`
-- Backend API: `http://localhost:5679/api/v1`
-- The frontend automatically proxies `/api` and `/static` to the backend
 
 #### Option 2: Single-service mode
 
-The backend serves both the API and the frontend static files:
+The backend serves the API, the frontend build and the admin build:
 
 ```bash
-# 1. Build the frontend
-cd frontend && npm run generate
-
-# 2. Copy the build output where the backend expects it
-#    (generate outputs to .output/public; the backend reads frontend/dist)
-cp -r .output/public dist
-
-# 3. Start the backend
+cd naka-drama-studio/frontend && npm run generate    # → frontend/.output/public (the backend's default FRONTEND_DIST)
+cd ../../naka-ai-backend/admin && npm run generate   # → admin/.output/public (served at /admin)
 cd ../backend && npm start
 ```
 
-Visit: `http://localhost:5679`
+Visit: `http://localhost:5679` (app) and `http://localhost:5679/admin/` (settings).
 
 ### 🗄️ Database
 
@@ -199,7 +195,7 @@ Migrating data from a legacy MySQL deployment:
 
 ```bash
 # Or run manually (non-empty target requires --force; automatic backup before writing)
-cd backend && npx tsx scripts/import-mysql-to-sqlite.ts
+cd ../naka-ai-backend/backend && npx tsx scripts/import-mysql-to-sqlite.ts
 ```
 
 > Migration covers database rows only; media files (images/videos) under the old deployment's `data/static/` must be copied manually, or historical assets won't load.
@@ -296,6 +292,10 @@ The episode list shows the production status of every episode — click "Enter S
 
 ### 🖥️ Desktop App (recommended)
 
+> Building the desktop app needs the backend repo next to this one: `../naka-ai-backend` with `npm install` in
+> `backend/` and `npm run generate` in `admin/` (override the location with `NAKA_BACKEND_DIR`). The packaged app
+> bundles the backend and opens the system settings at `/admin` without a sign-in.
+
 **⬇️ Prebuilt installers: [GitHub Releases](https://github.com/chatfire-AI/naka-ai/releases/latest) · [Mirror for China (Tencent COS)](https://installer.chatfire.site/naka-ai/v4.0.5/)**
 
 | Platform | File to download |
@@ -371,104 +371,13 @@ cd desktop && npm run dev  # bundle the backend and run in an Electron window
 
 ---
 
-### 🏭 Server Deployment
+### 🏭 Server & 🐳 Docker Deployment
 
-```bash
-# 1. Build the frontend
-cd frontend && npm run generate
+Moved to **[naka-ai-backend](https://github.com/kimyohant/naka-ai-backend)** together with the backend: single-server setup,
+`docker-compose.yml` (app + Watchtower in-app updates; it builds this repo's `frontend/` via `build.additional_contexts`),
+SQLite snapshots/migrations and the `ADMIN_TOKEN` / `NAKA_AUTH_PASSWORD` security settings are documented there.
 
-# 2. Copy the build output (generate outputs to frontend/.output/public; the backend reads
-#    frontend/dist — skip this step and the API works but pages 404)
-cp -r .output/public dist && cd ..
-
-# 3. Start the backend
-cd backend && npm start
-```
-
-Files to upload to the server:
-
-```
-backend/                    # backend source + node_modules
-backend/workspace/skills/   # Agent skill files
-frontend/dist/              # frontend build output
-data/                       # data directory (auto-created on first run)
-```
-
-#### Nginx Reverse Proxy
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    # Max 50MB for reference video/audio uploads
-    client_max_body_size 100m;
-
-    # Generated images/videos served straight from disk, bypassing Node:
-    # sendfile zero-copy + long-lived caching
-    # (files are uuid-named and immutable, so immutable caching is safe)
-    location /static/ {
-        alias /path/to/naka-ai/data/static/;
-        sendfile on;
-        tcp_nopush on;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    location / {
-        proxy_pass http://localhost:5679;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-```
-
-> Media loading optimization: the backend automatically generates 400px thumbnails (`*_thumb.webp`) for list pages and extracts poster frames (`*_poster.jpg`) as video covers — the frontend only loads original files when opening the full image or playing. To backfill historical files, run `npm run backfill-artwork` under `backend/`.
-
-### 🐳 Docker Deployment (with in-app updates)
-
-**Option A — prebuilt image (no clone, no build):** multi-arch (`linux/amd64` + `linux/arm64`), x86 servers and ARM devices match automatically
-
-```bash
-docker pull NAKA-AI/naka-ai:4.0.5
-
-docker run -d \
-  --name naka-ai \
-  -p 127.0.0.1:5679:5679 \
-  -e NAKA-AI_HOST=0.0.0.0 \
-  -e NAKA-AI_AUTH_PASSWORD='set-a-unique-password' \
-  -v NAKA-AI-data:/app/data \
-  --restart unless-stopped \
-  NAKA-AI/naka-ai:4.0.5
-```
-
-**Option B — docker compose (source build + Watchtower in-app updates):** the repo root provides an all-in-one `Dockerfile` (three stages: frontend generate + backend dependencies + runtime; the backend runs via tsx just like server deployment) and `docker-compose.yml` (app + Watchtower):
-
-```bash
-# 1. Configure the environment
-cp .env.example .env   # set NAKA-AI_AUTH_PASSWORD and WATCHTOWER_TOKEN
-
-# 2. Build and start (inject a version at publish time for "About & Updates" comparison)
-NAKA-AI_VERSION=4.0.5 docker compose up -d --build
-
-# 3. Visit http://localhost:5679
-```
-
-The development server binds to `127.0.0.1` by default. Docker binds its published port to the host's loopback address and requires `NAKA-AI_AUTH_PASSWORD`; the browser prompts for the configured Basic auth credentials. For access from another machine, put an HTTPS reverse proxy in front of this loopback port. Do not expose Basic auth over plain HTTP.
-
-SQLite changes use numbered, transactional migrations. Before an upgrade, create a verified snapshot (including committed WAL data) from `backend/`:
-
-```bash
-npm run db:snapshot -- backup ../data/NAKA-AI.sqlite3 ../data/backups/NAKA-AI-before-upgrade.sqlite3
-```
-
-To verify a backup can be restored, create a **new** database file with `npm run db:snapshot -- restore <backup.sqlite3> <new-file.sqlite3>`. The command refuses to overwrite a destination. Stop the app before replacing its active database with a verified restored copy.
-
-- **Data persistence**: the named volume `NAKA-AI-data` mounts `/app/data` (SQLite + generated images/videos + workspace/skills) — image updates don't lose data
-- **In-app updates**: the compose file ships a [Watchtower](https://containrrr.dev/watchtower/) sidecar (`--label-enable` only updates labeled containers, `--cleanup` removes old images, daily self-check). "Settings → About & Updates" can check for new versions and "Update Now" — the backend triggers it via the Watchtower HTTP API, which pulls the new image and rebuilds the container; refresh the page after a few minutes
-- **Manual mode**: remove the app's two `NAKA-AI_WATCHTOWER_*` env vars (or the whole watchtower service) from `docker-compose.yml` — "About & Updates" then degrades to a new-version notice + manual `docker compose pull && docker compose up -d`
-- **Publishing images**: `docker buildx build --platform linux/amd64,linux/arm64 --build-arg NAKA-AI_VERSION=x.y.z -t NAKA-AI/naka-ai:x.y.z -t NAKA-AI/naka-ai:latest --push .` — the version manifest is shared with the desktop app via `latest.json` on GitHub Releases (overridable with `NAKA-AI_UPDATE_FEED`)
+The app is served at `https://<your-domain>/` and the system-settings back-office at `https://<your-domain>/admin/`.
 
 ---
 
@@ -507,7 +416,7 @@ A: `~/Library/Application Support/NAKA-AI TECHDrama/data/` (SQLite database + ge
 
 ### Q: How do I migrate legacy MySQL data to SQLite?
 
-A: Keep MySQL reachable (environment variables or `backend/.env`), then run `cd backend && npx tsx scripts/import-mysql-to-sqlite.ts`. The script creates tables automatically, imports table-by-table, and validates row counts (non-empty targets require `--force`; a backup is made before writing).
+A: Keep MySQL reachable (environment variables or `backend/.env`), then run `cd naka-ai-backend/backend && npx tsx scripts/import-mysql-to-sqlite.ts`. The script creates tables automatically, imports table-by-table, and validates row counts (non-empty targets require `--force`; a backup is made before writing).
 
 ### Q: FFmpeg not installed or not found?
 
@@ -636,8 +545,8 @@ Issues and Pull Requests are welcome!
 Common checks:
 
 ```bash
-cd backend && npm run typecheck
-cd ../frontend && npm run build
+cd ../naka-ai-backend/backend && npm run typecheck
+cd ../../naka-drama-studio/frontend && npm run build
 ```
 
 ---

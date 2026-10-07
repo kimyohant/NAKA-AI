@@ -6,19 +6,20 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { backendSkip, backendUrl, hasBackend, readBackend } from './_backend.mjs'
 import { composeChannel, parseHashtags, postLink, SELLER_CHANNELS, CHANNEL_POST_URLS } from '../app/utils/sellerCopy.js'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 const useApi = read('app/composables/useApi.ts')
-const routes = read('../backend/src/routes/seller.ts')
+const routes = hasBackend ? readBackend('src/routes/seller.ts') : ''
 const layout = read('app/layouts/default.vue')
 const nuxtConfig = read('nuxt.config.ts')
 const workspace = read('app/views/seller/workspace.vue')
 const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
 
-test('sellerAPI calls exactly the backend seller routes', () => {
+test('sellerAPI calls exactly the backend seller routes', { skip: backendSkip }, () => {
   const block = useApi.slice(useApi.indexOf('export const sellerAPI'))
   const norm = (p) => p.replace(/\$\{[^}]+\}/g, ':id').replace(/\/$/, '')
   const calls = [...block.matchAll(/api\.(get|post|put|del)(?:<[^>]*>)?\(\s*[`'](\/seller[^`']*)[`']/g)]
