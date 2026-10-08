@@ -41,12 +41,12 @@ NAKA-AI TECH is an AI-powered short-drama production platform that automates the
 
 ```
 frontend/   — Nuxt 3 + Vue 3 + TypeScript (pure CSS, no UI framework)
-backend/    — Hono + Drizzle ORM + Mastra AI Agents + better-sqlite3
+backend/    — Hono + Drizzle ORM (PostgreSQL) + Mastra AI Agents
 backend/workspace/skills/ — Agent skill definitions (SKILL.md, editable in the back-office)
 admin/      — NAKA Admin: back-office SPA for system settings (AI services, styles, agents, storage), served at /admin
 study/      — Hypit render engine notes (source installed in study/hypit)
 desktop/    — Electron desktop app (main process + esbuild + electron-builder dmg/exe)
-data/       — Generated assets and the SQLite database
+data/       — Generated assets (+ the local PGlite database when DATABASE_URL is unset)
 ```
 
 ---
@@ -111,7 +111,7 @@ The interface ships in **中文 / English / 日本語 / 한국어**, with a glob
 | **Node.js** | 20+ | Runtime for frontend and backend |
 | **npm** | 9+ | Package manager |
 
-> **Zero-install database**: Bundled SQLite (single file in the project data directory) — no database server required.
+> **No database server needed for development**: with `DATABASE_URL` unset the backend runs PostgreSQL in-process (PGlite, kept in `data/pglite`). Production uses the shared PostgreSQL 17 from the root `docker-compose.yml`.
 > **No FFmpeg install needed**: Binaries ship via the `ffmpeg-static` / `ffprobe-static` npm packages — works out of the box.
 
 ### ⚙️ Environment Variables
@@ -120,7 +120,7 @@ No config files — everything is set via environment variables (all have defaul
 
 | Variable | Default | Description |
 |---|---|---|
-| `SQLITE_PATH` | `<repo>/data/NAKA-AI.sqlite3` | SQLite database file location |
+| `DATABASE_URL` | `pglite://<repo>/data/pglite` | `postgres://studio_app:…@host:5432/naka` (production, schema `studio`), `pglite://memory` (tests) or `pglite:///abs/dir` (in-process, on disk) |
 | `PORT` | `5679` | Backend service port |
 | `STORAGE_PATH` | `<repo>/data/static` | Generated-file storage directory |
 | `NAKA-AI_DATA_DIR` | — | Injected by the Electron main process (userData data root) |
@@ -202,24 +202,19 @@ cd ../admin && npm run generate
 cd ../backend && npm start
 ```
 
-On Windows, `scripts\redeploy.ps1` does all of this (plus a SQLite snapshot and a detached restart).
+On Windows, `scripts\redeploy.ps1` does all of this (plus a detached restart).
 
 Visit: `http://localhost:5679`
 
 ### 🗄️ Database
 
-Bundled SQLite (`better-sqlite3` + WAL mode). Tables are created automatically on first launch (idempotent DDL replay + seed data). Default file: `data/NAKA-AI.sqlite3`, overridable via `SQLITE_PATH`. The desktop app stores data in the user-data directory (`~/Library/Application Support/NAKA-AI TECHDrama/data/`).
+PostgreSQL — schema `studio` of the shared NAKA-AI database (`docs/adr/0004` at the monorepo root), reached as role `studio_app`. `DATABASE_URL` picks the server:
 
-Migrating data from a legacy MySQL deployment:
+- `postgres://studio_app:<password>@127.0.0.1:5432/naka` — the root `docker-compose.yml` postgres (`npm run db:up` at the root)
+- unset → PGlite (PostgreSQL compiled to WebAssembly, in-process) in `data/pglite` — local development without Docker
+- `pglite://memory` — tests (a fresh database per process)
 
-**Automatic migration on startup (recommended)**: When MySQL is explicitly configured (`DATABASE_URL` or `MYSQL_HOST`) and the SQLite database is empty, the backend automatically detects and imports all tables once (per-table row-count validation, single-transaction atomic writes, automatic rollback with retry on next launch, and a `.mysql-imported` marker to avoid re-importing). Set `MYSQL_AUTO_IMPORT=false` to disable.
-
-```bash
-# Or run manually (non-empty target requires --force; automatic backup before writing)
-cd backend && npx tsx scripts/import-mysql-to-sqlite.ts
-```
-
-> Migration covers database rows only; media files (images/videos) under the old deployment's `data/static/` must be copied manually, or historical assets won't load.
+Migrations live in `backend/migrations/pg/NNNN_*.sql` and are applied once each at startup, under an advisory lock; style presets are seeded after them. Drizzle table definitions: `backend/src/core/db/schema.ts`.
 
 ### 🔑 First Use: Configure AI Services
 
@@ -460,31 +455,20 @@ docker run -d \
   NAKA-AI/naka-ai:4.0.5
 ```
 
-**Option B — docker compose (source build + Watchtower in-app updates):** the repo root provides an all-in-one `Dockerfile` (three stages: frontend generate + backend dependencies + runtime; the backend runs via tsx just like server deployment) and `docker-compose.yml` (app + Watchtower):
+**Option B — docker compose (the monorepo root):** the studio is the `studio` service of the root `docker-compose.yml`, next to `postgres` and `landing`. It builds this directory's `Dockerfile` (frontend generate + admin generate + backend dependencies + runtime; the backend runs via tsx) and connects as `studio_app`:
 
 ```bash
-# 1. Configure the environment
-cp .env.example .env   # set NAKA-AI_AUTH_PASSWORD and WATCHTOWER_TOKEN
-
-# 2. Build and start (inject a version at publish time for "About & Updates" comparison)
-NAKA-AI_VERSION=4.0.5 docker compose up -d --build
-
-# 3. Visit http://localhost:5679
+# at the monorepo root
+cp .env.example .env                                     # database passwords (STUDIO_DB_PASSWORD, …)
+cp apps/studio/.env.example apps/studio/.env.production  # NAKA_AUTH_PASSWORD or SSO, ADMIN_TOKEN, …
+docker compose up -d --build studio                      # starts postgres first
+# visit http://localhost:5679
 ```
 
-The development server binds to `127.0.0.1` by default. Docker binds its published port to the host's loopback address and requires `NAKA-AI_AUTH_PASSWORD`; the browser prompts for the configured Basic auth credentials. For access from another machine, put an HTTPS reverse proxy in front of this loopback port. Do not expose Basic auth over plain HTTP.
+The development server binds to `127.0.0.1` by default. Docker binds its published port to the host's loopback address and requires `NAKA_AUTH_PASSWORD` (or naka-ai.com SSO); the browser prompts for the configured Basic auth credentials. For access from another machine, put an HTTPS reverse proxy in front of this loopback port. Do not expose Basic auth over plain HTTP.
 
-SQLite changes use numbered, transactional migrations. Before an upgrade, create a verified snapshot (including committed WAL data) from `backend/`:
-
-```bash
-npm run db:snapshot -- backup ../data/NAKA-AI.sqlite3 ../data/backups/NAKA-AI-before-upgrade.sqlite3
-```
-
-To verify a backup can be restored, create a **new** database file with `npm run db:snapshot -- restore <backup.sqlite3> <new-file.sqlite3>`. The command refuses to overwrite a destination. Stop the app before replacing its active database with a verified restored copy.
-
-- **Data persistence**: the named volume `NAKA-AI-data` mounts `/app/data` (SQLite + generated images/videos + workspace/skills) — image updates don't lose data
-- **In-app updates**: the compose file ships a [Watchtower](https://containrrr.dev/watchtower/) sidecar (`--label-enable` only updates labeled containers, `--cleanup` removes old images, daily self-check). "Settings → About & Updates" can check for new versions and "Update Now" — the backend triggers it via the Watchtower HTTP API, which pulls the new image and rebuilds the container; refresh the page after a few minutes
-- **Manual mode**: remove the app's two `NAKA-AI_WATCHTOWER_*` env vars (or the whole watchtower service) from `docker-compose.yml` — "About & Updates" then degrades to a new-version notice + manual `docker compose pull && docker compose up -d`
+- **Backups**: the database is in the `postgres` service — `pg_dump` it (docs/adr/0004)
+- **Data persistence**: the volume `naka-drama-studio_naka-data` (same name as before the move) mounts `/app/data` (generated images/videos + workspace/skills) — image updates don't lose data
 - **Publishing images**: `docker buildx build --platform linux/amd64,linux/arm64 --build-arg NAKA-AI_VERSION=x.y.z -t NAKA-AI/naka-ai:x.y.z -t NAKA-AI/naka-ai:latest --push .` — the version manifest is shared with the desktop app via `latest.json` on GitHub Releases (overridable with `NAKA-AI_UPDATE_FEED`)
 
 ---
@@ -495,7 +479,7 @@ To verify a backup can be restored, create a **new** database file with `npm run
 
 - **Runtime**: Node.js 20+
 - **Web framework**: Hono
-- **ORM**: Drizzle ORM + better-sqlite3 (WAL mode)
+- **ORM**: Drizzle ORM on PostgreSQL 17 (postgres.js; PGlite for dev/tests)
 - **AI Agents**: Mastra + AI SDK (OpenAI compatible)
 - **Video processing**: FFmpeg (fluent-ffmpeg + bundled binaries)
 - **Image processing**: Sharp
@@ -522,10 +506,6 @@ To verify a backup can be restored, create a **new** database file with `npm run
 
 A: `~/Library/Application Support/NAKA-AI TECHDrama/data/` (SQLite database + generated images/videos); writable copies of online-edited skills live in the sibling `workspace/` directory. In development mode the repo's `data/` directory is used instead.
 
-### Q: How do I migrate legacy MySQL data to SQLite?
-
-A: Keep MySQL reachable (environment variables or `backend/.env`), then run `cd backend && npx tsx scripts/import-mysql-to-sqlite.ts`. The script creates tables automatically, imports table-by-table, and validates row counts (non-empty targets require `--force`; a backup is made before writing).
-
 ### Q: FFmpeg not installed or not found?
 
 A: No install needed. The project bundles `ffmpeg-static` / `ffprobe-static` binaries (carried along in the desktop package). A system `PATH` FFmpeg won't conflict either, and you can point explicitly via `FFMPEG_BIN`/`FFPROBE_BIN`.
@@ -540,7 +520,7 @@ A: Check that the backend is running and the port is correct. In dev mode the pr
 
 ### Q: Database tables not created?
 
-A: The backend creates all tables automatically on first launch — check the logs to confirm initialization succeeded.
+A: The backend applies `backend/migrations/pg/*.sql` at startup — look for `🧩 migration … applied` in the log. With `DATABASE_URL=postgres://…` `studio_app` must own schema `studio` (the root `infra/postgres/init` creates it that way).
 
 ---
 

@@ -4,8 +4,8 @@ Monorepo ของ NAKA-AI TECH รวมโค้ดจาก 2 repo เดิ�
 
 | โฟลเดอร์ | มาจาก | คืออะไร |
 |---|---|---|
-| [`apps/landing`](apps/landing) | `kimyohant/naka-ai-landing` | เว็บ naka-ai.com — landing, สมาชิก/ล็อกอิน, เครดิต, ชำระเงิน, ใบเสร็จ, หลังร้าน (Cloudflare Worker) |
-| [`apps/studio`](apps/studio) | `kimyohant/naka-drama-studio` | NAKA Studio — เครื่องผลิตคอนเทนต์ AI: Drama, Marketer, Seller, Product Studio, Viral Clone, Live (Docker) |
+| [`apps/landing`](apps/landing) | `kimyohant/naka-ai-landing` | เว็บ naka-ai.com — landing, สมาชิก/ล็อกอิน, เครดิต, ชำระเงิน, ใบเสร็จ, หลังร้าน (Node + PostgreSQL ใน Docker) |
+| [`apps/studio`](apps/studio) | `kimyohant/naka-drama-studio` | NAKA Studio — เครื่องผลิตคอนเทนต์ AI: Drama, Marketer, Seller, Product Studio, Viral Clone, Live (Node + PostgreSQL ใน Docker) |
 | [`docs/adr`](docs/adr) | — | บันทึกการตัดสินใจด้านสถาปัตยกรรม |
 
 ## เริ่มต้น
@@ -19,5 +19,5 @@ cd apps/studio/backend && npm ci && npm run dev   # http://localhost:5679
 
 ## Deploy
 
-- **Landing:** `docker compose up -d --build` ที่ root (PostgreSQL + landing; ค่า secret ใน `apps/landing/.env.production`)
-- **Studio:** `cd apps/studio && docker compose up -d --build` (ชื่อ project ยังเป็น `naka-drama-studio` ข้อมูลใน volume เดิมไม่หาย)
+- `docker compose up -d --build` ที่ root: PostgreSQL + landing + studio (รหัสฐานข้อมูลใน `.env` ที่ root; secret ของแต่ละแอปใน `apps/landing/.env.production` และ `apps/studio/.env.production`)
+- เฉพาะแอปเดียว: `docker compose up -d --build landing` หรือ `… studio` (สื่อ/workspace ของ studio ยังอยู่ใน volume `naka-drama-studio_naka-data` เดิม)

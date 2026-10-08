@@ -9,7 +9,7 @@ The NAKA-AI monorepo. Two apps that used to live in separate repos, merged with 
 | Path | Was | What it is | Runs on |
 |---|---|---|---|
 | `apps/landing/` | `kimyohant/naka-ai-landing` | naka-ai.com: public landing, accounts/auth, credits, Stripe billing, receipts, social, inbox, admin. The **account hub** | Worker code on Node in Docker, PostgreSQL schema `account` |
-| `apps/studio/` | `kimyohant/naka-drama-studio` | NAKA Studio: the AI production engine (Drama, Marketer, Seller, Product Studio, Viral Clone, Live). Hono backend + Nuxt frontend + Nuxt admin | Docker (`apps/studio/docker-compose.yml`) |
+| `apps/studio/` | `kimyohant/naka-drama-studio` | NAKA Studio: the AI production engine (Drama, Marketer, Seller, Product Studio, Viral Clone, Live). Hono backend + Nuxt frontend + Nuxt admin | Docker (service `studio` in the root `docker-compose.yml`) |
 
 Each app keeps its own `package.json`, lockfiles, tests and `CLAUDE.md` — **read the app's own `CLAUDE.md` before working in it**:
 - `apps/landing/CLAUDE.md`
@@ -32,11 +32,11 @@ npm run dev:studio-web     # studio frontend on :3013
 npm run dev:studio-admin   # studio admin on :3014/admin/
 ```
 
-CI: `.github/workflows/landing-ci.yml` (with a PostgreSQL service), `studio-ci.yml` and `db-ci.yml` run only when their files change. Deploy: `docker compose up -d --build` at the root (postgres + landing); studio still from `apps/studio/` until it moves to PostgreSQL. The Cloudflare Worker deploy was retired with D1.
+CI: `.github/workflows/landing-ci.yml` (with a PostgreSQL service), `studio-ci.yml` and `db-ci.yml` run only when their files change. Deploy: `docker compose up -d --build` at the root (postgres + landing + studio; one app: `docker compose up -d --build studio`). The Cloudflare Worker deploy was retired with D1.
 
-## Shared database (in progress — docs/adr/0004)
+## Shared database (docs/adr/0004)
 
-One PostgreSQL 17 (`docker-compose.yml` at the root, `npm run db:up`) for both apps, one schema per owner: `account` (landing, role `account_app`), `studio` (studio, role `studio_app`), `reporting` (read-only views, `reporting_ro`). Each role's `search_path` is its own schema, so unqualified table names keep working; an app can't read or write the other schema except through views/`SECURITY DEFINER` functions the owner grants. Layout: `infra/postgres/init/` (runs once on an empty volume); permissions are tested with `npm run test:db` (PGlite, no Docker). No RabbitMQ/Redis: queues live in Postgres. Status: Phase 0 (database) and Phase 1 (landing on Node + PostgreSQL) done; studio still on SQLite until Phase 2.
+One PostgreSQL 17 (`docker-compose.yml` at the root, `npm run db:up`) for both apps, one schema per owner: `account` (landing, role `account_app`), `studio` (studio, role `studio_app`), `reporting` (read-only views, `reporting_ro`). Each role's `search_path` is its own schema, so unqualified table names keep working; an app can't read or write the other schema except through views/`SECURITY DEFINER` functions the owner grants. Layout: `infra/postgres/init/` (runs once on an empty volume); permissions are tested with `npm run test:db` (PGlite, no Docker). No RabbitMQ/Redis: queues live in Postgres. Status: Phase 0 (database), Phase 1 (landing) and Phase 2 (studio, `apps/studio/backend/migrations/pg/`) done; both apps' tests run on PGlite. Next: Phase 3 (credit functions, `studio.users` → view, queues on Postgres).
 
 ## Architecture decisions
 

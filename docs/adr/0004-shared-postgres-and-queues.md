@@ -1,6 +1,6 @@
 # ADR-0004: ใช้ฐานข้อมูลตัวเดียวกัน (PostgreSQL) — และต้องมี RabbitMQ / Redis ไหม
 
-**Status:** Accepted (2026-10-08) — Phase 0 done
+**Status:** Accepted (2026-10-08) — Phase 0, 1 and 2 done
 **Date:** 2026-10-08
 **Deciders:** เจ้าของระบบ NAKA-AI TECH
 
@@ -188,9 +188,11 @@ PostgreSQL 17  (database: naka)
 - [x] Dockerfile + service `landing` + `landing-cron` ใน compose; Caddy/Tunnel ตาม ADR-0002
 - ส่วนที่ต่างจากแผน: เขียนพร้อมกันถูก serialize ด้วย advisory lock ใน adapter (เหมือน D1 ที่เขียนทีละรายการ — โค้ดเช็คโควตา/ยอดเครดิตใน statement เดียวต้องการแบบนี้); test ที่รัน Cloudflare workerd + D1 ย้ายเป็น `tests/postgres.integration.test.cjs` (รันกับ PostgreSQL จริงใน CI); workflow deploy ไป Cloudflare ถูกลบ
 
-### Phase 2 — Studio → Postgres (2–3 สัปดาห์)
-- [ ] Drizzle `sqlite-core` → `pg-core` (`pgSchema('studio')`), DDL → drizzle-kit migrations, sync → async 46 จุด, `getInsertId` → `RETURNING`, test → PGlite
-- [ ] ย้าย service studio เข้า compose ที่ root (network เดียวกับ postgres)
+### ✅ Phase 2 — Studio → Postgres (เสร็จ)
+- [x] Drizzle `sqlite-core` → `pg-core`, DDL → `apps/studio/backend/migrations/pg/0001_baseline.sql` (39 ตาราง; รันตอนบูตใต้ advisory lock), sync → async, `getInsertId` → `RETURNING` + `insertedId()`, test → PGlite (`DATABASE_URL=pglite://memory`)
+- [x] ย้าย service studio เข้า compose ที่ root (network เดียวกับ postgres, `studio_app`); `apps/studio/docker-compose.yml` + Watchtower ถูกลบ (ADR-0002), volume สื่อเดิม `naka-drama-studio_naka-data` ใช้ต่อ
+- ส่วนที่ต่างจากแผน: ใช้ `pgTable` + `search_path` ของ role แทน `pgSchema('studio')` (SQL ไม่ต้องเติมชื่อ schema — dev/test ใช้ PGlite ที่ตั้ง search_path เอง); migration เป็นไฟล์ SQL ที่เขียนเอง ไม่ใช่ drizzle-kit generate; **concurrency** — บน better-sqlite3 การอ่านแล้วเขียนต่อกันไม่มี I/O จริงคั่น จึงไม่มี request อื่นแทรกได้ บน Postgres แทรกได้ทุก await → แก้จุดที่แข่งกันได้ด้วย statement เดียว (`ON CONFLICT`, `UPDATE … WHERE … RETURNING`) หรือ transaction + `pg_advisory_xact_lock` (`startTask`, งบโปรเจกต์ใน `createTask`, ผลตอบรับ creative, `makeVideo` ของ Seller) — test ใน `tests/concurrency.test.ts`
+- ไม่ได้ย้ายข้อมูล SQLite เดิม (ตามคำตอบด้านบน: ยังเป็น dev) — สื่อใน volume ยังอยู่ แต่แถวในฐานข้อมูลเริ่มใหม่
 
 ### Phase 3 — ใช้ประโยชน์จาก DB เดียว (1–2 สัปดาห์)
 - [ ] `account.hold_credits/commit_hold/refund_hold` + GRANT ให้ `studio_app`; studio หักเครดิต
