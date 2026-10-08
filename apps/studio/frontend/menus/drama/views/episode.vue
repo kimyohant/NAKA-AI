@@ -1532,6 +1532,7 @@ import { startTour, autoTour } from '~/composables/useTour'
 import { useAgent } from '~/composables/useAgent'
 import { toastError, mapError, MODERATION_RE } from '~/composables/useToast'
 import { analyzeVideoShot } from '../utils/videoPreflight'
+import { createVideoWatch } from '../utils/videoWatch.js'
 import LocaleSwitcher from '~/components/LocaleSwitcher.vue'
 
 definePageMeta({ layout: 'studio' })
@@ -2037,6 +2038,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleImageViewerKeydown)
   stopGenTasksPolling()
+  videoWatch.stop()
 })
 
 function isPendingSceneImage(id) {
@@ -2361,12 +2363,6 @@ function confirmBatchVideos() {
   const ids = previews.map(item => item.sb.id)
   previews.forEach(item => genVid(item.sb, { approved: true, request: item.request, silent: true }))
   toast.success(t('episode.vid.batchStarted', { n: ids.length }))
-  watchAsyncResult(() => ids.every(id => {
-    const target = sbs.value.find(s => s.id === id)
-    const done = !!getVideoUrl(target)
-    if (done) pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== id)
-    return done
-  }), 80, 4000)
   if (videoSelectMode.value) toggleVideoSelectMode()
 }
 
@@ -2389,7 +2385,12 @@ const videoModelMultiCfg = computed(() => hasMultiConfigs(videoModelOptions.valu
 
 // Production step helpers
 // ========== 任务列表面板 ==========
-async function loadGenTasks() {
+let genTasksLoading = null
+function loadGenTasks() {
+  genTasksLoading ??= loadGenTasksNow().finally(() => { genTasksLoading = null })
+  return genTasksLoading
+}
+async function loadGenTasksNow() {
   if (!epId.value) return
   try {
     const data = await taskAPI.listByEpisode(epId.value)
@@ -2429,6 +2430,7 @@ async function loadGenTasks() {
     pendingVideoIds.value = [...pending]
     unknownVideoIds.value = [...unknown]
     failedVideoMessages.value = failed
+    if (pending.size) videoWatch.start()
     if (selectedSb.value?.id) await loadSelectedShotReadiness()
   } catch { /* 静默失败,不打断其他刷新 */ }
 }
@@ -2577,7 +2579,7 @@ function genTaskDuration(row) {
 watch([taskDrawer, genTaskActiveCount], ([open, active]) => {
   stopGenTasksPolling()
   if (open && active > 0) {
-    genTasksTimer = setInterval(loadGenTasks, 4000)
+    genTasksTimer = setInterval(() => { if (!videoWatch.running) loadGenTasks() }, 4000)
   }
 })
 
@@ -2867,6 +2869,15 @@ function sceneShotCount(sceneId) {
 watch(rawContent, v => { localRaw.value = v }, { immediate: true })
 watch(scriptContent, v => { localScript.value = v }, { immediate: true })
 
+/** Reload only the shots (a video finished): keeps the selected shot and the multi-select. */
+async function reloadStoryboards(episodeId = epId.value) {
+  if (!episodeId) return
+  sbs.value = await episodeAPI.storyboards(episodeId)
+  selectedVideoSbIds.value = selectedVideoSbIds.value.filter(id => sbs.value.some(sb => sb.id === id))
+  const currentSelectedId = selectedSb.value?.id
+  selectedSb.value = sbs.value.find(sb => sb.id === currentSelectedId) || sbs.value[0] || null
+}
+
 async function refresh() {
   try {
     drama.value = await dramaAPI.get(dramaId)
@@ -2876,19 +2887,12 @@ async function refresh() {
       try { chars.value = await episodeAPI.characters(ep.id) } catch { chars.value = [] }
       try { scenes.value = await episodeAPI.scenes(ep.id) } catch { scenes.value = [] }
       try { propItems.value = await episodeAPI.props(ep.id) } catch { propItems.value = [] }
-      sbs.value = await episodeAPI.storyboards(ep.id)
+      await reloadStoryboards(ep.id)
       const [looksResult, assignmentsResult] = await Promise.allSettled([
         characterAPI.looks(dramaId), episodeAPI.characterLooks(ep.id),
       ])
       characterLooks.value = looksResult.status === 'fulfilled' ? looksResult.value : []
       shotLookAssignments.value = assignmentsResult.status === 'fulfilled' ? assignmentsResult.value : []
-      selectedVideoSbIds.value = selectedVideoSbIds.value.filter(id => sbs.value.some(sb => sb.id === id))
-      if (sbs.value.length) {
-        const currentSelectedId = selectedSb.value?.id
-        selectedSb.value = sbs.value.find(sb => sb.id === currentSelectedId) || sbs.value[0]
-      } else {
-        selectedSb.value = null
-      }
 
       const epHasContent = !!(episode.value?.content)
       const epHasScript = !!(episode.value?.script_content || episode.value?.scriptContent)
@@ -3585,8 +3589,8 @@ async function genVid(sb, opts = {}) {
     if (!isPendingVideo(sb.id)) pendingVideoIds.value.push(sb.id)
     const generation = await taskAPI.generate(opts.request)
     if (!opts.silent) toast.success(t('episode.vid.generating'))
-    await refresh()
-    pollVideoGeneration(generation?.id, sb.id)
+    videoWatch.track(generation?.id, sb.id)
+    await loadGenTasks()
   } catch (e) {
     pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== sb.id)
     failedVideoMessages.value = {
@@ -3596,52 +3600,33 @@ async function genVid(sb, opts = {}) {
     toastError(e, { fallback: 'episode.vid.genFailed' })
   }
 }
-async function pollVideoGeneration(generationId, storyboardId) {
-  if (!generationId) {
-    watchAsyncResult(() => {
-      const target = sbs.value.find(s => s.id === storyboardId)
-      const done = !!(target?.video_url || target?.videoUrl)
-      if (done) pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== storyboardId)
-      return done
-    }, 60, 4000)
-    return
-  }
-  for (let i = 0; i < 900; i++) {
-    await sleep(4000)
-    try {
-      const res = await taskAPI.get(generationId)
-      await refresh()
-      if (res?.status === 'completed') {
-        pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== storyboardId)
-        delete failedVideoMessages.value[storyboardId]
-        toast.success(t('episode.vid.genDone'))
-        return
-      }
-      if (res?.status === 'failed') {
-        pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== storyboardId)
-        const errMsg = res?.error_msg || res?.errorMsg || t('episode.vid.genFailed')
-        failedVideoMessages.value = {
-          ...failedVideoMessages.value,
-          [storyboardId]: errMsg,
-        }
-        toastError(errMsg, { fallback: 'episode.vid.genFailed' })
-        return
-      }
-      if (res?.status === 'unknown') {
-        pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== storyboardId)
-        if (!unknownVideoIds.value.includes(storyboardId)) unknownVideoIds.value.push(storyboardId)
-        toast.warning(t('episode.tasks.unknown'))
-        return
-      }
-    } catch {}
-  }
+// ===== video status: one watcher for the whole page (../utils/videoWatch.js) =====
+// One task-list request every 4 s for every shot being generated; the shots reload only when a video
+// finished. Stops when the page closes; loadGenTasks restarts it for shots still generating on reopen.
+function dropPendingVideo(storyboardId) {
   pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== storyboardId)
-  failedVideoMessages.value = {
-    ...failedVideoMessages.value,
-    [storyboardId]: t('episode.vid.genTimeout'),
-  }
-  toast.error(t('episode.vid.genTimeout'))
 }
+const videoWatch = createVideoWatch({
+  pendingIds: () => pendingVideoIds.value,
+  loadTasks: async () => { await loadGenTasks(); return genTasks.value },
+  reloadShots: () => reloadStoryboards(),
+  hasVideo: id => !!getVideoUrl(sbs.value.find(s => s.id === id)),
+  onExpired: dropPendingVideo,
+  onFinished: (storyboardId, task) => {
+    dropPendingVideo(storyboardId)
+    if (task.status === 'completed') {
+      delete failedVideoMessages.value[storyboardId]
+      toast.success(t('episode.vid.genDone'))
+    } else if (task.status === 'failed') {
+      const errMsg = task.error_msg || task.errorMsg || t('episode.vid.genFailed')
+      failedVideoMessages.value = { ...failedVideoMessages.value, [storyboardId]: errMsg }
+      toastError(errMsg, { fallback: 'episode.vid.genFailed' })
+    } else {
+      if (!unknownVideoIds.value.includes(storyboardId)) unknownVideoIds.value.push(storyboardId)
+      toast.warning(t('episode.tasks.unknown'))
+    }
+  },
+})
 async function doMerge(ids) {
   const storyboardIds = Array.isArray(ids) ? ids : undefined
   if (storyboardIds && !storyboardIds.length) {
