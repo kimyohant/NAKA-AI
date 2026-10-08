@@ -19,5 +19,5 @@ cd apps/studio/backend && npm ci && npm run dev   # http://localhost:5679
 
 ## Deploy
 
-- **Landing:** GitHub Actions → *Landing Deploy* → Run workflow (หรือ `cd apps/landing && npm run deploy`)
+- **Landing:** `docker compose up -d --build` ที่ root (PostgreSQL + landing; ค่า secret ใน `apps/landing/.env.production`)
 - **Studio:** `cd apps/studio && docker compose up -d --build` (ชื่อ project ยังเป็น `naka-drama-studio` ข้อมูลใน volume เดิมไม่หาย)

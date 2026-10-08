@@ -3,8 +3,6 @@ const { after, mock, test } = require('node:test');
 const { execFileSync } = require('node:child_process');
 const { readFileSync, rmSync } = require('node:fs');
 const path = require('node:path');
-const { build } = require('esbuild');
-const { Miniflare, convertV4MiniflareOptions } = require('miniflare');
 const { migratedDb } = require('./helpers/d1.cjs');
 
 const root = path.resolve(__dirname, '..');
@@ -194,37 +192,5 @@ test('a failed replacement-session insert rolls back the hash and session deleti
   assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS n FROM sessions WHERE user_id = ?').get(user.id).n, 1);
 });
 
-test('Cloudflare workerd and real D1 retain the new session after password change', { timeout: 60000 }, async () => {
-  const bundled = await build({ stdin: { contents: "export { default } from './src/index';", resolveDir: root, loader: 'ts' },
-    bundle: true, write: false, format: 'esm', platform: 'browser', target: 'es2022' });
-  const options = { modules: true, script: bundled.outputFiles[0].text, compatibilityDate: '2026-09-01',
-    d1Databases: ['DB'], cf: false,
-    bindings: { APP_ORIGIN: 'https://naka.test', SESSION_SECRET: 'test-only-secret-at-least-32-characters', SMS_PROVIDER: 'off' },
-  };
-  const mf = new Miniflare(convertV4MiniflareOptions ? convertV4MiniflareOptions(options) : options);
-  try {
-    const db = await mf.getD1Database('DB');
-    for (const file of MIGRATIONS) {
-      const sql = readFileSync(path.join(root, 'migrations', file), 'utf8').replace(/--[^\r\n]*/g, '');
-      for (const statement of sql.split(';').map(part => part.trim()).filter(Boolean)) await db.prepare(statement).run();
-    }
-    const call = (route, body, cookie) => mf.dispatchFetch(`https://naka.test/api/auth/${route}`, {
-      method: body ? 'POST' : 'GET', redirect: 'manual',
-      headers: { Origin: 'https://naka.test', 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-    });
-    const registered = await call('password/register', { email: 'runtime@example.test', password: 'old-secret-123' });
-    assert.equal(registered.status, 201, await registered.clone().text());
-    const oldCookie = cookieOf(registered);
-    const before = await call('me', undefined, oldCookie);
-    assert.equal(before.status, 200);
-    assert.equal((await before.json()).hasPassword, true);
-    const changed = await call('password/change', { currentPassword: 'old-secret-123', newPassword: 'new-secret-456' }, oldCookie);
-    assert.equal(changed.status, 200, await changed.clone().text());
-    const newCookie = cookieOf(changed);
-    assert.equal((await call('me', undefined, oldCookie)).status, 401);
-    assert.equal((await call('me', undefined, newCookie)).status, 200);
-    assert.equal((await call('password/login', { email: 'runtime@example.test', password: 'old-secret-123' })).status, 401);
-    assert.equal((await call('password/login', { email: 'runtime@example.test', password: 'new-secret-456' })).status, 200);
-  } finally { await mf.dispose(); }
-});
+// The Cloudflare workerd + D1 runtime test moved to tests/postgres.integration.test.cjs (real PostgreSQL).
+

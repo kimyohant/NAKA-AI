@@ -10,12 +10,20 @@
  *    far + 1), with a cast taken from the bound JS value: integers `::bigint`, other numbers
  *    `::float8`, booleans `::bigint` (bound as 1/0, as D1 does). PostgreSQL would otherwise type an
  *    untyped parameter in `INSERT … SELECT ?` as text and refuse to store it in a bigint column.
+ *    A placeholder cast to json/jsonb is typed as text first (`$n::text::jsonb`): drivers would
+ *    otherwise JSON-encode the bound JSON string a second time.
  *  - camelCase identifiers (`AS displayName`, `ORDER BY createdAt`) are double-quoted: PostgreSQL
  *    folds unquoted names to lower case, SQLite keeps them, and the code reads `row.displayName`.
  *  - an INSERT into a table with an identity id gets `RETURNING id`, reported as meta.last_row_id.
  *  - `INSERT OR IGNORE` becomes `INSERT … ON CONFLICT DO NOTHING`.
  * SQLite-only functions the SQL still uses (datetime, json_extract, json_valid, instr, unixepoch) are
  * defined in the schema itself (migrations/pg/0001_baseline.sql).
+ *
+ * Writes are serialized, as D1 serializes them: every statement that changes data (and every
+ * batch) runs in a transaction that first takes one advisory lock. The app relies on this — quota
+ * and balance checks are written as "INSERT … SELECT … WHERE (SELECT count(*) …) < limit", which is
+ * only safe when no other write runs in between (OTP and reset limits, credit holds, job limits).
+ * Reads do not take the lock.
  */
 
 export type Row = Record<string, unknown>;
@@ -37,6 +45,15 @@ export interface PgExecutor {
   batch(qs: PgQuery[]): Promise<PgResult[]>;
   /** Run a script of statements without parameters. */
   exec(sql: string): Promise<void>;
+}
+
+/** pg_advisory_xact_lock key for the single-writer lock (any constant; one per app/schema). */
+export const WRITE_LOCK_KEY = 7_204_0002;
+const WRITE_LOCK: PgQuery = { text: `SELECT pg_advisory_xact_lock(${WRITE_LOCK_KEY})`, values: [] };
+
+/** A statement that only reads (SELECT/WITH without INSERT/UPDATE/DELETE) needs no write lock. */
+export function isReadOnly(text: string): boolean {
+  return /^\s*(SELECT|WITH)\b/i.test(text) && !/\b(INSERT|UPDATE|DELETE)\b/i.test(text);
 }
 
 /** Tables whose `id` is an identity column (AUTOINCREMENT in the SQLite schema). */
@@ -113,7 +130,9 @@ export function translate(sql: string, params: unknown[] = []): Translated {
       while (j < n && sql[j] >= '0' && sql[j] <= '9') j++;
       const index = j > i + 1 ? Number(sql.slice(i + 1, j)) : maxIndex + 1;
       maxIndex = Math.max(maxIndex, index);
-      out += `$${index}${castFor(params[index - 1])}`;
+      // `?::jsonb` → `$n::text::jsonb`: typed as jsonb, drivers JSON-encode the (already JSON) string again
+      const cast = castFor(params[index - 1]) || (/^::jsonb?\b/i.test(sql.slice(j)) ? '::text' : '');
+      out += `$${index}${cast}`;
       i = j;
       continue;
     }
@@ -171,7 +190,7 @@ interface D1Result<T = Row> {
 
 function toD1Result(t: Translated, r: PgResult, started: number): D1Result {
   const ids = t.returningId ? r.rows.map(row => Number(row.id)).filter(Number.isFinite) : [];
-  const isRead = /^\s*(SELECT|WITH)\b/i.test(t.text) && !/\b(INSERT|UPDATE|DELETE)\b/i.test(t.text);
+  const isRead = isReadOnly(t.text);
   return {
     results: t.returningId ? [] : r.rows,
     success: true,
@@ -211,7 +230,8 @@ export class PgD1PreparedStatement {
   async run<T = Row>(): Promise<D1Result<T>> {
     const t = this.translated();
     const started = Date.now();
-    return toD1Result(t, await this.exec.query(t), started) as D1Result<T>;
+    const result = isReadOnly(t.text) ? await this.exec.query(t) : (await this.exec.batch([WRITE_LOCK, t]))[1];
+    return toD1Result(t, result, started) as D1Result<T>;
   }
 
   async all<T = Row>(): Promise<D1Result<T>> {
@@ -249,7 +269,8 @@ export class PgD1Database {
   async batch<T = Row>(statements: PgD1PreparedStatement[]): Promise<D1Result<T>[]> {
     const translated = statements.map(s => s.translated());
     const started = Date.now();
-    const results = await this.executor.batch(translated);
+    const writes = translated.some(t => !isReadOnly(t.text));
+    const results = writes ? (await this.executor.batch([WRITE_LOCK, ...translated])).slice(1) : await this.executor.batch(translated);
     return results.map((r, i) => toD1Result(translated[i], r, started)) as D1Result<T>[];
   }
 

@@ -4,30 +4,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-naka-ai: a Thai-market AI selling platform (naka-ai.com). One Cloudflare Worker (`src/index.ts`) serves everything: the static front end from `public/` (Workers Assets binding `ASSETS`, no build step), the JSON APIs, webhooks, and a per-minute cron. Storage is D1 (`DB`); R2 (`MEDIA`) is bound only in `wrangler.dev.jsonc` — production leaves it unbound and the upload routes answer 503. Docs and UI copy are largely Thai.
+naka-ai: a Thai-market AI selling platform (naka-ai.com). The app is written as one Cloudflare Worker (`src/index.ts`: the JSON APIs, webhooks and a per-minute cron, with the static front end in `public/`, no build step) and **runs on Node in Docker** (since 2026-10, docs/adr/0004): `server/node.ts` gives the unchanged Worker its bindings — `env.DB` is the D1 API on **PostgreSQL** (`src/db/pg-d1.ts` + `server/postgres.ts`, schema `account` of the shared database), `env.ASSETS` serves `public/` from disk (`server/assets.ts`), `env.MEDIA` is an R2 stand-in on a directory when `MEDIA_DIR` is set (`server/media.ts`), and the cron runs every minute in-process. Docs and UI copy are largely Thai.
 
 ## Commands
 
 ```bash
-npm run dev                 # wrangler dev -c wrangler.dev.jsonc on 127.0.0.1:8788 (dev config: no custom-domain routes, R2 bound)
-npm run auth:setup          # generates a local SESSION_SECRET into .dev.vars (copy .dev.vars.example first)
-npm run db:migrate:local    # apply migrations/ to the local D1
-npm run typecheck           # tsc -p . (covers src/ only)
-npm test                    # node --test over tests/ and src/{auth,social,inbox}/tests
+npm run db:up               # (repo root) the shared PostgreSQL in Docker
+cp .env.example .env        # DATABASE_URL etc.; npm run auth:setup adds a SESSION_SECRET
+npm run dev                 # tsx watch server/node.ts on 127.0.0.1:8788 (applies migrations/pg at start)
+npm run typecheck           # src/ (Workers types) + server/ (Node types)
+npm test                    # node --test over tests/ and src/{auth,social,inbox}/tests — PostgreSQL in-process (PGlite)
+npm run test:pg             # tests/postgres.integration.test.cjs — needs TEST_DATABASE_URL (a real server)
 node --test tests/billing.test.cjs     # single test file
-node --test --test-name-pattern="x" tests/billing.test.cjs   # single test
-npm run deploy              # wrangler deploy (see docs/DEPLOY.md for secrets/migrations order)
+docker compose up -d --build           # (repo root) postgres + landing; secrets in apps/landing/.env.production
 ```
 
-CI (`.github/workflows/ci.yml`) runs `typecheck` + `test` on Node 24 — tests use `node:sqlite`, so older Node won't work. `schema.sql` (`db:local`/`db:remote`) is the legacy LINE-bot schema; everything newer lives in `migrations/NNNN_*.sql` (apply with `wrangler d1 migrations apply`, and run them *before* deploying code that depends on them).
+**Database** — schema `migrations/pg/NNNN_*.sql` (0001 = the D1 schema after the old SQLite `migrations/0001…0018` + `schema.sql`, which stay only as history). `server/migrate.ts` applies new files at start, once each, under an advisory lock. Write SQL as before (SQLite-flavoured `?`/`?N`); `translate()` in `src/db/pg-d1.ts` converts placeholders (with typed casts), quotes camelCase aliases, turns `INSERT OR IGNORE` into `ON CONFLICT DO NOTHING` and reports `last_row_id`; the baseline defines `datetime()`, `json_extract()`, `json_valid()`, `instr()`, `unixepoch()`. Things that do **not** carry over: scalar `MIN/MAX(a,b)` (use `LEAST/GREATEST`), integers as booleans (`?N = 1`), `IS ?` (`IS NOT DISTINCT FROM`), `changes()`, `PRAGMA`, `sqlite_master`, `printf`, an untyped `? IS NULL` (`?::text IS NULL`), bare column names inside `ON CONFLICT DO UPDATE` (qualify them). **Writes are serialized like D1**: every write statement/batch takes one advisory lock first, because quota and balance checks are written as single `INSERT … SELECT … WHERE count < limit` statements. Results come back as D1 did: bigint/numeric → number, boolean → 1/0.
+
+**Tests** — `tests/helpers/d1.cjs`: `migratedDb()` gives `{ db, sqlite }` on a fresh schema; `db` is the real adapter, `sqlite` a synchronous handle (`prepare().get/all/run`, `exec`, `failTrigger()`) backed by PGlite in a worker thread. `PG_DEBUG=1` prints failing SQL. CI also runs the integration tests against a PostgreSQL service.
 
 ## Architecture
 
 **Routing** — `src/index.ts` `fetch` is a linear chain: `withSettings` → www→APP_ORIGIN redirect → `closedFeature` (feature-switch 503s) → studio SSO → `handleAuth` → per-prefix handlers (`/api/social`, `/api/marketer`, `/api/inbox`, `/api/billing`, `/api/receipts`, `/api/works`, `/api/onboarding`, `/api/affiliate`, `/webhook/{line,meta,stripe}`, `/api/admin/*`) → fall through to `env.ASSETS.fetch`. Only `/api/*` and `/webhook/*` hit the Worker first (`run_worker_first`); everything else is served as static files. Each `src/<area>/index.ts` exports a `handleX(request, env, url, …)` that returns `null`/`Response`. State-changing session requests are checked against `Origin`.
 
-**Runtime settings overlay** — `withSettings(env)` (`src/system/store.ts`) runs on every request and cron tick, merging values saved in `/admin/system/` (D1 `system_settings`, API keys AES-GCM encrypted with `SETTINGS_KEY`) over wrangler vars/secrets. Modules just read `env.X`. Only keys listed in `src/system/registry.ts` are editable this way; feature switches are read with `featureOn(env, "FEATURE_…")`. Adding a new configurable value or feature flag means registering it there. See `docs/system-control.md`.
+**Runtime settings overlay** — `withSettings(env)` (`src/system/store.ts`) runs on every request and cron tick, merging values saved in `/admin/system/` (`system_settings`, API keys AES-GCM encrypted with `SETTINGS_KEY`) over wrangler vars/secrets. Modules just read `env.X`. Only keys listed in `src/system/registry.ts` are editable this way; feature switches are read with `featureOn(env, "FEATURE_…")`. Adding a new configurable value or feature flag means registering it there. See `docs/system-control.md`.
 
-**Job queue** — `src/jobs.ts` is a D1-backed queue drained by the cron (`scheduled` → `runQueue`, 30 jobs / 5 concurrent). Credits are held at `enqueueJob` and refunded exactly once on permanent failure; jobs use leases with fencing. Handlers are registered by `kind` in `jobHandlers(env)` (affiliate, inbox replies, marketer tasks, AI video…); throw `PermanentJobError` to fail without retry, `JobDeferredError` to retry later. `src/credits.ts` owns balances/ledger/plans.
+**Job queue** — `src/jobs.ts` is a database-backed queue drained by the cron (`scheduled` → `runQueue`, 30 jobs / 5 concurrent). Credits are held at `enqueueJob` and refunded exactly once on permanent failure; jobs use leases with fencing. Handlers are registered by `kind` in `jobHandlers(env)` (affiliate, inbox replies, marketer tasks, AI video…); throw `PermanentJobError` to fail without retry, `JobDeferredError` to retry later. `src/credits.ts` owns balances/ledger/plans.
 
 **Cron** — one `* * * * *` trigger fans out in `scheduled`: queue run, social publishing, billing (expiry + monthly credit top-up), receipt backfill, inbox drain, and hourly (minute 7) trending sync. Each piece is its own `ctx.waitUntil` so one failing config can't stop the others.
 

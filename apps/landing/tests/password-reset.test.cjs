@@ -3,8 +3,6 @@ const { after, mock, test } = require('node:test');
 const { execFileSync } = require('node:child_process');
 const { readFileSync, rmSync } = require('node:fs');
 const path = require('node:path');
-const { build } = require('esbuild');
-const { Miniflare, convertV4MiniflareOptions } = require('miniflare');
 const { migratedDb } = require('./helpers/d1.cjs');
 
 const root = path.resolve(__dirname, '..');
@@ -239,37 +237,5 @@ test('Resend failure leaves a generic 200 and logs no email or token', async t =
   assert.equal(logs[0].includes(token), false);
 });
 
-test('real D1 accepts only one of two concurrent submissions of the same token', { timeout: 60000 }, async () => {
-  const bundled = await build({ stdin: { contents: "export { default } from './src/index';", resolveDir: root, loader: 'ts' },
-    bundle: true, write: false, format: 'esm', platform: 'browser', target: 'es2022' });
-  const options = { modules: true, script: bundled.outputFiles[0].text, compatibilityDate: '2026-09-01',
-    d1Databases: ['DB'], cf: false,
-    bindings: { APP_ORIGIN: 'https://naka.test', SESSION_SECRET: 'test-only-secret-at-least-32-characters', SMS_PROVIDER: 'off' },
-  };
-  const mf = new Miniflare(convertV4MiniflareOptions ? convertV4MiniflareOptions(options) : options);
-  try {
-    const db = await mf.getD1Database('DB');
-    for (const file of MIGRATIONS) {
-      const sql = readFileSync(path.join(root, 'migrations', file), 'utf8').replace(/--[^\r\n]*/g, '');
-      for (const statement of sql.split(';').map(part => part.trim()).filter(Boolean)) await db.prepare(statement).run();
-    }
-    const call = (route, body) => mf.dispatchFetch(`https://naka.test/api/auth/${route}`, {
-      method: 'POST', headers: { Origin: 'https://naka.test', 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-    });
-    const registered = await call('password/register', { email: 'runtime@example.test', password: 'old-secret-123' });
-    assert.equal(registered.status, 201, await registered.clone().text());
-    const user = await db.prepare("SELECT user_id FROM auth_identities WHERE provider = 'password'").first();
-    const token = 'a'.repeat(43);
-    const t = Math.floor(Date.now() / 1000);
-    await db.prepare(`INSERT INTO auth_password_resets (email_key, ip_key, user_id, token_hash, expires_at, created_at)
-      VALUES ('email-hmac', 'ip-hmac', ?, ?, ?, ?)`).bind(user.user_id, await sha256(token), t + 1800, t).run();
-    const [first, second] = await Promise.all([
-      call('password/reset', { token, newPassword: 'first-secret-456' }),
-      call('password/reset', { token, newPassword: 'second-secret-456' }),
-    ]);
-    assert.deepEqual([first.status, second.status].sort(), [200, 400]);
-    const hash = (await db.prepare('SELECT hash FROM auth_passwords WHERE user_id = ?').bind(user.user_id).first()).hash;
-    assert.equal((await verifyPassword('first-secret-456', hash)) !== (await verifyPassword('second-secret-456', hash)), true);
-    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM sessions WHERE user_id = ?').bind(user.user_id).first()).n, 0);
-  } finally { await mf.dispose(); }
-});
+// The Cloudflare workerd + D1 runtime test moved to tests/postgres.integration.test.cjs (real PostgreSQL).
+

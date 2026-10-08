@@ -1,0 +1,13 @@
+node_modules
+.wrangler
+.env
+.dev.vars
+.media
+creative
+tests
+src/**/tests
+docs
+openwiki
+.ui-craft
+migrations/*.sql
+*.md

@@ -181,11 +181,12 @@ PostgreSQL 17  (database: naka)
 - [x] `infra/postgres/init/`: schema `account`/`studio`/`reporting`, role `account_app`/`studio_app`/`reporting_ro` (NOLOGIN ใน SQL, ตั้งรหัสจาก `.env` ด้วย shell script), `search_path` ต่อ role, ปิดสิทธิ์ `public`
 - [x] ตรวจสิทธิ์ด้วย PGlite: แต่ละ role สร้าง/อ่าน/เขียนได้แค่ schema ของตัวเอง
 
-### Phase 1 — Landing → Node + Docker + Postgres (2–3 สัปดาห์)
-- [ ] Node entrypoint ห่อ `worker.fetch()/scheduled()` เดิม (ADR-0002 §3) + adapter รูปแบบ D1 บน Postgres (`postgres` driver; `?` → `$n`; `batch` = transaction; `last_row_id` จาก `RETURNING id`)
-- [ ] แปลง SQL เฉพาะ SQLite ~70 จุด + migrations 0001–0018 → baseline Postgres ชุดเดียว
-- [ ] test 279 ตัว: shim `node:sqlite` → PGlite
-- [ ] Dockerfile + service `landing` + `landing-cron` ใน compose; Caddy/Tunnel ตาม ADR-0002
+### ✅ Phase 1 — Landing → Node + Docker + Postgres (เสร็จ)
+- [x] Node entrypoint ห่อ `worker.fetch()/scheduled()` เดิม (ADR-0002 §3) + adapter รูปแบบ D1 บน Postgres (`postgres` driver; `?` → `$n`; `batch` = transaction; `last_row_id` จาก `RETURNING id`)
+- [x] แปลง SQL เฉพาะ SQLite ~70 จุด + migrations 0001–0018 → baseline Postgres ชุดเดียว
+- [x] test 279 ตัว: shim `node:sqlite` → PGlite
+- [x] Dockerfile + service `landing` + `landing-cron` ใน compose; Caddy/Tunnel ตาม ADR-0002
+- ส่วนที่ต่างจากแผน: เขียนพร้อมกันถูก serialize ด้วย advisory lock ใน adapter (เหมือน D1 ที่เขียนทีละรายการ — โค้ดเช็คโควตา/ยอดเครดิตใน statement เดียวต้องการแบบนี้); test ที่รัน Cloudflare workerd + D1 ย้ายเป็น `tests/postgres.integration.test.cjs` (รันกับ PostgreSQL จริงใน CI); workflow deploy ไป Cloudflare ถูกลบ
 
 ### Phase 2 — Studio → Postgres (2–3 สัปดาห์)
 - [ ] Drizzle `sqlite-core` → `pg-core` (`pgSchema('studio')`), DDL → drizzle-kit migrations, sync → async 46 จุด, `getInsertId` → `RETURNING`, test → PGlite

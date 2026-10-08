@@ -3,8 +3,10 @@
 #   cp .env.example .env    # then set every password
 #   docker compose up -d postgres
 #
-# Phase 0: the shared PostgreSQL only. landing (Phase 1) and studio (Phase 2) join this file as
-# they move onto Postgres; until then apps/studio keeps its own docker-compose.yml.
+#   docker compose up -d --build            # postgres + landing (naka-ai.com)
+#
+# landing (apps/landing) is on PostgreSQL; studio joins this file when it moves too (ADR-0004
+# phase 2) — until then apps/studio keeps its own docker-compose.yml.
 name: naka
 
 services:
@@ -32,5 +34,26 @@ services:
       retries: 20
     restart: unless-stopped
 
+  landing:
+    build: ./apps/landing
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://account_app:${ACCOUNT_DB_PASSWORD}@postgres:5432/naka
+      MEDIA_DIR: /data/media
+      TZ: Asia/Bangkok
+    # the Worker's vars and secrets (APP_ORIGIN, SESSION_SECRET, ADMIN_TOKEN, …) — see apps/landing/.env.example
+    env_file:
+      - path: ./apps/landing/.env.production
+        required: false
+    volumes:
+      - landing-media:/data/media
+    # behind Caddy / Cloudflare Tunnel in production (ADR-0002); local port for testing
+    ports:
+      - "127.0.0.1:8788:8788"
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  landing-media:

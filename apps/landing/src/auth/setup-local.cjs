@@ -3,7 +3,7 @@ const { readFileSync, appendFileSync, existsSync } = require('node:fs');
 const { randomBytes } = require('node:crypto');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
-const file = path.join(root, '.dev.vars');
+const file = path.join(root, '.env');
 const current = existsSync(file) ? readFileSync(file, 'utf8') : '';
 const defaults = {
   APP_ORIGIN: 'http://127.0.0.1:8789',

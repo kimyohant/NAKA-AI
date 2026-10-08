@@ -195,35 +195,7 @@ test('auth, methods, origins, invalid JSON and streamed UTF-8 body size fail clo
   assert.equal(await handleAdminCustomers(new Request(other), env, other), null);
 });
 
-test('Cloudflare workerd + D1 serializes concurrent grants and renewals with exact audit before/after', { timeout: 60000 }, async () => {
-  const { build } = require('esbuild');
-  const { Miniflare, convertV4MiniflareOptions } = require('miniflare');
-  const bundled = await build({ stdin: { contents: "import {handleAdminCustomers} from './src/admin/customers'; export default {fetch(r,e){return handleAdminCustomers(r,e,new URL(r.url))}};", resolveDir: root, loader: 'ts' }, bundle: true, write: false, format: 'esm', platform: 'browser', target: 'es2022' });
-  const options = { modules: true, script: bundled.outputFiles[0].text, compatibilityDate: '2026-09-01', d1Databases: ['DB'], cf: false, bindings: { ADMIN_TOKEN: TOKEN } };
-  const mf = new Miniflare(convertV4MiniflareOptions ? convertV4MiniflareOptions(options) : options);
-  try {
-    const runtimeDb = await mf.getD1Database('DB');
-    for (const file of migrations) {
-      const sql = readFileSync(path.join(root, 'migrations', file), 'utf8').replace(/--[^\r\n]*/g, '');
-      for (const statement of sql.split(';').map(s => s.trim()).filter(Boolean)) await runtimeDb.prepare(statement).run();
-    }
-    await runtimeDb.prepare("INSERT INTO users (id,display_name,created_at) VALUES ('u1','runtime',1)").run();
-    const post = (action, data) => mf.dispatchFetch('https://naka.test/api/admin/customers/u1/' + action, { method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    const grants = await Promise.all(Array.from({ length: 8 }, () => post('credits', { amount: 5, note: 'พร้อมกัน' })));
-    for (const response of grants) assert.equal(response.status, 200, await response.text());
-    const grantsAudit = (await runtimeDb.prepare("SELECT detail FROM admin_audit WHERE action = 'credits' ORDER BY rowid").all()).results.map(r => JSON.parse(r.detail));
-    assert.deepEqual(grantsAudit.map(a => a.before.credits), [0,5,10,15,20,25,30,35]);
-    assert.deepEqual(grantsAudit.map(a => a.after.credits), [5,10,15,20,25,30,35,40]);
-    const renewals = await Promise.all(Array.from({ length: 5 }, () => post('package', { planId: 'starter', months: 1, note: 'ต่อพร้อมกัน' })));
-    for (const response of renewals) assert.equal(response.status, 200, await response.text());
-    const sub = await runtimeDb.prepare("SELECT * FROM subscriptions WHERE user_id='u1'").first();
-    const packageAudit = (await runtimeDb.prepare("SELECT detail FROM admin_audit WHERE action='package' ORDER BY rowid").all()).results.map(r => JSON.parse(r.detail));
-    assert.equal(sub.expires_at, packageAudit[0].after.expiresAt + 4 * MONTH);
-    assert.equal(sub.next_credit_at, packageAudit[0].after.nextCreditAt);
-    assert.equal((await runtimeDb.prepare("SELECT SUM(delta) AS n FROM credit_ledger WHERE user_id='u1'").first()).n, 40);
-    for (let i = 1; i < 5; i++) assert.deepEqual(packageAudit[i].before, packageAudit[i - 1].after);
-  } finally { await mf.dispose(); }
-});
+// The Cloudflare workerd + D1 runtime test moved to tests/postgres.integration.test.cjs (real PostgreSQL).
 
 // Small DOM harness executes the shipped script; runtime integration above uses real workerd/D1.
 function ui(fetcher) {
