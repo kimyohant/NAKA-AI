@@ -1,8 +1,8 @@
 ---
 id: 3
-status: open
+status: closed
 labels: [ready-for-agent]
-assignee: null
+assignee: opencode
 blocked_by: [2]
 ---
 
@@ -33,11 +33,44 @@ Details that matter:
 
 ## Acceptance criteria
 
-- [ ] Unit tests cover each of the four rules, with a case that is cut and a case that is not.
-- [ ] Tests show "555", "+1", "สนใจ", and "ราคา?" stay `new`.
-- [ ] A test shows emoji-only, punctuation-only, @mention-only, and empty Comments become `skipped`.
-- [ ] A test shows a viewer answering under our own Comment stays `new`.
-- [ ] A test with the fake adapter shows a stored `draft` Comment becomes `skipped`, "already replied on the Platform", when the Page's own answer arrives in a later round.
-- [ ] A test shows a `replied` Comment does not change when our own Reply is read back from the Platform.
-- [ ] The status note holds the rule name, and the Skipped column of the board shows it.
-- [ ] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+- [x] Unit tests cover each of the four rules, with a case that is cut and a case that is not.
+- [x] Tests show "555", "+1", "สนใจ", and "ราคา?" stay `new`.
+- [x] A test shows emoji-only, punctuation-only, @mention-only, and empty Comments become `skipped`.
+- [x] A test shows a viewer answering under our own Comment stays `new`.
+- [x] A test with the fake adapter shows a stored `draft` Comment becomes `skipped`, "already replied on the Platform", when the Page's own answer arrives in a later round.
+- [x] A test shows a `replied` Comment does not change when our own Reply is read back from the Platform.
+- [x] The status note holds the rule name, and the Skipped column of the board shows it.
+- [x] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+
+## Notes
+
+### 2026-10-08
+
+Done. Plain-rule judging step after the reading step: `new` Comments
+matching a rule become `skipped` with the rule name as the status note;
+everything else stays `new` for ticket 04.
+
+Changed files:
+- Backend: `src/services/social/filter.ts` (new: pure `judgePlainRule`,
+  `isNothingToAnswer` keeps any letter/digit so short Thai/interest text
+  passes, `collectPlainRuleContext`; notes `own comment`,
+  `already replied on the Platform`, `no text to answer`,
+  `reply to another viewer`), `src/services/social/poller.ts` (keeps every
+  comment the Platform returned this round, judges `new` rows, marks stored
+  `new`/`draft`/`queued`/`needs_human` rows `skipped` when an own comment
+  arrives under them; `replied` never changes; stored `replyPlatformId`
+  excluded), `package.json` (`test:social` adds the new file),
+  `.github/workflows/ci.yml` (new file in the test list).
+- Tests: `tests/social-filter.test.ts` (10 tests: unit per rule cut/not-cut,
+  short-text keep, noise cut, under-our-reply stays new, fake-adapter rounds
+  for draft-to-skipped and replied-unchanged, board route shows the note).
+- Frontend untouched: the board already renders `statusNote` on Skipped cards.
+
+Gates: `npm run typecheck` clean; `npm run test:social` 25/25 pass; full
+backend suite 215 pass / 1 fail (only the known base failure
+"unsloth image test probe"; the other known failure
+"server masks saved keys" passed this run).
+
+Deviations: none. Rule 2 and "answered outside our app" share the note
+"already replied on the Platform", as the ticket text uses that wording for
+both.
