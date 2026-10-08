@@ -2,6 +2,8 @@
  * Seed scratch DB สำหรับ smoke test gallery (รัน: npx tsx tests/gallery-seed.ts)
  * สร้าง campaign + creative (approved/in_production) เพื่อทดสอบ GET /gallery + PUT result
  */
+export {}
+
 process.env.DATABASE_URL = process.env.DATABASE_URL || 'pglite://data/gallery-smoke'
 
 const { db, schema, insertedId, closeDb } = await import('../src/core/db/index.js')
