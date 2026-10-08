@@ -3,7 +3,8 @@
  * Built like the live-comment responder: one Mastra agent `social_responder`,
  * default prompt, no tools, one step, one JSON user message; this service
  * parses the JSON answer and checks the reply rules in code.
- * In this ticket every `reply` verdict becomes a Draft (auto mode is ticket 06).
+ * A `reply` verdict becomes `queued` in Auto mode when the comment is at most
+ * 24 hours old, otherwise `draft` (Draft mode, or an older comment).
  */
 import { and, desc, eq, isNull } from 'drizzle-orm'
 import { db, schema } from '../../db/index.js'
@@ -19,6 +20,8 @@ export const COULD_NOT_JUDGE = 'could not judge'
 export const POST_TEXT_LIMIT = 1000
 export const COMMENT_TEXT_LIMIT = 500
 export const MAX_REPLY_CHARS = 300
+/** Auto mode publishes only comments at most this old; older ones become drafts. */
+export const AUTO_REPLY_MAX_AGE_MS = 24 * 3600_000
 const LLM_TIMEOUT_MS = 60_000
 
 export type SocialVerdict = 'reply' | 'skip' | 'human' | 'unsure'
@@ -170,7 +173,21 @@ function ownTexts(rows: CommentRow[]): Map<string, string> {
   return map
 }
 
-function applyVerdict(row: CommentRow, out: SocialJudgeOutput, ts: string): void {
+/**
+ * Auto-mode gate: a comment qualifies for `queued` only when its age is known
+ * and at most 24 hours. Unknown age is treated as too old (draft, never auto).
+ */
+export function isAutoReplyEligible(
+  commentedAt: string | null | undefined,
+  nowMs: number = Date.now(),
+): boolean {
+  if (!commentedAt) return false
+  const t = Date.parse(commentedAt)
+  if (Number.isNaN(t)) return false
+  return nowMs - t <= AUTO_REPLY_MAX_AGE_MS
+}
+
+function applyVerdict(account: AccountRow, row: CommentRow, out: SocialJudgeOutput, ts: string): void {
   const base = {
     verdict: out.verdict,
     reason: out.reason || null,
@@ -178,8 +195,9 @@ function applyVerdict(row: CommentRow, out: SocialJudgeOutput, ts: string): void
     updatedAt: ts,
   }
   if (out.verdict === 'reply') {
+    const queued = account.replyMode === 'auto' && isAutoReplyEligible(row.commentedAt)
     db.update(schema.socialComments).set({
-      ...base, status: 'draft', statusNote: null, replyText: out.reply!,
+      ...base, status: queued ? 'queued' : 'draft', statusNote: null, replyText: out.reply!,
     }).where(eq(schema.socialComments.id, row.id)).run()
   } else if (out.verdict === 'skip') {
     db.update(schema.socialComments).set({
@@ -208,7 +226,8 @@ function applyFailure(row: CommentRow, ts: string): void {
 /**
  * Judging step of the polling round (ticket 04): after the plain rules, judge
  * the remaining `new` comments without a verdict, newest first, one at a time,
- * at most 50 per account per round. A comment that already has a verdict is
+ * at most 50 per account per round. A `reply` verdict becomes `queued` in Auto
+ * mode when the comment is at most 24 hours old, otherwise `draft`. A comment that already has a verdict is
  * never judged again. LLM failure keeps the comment `new` for the next round;
  * after 3 failed rounds it becomes `needs_human` with "could not judge".
  */
@@ -254,7 +273,7 @@ export async function judgeNewComments(accountId: number): Promise<{ judged: num
         }),
         maxReplyChars,
       )
-      applyVerdict(row, out, ts)
+      applyVerdict(account, row, out, ts)
       judged++
     } catch (err) {
       console.error(`Social judge failed for comment ${row.id}:`, (err as Error)?.message)

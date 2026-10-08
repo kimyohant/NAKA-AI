@@ -239,3 +239,140 @@ export async function helpMeDraft(commentId: number): Promise<string> {
   }
   return requestDraftReply(account, postText, current.text)
 }
+
+// --- Auto mode (ticket 06) ---
+
+export const MAX_AUTO_SEND_PER_ROUND = 10
+export const MAX_AUTO_SEND_ATTEMPTS = 3
+export const AUTO_SEND_GAP_MS = 3000
+/** A `queued` comment older than this while waiting becomes a `draft`. */
+export const QUEUED_MAX_AGE_MS = 24 * 3600_000
+
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
+
+/**
+ * Poller step 2: `queued` rows older than 24 hours become `draft` so a person
+ * decides about them. The verdict and reply text stay, so the draft is
+ * sendable. Returns the number of rows moved.
+ */
+export function expireQueuedComments(accountId: number, nowMs: number = Date.now()): number {
+  const rows = db.select({
+    id: schema.socialComments.id,
+    commentedAt: schema.socialComments.commentedAt,
+  }).from(schema.socialComments)
+    .where(and(
+      eq(schema.socialComments.accountId, accountId),
+      eq(schema.socialComments.status, 'queued'),
+    )).all()
+  const stale = rows.filter(r => {
+    if (!r.commentedAt) return false
+    const t = Date.parse(r.commentedAt)
+    return !Number.isNaN(t) && nowMs - t > QUEUED_MAX_AGE_MS
+  })
+  if (!stale.length) return 0
+  const ts = now()
+  db.update(schema.socialComments).set({ status: 'draft', updatedAt: ts })
+    .where(and(
+      eq(schema.socialComments.accountId, accountId),
+      eq(schema.socialComments.status, 'queued'),
+      inArray(schema.socialComments.id, stale.map(r => r.id)),
+    )).run()
+  return stale.length
+}
+
+/** Send-failure table for a `queued` auto send (ticket 06, spec error table). */
+function handleQueuedSendFailure(commentId: number, accountId: number, err: unknown): void {
+  const ts = now()
+  const kind = err instanceof SocialPlatformError ? err.kind : 'unknown'
+  const message = err instanceof Error ? err.message : 'send failed'
+  if (kind === 'not_found') {
+    db.update(schema.socialComments).set({ status: 'skipped', statusNote: DELETED_NOTE, updatedAt: ts })
+      .where(eq(schema.socialComments.id, commentId)).run()
+    return
+  }
+  if (kind === 'auth_expired') {
+    db.update(schema.socialComments).set({ status: 'draft', statusNote: sendFailedNote(message), updatedAt: ts })
+      .where(eq(schema.socialComments.id, commentId)).run()
+    db.update(schema.socialAccounts).set({ status: 'reconnect_needed', updatedAt: ts })
+      .where(eq(schema.socialAccounts.id, accountId)).run()
+    return
+  }
+  if (kind === 'rejected') {
+    db.update(schema.socialComments).set({ status: 'needs_human', statusNote: message, updatedAt: ts })
+      .where(eq(schema.socialComments.id, commentId)).run()
+    return
+  }
+  if (kind === 'rate_limited') {
+    // No pause here (ticket 08) — back to `queued` for the next round.
+    db.update(schema.socialComments).set({ status: 'queued', updatedAt: ts })
+      .where(eq(schema.socialComments.id, commentId)).run()
+    return
+  }
+  // unknown: back to `queued`, up to 3 rounds, then `needs_human`.
+  const [current] = db.select({ sendAttempts: schema.socialComments.sendAttempts })
+    .from(schema.socialComments).where(eq(schema.socialComments.id, commentId)).all()
+  const attempts = (current?.sendAttempts ?? 0) + 1
+  if (attempts >= MAX_AUTO_SEND_ATTEMPTS) {
+    db.update(schema.socialComments).set({
+      status: 'needs_human', statusNote: sendFailedNote(message),
+      sendAttempts: attempts, updatedAt: ts,
+    }).where(eq(schema.socialComments.id, commentId)).run()
+  } else {
+    db.update(schema.socialComments).set({
+      status: 'queued', statusNote: sendFailedNote(message),
+      sendAttempts: attempts, updatedAt: ts,
+    }).where(eq(schema.socialComments.id, commentId)).run()
+  }
+}
+
+/**
+ * Poller step 5: publish `queued` comments, oldest first, at most 10 per
+ * account per round, 3 seconds apart. Uses the same atomic claim as a send by
+ * a person, so a concurrent person send gives exactly one reply.
+ * `reply_source` is `auto`. The gap wait is injectable so tests stay fast.
+ */
+export async function sendQueuedReplies(
+  accountId: number,
+  opts: { waitBetweenSends?: () => Promise<void> } = {},
+): Promise<{ sent: number }> {
+  const wait = opts.waitBetweenSends ?? (() => sleep(AUTO_SEND_GAP_MS))
+  const [account] = db.select().from(schema.socialAccounts)
+    .where(eq(schema.socialAccounts.id, accountId)).all()
+  if (!account) return { sent: 0 }
+  const adapter = getSocialAdapter(account.platform)
+  const rows = db.select().from(schema.socialComments).where(
+    and(
+      eq(schema.socialComments.accountId, accountId),
+      eq(schema.socialComments.status, 'queued'),
+    ),
+  ).orderBy(schema.socialComments.commentedAt).limit(MAX_AUTO_SEND_PER_ROUND).all()
+  let sent = 0
+  let attempted = 0
+  for (const row of rows) {
+    if (!row.replyText?.trim()) continue
+    if (attempted > 0) await wait()
+    attempted++
+    let claimed: CommentRow
+    try {
+      claimed = claimForSend(row.id, ['queued'])
+    } catch {
+      continue // a person claimed it first — their send wins
+    }
+    try {
+      const { replyId } = await adapter.reply(toAuth(account), toAdapterComment(claimed), claimed.replyText!)
+      const ts = now()
+      db.update(schema.socialComments).set({
+        status: 'replied',
+        statusNote: null,
+        replySource: 'auto',
+        replyPlatformId: replyId,
+        repliedAt: ts,
+        updatedAt: ts,
+      }).where(eq(schema.socialComments.id, row.id)).run()
+      sent++
+    } catch (err) {
+      handleQueuedSendFailure(row.id, account.id, err)
+    }
+  }
+  return { sent }
+}
