@@ -345,8 +345,10 @@ async function resumePollingTask(id: number, config: AIConfig) {
 }
 
 export async function recoverGenerationTasks(): Promise<{ resumed: number; queued: number; unknown: number }> {
+  // oldest first, as SQLite returned them: a freed GPU slot goes to the task that has waited longest
   const rows = await db.select().from(schema.sysTask)
     .where(inArray(schema.sysTask.status, ['queued', 'submitting', 'processing']))
+    .orderBy(asc(schema.sysTask.id))
   const counts = { resumed: 0, queued: 0, unknown: 0 }
   for (const record of rows) {
     if (!['queued', 'submitting', 'processing'].includes(record.status || '')) continue
