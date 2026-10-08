@@ -42,7 +42,7 @@ Static pages live in `app/pages/` (`index`, `settings`, `marketer`, `studio`, `s
 
 ## Views by product area
 
-- **Drama** (`views/drama/`): `detail.vue` (project overview), `board.vue`, and `episode.vue`, the largest file (~6.5k lines) and core workbench for script → assets → storyboard → video → export. See [Drama Pipeline](../workflows/drama-pipeline.md).
+- **Drama** (`views/drama/`): `detail.vue` (project overview), `board.vue`, and `episode.vue`, the core workbench for script → assets → storyboard → video → export (state and logic in `episode.vue`, ~2.6k lines; its panels are lazy-loaded markup in `views/episode/`, styles in `views/episode/workbench.css`). See [Drama Pipeline](../workflows/drama-pipeline.md).
 - **Marketer** (`views/marketer/`, `Marketer*` components): campaigns, reference ads, trending and gallery.
 - **Studio / Seller / Viral Clone** (`views/studio`, `views/seller`, `views/viralclone`): workspaces for their respective projects; see [Marketing Suite](../workflows/marketing-suite.md) and [Viral Clone](../workflows/viral-clone.md).
 

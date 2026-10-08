@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readEpisodeWorkbench } from './_episode.mjs'
 
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8')
 const studioCss = read('../app/assets/studio.css')
@@ -10,7 +11,7 @@ const surfaces = [
   layout,
   read('../menus/drama/pages/index.vue'),
   read('../menus/drama/views/detail.vue'),
-  read('../menus/drama/views/episode.vue'),
+  readEpisodeWorkbench(),
 ].join('\n')
 
 // rebrand หลังชุด Apple-light: ChatFire 火焰橙 + IBM Plex Sans Thai (ดู commit 82877d0)

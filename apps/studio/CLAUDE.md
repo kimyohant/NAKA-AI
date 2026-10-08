@@ -67,6 +67,7 @@ study/hypit/ — Full source of Hypit (hypit-ai/hypit @ 7f730ab); the Viral Clon
 - No Settings page: "configure AI" links go to the back-office (`runtimeConfig.public.adminUrl`, default `/admin/`); a 401 `E_AUTH_REQUIRED` sends the browser to the naka-ai sign-in
 - `app/composables/useApi.ts` is the unified fetch client (all relative paths, same origin as the backend in production)
 - Core workbenches: `menus/drama/views/episode.vue` (drama pipeline), `menus/seller/views/workspace.vue` (AI Seller)
+- The episode workbench keeps all state and logic in `episode.vue`; its big parts (script, assets, videos, export, task drawer, asset detail) are markup-only lazy chunks in `menus/drama/views/episode/` that `inject(EPISODE_WORKBENCH)` what the page provides. A name a part's template uses must be in the page's `provide(...)` list (`tests/episode-split-structure.test.mjs`). Styles: `views/episode/workbench.css`, plain CSS with every rule under the root `.ep-workbench` (not scoped, so the parts share it)
 
 ## Database
 PostgreSQL 17 shared with apps/landing (one schema per app, docs/adr/0004). Startup applies `backend/migrations/pg/*.sql` (baseline `0001_baseline.sql` = the former SQLite schema, 39 tables) and seeds style presets (`src/core/db/seed.ts`). Production: root `docker-compose.yml` `postgres` service, backed up with `pg_dump`. Local dev without Docker: leave `DATABASE_URL` unset (PGlite in `data/pglite`), or `npm run db:up` at the root and set `DATABASE_URL=postgres://studio_app:…@127.0.0.1:5432/naka` in `backend/.env`.
