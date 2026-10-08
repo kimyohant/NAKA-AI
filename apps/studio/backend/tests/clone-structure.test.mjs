@@ -80,8 +80,9 @@ test('render driver reuse pipeline เดิม (ห้ามสร้าง ren
 })
 
 test('migration v12 tables ตาม PLAN §3', () => {
-  const schemaSql = read('src/core/db/sqlite-schema.ts')
-  assert.match(schemaSql, /version: 12/)
+  const schemaSql = read('migrations/pg/0001_baseline.sql')
+  assert.match(schemaSql, /CREATE TABLE "clone_projects" \(/)
+  assert.match(schemaSql, /CREATE TABLE "clone_variants" \(/)
   for (const col of ['reference_path', 'reference_transcript', 'blueprint_json', 'error_code', 'render_state']) {
     assert.ok(schemaSql.includes(col), `clone_projects missing column ${col}`)
   }

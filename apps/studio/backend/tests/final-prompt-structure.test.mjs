@@ -7,14 +7,14 @@ const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('characters and scenes tables store the agent-written final prompt', () => {
   const schema = read('src/core/db/schema.ts')
-  const sqliteSchema = read('src/core/db/sqlite-schema.ts')
+  const baseline = read('migrations/pg/0001_baseline.sql')
 
-  // Drizzle 表定义（SQLite 化：sqliteTable + text）
-  assert.match(schema, /export const characters = sqliteTable\('characters'[\s\S]*?finalPrompt: text\('final_prompt'\)/)
-  assert.match(schema, /export const scenes = sqliteTable\('scenes'[\s\S]*?finalPrompt: text\('final_prompt'\)/)
-  // SQLite 启动建表 DDL 含最终提示词列（幂等重放）
-  assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS characters \([\s\S]*?final_prompt TEXT/)
-  assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS scenes \([\s\S]*?final_prompt TEXT/)
+  // Drizzle 表定义（pgTable + text）
+  assert.match(schema, /export const characters = pgTable\('characters'[\s\S]*?finalPrompt: text\('final_prompt'\)/)
+  assert.match(schema, /export const scenes = pgTable\('scenes'[\s\S]*?finalPrompt: text\('final_prompt'\)/)
+  // PostgreSQL baseline 含最终提示词列
+  assert.match(baseline, /CREATE TABLE "characters" \([^;]*?"final_prompt" text/)
+  assert.match(baseline, /CREATE TABLE "scenes" \([^;]*?"final_prompt" text/)
 })
 
 test('grid prompt agent tools save agent-written final prompts with style injection', () => {
