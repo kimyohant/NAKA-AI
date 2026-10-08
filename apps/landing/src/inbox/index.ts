@@ -20,7 +20,7 @@ async function route(request: Request, env: Env, url: URL, userId: string): Prom
   if (path === '/threads') {
     const status = url.searchParams.get('status');
     if (status && !['open', 'needs_human', 'closed'].includes(status)) throw new InboxError(400, 'สถานะไม่ถูกต้อง');
-    const result = await env.DB.prepare(`SELECT ${fields} FROM inbox_threads WHERE user_id=? AND (? IS NULL OR status=?) ORDER BY last_message_at DESC,id LIMIT 100`)
+    const result = await env.DB.prepare(`SELECT ${fields} FROM inbox_threads WHERE user_id=? AND (?::text IS NULL OR status=?) ORDER BY last_message_at DESC,id LIMIT 100`)
       .bind(userId, status, status).all();
     return json({ threads: result.results });
   }

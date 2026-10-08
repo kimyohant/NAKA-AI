@@ -63,7 +63,7 @@ test('cards use the art and fall back to the icon when an image fails', () => {
 
 test('every seeded visual style has an example image, and the picker falls back to its gradient', async () => {
   const { styleExample } = await import('../app/utils/studioArt.js')
-  const schema = read('../backend/src/core/db/sqlite-schema.ts')
+  const schema = read('../backend/src/core/db/seed.ts')
   const seeded = [...schema.matchAll(/value: '([a-z0-9-]+)', sortOrder/g)].map(m => m[1])
   assert.ok(seeded.length >= 8)
   for (const v of seeded) assert.ok(existsSync(publicFile(styleExample(v))), `missing style example ${v}`)

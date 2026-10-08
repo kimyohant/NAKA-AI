@@ -8,8 +8,8 @@ The NAKA-AI monorepo. Two apps that used to live in separate repos, merged with 
 
 | Path | Was | What it is | Runs on |
 |---|---|---|---|
-| `apps/landing/` | `kimyohant/naka-ai-landing` | naka-ai.com: public landing, accounts/auth, credits, Stripe billing, receipts, social, inbox, admin. The **account hub** | Cloudflare Worker + D1 (`wrangler`) |
-| `apps/studio/` | `kimyohant/naka-drama-studio` | NAKA Studio: the AI production engine (Drama, Marketer, Seller, Product Studio, Viral Clone, Live). Hono backend + Nuxt frontend + Nuxt admin | Docker (`apps/studio/docker-compose.yml`) |
+| `apps/landing/` | `kimyohant/naka-ai-landing` | naka-ai.com: public landing, accounts/auth, credits, Stripe billing, receipts, social, inbox, admin. The **account hub** | Worker code on Node in Docker, PostgreSQL schema `account` |
+| `apps/studio/` | `kimyohant/naka-drama-studio` | NAKA Studio: the AI production engine (Drama, Marketer, Seller, Product Studio, Viral Clone, Live). Hono backend + Nuxt frontend + Nuxt admin | Docker (service `studio` in the root `docker-compose.yml`) |
 
 Each app keeps its own `package.json`, lockfiles, tests and `CLAUDE.md` — **read the app's own `CLAUDE.md` before working in it**:
 - `apps/landing/CLAUDE.md`
@@ -24,18 +24,19 @@ Members sign in on naka-ai.com; the studio redeems a one-time code from the Work
 ## Commands (from the repo root)
 
 ```bash
-npm run dev:landing        # wrangler dev on 127.0.0.1:8788
-npm run test:landing       # node --test (Node 24: tests use node:sqlite)
+npm run db:up              # the shared PostgreSQL (Docker)
+npm run dev:landing        # landing on 127.0.0.1:8788 (needs apps/landing/.env)
+npm run test:landing       # node --test (PostgreSQL in-process via PGlite; no Docker needed)
 npm run dev:studio         # studio backend on :5679
 npm run dev:studio-web     # studio frontend on :3013
 npm run dev:studio-admin   # studio admin on :3014/admin/
 ```
 
-CI: `.github/workflows/landing-ci.yml` and `studio-ci.yml` run only when their app's files change. Landing production deploy is manual (`landing-deploy.yml`). Studio deploys with `docker compose up -d --build` from `apps/studio/`.
+CI: `.github/workflows/landing-ci.yml` (with a PostgreSQL service), `studio-ci.yml` and `db-ci.yml` run only when their files change. Deploy: `docker compose up -d --build` at the root (postgres + landing + studio; one app: `docker compose up -d --build studio`). The Cloudflare Worker deploy was retired with D1.
 
-## Shared database (in progress — docs/adr/0004)
+## Shared database (docs/adr/0004)
 
-One PostgreSQL 17 (`docker-compose.yml` at the root, `npm run db:up`) for both apps, one schema per owner: `account` (landing, role `account_app`), `studio` (studio, role `studio_app`), `reporting` (read-only views, `reporting_ro`). Each role's `search_path` is its own schema, so unqualified table names keep working; an app can't read or write the other schema except through views/`SECURITY DEFINER` functions the owner grants. Layout: `infra/postgres/init/` (runs once on an empty volume); permissions are tested with `npm run test:db` (PGlite, no Docker). No RabbitMQ/Redis: queues live in Postgres. Status: Phase 0 (database) done; landing still on D1 and studio still on SQLite until Phases 1–2.
+One PostgreSQL 17 (`docker-compose.yml` at the root, `npm run db:up`) for both apps, one schema per owner: `account` (landing, role `account_app`), `studio` (studio, role `studio_app`), `reporting` (read-only views, `reporting_ro`). Each role's `search_path` is its own schema, so unqualified table names keep working; an app can't read or write the other schema except through views/`SECURITY DEFINER` functions the owner grants. Layout: `infra/postgres/init/` (runs once on an empty volume); permissions are tested with `npm run test:db` (PGlite, no Docker). No RabbitMQ/Redis: queues live in Postgres. Status: Phase 0 (database), Phase 1 (landing) and Phase 2 (studio, `apps/studio/backend/migrations/pg/`) done; both apps' tests run on PGlite. Next: Phase 3 (credit functions, `studio.users` → view, queues on Postgres).
 
 ## Architecture decisions
 

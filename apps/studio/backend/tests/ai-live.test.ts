@@ -11,21 +11,13 @@ import path from 'node:path'
 import { test, after } from 'node:test'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-live-'))
-process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
+process.env.DATABASE_URL = 'pglite://memory'
 process.env.STORAGE_PATH = path.join(dir, 'static')
 
-const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 const { db, schema } = await import('../src/core/db/index.js')
 const { now } = await import('../src/core/http/response.js')
 const live = await import('../src/modules/live/services/ai-live.js')
 const { mastra } = await import('../src/core/mastra/index.js')
-{
-  const { default: Database } = await import('better-sqlite3')
-  const sqlite = new Database(process.env.SQLITE_PATH)
-  sqlite.pragma('journal_mode = WAL')
-  initSqliteSchema(sqlite)
-  sqlite.close()
-}
 
 const TOKEN = 'a'.repeat(32)
 const RTMP = 'rtmps://live-api-s.facebook.com:443/rtmp/FB-secret-stream-key'
@@ -55,10 +47,10 @@ const replies = new Map<string, string[]>()
 const realGetAgent = mastra.getAgent.bind(mastra)
 ;(mastra as any).getAgent = (type: string) =>
   replies.has(type) ? { generate: async () => ({ text: replies.get(type)!.shift() ?? '' }) } : realGetAgent(type)
-db.insert(schema.aiServiceConfigs).values({
+await db.insert(schema.aiServiceConfigs).values({
   serviceType: 'text', provider: 'openai', name: 'test', baseUrl: 'http://127.0.0.1:1', apiKey: 'k', model: JSON.stringify(['m']),
   isActive: true, priority: 1, createdAt: now(), updatedAt: now(),
-} as any).run()
+} as any)
 
 test('not configured → status offline, actions refuse with E_LIVE_NOT_CONFIGURED', async () => {
   const s = await live.liveStatus()

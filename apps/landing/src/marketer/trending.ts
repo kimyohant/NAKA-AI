@@ -132,15 +132,15 @@ export async function upsertTrending(env: Env, rows: TrendingInput[], source: "c
   const statements = rows.map((r) => env.DB.prepare(`INSERT INTO trending_videos (id, source, url, platform, region, category, title, author,
       product_name, thumbnail_url, views, likes, comments, shares, revenue_thb, published_at, added_by, created_at, updated_at)
     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?18)
-    ON CONFLICT(url) DO UPDATE SET views = MAX(views, excluded.views), likes = MAX(likes, excluded.likes),
-      comments = MAX(comments, excluded.comments), shares = MAX(shares, excluded.shares),
-      revenue_thb = COALESCE(excluded.revenue_thb, revenue_thb),
-      title = CASE WHEN excluded.title <> '' THEN excluded.title ELSE title END,
-      author = CASE WHEN excluded.author <> '' THEN excluded.author ELSE author END,
-      product_name = CASE WHEN excluded.product_name <> '' THEN excluded.product_name ELSE product_name END,
-      thumbnail_url = COALESCE(excluded.thumbnail_url, thumbnail_url),
-      category = CASE WHEN excluded.category <> 'other' THEN excluded.category ELSE category END,
-      published_at = COALESCE(published_at, excluded.published_at), updated_at = excluded.updated_at`)
+    ON CONFLICT(url) DO UPDATE SET views = GREATEST(trending_videos.views, excluded.views), likes = GREATEST(trending_videos.likes, excluded.likes),
+      comments = GREATEST(trending_videos.comments, excluded.comments), shares = GREATEST(trending_videos.shares, excluded.shares),
+      revenue_thb = COALESCE(excluded.revenue_thb, trending_videos.revenue_thb),
+      title = CASE WHEN excluded.title <> '' THEN excluded.title ELSE trending_videos.title END,
+      author = CASE WHEN excluded.author <> '' THEN excluded.author ELSE trending_videos.author END,
+      product_name = CASE WHEN excluded.product_name <> '' THEN excluded.product_name ELSE trending_videos.product_name END,
+      thumbnail_url = COALESCE(excluded.thumbnail_url, trending_videos.thumbnail_url),
+      category = CASE WHEN excluded.category <> 'other' THEN excluded.category ELSE trending_videos.category END,
+      published_at = COALESCE(trending_videos.published_at, excluded.published_at), updated_at = excluded.updated_at`)
     .bind(crypto.randomUUID(), source, r.url, r.platform, r.region, r.category, r.title, r.author, r.productName,
       r.thumbnailUrl, r.views, r.likes, r.comments, r.shares, r.revenueThb, r.publishedAt, addedBy, t));
   for (let i = 0; i < statements.length; i += 50) await env.DB.batch(statements.slice(i, i + 50));
@@ -163,7 +163,7 @@ export async function listTrending(env: Env, q: TrendingQuery) {
   const days = Number(q.days);
   if ([7, 30, 90].includes(days)) { binds.push(now() - days * 86400); where.push(`COALESCE(published_at, created_at) >= ?${binds.length}`); }
   const order = q.sort === "revenue" ? "COALESCE(revenue_thb, -1) DESC, views DESC"
-    : q.sort === "engagement" ? "CAST(likes + comments + shares AS REAL) / MAX(views, 1) DESC, views DESC"
+    : q.sort === "engagement" ? "CAST(likes + comments + shares AS REAL) / GREATEST(views, 1) DESC, views DESC"
     : q.sort === "newest" ? "COALESCE(published_at, created_at) DESC" : "views DESC";
   const limit = Math.min(Math.max(Math.trunc(q.limit ?? 48), 1), 96);
   const { results } = await env.DB.prepare(`SELECT id, url, platform, region, category, title, author, product_name, thumbnail_url,

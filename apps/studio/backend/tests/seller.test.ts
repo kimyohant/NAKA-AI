@@ -1,5 +1,5 @@
 /**
- * AI นักขาย (services/seller.ts) — fake Mastra agent + SQLite ชั่วคราว
+ * AI นักขาย (services/seller.ts) — fake Mastra agent + PGlite (pglite://memory)
  * ตรวจ: validation (ลิงก์ http(s), ไฟล์ต้องเป็น /static), สร้าง/แก้/ลบ, AI แคปชั่นต่อช่องทาง
  * (แฮชแท็กล้าง # / จำกัดจำนวน, ลิงก์ต่อท้ายคอมเมนต์โดย backend), JSON เสีย → ลองซ้ำ → E_SELLER_COPY
  */
@@ -10,21 +10,13 @@ import path from 'node:path'
 import { test } from 'node:test'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-seller-'))
-process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
+process.env.DATABASE_URL = 'pglite://memory'
 process.env.STORAGE_PATH = path.join(dir, 'static')
 
-const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 const { db, schema } = await import('../src/core/db/index.js')
 const { now } = await import('../src/core/http/response.js')
 const seller = await import('../src/modules/seller/services/seller.js')
 const { mastra } = await import('../src/core/mastra/index.js')
-{
-  const { default: Database } = await import('better-sqlite3')
-  const sqlite = new Database(process.env.SQLITE_PATH)
-  sqlite.pragma('journal_mode = WAL')
-  initSqliteSchema(sqlite)
-  sqlite.close()
-}
 
 const replies: string[] = []
 const { eq } = await import('drizzle-orm')
@@ -50,10 +42,10 @@ const closeGate = () => { scriptGate = new Promise<void>(r => { openGate = r }) 
 test('generate without a text model → E_NO_TEXT_MODEL', async () => {
   const post = await seller.createPost({ productName: 'เซรั่ม' })
   await assert.rejects(() => seller.generateCopy(post!.id), (e: any) => e.errorCode === 'E_NO_TEXT_MODEL')
-  db.insert(schema.aiServiceConfigs).values({
+  await db.insert(schema.aiServiceConfigs).values({
     serviceType: 'text', provider: 'openai', name: 'test', baseUrl: 'http://127.0.0.1:1', apiKey: 'k', model: JSON.stringify(['m']),
     isActive: true, priority: 1, createdAt: now(), updatedAt: now(),
-  } as any).run()
+  } as any)
 })
 
 test('create/update validation', async () => {
@@ -120,10 +112,10 @@ test('skill video: guards before spending (models, skill, presenter)', async () 
   // ยังไม่มีโมเดลรูป/วิดีโอ (มีแค่ข้อความจาก test แรก)
   await assert.rejects(() => seller.makeVideo(post!.id, { templateId: 'unboxing' }), (e: any) => /^E_NO_(IMAGE|VIDEO)_MODEL$/.test(e.errorCode))
   for (const [serviceType, provider] of [['image', 'openai'], ['video', 'minimax']]) {
-    db.insert(schema.aiServiceConfigs).values({
+    await db.insert(schema.aiServiceConfigs).values({
       serviceType, provider, name: serviceType, baseUrl: 'http://127.0.0.1:1', apiKey: 'k', model: JSON.stringify(['m']),
       isActive: true, priority: 1, createdAt: now(), updatedAt: now(),
-    } as any).run()
+    } as any)
   }
   await assert.rejects(() => seller.makeVideo(post!.id, { templateId: 'nope' }), (e: any) => e.errorCode === 'E_TEMPLATE_UNKNOWN')
   const before = (await studio.listProjects()).length
@@ -153,9 +145,9 @@ test('skill video: product goes to Studio, finished merge is attached to the pos
 
   // จำลอง auto-render จบ + merge เสร็จ แล้ว getPost ต้องแนบวิดีโอเอง
   const fresh = (await studio.getProjectRow(project.id))!
-  db.update(schema.studioProjects).set({ autoRender: JSON.stringify({ stage: 'done', total: 1, done: 1, failed: 0 }) })
-    .where(eq(schema.studioProjects.id, project.id)).run()
-  db.insert(schema.videoMerges).values({ episodeId: fresh.episodeId, dramaId: fresh.dramaId, provider: 'ffmpeg', model: 'concat', status: 'completed', mergedUrl: 'static/merged/cup.mp4', createdAt: now() } as any).run()
+  await db.update(schema.studioProjects).set({ autoRender: JSON.stringify({ stage: 'done', total: 1, done: 1, failed: 0 }) })
+    .where(eq(schema.studioProjects.id, project.id))
+  await db.insert(schema.videoMerges).values({ episodeId: fresh.episodeId, dramaId: fresh.dramaId, provider: 'ffmpeg', model: 'concat', status: 'completed', mergedUrl: 'static/merged/cup.mp4', createdAt: now() } as any)
   openGate()
   await waitFor(async () => (await studio.getProjectRow(project.id))!.status === 'script_ready')
   const done = await seller.getPost(post!.id)
@@ -185,4 +177,31 @@ test('skill video: script ready without shots → auto-render refuses → job fa
   assert.equal((await seller.getPost(post!.id))!.videoJob!.stage, 'cancelled')
   const manual = await seller.updatePost(post!.id, { videoUrl: '/static/uploads/mine.mp4' })
   assert.equal(manual!.videoUrl, '/static/uploads/mine.mp4')
+})
+
+test('skill video: two clicks at once start one Studio project; a failed start leaves the post as it was', async () => {
+  const post = await seller.createPost({ productName: 'พัดลมพกพา', channels: ['tiktok'] })
+  const before = (await studio.listProjects()).length
+  closeGate()
+  try {
+    const results = await Promise.allSettled([
+      seller.makeVideo(post!.id, { templateId: 'unboxing' }),
+      seller.makeVideo(post!.id, { templateId: 'unboxing' }),
+    ])
+    assert.equal(results.filter(r => r.status === 'fulfilled').length, 1)
+    const refused = results.find(r => r.status === 'rejected') as PromiseRejectedResult
+    assert.equal(refused.reason.errorCode, 'E_SELLER_VIDEO_BUSY')
+    assert.equal((await studio.listProjects()).length, before + 1, 'each click created its own Studio project')
+  } finally {
+    // also on failure: a running video driver would keep the test process alive
+    await seller.stopVideo(post!.id)
+    openGate()
+  }
+
+  // the claim is released when the start fails (presenter missing): not busy, previous project link kept
+  const linked = (await seller.getPost(post!.id))!.studioProjectId
+  await assert.rejects(() => seller.makeVideo(post!.id, { templateId: 'ugc_review' }), (e: any) => e.errorCode === 'E_AVATAR_REQUIRED')
+  const after = (await seller.getPost(post!.id))!
+  assert.equal(after.studioProjectId, linked)
+  assert.equal(after.videoJob!.running, false)
 })

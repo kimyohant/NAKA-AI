@@ -98,10 +98,10 @@ test('panel values win over wrangler values, which win over switch defaults', as
 test('unreadable, tampered or unknown rows are ignored so the Worker values keep the site running', async () => {
   await set('ANTHROPIC_API_KEY', ANTHROPIC);
   const workerEnv = { ...env, ANTHROPIC_API_KEY: 'from-wrangler', ADMIN_TOKEN: TOKEN };
-  const otherKey = { ...workerEnv, SETTINGS_KEY: randomBytes(32).toString('base64'), DB: migratedDb(...migrations).db };
-  // A different SETTINGS_KEY cannot decrypt the row.
+  // A different SETTINGS_KEY cannot decrypt the row. (Read it first: migratedDb() starts a fresh database.)
   const moved = sqlite.prepare("SELECT * FROM system_settings WHERE key = 'ANTHROPIC_API_KEY'").get();
   const { sqlite: s2, db: db2 } = migratedDb(...migrations);
+  const otherKey = { ...workerEnv, SETTINGS_KEY: randomBytes(32).toString('base64'), DB: db2 };
   s2.prepare('INSERT INTO system_settings (key, value, secret, hint, updated_at) VALUES (?, ?, ?, ?, ?)').run(moved.key, moved.value, 1, moved.hint, moved.updated_at);
   s2.prepare("INSERT INTO system_settings (key, value, secret, hint, updated_at) VALUES ('ADMIN_TOKEN', 'stolen', 0, NULL, 1), ('FEATURE_CLIPS', 'off', 1, NULL, 1)").run();
   // The same ciphertext under another key name fails its additional data check.
@@ -117,7 +117,8 @@ test('unreadable, tampered or unknown rows are ignored so the Worker values keep
   assert.equal(view.find(s => s.key === 'ANTHROPIC_API_KEY').readable, false);
   s2.close();
   // A missing table (migration not applied yet) falls back to wrangler values instead of failing every request.
-  const { sqlite: bare, db: bareDb } = migratedDb('0001_auth.sql');
+  const { sqlite: bare, db: bareDb } = migratedDb();
+  bare.exec('DROP TABLE system_settings');
   assert.equal((await withSettings({ ...workerEnv, DB: bareDb })).ANTHROPIC_API_KEY, 'from-wrangler');
   bare.close();
 });

@@ -4,7 +4,7 @@
  * ตั้งใจไม่ import mastra เพื่อไม่ให้เกิด dependency cycle (studio.ts → mastra → agents → tools → ที่นี่)
  */
 import { and, eq, isNull } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { now } from '../../../core/http/response.js'
 
 /** ข้อมูลที่ prompt builder ต้องใช้ — caller อ่านจาก DB แล้วส่งมาเป็น plain object */
@@ -73,7 +73,8 @@ export async function clearEpisodeStoryboards(episodeId: number): Promise<number
   const res = await db.update(schema.storyboards)
     .set({ deletedAt: now(), updatedAt: now() })
     .where(and(eq(schema.storyboards.episodeId, episodeId), isNull(schema.storyboards.deletedAt)))
-  return res?.changes ?? 0
+    .returning({ id: schema.storyboards.id })
+  return res.length
 }
 
 /** เขียนช็อต 1 ช็อต: storyboard เดิม (เก็บภาพ/ความยาว/prompt) + studio_shots (role/dialogue/on_screen_text) */
@@ -102,8 +103,8 @@ export async function writeStudioShot(params: {
     status: 'pending',
     createdAt: ts,
     updatedAt: ts,
-  })
-  const storyboardId = getInsertId(sbRes)
+  }).returning({ id: schema.storyboards.id })
+  const storyboardId = insertedId(sbRes)
   await db.insert(schema.studioShots).values({
     storyboardId,
     projectId: params.projectId,

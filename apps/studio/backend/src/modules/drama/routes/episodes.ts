@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { and, eq, isNull } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { success, notFound, badRequest, now } from '../../../core/http/response.js'
 import { toSnakeCaseArray, toSnakeCase } from '../../../core/utils/transform.js'
 import { getActiveConfigId } from '../../../core/ai/ai.js'
@@ -42,10 +42,10 @@ app.post('/', async (c) => {
     resolution: ['480p', '720p', '1080p'].includes(body.resolution) ? body.resolution : '720p',
     createdAt: ts,
     updatedAt: ts,
-  })
+  }).returning({ id: schema.episodes.id })
 
   const [ep] = await db.select().from(schema.episodes)
-    .where(eq(schema.episodes.id, getInsertId(res)))
+    .where(eq(schema.episodes.id, insertedId(res)))
   return success(c, {
     id: ep.id,
     episode_number: ep.episodeNumber,
@@ -273,7 +273,7 @@ app.get('/:id/generation-tasks', async (c) => {
 
   return success(c, {
     // queue_position: งานวิดีโอที่รอคิว provider ทำทีละงาน (เช่น Unsloth H3) — UI แสดง "คิวที่ n"; อื่น ๆ = null
-    tasks: toSnakeCaseArray(tasks.map(t => ({ ...t, queuePosition: videoQueuePosition(t) }))),
+    tasks: toSnakeCaseArray(await Promise.all(tasks.map(async t => ({ ...t, queuePosition: await videoQueuePosition(t) })))),
     merges: toSnakeCaseArray(merges),
   })
 })

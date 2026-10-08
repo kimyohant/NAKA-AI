@@ -238,19 +238,13 @@ test("a Stripe error fails the checkout; unconfigured, cross-site and too many o
   assert.deepEqual(await (await call("/config")).json(), { enabled: false });
 });
 
-test("migration 0010 keeps existing payments and their receipts", () => {
-  const { sqlite: old } = migratedDb("0001_auth.sql", "0002_credits_jobs.sql", "0004_plans.sql", "0007_payments.sql", "0008_receipts.sql");
-  old.exec("PRAGMA foreign_keys = ON");
-  old.prepare("INSERT INTO users (id, display_name, created_at) VALUES ('u1', 'ร้าน', 0)").run();
-  old.prepare("INSERT INTO payments (id, user_id, plan_id, period, amount_satang, method, status, omise_charge_id, created_at, paid_at) VALUES ('p1','u1','pro','monthly',79000,'card','successful','chrg_1',1,2)").run();
-  const cols = old.prepare("PRAGMA table_info(receipts)").all().filter((c) => c.notnull && c.dflt_value === null).map((c) => c.name);
-  const sample = { id: "r1", payment_id: "p1", user_id: "u1", year: 2026, seq: 1, number: "RC2026-000001", issued_at: 2, snapshot: "{}" };
-  old.prepare(`INSERT INTO receipts (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`).run(...cols.map((c) => sample[c] ?? 0));
-  // D1 applies a migration file as one transaction, which is what lets the deferred foreign keys pass.
-  old.exec(`BEGIN; ${readFileSync(path.join(root, "migrations", "0010_stripe.sql"), "utf8")} COMMIT;`);
-  assert.deepEqual({ ...old.prepare("SELECT id, method, omise_charge_id, stripe_session_id FROM payments").get() },
-    { id: "p1", method: "card", omise_charge_id: "chrg_1", stripe_session_id: null });
-  assert.equal(old.prepare("PRAGMA foreign_key_check").all().length, 0);
-  assert.equal(old.prepare("SELECT payment_id FROM receipts").get().payment_id, "p1");
-  old.close();
+test("payments accept card and Stripe Checkout rows and receipts keep their payment", () => {
+  const { sqlite } = migratedDb();
+  sqlite.prepare("INSERT INTO users (id, display_name, created_at) VALUES ('u1', 'ร้าน', 0)").run();
+  sqlite.prepare("INSERT INTO payments (id, user_id, plan_id, period, amount_satang, method, status, omise_charge_id, created_at, paid_at) VALUES ('p1','u1','pro','monthly',79000,'card','successful','chrg_1',1,2)").run();
+  sqlite.prepare("INSERT INTO payments (id, user_id, plan_id, period, amount_satang, method, status, stripe_session_id, created_at) VALUES ('p2','u1','pro','monthly',79000,'stripe_checkout','pending','cs_1',3)").run();
+  sqlite.prepare("INSERT INTO receipts (id, payment_id, user_id, year, seq, number, issued_at, snapshot) VALUES ('r1','p1','u1',2026,1,'RC2026-000001',2,'{}')").run();
+  assert.throws(() => sqlite.prepare("INSERT INTO receipts (id, payment_id, user_id, year, seq, number, issued_at, snapshot) VALUES ('r2','missing','u1',2026,2,'RC2026-000002',2,'{}')").run(), /foreign key/);
+  assert.equal(sqlite.prepare("SELECT payment_id FROM receipts").get().payment_id, "p1");
 });
+

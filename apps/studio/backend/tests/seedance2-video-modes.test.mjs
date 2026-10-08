@@ -108,11 +108,11 @@ test('tasks route validates reference-mode requirements for video tasks', () => 
 
 test('image/video generation tasks are unified into a single sys_task table', () => {
   const schema = read('src/core/db/schema.ts')
-  const sqliteSchema = read('src/core/db/sqlite-schema.ts')
+  const baseline = read('migrations/pg/0001_baseline.sql')
   const envExample = read('.env.example')
 
-  // sys_task：type 区分 image/video，生成参数收进 params(JSON)（SQLite 化：sqliteTable + text）
-  assert.match(schema, /export const sysTask = sqliteTable\('sys_task'/)
+  // sys_task：type 区分 image/video，生成参数收进 params(JSON)（pgTable + text）
+  assert.match(schema, /export const sysTask = pgTable\('sys_task'/)
   assert.match(schema, /type: text\('type'\)\.notNull\(\)/)
   assert.match(schema, /params: text\('params'\)/)
   assert.match(schema, /resultUrl: text\('result_url'\)/)
@@ -121,13 +121,11 @@ test('image/video generation tasks are unified into a single sys_task table', ()
   // 旧的 image_generations / video_generations 表定义已移除
   assert.doesNotMatch(schema, /imageGenerations/)
   assert.doesNotMatch(schema, /videoGenerations/)
-  assert.doesNotMatch(sqliteSchema, /image_generations/)
-  assert.doesNotMatch(sqliteSchema, /video_generations/)
+  assert.doesNotMatch(baseline, /image_generations/)
+  assert.doesNotMatch(baseline, /video_generations/)
 
-  // SQLite 启动建表 DDL：sys_task 统一任务表
-  assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS sys_task \(/)
-  assert.match(sqliteSchema, /params TEXT/)
-  assert.match(sqliteSchema, /result_url TEXT/)
+  // PostgreSQL baseline：sys_task 统一任务表
+  assert.match(baseline, /CREATE TABLE "sys_task" \([^;]*?"params" text[^;]*?"result_url" text/)
 
   // 路由与服务只操作 sys_task（统一 /tasks 入口，type 过滤）
   const tasksRoute = read('src/core/routes/tasks.ts')

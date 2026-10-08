@@ -3,63 +3,53 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import Database from 'better-sqlite3'
 import { buildCaptionCues, splitCaptionLines, toSrt, toAss, assertCaptionFontAvailable, aiLabelText } from '../src/core/production/captions.js'
 
 // ตั้ง env ก่อน import services (db singleton) — ทำผ่าน dynamic import
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-studio2-'))
-process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
+process.env.DATABASE_URL = 'pglite://memory'
 
-const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 const { db, schema } = await import('../src/core/db/index.js')
+const { sqlite } = await import('./_sql.js')
 const { createProjectFromCampaign } = await import('../src/modules/product-studio/services/studio.js')
 const { startAutoRender, runAutoRenderPipeline } = await import('../src/modules/product-studio/services/studio-autorender.js')
 const { now } = await import('../src/core/http/response.js')
 
 // seed: migration + configs (dummy) + campaign/creative + project/drama/episode/storyboards
-{
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  sqlite.pragma('journal_mode = WAL')
-  initSqliteSchema(sqlite)
-  sqlite.close()
-}
 const ts = now()
 {
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  sqlite.pragma('journal_mode = WAL')
-  sqlite.prepare("INSERT INTO ai_service_configs (service_type, provider, name, base_url, api_key, model, is_active, is_default, priority, created_at, updated_at) VALUES ('image','openai','d','http://127.0.0.1:9','sk-dummy','[\"m\"]',1,1,10,?,?),('video','volcengine','d','http://127.0.0.1:9','sk-dummy','[\"m\"]',1,1,10,?,?)").run(ts, ts, ts, ts)
-  sqlite.prepare("INSERT INTO campaigns (title, product_name, product_images, platforms, market, status, created_at, updated_at) VALUES ('Camp A', 'Serum S', '[\"/static/products/a.png\"]', '[\"tiktok\",\"shopee\"]', 'TH', 'draft', ?, ?)").run(ts, ts)
-  sqlite.prepare("INSERT INTO campaign_creatives (campaign_id, angle, hook, format, platform, duration_sec, cta, script, status, created_at, updated_at) VALUES (1, 'ugc angle', 'Dull skin? Watch this', 'ugc', 'tiktok', 30, 'Shop now', '## S1', 'approved', ?, ?)").run(ts, ts)
-  sqlite.prepare("INSERT INTO studio_projects (title, product_name, template_id, language, market, platform, aspect_ratio, duration_sec, status, created_at, updated_at) VALUES ('P1', 'Serum S', 'ugc_review', 'th', 'TH', 'tiktok', '9:16', 24, 'script_ready', ?, ?)").run(ts, ts)
-  sqlite.prepare("INSERT INTO dramas (title, status, created_at, updated_at) VALUES ('P1', 'draft', ?, ?)").run(ts, ts)
-  sqlite.prepare("INSERT INTO episodes (drama_id, episode_number, title, status, created_at, updated_at) VALUES (1, 1, 'P1', 'draft', ?, ?)").run(ts, ts)
-  sqlite.prepare("UPDATE studio_projects SET drama_id=1, episode_id=1 WHERE id=1").run()
+  await sqlite.prepare("INSERT INTO ai_service_configs (service_type, provider, name, base_url, api_key, model, is_active, is_default, priority, created_at, updated_at) VALUES ('image','openai','d','http://127.0.0.1:9','sk-dummy','[\"m\"]',true,true,10,?,?),('video','volcengine','d','http://127.0.0.1:9','sk-dummy','[\"m\"]',true,true,10,?,?)").run(ts, ts, ts, ts)
+  await sqlite.prepare("INSERT INTO campaigns (title, product_name, product_images, platforms, market, status, created_at, updated_at) VALUES ('Camp A', 'Serum S', '[\"/static/products/a.png\"]', '[\"tiktok\",\"shopee\"]', 'TH', 'draft', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO campaign_creatives (campaign_id, angle, hook, format, platform, duration_sec, cta, script, status, created_at, updated_at) VALUES (1, 'ugc angle', 'Dull skin? Watch this', 'ugc', 'tiktok', 30, 'Shop now', '## S1', 'approved', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO studio_projects (title, product_name, template_id, language, market, platform, aspect_ratio, duration_sec, status, created_at, updated_at) VALUES ('P1', 'Serum S', 'ugc_review', 'th', 'TH', 'tiktok', '9:16', 24, 'script_ready', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO dramas (title, status, created_at, updated_at) VALUES ('P1', 'draft', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO episodes (drama_id, episode_number, title, status, created_at, updated_at) VALUES (1, 1, 'P1', 'draft', ?, ?)").run(ts, ts)
+  await sqlite.prepare("UPDATE studio_projects SET drama_id=1, episode_id=1 WHERE id=1").run()
   // avatar (uploaded image) — ugc_review avatarMode: required
-  sqlite.prepare("INSERT INTO studio_avatars (name, description, image_url, created_at, updated_at) VALUES ('Ploy', 'Thai woman, 25', '/static/avatars/ploy.png', ?, ?)").run(ts, ts)
-  sqlite.prepare("UPDATE studio_projects SET avatar_id=1 WHERE id=1").run()
+  await sqlite.prepare("INSERT INTO studio_avatars (name, description, image_url, created_at, updated_at) VALUES ('Ploy', 'Thai woman, 25', '/static/avatars/ploy.png', ?, ?)").run(ts, ts)
+  await sqlite.prepare("UPDATE studio_projects SET avatar_id=1 WHERE id=1").run()
   // 2 shots: imagePrompt/videoPrompt ครบ (pipeline จะส่งงานจริงผ่าน generateImage/Video)
   for (let i = 1; i <= 2; i++) {
-    sqlite.prepare("INSERT INTO storyboards (episode_id, storyboard_number, title, duration, description, image_prompt, video_prompt, status, created_at, updated_at) VALUES (1, ?, ?, 5, 'visual text', ?, ?, 'pending', ?, ?)").run(i, `role${i}`, `img ${i}`, `vid ${i}`, ts, ts)
-    const sbId = sqlite.prepare("SELECT id FROM storyboards WHERE episode_id=1 AND storyboard_number=?").get(i).id
-    sqlite.prepare("INSERT INTO studio_shots (storyboard_id, project_id, role, dialogue, on_screen_text) VALUES (?, 1, ?, 'บรรทัดพูดภาษาไทยช็อตที่ ' || ?, null)").run(sbId, i === 1 ? 'hook' : 'problem', i)
+    await sqlite.prepare("INSERT INTO storyboards (episode_id, storyboard_number, title, duration, description, image_prompt, video_prompt, status, created_at, updated_at) VALUES (1, ?, ?, 5, 'visual text', ?, ?, 'pending', ?, ?)").run(i, `role${i}`, `img ${i}`, `vid ${i}`, ts, ts)
+    const sbId = (await sqlite.prepare("SELECT id FROM storyboards WHERE episode_id=1 AND storyboard_number=?").get(i)).id
+    await sqlite.prepare("INSERT INTO studio_shots (storyboard_id, project_id, role, dialogue, on_screen_text) VALUES (?, 1, ?, 'บรรทัดพูดภาษาไทยช็อตที่ ' || ?, null)").run(sbId, i === 1 ? 'hook' : 'problem', i)
   }
   sqlite.close()
 }
 
-test('migration v11: คอลัมน์ captions/auto_render/source_campaign_id ครบ', () => {
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  const cols = sqlite.pragma('table_info(studio_projects)').map(r => r.name)
+test('migration v11: คอลัมน์ captions/auto_render/source_campaign_id ครบ', async () => {
+  const cols = (await sqlite.columns('studio_projects'))
   for (const col of ['captions', 'caption_style', 'ai_label_burn_in', 'auto_render', 'source_campaign_id']) {
     assert.ok(cols.includes(col), `missing ${col}`)
   }
-  const mergeCols = sqlite.pragma('table_info(video_merges)').map(r => r.name)
+  const mergeCols = (await sqlite.columns('video_merges'))
   assert.ok(mergeCols.includes('captioned') && mergeCols.includes('subtitle_url'))
-  const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all().map(r => r.version)
-  assert.deepEqual(versions, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
+  const versions = (await sqlite.prepare('SELECT name FROM schema_migrations ORDER BY name').all()).map(r => r.name)
+  assert.deepEqual(versions, ['0001_baseline.sql'])
   sqlite.close()
 })
 
-test('captions: ตัดบรรทัดหลายภาษาด้วย Intl.Segmenter', () => {
+test('captions: ตัดบรรทัดหลายภาษาด้วย Intl.Segmenter', async () => {
   // th: ไม่มีช่องว่าง — segmenter แบ่งคำไทยได้ และควบรวมโดยไม่เติมช่องว่าง
   const th = splitCaptionLines('สวัสดีครับวันนี้จะมารีวิวเซรั่มตัวใหม่จากร้านเรา', 'th', 18)
   assert.ok(th.length >= 2)
@@ -138,8 +128,7 @@ test('from-campaign: map platform/market/images + notes จาก creative + gua
   )
   // campaign soft delete ⇒ E_STUDIO_CAMPAIGN_NOT_FOUND
   {
-    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-    sqlite.prepare("UPDATE campaigns SET deleted_at='2026-01-02' WHERE id=1").run()
+    await sqlite.prepare("UPDATE campaigns SET deleted_at='2026-01-02' WHERE id=1").run()
     sqlite.close()
   }
   await assert.rejects(
@@ -153,27 +142,25 @@ test('auto-render: stage เดินครบ ช็อตล้มไม่ห
   // ช็อตล้มไม่หยุด pipeline (keyframes → videos) และ loop จบ (stage failed + finishedAt)
   // pipeline_tasks row: startAutoRender สร้างให้จริง — test เรียก runAutoRenderPipeline ตรงจึง seed เอง
   {
-    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1','running',datetime('now'),datetime('now'))").run()
+    await sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1','running',datetime('now'),datetime('now'))").run()
     sqlite.close()
   }
   await runAutoRenderPipeline(1, 'studio_render:1', { pollMs: 50 })
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  const row = sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get()
+  const row = (await sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get())
   const state = JSON.parse(row.auto_render)
   assert.equal(state.stage, 'failed')
   assert.match(state.errorMsg ?? '', /E_STUDIO_NEEDS_KEYFRAMES/)
   assert.ok(state.finishedAt)
   // sys_task ถูกสร้างจริงใน keyframes stage (ส่งงานผ่าน generateImage)
-  const taskCount = sqlite.prepare("SELECT COUNT(*) c FROM sys_task WHERE type='image'").get().c
+  const taskCount = (await sqlite.prepare("SELECT COUNT(*) c FROM sys_task WHERE type='image'").get()).c
   assert.equal(taskCount, 2)
   // loop หยุดจริง: รอ 300ms แล้ว auto_render ไม่เปลี่ยน
   const before = JSON.stringify(row.auto_render)
   await new Promise(r => setTimeout(r, 300))
-  const after = JSON.stringify(sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get().auto_render)
+  const after = JSON.stringify((await sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get()).auto_render)
   assert.equal(after, before)
   // pipeline_tasks row จบสถานะ
-  const pt = sqlite.prepare("SELECT status, error_msg FROM pipeline_tasks WHERE kind='studio_render'").get()
+  const pt = (await sqlite.prepare("SELECT status, error_msg FROM pipeline_tasks WHERE kind='studio_render'").get())
   assert.equal(pt.status, 'error')
   assert.match(pt.error_msg ?? '', /E_STUDIO_NEEDS_KEYFRAMES/)
   sqlite.close()
@@ -181,20 +168,18 @@ test('auto-render: stage เดินครบ ช็อตล้มไม่ห
 
 test('auto-render: cancel หยุดก่อนส่งงาน stage ถัดไป (deterministic: cancel ก่อนเริ่ม)', async () => {
   {
-    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
     // reset โปรเจกต์ 1 เป็น script_ready + สร้าง pipeline row พร้อม cancel_requested=1 ก่อนเริ่ม
-    sqlite.prepare("UPDATE studio_projects SET status='script_ready', auto_render=NULL WHERE id=1").run()
-    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1b','running',datetime('now'),datetime('now'))").run()
-    sqlite.prepare("UPDATE pipeline_tasks SET cancel_requested=1 WHERE key='studio_render:1b'").run()
+    await sqlite.prepare("UPDATE studio_projects SET status='script_ready', auto_render=NULL WHERE id=1").run()
+    await sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1b','running',datetime('now'),datetime('now'))").run()
+    await sqlite.prepare("UPDATE pipeline_tasks SET cancel_requested=1 WHERE key='studio_render:1b'").run()
     sqlite.close()
   }
   await runAutoRenderPipeline(1, 'studio_render:1b', { pollMs: 50 })
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  const row = sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get()
+  const row = (await sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get())
   const state = JSON.parse(row.auto_render)
   assert.equal(state.stage, 'cancelled')
   assert.ok(state.finishedAt)
-  const pt = sqlite.prepare("SELECT status FROM pipeline_tasks WHERE key='studio_render:1b'").get()
+  const pt = (await sqlite.prepare("SELECT status FROM pipeline_tasks WHERE key='studio_render:1b'").get())
   assert.equal(pt.status, 'cancelled')
   sqlite.close()
 })
@@ -214,26 +199,23 @@ test('captions: ข้อความยาวแบ่ง cue ขนาดใ�
 test('auto-render resume ที่ videos: ไม่ส่ง keyframe ซ้ำ และงานที่จบครบระหว่าง server ดับเดินต่อได้', async () => {
   let videoTaskIds: number[]
   {
-    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-    sqlite.prepare("UPDATE studio_projects SET auto_render=NULL WHERE id=1").run()
-    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1c','running',datetime('now'),datetime('now'))").run()
+    await sqlite.prepare("UPDATE studio_projects SET auto_render=NULL WHERE id=1").run()
+    await sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1c','running',datetime('now'),datetime('now'))").run()
     // งานวิดีโอของ stage ที่ค้าง จบไปแล้ว (failed) ระหว่างที่ server ดับ — ไม่มี in-flight เหลือ
     const ins = sqlite.prepare("INSERT INTO sys_task (type, status, created_at, updated_at) VALUES ('video', 'failed', ?, ?)")
-    videoTaskIds = [Number(ins.run(ts, ts).lastInsertRowid), Number(ins.run(ts, ts).lastInsertRowid)]
+    videoTaskIds = [Number((await ins.run(ts, ts)).lastInsertRowid), Number((await ins.run(ts, ts)).lastInsertRowid)]
     sqlite.close()
   }
-  const countImages = () => {
-    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-    const c = sqlite.prepare("SELECT COUNT(*) c FROM sys_task WHERE type='image'").get().c
+  const countImages = async () => {
+    const c = (await sqlite.prepare("SELECT COUNT(*) c FROM sys_task WHERE type='image'").get()).c
     sqlite.close()
     return c
   }
-  const imagesBefore = countImages()
+  const imagesBefore = await countImages()
   await runAutoRenderPipeline(1, 'studio_render:1c', { pollMs: 50, resumeStage: 'videos', resumeTaskIds: videoTaskIds })
   // keyframe ที่เคยล้ม (จาก test ก่อนหน้า) ต้องไม่ถูกส่งใหม่ — resume ห้ามย้อน stage
-  assert.equal(countImages(), imagesBefore)
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  const state = JSON.parse(sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get().auto_render)
+  assert.equal(await countImages(), imagesBefore)
+  const state = JSON.parse((await sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get()).auto_render)
   // เดินต่อไปถึง merge (ไม่มีวิดีโอ → E_STUDIO_NO_VIDEOS) — ไม่ใช่ล้มทันทีด้วย E_TASK_INTERRUPTED
   assert.equal(state.stage, 'failed')
   assert.doesNotMatch(state.errorMsg ?? '', /E_TASK_INTERRUPTED/)
@@ -243,14 +225,12 @@ test('auto-render resume ที่ videos: ไม่ส่ง keyframe ซ้ำ
 
 test('auto-render resume: sys_task หายจริง ⇒ E_TASK_INTERRUPTED', async () => {
   {
-    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-    sqlite.prepare("UPDATE studio_projects SET auto_render=NULL WHERE id=1").run()
-    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1d','running',datetime('now'),datetime('now'))").run()
+    await sqlite.prepare("UPDATE studio_projects SET auto_render=NULL WHERE id=1").run()
+    await sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:1d','running',datetime('now'),datetime('now'))").run()
     sqlite.close()
   }
   await runAutoRenderPipeline(1, 'studio_render:1d', { pollMs: 50, resumeStage: 'videos', resumeTaskIds: [987654] })
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  const state = JSON.parse(sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get().auto_render)
+  const state = JSON.parse((await sqlite.prepare('SELECT auto_render FROM studio_projects WHERE id=1').get()).auto_render)
   assert.equal(state.stage, 'failed')
   assert.match(state.errorMsg ?? '', /E_TASK_INTERRUPTED/)
   sqlite.close()
@@ -259,16 +239,14 @@ test('auto-render resume: sys_task หายจริง ⇒ E_TASK_INTERRUPTED'
 test('boot: failStaleRunningTasks ไม่แตะ studio_render — ปล่อยให้ resumeStaleAutoRenders รับช่วง', async () => {
   const { failStaleRunningTasks } = await import('../src/core/tasks/pipeline-tasks.js')
   {
-    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:boot','running',datetime('now'),datetime('now'))").run()
-    sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('extract','extract:boot','running',datetime('now'),datetime('now'))").run()
+    await sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:boot','running',datetime('now'),datetime('now'))").run()
+    await sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('extract','extract:boot','running',datetime('now'),datetime('now'))").run()
     sqlite.close()
   }
   await failStaleRunningTasks()
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  const status = (key: string) => sqlite.prepare('SELECT status FROM pipeline_tasks WHERE key=?').get(key).status
-  assert.equal(status('extract:boot'), 'error')         // kind ปกติยังถูกเคลียร์เหมือนเดิม
-  assert.equal(status('studio_render:boot'), 'running') // resume รับช่วงต่อ
+  const status = async (key: string) => (await sqlite.prepare('SELECT status FROM pipeline_tasks WHERE key=?').get(key)).status
+  assert.equal(await status('extract:boot'), 'error')         // kind ปกติยังถูกเคลียร์เหมือนเดิม
+  assert.equal(await status('studio_render:boot'), 'running') // resume รับช่วงต่อ
   sqlite.close()
 })
 

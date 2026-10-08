@@ -1,97 +1,55 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
 import { test } from 'node:test'
-import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
 import { isBlockedAddress, assertPublicHttpUrl, SafeFetchError } from '../src/core/utils/safe-fetch.js'
 import { ingestProductUrl } from '../src/core/product/product-ingest.js'
 import { AppError } from '../src/core/http/response.js'
 
-test('migration v6 creates campaign tables and stays idempotent', () => {
-  const directory = mkdtempSync(path.join(tmpdir(), 'naka-campaign-test-'))
-  const dbFile = path.join(directory, 'test.sqlite3')
-  let sqlite: Database.Database | undefined
-  try {
-    sqlite = new Database(dbFile)
-    sqlite.pragma('journal_mode = WAL')
-    initSqliteSchema(sqlite)
-    initSqliteSchema(sqlite) // 幂等重放
-    const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
+process.env.DATABASE_URL = 'pglite://memory'
+const { rawQuery } = await import('../src/core/db/index.js')
+const { sqlite } = await import('./_sql.js')
 
-    const campaignCols = (sqlite.pragma('table_info(campaigns)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['product_url', 'product_name', 'product_images', 'brand_notes', 'market', 'platforms',
-      'audience', 'goal', 'style', 'aspect_ratio', 'status', 'error_msg', 'drama_id', 'deleted_at']) {
-      assert.ok(campaignCols.includes(col), `campaigns missing column ${col}`)
-    }
-    const docCols = (sqlite.pragma('table_info(campaign_docs)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['campaign_id', 'kind', 'content', 'status', 'version']) {
-      assert.ok(docCols.includes(col), `campaign_docs missing column ${col}`)
-    }
-    const creativeCols = (sqlite.pragma('table_info(campaign_creatives)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['campaign_id', 'angle', 'hook', 'format', 'platform', 'duration_sec', 'cta', 'script',
-      'status', 'episode_id', 'episode_number']) {
-      assert.ok(creativeCols.includes(col), `campaign_creatives missing column ${col}`)
-    }
-    // 每活动每 kind 一份文档（upsert 依赖唯一约束）
-    const docSql = sqlite.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'campaign_docs'").get() as { sql: string }
-    assert.match(docSql.sql, /UNIQUE \(campaign_id, kind\)/)
+test('campaign + studio tables exist in the PostgreSQL schema with their constraints', async () => {
+  const migrations = (await rawQuery('SELECT name FROM schema_migrations ORDER BY name')).map(r => r.name)
+  assert.ok(migrations.includes('0001_baseline.sql'), 'baseline migration not recorded')
 
-    // v7: research_notes + ประวัติเอกสาร, v8: budget_thb
-    assert.ok(campaignCols.includes('research_notes'), 'campaigns missing column research_notes')
-    assert.ok(campaignCols.includes('budget_thb'), 'campaigns missing column budget_thb')
-    const revCols = (sqlite.pragma('table_info(campaign_doc_revisions)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['doc_id', 'version', 'content', 'source', 'created_at']) {
-      assert.ok(revCols.includes(col), `campaign_doc_revisions missing column ${col}`)
-    }
-
-    // v9 (Phase 3): campaign_ad_references + campaign_visuals + campaign_creatives.reference_id
-    const refCols = (sqlite.pragma('table_info(campaign_ad_references)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['campaign_id', 'title', 'source_url', 'transcript', 'notes', 'analysis']) {
-      assert.ok(refCols.includes(col), `campaign_ad_references missing column ${col}`)
-    }
-    const visCols = (sqlite.pragma('table_info(campaign_visuals)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['campaign_id', 'kind', 'source_image', 'instruction', 'prompt', 'task_id']) {
-      assert.ok(visCols.includes(col), `campaign_visuals missing column ${col}`)
-    }
-    const creativeCols2 = (sqlite.pragma('table_info(campaign_creatives)') as Array<{ name: string }>).map(r => r.name)
-    assert.ok(creativeCols2.includes('reference_id'), 'campaign_creatives missing column reference_id')
-
-    // v10 (Product Studio)
-    for (const table of ['studio_projects', 'studio_shots', 'studio_avatars', 'studio_images']) {
-      const cols = (sqlite.pragma(`table_info(${table})`) as Array<{ name: string }>).map(r => r.name)
-      assert.ok(cols.length > 0, `${table} table missing`)
-    }
-    const spCols = (sqlite.pragma('table_info(studio_projects)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['template_id', 'language', 'market', 'platform', 'aspect_ratio', 'duration_sec', 'avatar_id', 'ai_disclosure', 'drama_id', 'episode_id', 'deleted_at']) {
-      assert.ok(spCols.includes(col), `studio_projects missing column ${col}`)
-    }
-    const ssCols = (sqlite.pragma('table_info(studio_shots)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['storyboard_id', 'project_id', 'role', 'dialogue', 'on_screen_text']) {
-      assert.ok(ssCols.includes(col), `studio_shots missing column ${col}`)
-    }
-
-    // 约束可用：插入/更新/JSON 数组存取
-    const ts = '2026-01-01T00:00:00.000Z'
-    const res = sqlite.prepare(`INSERT INTO campaigns (title, product_name, product_images, platforms, status, created_at, updated_at)
-      VALUES ('t', 'p', '["/static/products/a.png"]', '["tiktok"]', 'draft', ?, ?)`).run(ts, ts)
-    const campaignId = Number(res.lastInsertRowid)
-    sqlite.prepare(`INSERT INTO campaign_docs (campaign_id, kind, content, status, version, created_at, updated_at)
-      VALUES (?, 'market_research', '# r', 'draft', 1, ?, ?)`).run(campaignId, ts, ts)
-    sqlite.prepare(`INSERT INTO campaign_creatives (campaign_id, angle, hook, format, platform, duration_sec, script, status, created_at, updated_at)
-      VALUES (?, 'a', 'h', 'ugc', 'tiktok', 30, '## S1', 'draft', ?, ?)`).run(campaignId, ts, ts)
-    const row = sqlite.prepare('SELECT product_images, platforms FROM campaigns WHERE id = ?').get(campaignId) as any
-    assert.deepEqual(JSON.parse(row.product_images), ['/static/products/a.png'])
-    assert.deepEqual(JSON.parse(row.platforms), ['tiktok'])
-    // UNIQUE(campaign_id, kind) 生效
-    assert.throws(() => sqlite!.prepare(`INSERT INTO campaign_docs (campaign_id, kind, content, status, version, created_at, updated_at)
-      VALUES (?, 'market_research', '# dup', 'draft', 1, ?, ?)`).run(campaignId, ts, ts), /UNIQUE/)
-  } finally {
-    sqlite?.close()
-    rmSync(directory, { recursive: true, force: true })
+  const expect = async (table: string, cols: string[]) => {
+    const have = await sqlite.columns(table)
+    assert.ok(have.length > 0, `${table} table missing`)
+    for (const col of cols) assert.ok(have.includes(col), `${table} missing column ${col}`)
   }
+  await expect('campaigns', ['product_url', 'product_name', 'product_images', 'brand_notes', 'market', 'platforms',
+    'audience', 'goal', 'style', 'aspect_ratio', 'status', 'error_msg', 'drama_id', 'deleted_at',
+    'research_notes', 'budget_thb'])
+  await expect('campaign_docs', ['campaign_id', 'kind', 'content', 'status', 'version'])
+  await expect('campaign_creatives', ['campaign_id', 'angle', 'hook', 'format', 'platform', 'duration_sec', 'cta', 'script',
+    'status', 'episode_id', 'episode_number', 'reference_id'])
+  // 每活动每 kind 一份文档（upsert 依赖唯一约束）
+  assert.ok((await sqlite.uniques('campaign_docs')).includes('campaign_id,kind'), 'campaign_docs UNIQUE (campaign_id, kind) missing')
+  await expect('campaign_doc_revisions', ['doc_id', 'version', 'content', 'source', 'created_at'])
+  await expect('campaign_ad_references', ['campaign_id', 'title', 'source_url', 'transcript', 'notes', 'analysis'])
+  await expect('campaign_visuals', ['campaign_id', 'kind', 'source_image', 'instruction', 'prompt', 'task_id'])
+  // Product Studio
+  await expect('studio_projects', ['template_id', 'language', 'market', 'platform', 'aspect_ratio', 'duration_sec', 'avatar_id',
+    'ai_disclosure', 'drama_id', 'episode_id', 'deleted_at'])
+  await expect('studio_shots', ['storyboard_id', 'project_id', 'role', 'dialogue', 'on_screen_text'])
+  await expect('studio_avatars', [])
+  await expect('studio_images', [])
+
+  // 约束可用：插入/更新/JSON 数组存取
+  const ts = '2026-01-01T00:00:00.000Z'
+  const res = await sqlite.prepare(`INSERT INTO campaigns (title, product_name, product_images, platforms, status, created_at, updated_at)
+    VALUES ('t', 'p', '["/static/products/a.png"]', '["tiktok"]', 'draft', ?, ?)`).run(ts, ts)
+  const campaignId = Number(res.lastInsertRowid)
+  await sqlite.prepare(`INSERT INTO campaign_docs (campaign_id, kind, content, status, version, created_at, updated_at)
+    VALUES (?, 'market_research', '# r', 'draft', 1, ?, ?)`).run(campaignId, ts, ts)
+  await sqlite.prepare(`INSERT INTO campaign_creatives (campaign_id, angle, hook, format, platform, duration_sec, script, status, created_at, updated_at)
+    VALUES (?, 'a', 'h', 'ugc', 'tiktok', 30, '## S1', 'draft', ?, ?)`).run(campaignId, ts, ts)
+  const row = await sqlite.prepare('SELECT product_images, platforms FROM campaigns WHERE id = ?').get(campaignId)
+  assert.deepEqual(JSON.parse(row.product_images), ['/static/products/a.png'])
+  assert.deepEqual(JSON.parse(row.platforms), ['tiktok'])
+  // UNIQUE(campaign_id, kind) 生效
+  await assert.rejects(sqlite.prepare(`INSERT INTO campaign_docs (campaign_id, kind, content, status, version, created_at, updated_at)
+    VALUES (?, 'market_research', '# dup', 'draft', 1, ?, ?)`).run(campaignId, ts, ts), (err: any) => (err.code ?? err.cause?.code) === '23505')
 })
 
 test('isBlockedAddress blocks private/loopback/link-local ranges', () => {

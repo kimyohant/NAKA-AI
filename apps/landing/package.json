@@ -3,17 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "wrangler dev -c wrangler.dev.jsonc --ip 127.0.0.1 --port 8788",
-    "deploy": "wrangler deploy",
+    "dev": "tsx watch --env-file=.env server/node.ts",
+    "start": "tsx server/node.ts",
     "test": "node --test tests/*.test.cjs src/auth/tests/*.test.cjs src/social/tests/*.test.cjs src/inbox/tests/*.test.cjs",
+    "test:pg": "node --test tests/postgres.integration.test.cjs",
     "test:auth": "node --test src/auth/tests/*.test.cjs",
     "auth:setup": "node src/auth/setup-local.cjs",
-    "dev:auth": "wrangler dev --ip 127.0.0.1 --port 8788",
-    "db:migrate:local": "wrangler d1 migrations apply naka-ai-db --local -c wrangler.dev.jsonc",
-    "typecheck": "tsc -p .",
-    "world:postprocess": "node creative/postprocess-world.cjs",
-    "db:local": "wrangler d1 execute naka-ai-db --local --file=schema.sql",
-    "db:remote": "wrangler d1 execute naka-ai-db --remote --file=schema.sql"
+    "typecheck": "tsc -p . && tsc -p tsconfig.server.json",
+    "world:postprocess": "node creative/postprocess-world.cjs"
   },
   "keywords": [],
   "author": "",
@@ -21,10 +18,14 @@
   "type": "commonjs",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
-    "stripe": "^22.6.2"
+    "postgres": "^3.4.9",
+    "stripe": "^22.6.2",
+    "tsx": "^4.23.15"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260924.1",
+    "@electric-sql/pglite": "^0.3.16",
+    "@types/node": "^24.19.1",
     "typescript": "^7.0.2",
     "wrangler": "^4.137.0"
   },

@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { and, eq, isNull, like, desc } from 'drizzle-orm'
 import { ownedBy } from '../../../core/auth/owner-context.js'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { success, badRequest, notFound, created, now } from '../../../core/http/response.js'
 import { toSnakeCase, toSnakeCaseArray } from '../../../core/utils/transform.js'
 import { budgetForDrama } from '../../../core/generation/generation-cost.js'
@@ -80,10 +80,10 @@ app.post('/', async (c) => {
     status: 'draft',
     createdAt: ts,
     updatedAt: ts,
-  })
+  }).returning({ id: schema.dramas.id })
 
   const [result] = await db.select().from(schema.dramas)
-    .where(eq(schema.dramas.id, getInsertId(res)))
+    .where(eq(schema.dramas.id, insertedId(res)))
 
   // 不再预建集 — 用户通过「添加集」流程创建（该流程会锁定图片/视频生成配置）
   return created(c, toSnakeCase(result))
@@ -106,7 +106,7 @@ app.get('/stats', async (c) => {
 app.get('/:id/budget', async (c) => {
   const id = Number(c.req.param('id'))
   if (!Number.isInteger(id) || id < 1) return badRequest(c, 'Invalid project ID')
-  try { return success(c, budgetForDrama(id)) }
+  try { return success(c, await budgetForDrama(id)) }
   catch { return notFound(c, 'Project not found') }
 })
 

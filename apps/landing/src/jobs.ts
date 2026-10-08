@@ -152,8 +152,8 @@ export async function failJob(db: D1Database, jobId: string, expectedAttempts: n
     db
       .prepare(
         `UPDATE jobs SET status = 'queued', lease_until = NULL, error = ?1, updated_at = datetime('now'),
-           run_after = datetime('now', '+' || MIN(?2 * (1 << (attempts - 1)), ?3) || ' seconds')
-         WHERE id = ?4 AND status = 'running' AND attempts = ?5 AND ?6 AND attempts < max_attempts`,
+           run_after = datetime('now', '+' || LEAST(?2 * (1::bigint << (attempts - 1)::int), ?3) || ' seconds')
+         WHERE id = ?4 AND status = 'running' AND attempts = ?5 AND ?6 = 1 AND attempts < max_attempts`,
       )
       .bind(message, BASE_RETRY_SECONDS, MAX_RETRY_SECONDS, jobId, expectedAttempts, retryable ? 1 : 0),
     db

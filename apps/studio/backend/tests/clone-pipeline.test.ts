@@ -13,16 +13,15 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { eq } from 'drizzle-orm'
-import Database from 'better-sqlite3'
 import sharp from 'sharp'
 
 const execFileAsync = promisify(execFile)
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-clone-'))
-process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
+process.env.DATABASE_URL = 'pglite://memory'
 process.env.STORAGE_PATH = path.join(dir, 'static')
 
-const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 const { db, schema } = await import('../src/core/db/index.js')
+const { sqlite } = await import('./_sql.js')
 const { now, AppError } = await import('../src/core/http/response.js')
 const clone = await import('../src/modules/viral-clone/services/clone.js')
 const { failStaleRunningTasks, RESUMABLE_PIPELINE_KINDS } = await import('../src/core/tasks/pipeline-tasks.js')
@@ -30,13 +29,10 @@ const { mastra } = await import('../src/core/mastra/index.js')
 
 // ---------- seed: schema + configs + product/avatar + media ----------
 {
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  sqlite.pragma('journal_mode = WAL')
-  initSqliteSchema(sqlite)
-  const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-  assert.deepEqual(versions.map(r => r.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], 'migrations applied through v13')
+  const versions = (await sqlite.prepare('SELECT name FROM schema_migrations ORDER BY name').all()) as Array<{ name: string }>
+  assert.deepEqual(versions.map(r => r.name), ['0001_baseline.sql'], 'the PostgreSQL baseline holds every table')
   for (const table of ['clone_projects', 'clone_variants']) {
-    const cols = (sqlite.pragma(`table_info(${table})`) as Array<{ name: string }>).map(r => r.name)
+    const cols = (await sqlite.columns(table))
     assert.ok(cols.length > 5, `${table} exists`)
   }
   sqlite.close()
@@ -60,10 +56,8 @@ writeFileSync(path.join(dir, 'static', 'avatars', 'a.png'), pngBytes)
 
 // product (Studio) + avatar สำหรับ matrix/existence checks
 {
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  sqlite.pragma('journal_mode = WAL')
-  sqlite.prepare("INSERT INTO studio_projects (title, product_name, product_description, product_images, template_id, language, market, platform, aspect_ratio, duration_sec, status, created_at, updated_at) VALUES ('Serum S', 'Serum S', 'วิตซีเข้มข้น', '[\"static/images/p.png\"]', 'ugc_review', 'th', 'TH', 'tiktok', '9:16', 24, 'draft', ?, ?)").run(ts, ts)
-  sqlite.prepare("INSERT INTO studio_avatars (name, description, image_url, created_at, updated_at) VALUES ('Ploy', 'Thai woman 25', '/static/avatars/a.png', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO studio_projects (title, product_name, product_description, product_images, template_id, language, market, platform, aspect_ratio, duration_sec, status, created_at, updated_at) VALUES ('Serum S', 'Serum S', 'วิตซีเข้มข้น', '[\"static/images/p.png\"]', 'ugc_review', 'th', 'TH', 'tiktok', '9:16', 24, 'draft', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO studio_avatars (name, description, image_url, created_at, updated_at) VALUES ('Ploy', 'Thai woman 25', '/static/avatars/a.png', ?, ?)").run(ts, ts)
   sqlite.close()
 }
 
@@ -101,9 +95,7 @@ const port = (server.address() as { port: number }).port
 const stubBase = `http://127.0.0.1:${port}`
 
 {
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  sqlite.pragma('journal_mode = WAL')
-  sqlite.prepare("INSERT INTO ai_service_configs (service_type, provider, name, base_url, api_key, model, is_active, is_default, priority, created_at, updated_at) VALUES ('image','openai','stub',?,'sk-test-stub-local','[\"gpt-image-1\"]',1,1,10,?,?),('video','volcengine','stub',?,'sk-test-stub-local','[\"doubao-seedance-2-0-mini-260615\"]',1,1,10,?,?),('text','openai','stub-text',?,'sk-test-stub-local','[\"gpt-4o-mini\"]',1,1,10,?,?)").run(stubBase, ts, ts, stubBase, ts, ts, stubBase, ts, ts)
+  await sqlite.prepare("INSERT INTO ai_service_configs (service_type, provider, name, base_url, api_key, model, is_active, is_default, priority, created_at, updated_at) VALUES ('image','openai','stub',?,'sk-test-stub-local','[\"gpt-image-1\"]',true,true,10,?,?),('video','volcengine','stub',?,'sk-test-stub-local','[\"doubao-seedance-2-0-mini-260615\"]',true,true,10,?,?),('text','openai','stub-text',?,'sk-test-stub-local','[\"gpt-4o-mini\"]',true,true,10,?,?)").run(stubBase, ts, ts, stubBase, ts, ts, stubBase, ts, ts)
   sqlite.close()
 }
 
@@ -326,7 +318,7 @@ function eqKey(key: string) {
   return eq(schema.pipelineTasks.key, key)
 }
 
-test('cleanup', () => {
+test('cleanup', async () => {
   ;(mastra as any).getAgent = realGetAgent
   server.close()
   try {

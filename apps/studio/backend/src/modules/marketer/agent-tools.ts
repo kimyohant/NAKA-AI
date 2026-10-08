@@ -8,7 +8,7 @@
 import { createTool } from '@mastra/core/tools'
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../../core/db/index.js'
+import { db, insertedId, schema } from '../../core/db/index.js'
 import { now } from '../../core/http/response.js'
 import { getCampaignId } from '../../core/agents/context.js'
 import { registerAgentTools } from '../../core/agents/index.js'
@@ -134,8 +134,8 @@ const saveCampaignDoc = createTool({
       version: 1,
       createdAt: ts,
       updatedAt: ts,
-    })
-    return { message: `Doc ${kind} created`, doc_id: getInsertId(res), kind, version: 1 }
+    }).returning({ id: schema.campaignDocs.id })
+    return { message: `Doc ${kind} created`, doc_id: insertedId(res), kind, version: 1 }
   },
 })
 
@@ -188,8 +188,8 @@ const saveCreatives = createTool({
         referenceId: (rc?.get('referenceId' as never) as number | undefined) ?? null,
         createdAt: ts,
         updatedAt: ts,
-      })
-      ids.push(getInsertId(res))
+      }).returning({ id: schema.campaignCreatives.id })
+      ids.push(insertedId(res))
     }
     return { message: `${ids.length} creatives saved`, creative_ids: ids }
   },

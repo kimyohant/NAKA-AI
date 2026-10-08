@@ -11,7 +11,7 @@ test('project budget, source freshness and export health use isolated data', { t
     const backendDir = path.resolve(import.meta.dirname, '..')
     const child = spawn(process.execPath, [path.join(backendDir, 'node_modules/tsx/dist/cli.mjs'), 'tests/production-guards-scenario.ts'], {
       cwd: backendDir,
-      env: { ...process.env, SQLITE_PATH: path.join(directory, 'test.sqlite3') },
+      env: { ...process.env, DATABASE_URL: 'pglite://memory', SCRATCH_DIR: directory },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     let output = ''

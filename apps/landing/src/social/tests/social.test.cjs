@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { test, after, mock } = require('node:test');
-const { DatabaseSync } = require('node:sqlite');
+const { migratedDb } = require('../../../tests/helpers/d1.cjs');
 const { readFileSync, mkdirSync, writeFileSync, rmSync } = require('node:fs');
 const path = require('node:path');
 const { buildSync } = require('esbuild');
@@ -12,29 +12,15 @@ const compiled = buildSync({ stdin: { contents: `export * from './src/social/ind
 writeFileSync(path.join(output, 'social.cjs'), compiled.outputFiles[0].text);
 const { handleSocial, publishDuePosts, encryptToken, decryptToken, tokenContext, signedMediaUrl, GRAPH_VERSION, MAX_UPLOAD } = require(path.join(output, 'social.cjs'));
 const migration = readFileSync(path.join(root, 'migrations/0003_social.sql'), 'utf8');
+// The production SQL on PostgreSQL (PGlite) through the app's D1 adapter — tests/helpers/d1.cjs.
+// `sql` is the synchronous test handle (prepare(…).get/all/run, exec); HTTP alone is mocked.
 class D1 {
   constructor() {
-    this.sql = new DatabaseSync(':memory:');
-    this.sql.exec('PRAGMA foreign_keys = ON');
-    this.sql.exec(readFileSync(path.join(root, 'migrations/0001_auth.sql'), 'utf8'));
-    this.sql.exec(migration);
+    const { sqlite, db } = migratedDb(); this.sql = sqlite; this.db = db;
     this.sql.exec("INSERT INTO users (id, created_at) VALUES ('user-a', 0), ('user-b', 0)");
   }
-  prepare(query) {
-    let values = []; const db = this.sql;
-    return {
-      bind(...bound) { values = bound; return this; },
-      async first() { const row = db.prepare(query).get(...values); return row ? { ...row } : null; },
-      async all() { return { success: true, results: db.prepare(query).all(...values).map(row => ({ ...row })) }; },
-      async run() { const result = db.prepare(query).run(...values); return { success: true, meta: { changes: result.changes } }; },
-      execute() { return { success: true, results: db.prepare(query).all(...values) }; },
-    };
-  }
-  async batch(statements) {
-    this.sql.exec('BEGIN');
-    try { const result = statements.map(s => s.execute()); this.sql.exec('COMMIT'); return result; }
-    catch (error) { this.sql.exec('ROLLBACK'); throw error; }
-  }
+  prepare(query) { return this.db.prepare(query); }
+  batch(statements) { return this.db.batch(statements); }
 }
 class R2 {
   files = new Map();
@@ -94,7 +80,6 @@ test('migration is repeatable and rejects cross-owner account/media references',
   const f = setup(t); f.db.exec(migration);
   const item = await f.queue();
   assert.throws(() => f.db.prepare('UPDATE scheduled_posts SET user_id = ? WHERE id = ?').run('user-b', item.postId));
-  assert.equal(f.db.prepare('PRAGMA foreign_key_check').all().length, 0);
 });
 test('AES-GCM uses random IVs, authenticates owner/context, and rejects tampering and bad keys', async t => {
   const f = setup(t); const context = tokenContext('a', 'facebook', '1');

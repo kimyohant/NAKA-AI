@@ -116,16 +116,15 @@ test('marketer agents are registered with tools, prompts and skills', () => {
 })
 
 test('campaign schema and pipeline task kinds are wired', () => {
-  const sqliteSchema = read('src/core/db/sqlite-schema.ts')
-  assert.match(sqliteSchema, /version: 6/)
-  assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS campaigns/)
-  assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS campaign_docs/)
-  assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS campaign_creatives/)
+  const baseline = read('migrations/pg/0001_baseline.sql')
+  assert.match(baseline, /CREATE TABLE "campaigns" \(/)
+  assert.match(baseline, /CREATE TABLE "campaign_docs" \(/)
+  assert.match(baseline, /CREATE TABLE "campaign_creatives" \(/)
 
   const drizzle = read('src/core/db/schema.ts')
-  assert.match(drizzle, /export const campaigns = sqliteTable\('campaigns'/)
-  assert.match(drizzle, /export const campaignDocs = sqliteTable\('campaign_docs'/)
-  assert.match(drizzle, /export const campaignCreatives = sqliteTable\('campaign_creatives'/)
+  assert.match(drizzle, /export const campaigns = pgTable\('campaigns'/)
+  assert.match(drizzle, /export const campaignDocs = pgTable\('campaign_docs'/)
+  assert.match(drizzle, /export const campaignCreatives = pgTable\('campaign_creatives'/)
 
   const pipeline = read('src/core/tasks/pipeline-tasks.ts')
   assert.match(pipeline, /campaign_research/)

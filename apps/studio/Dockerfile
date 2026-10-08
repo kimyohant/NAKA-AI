@@ -23,7 +23,7 @@ RUN node -e "const fs=require('fs');const l=JSON.parse(fs.readFileSync('package-
 COPY admin/ ./
 RUN npm run generate
 
-# ===== 后端构建：安装依赖（含原生模块编译） =====
+# ===== 后端构建：安装依赖（sharp 等原生模块） =====
 FROM node:20-bookworm AS backend-build
 WORKDIR /build/backend
 COPY backend/package.json backend/package-lock.json ./
@@ -41,7 +41,7 @@ ENV NODE_ENV=production \
     NAKA_VERSION=${NAKA_VERSION} \
     PORT=5679 \
     NAKA_DATA_DIR=/app/data \
-    SQLITE_PATH=/app/data/huobao.sqlite3 \
+    DATABASE_URL=pglite:///app/data/pglite \
     WORKSPACE_PATH=/app/data/workspace \
     FRONTEND_DIST=/app/frontend-dist \
     ADMIN_DIST=/app/admin-dist
@@ -51,6 +51,8 @@ COPY --from=backend-build /build/backend/src ./backend/src
 COPY --from=backend-build /build/backend/node_modules ./backend/node_modules
 COPY --from=backend-build /build/backend/package.json ./backend/package.json
 COPY --from=backend-build /build/backend/tsconfig.json ./backend/tsconfig.json
+# PostgreSQL migrations, applied at startup (src/core/db/migrate.ts)
+COPY --from=backend-build /build/backend/migrations ./backend/migrations
 # workspace 模板（skills/prompts），entrypoint copy-once 到数据卷后可在线编辑
 COPY backend/workspace ./workspace-template
 COPY --from=frontend-build /build/frontend/.output/public ./frontend-dist
@@ -58,7 +60,9 @@ COPY --from=admin-build /build/admin/.output/public ./admin-dist
 COPY docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh && mkdir -p /app/data
 
-# 数据卷：SQLite + 生成的静态文件 + 可编辑 workspace
+# DATABASE_URL: the root docker-compose.yml points it at PostgreSQL (postgres://studio_app:…@postgres:5432/naka);
+# the default above keeps a standalone container working on an in-process PGlite inside the data volume.
+# 数据卷：生成的静态文件 + 可编辑 workspace (+ PGlite when DATABASE_URL is left at its default)
 VOLUME ["/app/data"]
 EXPOSE 5679
 

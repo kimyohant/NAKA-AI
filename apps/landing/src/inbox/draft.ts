@@ -12,7 +12,7 @@ const schema = { type: 'object', properties: { reply: { type: 'string' }, confid
 export async function knowledge(env: Env, userId: string): Promise<Knowledge> {
   const kb = await env.DB.prepare('SELECT title,content FROM inbox_kb WHERE user_id=? ORDER BY id LIMIT 30').bind(userId).all();
   // Legacy products are global for the LINE bot. Never read them into a tenant's inbox.
-  const columns = await env.DB.prepare('PRAGMA table_info(products)').all<{ name: string }>();
+  const columns = await env.DB.prepare("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'products'").all<{ name: string }>();
   const names = new Set(columns.results.map(column => column.name));
   const products = ['user_id', 'name', 'description', 'price', 'stock', 'active'].every(name => names.has(name))
     ? (await env.DB.prepare('SELECT name,description,price,stock FROM products WHERE user_id=? AND active=1 ORDER BY id LIMIT 30').bind(userId).all()).results : [];

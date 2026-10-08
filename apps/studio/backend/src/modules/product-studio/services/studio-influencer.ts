@@ -6,7 +6,7 @@
  */
 import { and, desc, eq, isNull } from 'drizzle-orm'
 import { ownedBy } from '../../../core/auth/owner-context.js'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { AppError, now } from '../../../core/http/response.js'
 import { getActiveConfig } from '../../../core/ai/ai.js'
 import { generateImage } from '../../../core/generation/generation.js'
@@ -201,8 +201,8 @@ export async function createInfluencer(body: any) {
     values.locale = requireEnum<StudioMarket>(body.locale, STUDIO_MARKETS.map(m => m.id), 'locale')
   }
   if (body.tone !== undefined) values.tone = isNonEmptyString(body.tone) ? body.tone.trim() : null
-  const res = await db.insert(schema.studioInfluencers).values(values as typeof schema.studioInfluencers.$inferInsert)
-  const [row] = await db.select().from(schema.studioInfluencers).where(eq(schema.studioInfluencers.id, getInsertId(res)))
+  const res = await db.insert(schema.studioInfluencers).values(values as typeof schema.studioInfluencers.$inferInsert).returning({ id: schema.studioInfluencers.id })
+  const [row] = await db.select().from(schema.studioInfluencers).where(eq(schema.studioInfluencers.id, insertedId(res)))
   return toInfluencerJson(row, undefined)
 }
 
@@ -313,8 +313,8 @@ export async function generateReviewImages(influencerId: number, body: any) {
         taskId,
         createdAt: ts,
         updatedAt: ts,
-      })
-      const [row] = await db.select().from(schema.studioInfluencerContents).where(eq(schema.studioInfluencerContents.id, getInsertId(res)))
+      }).returning({ id: schema.studioInfluencerContents.id })
+      const [row] = await db.select().from(schema.studioInfluencerContents).where(eq(schema.studioInfluencerContents.id, insertedId(res)))
       rows.push(row)
     }
   }
@@ -336,7 +336,8 @@ export async function listInfluencerContents(influencerId: number) {
 export async function deleteInfluencerContent(influencerId: number, contentId: number): Promise<boolean> {
   const res = await db.delete(schema.studioInfluencerContents)
     .where(and(eq(schema.studioInfluencerContents.id, contentId), eq(schema.studioInfluencerContents.influencerId, influencerId)))
-  return (res?.changes ?? 0) > 0
+    .returning({ id: schema.studioInfluencerContents.id })
+  return res.length > 0
 }
 
 // ---------- Review script (async — agent influencer_writer, pattern เดียวกับ studio script) ----------
@@ -378,8 +379,8 @@ export async function generateReviewScript(influencerId: number, body: any) {
     durationSec,
     createdAt: ts,
     updatedAt: ts,
-  })
-  const contentId = getInsertId(res)
+  }).returning({ id: schema.studioInfluencerContents.id })
+  const contentId = insertedId(res)
   logTaskStart('Influencer', 'review-script', { influencerId, contentId, language, platform, durationSec })
 
   const message = [

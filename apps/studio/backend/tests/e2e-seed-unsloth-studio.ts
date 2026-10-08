@@ -1,25 +1,24 @@
 /**
- * Seed scratch DB สำหรับทดสอบ e2e กับ unsloth server จริง (รันด้วย tsx ชี้ SQLITE_PATH ที่ scratch)
+ * Seed scratch DB สำหรับทดสอบ e2e กับ unsloth server จริง (รันด้วย tsx ชี้ DATABASE_URL ที่ scratch เช่น pglite://<dir>)
  * สร้าง: drama + episode (video config = unsloth) + studio project (2 ช็อต, keyframe สมมุติเสร็จแล้ว)
  * บทพูด/keyframe เป็นภาษาไทยตาม brief — ไม่สร้างงานจริงในสคริปต์นี้
  */
-import { db, getInsertId, schema } from '../src/core/db/index.js'
-import { eq } from 'drizzle-orm'
+import { closeDb, db, insertedId, schema } from '../src/core/db/index.js'
 import { now } from '../src/core/http/response.js'
 
 const ts = now()
 
-const dramaRes = db.insert(schema.dramas).values({
+const dramaRes = await db.insert(schema.dramas).values({
   title: 'E2E unsloth เซรั่มวิตซี',
   style: 'UGC realistic',
   aspectRatio: '9:16',
   status: 'draft',
   createdAt: ts,
   updatedAt: ts,
-}).run()
-const dramaId = getInsertId(dramaRes)
+}).returning({ id: schema.dramas.id })
+const dramaId = insertedId(dramaRes)
 
-const episodeRes = db.insert(schema.episodes).values({
+const episodeRes = await db.insert(schema.episodes).values({
   dramaId,
   episodeNumber: 1,
   title: 'E2E unsloth เซรั่มวิตซี',
@@ -29,10 +28,10 @@ const episodeRes = db.insert(schema.episodes).values({
   videoConfigId: 1, // unsloth
   createdAt: ts,
   updatedAt: ts,
-}).run()
-const episodeId = getInsertId(episodeRes)
+}).returning({ id: schema.episodes.id })
+const episodeId = insertedId(episodeRes)
 
-const projectRes = db.insert(schema.studioProjects).values({
+const projectRes = await db.insert(schema.studioProjects).values({
   title: 'E2E unsloth เซรั่มวิตซี',
   productName: 'เซรั่มวิตซี NAKA',
   productDescription: 'เซรั่มบำรุงผิวหน้าสำหรับทดสอบระบบ',
@@ -49,8 +48,8 @@ const projectRes = db.insert(schema.studioProjects).values({
   episodeId,
   createdAt: ts,
   updatedAt: ts,
-}).run()
-const projectId = getInsertId(projectRes)
+}).returning({ id: schema.studioProjects.id })
+const projectId = insertedId(projectRes)
 
 const shots = [
   {
@@ -74,7 +73,7 @@ const shots = [
 ]
 
 for (const shot of shots) {
-  const sbRes = db.insert(schema.storyboards).values({
+  const sbRes = await db.insert(schema.storyboards).values({
     episodeId,
     storyboardNumber: shot.storyboardNumber,
     title: shot.role,
@@ -86,19 +85,19 @@ for (const shot of shots) {
     status: 'pending',
     createdAt: ts,
     updatedAt: ts,
-  }).run()
-  const storyboardId = getInsertId(sbRes)
+  }).returning({ id: schema.storyboards.id })
+  const storyboardId = insertedId(sbRes)
 
-  db.insert(schema.studioShots).values({
+  await db.insert(schema.studioShots).values({
     storyboardId,
     projectId,
     role: shot.role,
     dialogue: shot.dialogue,
     onScreenText: null,
-  }).run()
+  })
 
   // keyframe ถือว่าเสร็จแล้ว (seed ไฟล์ลง static ก่อนหน้า) — auto-render จะข้าม stage keyframes
-  const imageTaskRes = db.insert(schema.sysTask).values({
+  const imageTaskRes = await db.insert(schema.sysTask).values({
     type: 'image',
     storyboardId,
     dramaId,
@@ -110,19 +109,20 @@ for (const shot of shots) {
     estimatedCostThb: 0,
     createdAt: ts,
     updatedAt: ts,
-  }).run()
-  const imageTaskId = getInsertId(imageTaskRes)
+  }).returning({ id: schema.sysTask.id })
+  const imageTaskId = insertedId(imageTaskRes)
 
   // readiness ของ video: candidate slot ต้องถูก "เลือก" ผ่าน storyboard_media_selections
-  db.insert(schema.storyboardMediaSelections).values({
+  await db.insert(schema.storyboardMediaSelections).values({
     storyboardId,
     slot: 'first_frame',
     taskId: imageTaskId,
     selectedAt: ts,
-  }).run()
+  })
 
   console.log(`shot ${shot.storyboardNumber}: storyboard=${storyboardId}`)
 }
 
 console.log(`project=${projectId} drama=${dramaId} episode=${episodeId}`)
+await closeDb()
 process.exit(0)

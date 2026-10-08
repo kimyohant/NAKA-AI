@@ -10,7 +10,7 @@
 import { createTool } from '@mastra/core/tools'
 import type { ToolExecutionContext } from '@mastra/core/tools'
 import { z } from 'zod'
-import { db, getInsertId, schema } from '../../db/index.js'
+import { db, insertedId, schema } from '../../db/index.js'
 import { eq, and } from 'drizzle-orm'
 import { now } from '../../http/response.js'
 import { logTaskProgress, logTaskSuccess } from '../../tasks/task-logger.js'
@@ -226,8 +226,8 @@ const saveDedupCharacters = createTool({
           dramaId,
           createdAt: ts,
           updatedAt: ts,
-        })
-        const charId = getInsertId(res)
+        }).returning({ id: schema.characters.id })
+        const charId = insertedId(res)
         await linkCharToEpisode(episodeId, charId)
         results.created++
       }
@@ -294,8 +294,8 @@ const saveDedupScenes = createTool({
           lighting: scene.lighting || '',
           createdAt: ts,
           updatedAt: ts,
-        })
-        const sceneId = getInsertId(res)
+        }).returning({ id: schema.scenes.id })
+        const sceneId = insertedId(res)
         await linkSceneToEpisode(episodeId, sceneId)
         results.created++
       }
@@ -399,8 +399,8 @@ const saveDedupProps = createTool({
           dramaId,
           createdAt: ts,
           updatedAt: ts,
-        })
-        const propId = getInsertId(res)
+        }).returning({ id: schema.props.id })
+        const propId = insertedId(res)
         await linkPropToEpisode(episodeId, propId)
         results.created++
       }

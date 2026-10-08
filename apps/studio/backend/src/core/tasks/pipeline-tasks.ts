@@ -3,8 +3,8 @@
  * （替代原先进程内 Map：重启后状态可恢复，boot 时把遗留 running 行标记失败；
  *  cancel_requested 标志由长循环任务在步骤之间自愿检查，实现协作式取消）
  */
-import { eq, and, inArray, notInArray } from 'drizzle-orm'
-import { db, schema } from '../db/index.js'
+import { eq, and, ne, inArray, notInArray } from 'drizzle-orm'
+import { db, pgErrorCode, schema } from '../db/index.js'
 import { now } from '../http/response.js'
 
 export type PipelineTaskKind = 'extract' | 'video_prompts' | 'campaign_research' | 'campaign_strategy' | 'campaign_creatives' | 'studio_script' | 'studio_render' | 'campaign_doc_revise' | 'reference_analyze' | 'clone_analyze' | 'clone_render' | 'influencer_script'
@@ -73,7 +73,9 @@ export async function startTask(params: {
   if (existing && existing.status === 'running') return null
 
   if (existing) {
-    await db.update(schema.pipelineTasks).set({
+    // conditional reset: two requests that both read a finished row race here — only the one whose
+    // UPDATE still sees status <> 'running' gets the row back (PostgreSQL re-checks the WHERE after the lock)
+    const [row] = await db.update(schema.pipelineTasks).set({
       kind: params.kind,
       dramaId: params.dramaId ?? existing.dramaId,
       episodeId: params.episodeId ?? existing.episodeId,
@@ -86,14 +88,13 @@ export async function startTask(params: {
       cancelRequested: 0,
       finishedAt: null,
       updatedAt: ts,
-    }).where(eq(schema.pipelineTasks.id, existing.id))
-    const [row] = await db.select().from(schema.pipelineTasks)
-      .where(eq(schema.pipelineTasks.id, existing.id))
-    return toRow(row)
+    }).where(and(eq(schema.pipelineTasks.id, existing.id), ne(schema.pipelineTasks.status, 'running')))
+      .returning()
+    return row ? toRow(row) : null
   }
 
   try {
-    await db.insert(schema.pipelineTasks).values({
+    const [row] = await db.insert(schema.pipelineTasks).values({
       kind: params.kind,
       key: params.key,
       dramaId: params.dramaId ?? null,
@@ -103,18 +104,16 @@ export async function startTask(params: {
       cancelRequested: 0,
       createdAt: ts,
       updatedAt: ts,
-    })
+    }).returning()
+    return toRow(row)
   } catch (err: any) {
     // 并发竞态：另一请求刚插入了同 key 行 → 若它在 running 就拒绝，否则同样重置
-    if (!String(err?.code || '').includes('SQLITE_CONSTRAINT')) throw err
+    if (pgErrorCode(err) !== '23505') throw err // unique_violation (the same key was inserted a moment ago)
     const [race] = await db.select().from(schema.pipelineTasks)
       .where(eq(schema.pipelineTasks.key, params.key))
     if (!race || race.status === 'running') return null
     return startTask(params)
   }
-  const [row] = await db.select().from(schema.pipelineTasks)
-    .where(and(eq(schema.pipelineTasks.key, params.key), eq(schema.pipelineTasks.status, 'running')))
-  return row ? toRow(row) : null
 }
 
 export async function updateTask(key: string, patch: Partial<{
@@ -165,5 +164,6 @@ export async function failStaleRunningTasks(): Promise<number> {
       // ห้ามแตะ kind ที่ resume ได้ — ไม่งั้น resumeStaleAutoRenders (รันทีหลัง) จะไม่เหลืออะไรให้ resume
       notInArray(schema.pipelineTasks.kind, RESUMABLE_PIPELINE_KINDS),
     ))
-  return res?.changes ?? 0
+    .returning({ id: schema.pipelineTasks.id })
+  return res.length
 }

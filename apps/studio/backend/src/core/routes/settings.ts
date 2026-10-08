@@ -2,14 +2,14 @@
  * 应用设置路由 — 全局配置的读写入口（当前：AI 内容语言）
  */
 import { Hono } from 'hono'
-import { getContentLanguage, setContentLanguage, getToursSeen, setToursSeen, CONTENT_LANGUAGES, type ContentLanguage } from '../ai/app-settings.js'
+import { loadContentLanguage, setContentLanguage, getToursSeen, setToursSeen, CONTENT_LANGUAGES, type ContentLanguage } from '../ai/app-settings.js'
 import { success, badRequest } from '../http/response.js'
 
 const app = new Hono()
 
 // GET /content-language — 当前 AI 内容语言
 app.get('/content-language', async (c) => {
-  return success(c, { language: await getContentLanguage() })
+  return success(c, { language: await loadContentLanguage() })
 })
 
 // PUT /content-language — 设置 AI 内容语言（body: { language: 'th'|'en' }）

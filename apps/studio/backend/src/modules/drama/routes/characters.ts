@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { and, eq } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { success, created, badRequest, now } from '../../../core/http/response.js'
 import { toSnakeCase } from '../../../core/utils/transform.js'
 import { generateImage } from '../../../core/generation/generation.js'
@@ -30,8 +30,8 @@ app.post('/:id/looks', async (c) => {
   const ts = now()
   const result = await db.insert(schema.characterLooks).values({
     characterId, name, notes: String(body.notes || ''), imageUrl: body.image_url || null, createdAt: ts, updatedAt: ts,
-  })
-  const [look] = await db.select().from(schema.characterLooks).where(eq(schema.characterLooks.id, getInsertId(result)))
+  }).returning({ id: schema.characterLooks.id })
+  const [look] = await db.select().from(schema.characterLooks).where(eq(schema.characterLooks.id, insertedId(result)))
   return created(c, toSnakeCase(look))
 })
 
@@ -79,8 +79,8 @@ app.post('/', async (c) => {
     dramaId: body.drama_id,
     createdAt: ts,
     updatedAt: ts,
-  })
-  const charId = getInsertId(res)
+  }).returning({ id: schema.characters.id })
+  const charId = insertedId(res)
   if (body.episode_id) {
     const existing = await db.select().from(schema.episodeCharacters)
       .where(and(eq(schema.episodeCharacters.episodeId, Number(body.episode_id)), eq(schema.episodeCharacters.characterId, charId)))

@@ -462,8 +462,8 @@
         "other": "Other"
       },
       "diskFree": "Disk free {size}",
-      "note": "The data directory holds the SQLite database and all generated media; Agent skills (workspace) are not included and do not migrate.",
-      "serverNote": "For server deployments, configure storage via STORAGE_PATH / SQLITE_PATH environment variables; restart to apply.",
+      "note": "The data directory holds all generated media (the database is PostgreSQL); Agent skills (workspace) are not included and do not migrate.",
+      "serverNote": "For server deployments, configure storage via STORAGE_PATH and the database via DATABASE_URL; restart to apply.",
       "loadFailed": "Failed to load storage info"
     },
     "about": {

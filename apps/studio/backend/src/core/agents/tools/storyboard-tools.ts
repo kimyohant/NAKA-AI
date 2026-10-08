@@ -5,7 +5,7 @@
 import { createTool } from '@mastra/core/tools'
 import type { ToolExecutionContext } from '@mastra/core/tools'
 import { z } from 'zod'
-import { db, getInsertId, schema } from '../../db/index.js'
+import { db, insertedId, schema } from '../../db/index.js'
 import { eq } from 'drizzle-orm'
 import { now } from '../../http/response.js'
 import { logTaskProgress, logTaskSuccess } from '../../tasks/task-logger.js'
@@ -313,8 +313,8 @@ const saveStoryboards = createTool({
           soundEffect: sb.sound_effect,
           sceneId: sb.scene_id, duration: sb.duration || 10,
           createdAt: ts, updatedAt: ts,
-        })
-        const newId = getInsertId(res)
+        }).returning({ id: schema.storyboards.id })
+        const newId = insertedId(res)
         shotToId.set(sb.shot_number, newId)
         await syncStoryboardCharacters(newId, sb.character_ids || [])
         await syncStoryboardProps(newId, sb.prop_ids || [])

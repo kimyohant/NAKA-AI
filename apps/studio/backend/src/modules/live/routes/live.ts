@@ -27,7 +27,7 @@ async function run(c: Context, fn: () => Promise<unknown> | unknown) {
 const body = async (c: Context) => c.req.json().catch(() => ({} as Record<string, unknown>))
 
 app.get('/config', c => run(c, () => live.getLiveConfig()))
-app.put('/config', async c => { const b = await body(c); return run(c, () => live.saveLiveConfig(b)) })
+app.put('/config', async c => { const b = await body(c); return run(c, async () => { const saved = live.saveLiveConfig(b); await live.flushLiveConfig(); return saved }) })
 app.get('/status', c => run(c, () => live.liveStatus()))
 
 app.post('/start', async c => { const b = await body(c); return run(c, () => live.startLive(b)) })

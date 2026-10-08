@@ -3,6 +3,7 @@
  * ตรวจ: กฎ path ไหนต้องเป็น admin, ปิด guard เมื่อไม่ตั้ง ADMIN_TOKEN, token ผิด/ไม่มี → 401 E_ADMIN_REQUIRED,
  * token ถูก → ผ่าน, การอ่านที่แอปผู้ใช้ต้องใช้ (รายการ AI config / style presets / ค่าส่วนตัว) ยังเปิดอยู่
  */
+import './_memory-db.js'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { Hono } from 'hono'

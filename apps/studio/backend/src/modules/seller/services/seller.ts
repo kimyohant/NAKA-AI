@@ -8,7 +8,7 @@
  */
 import { and, desc, eq, isNull } from 'drizzle-orm'
 import { ownedBy, ownerScope, runAsOwner } from '../../../core/auth/owner-context.js'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { AppError, now } from '../../../core/http/response.js'
 import { getActiveConfig, getTextConfig } from '../../../core/ai/ai.js'
 import { mastra } from '../../../core/mastra/index.js'
@@ -210,8 +210,8 @@ export async function createPost(body: Record<string, unknown>) {
     title: patch.title || patch.productName || '',
     createdAt: ts,
     updatedAt: ts,
-  })
-  return getPost(getInsertId(res))
+  }).returning({ id: schema.sellerPosts.id })
+  return getPost(insertedId(res))
 }
 
 export async function updatePost(id: number, body: Record<string, unknown>) {
@@ -423,8 +423,17 @@ export async function driveVideo(postId: number, pollMs = DRIVE_POLL_MS): Promis
 export async function resumeSellerVideos(): Promise<number> {
   const rows = await db.select().from(schema.sellerPosts)
     .where(and(eq(schema.sellerPosts.videoAuto, true), isNull(schema.sellerPosts.deletedAt)))
-  for (const row of rows) void driveVideo(row.id)
-  return rows.length
+  let resumed = 0
+  for (const row of rows) {
+    // makeVideo claimed it but stopped before linking a project (server restart) → release it
+    if (!row.studioProjectId) {
+      await setVideo(row.id, { videoAuto: false, videoError: 'E_TASK_INTERRUPTED: เซิร์ฟเวอร์รีสตาร์ทระหว่างสร้างวิดีโอ — กดทำวิดีโอใหม่' })
+      continue
+    }
+    void driveVideo(row.id)
+    resumed++
+  }
+  return resumed
 }
 
 /**
@@ -443,28 +452,47 @@ export async function makeVideo(id: number, body: { templateId?: unknown; avatar
   if (!image) throw new AppError('未配置图片模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_IMAGE_MODEL')
   if (!video) throw new AppError('未配置视频模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_VIDEO_MODEL')
 
+  // claim the post in one statement: of two clicks at once only one passes (each would otherwise create
+  // and script its own Studio project). No project link while it is being made, so syncVideo leaves it be.
+  const [claimed] = await db.update(schema.sellerPosts)
+    .set({ videoAuto: true, studioProjectId: null, videoError: null, updatedAt: now() })
+    .where(and(eq(schema.sellerPosts.id, id), eq(schema.sellerPosts.videoAuto, false), isNull(schema.sellerPosts.deletedAt)))
+    .returning({ id: schema.sellerPosts.id })
+  if (!claimed) throw new AppError('กำลังทำวิดีโออยู่ — รอให้เสร็จหรือกดหยุดก่อน', 'E_SELLER_VIDEO_BUSY')
+  const release = () => setVideo(id, { videoAuto: false, studioProjectId: row.studioProjectId, videoError: row.videoError })
+
   const post = toPostJson(row)
   const optionalId = (v: unknown) => (v === undefined || v === null || v === '' ? undefined : Number(v))
-  // the Studio project belongs to the post's member (also when an admin starts it for them)
-  const project = await runAsOwner({ ownerId: row.ownerUserId, admin: ownerScope()?.admin ?? true }, () => createProject({
-    title: row.title || row.productName,
-    productName: row.productName,
-    productUrl: row.productUrl,
-    productDescription: [row.productDescription, row.productPrice ? `Price: ${row.productPrice}` : ''].filter(Boolean).join('\n') || undefined,
-    productImages: post.productImages,
-    templateId: template.id,
-    platform: CHANNEL_PLATFORM[post.channels[0] ?? 'tiktok'],
-    language: row.language,
-    market: row.language === 'th' ? 'TH' : 'GLOBAL',
-    avatarId: optionalId(body.avatarId),
-    influencerId: optionalId(body.influencerId),
-    notes: row.notes || undefined,
-  }))
-  if (!project) throw new AppError('สร้างโปรเจกต์วิดีโอไม่สำเร็จ', 'E_SELLER_VIDEO_FAILED')
+  let project: Awaited<ReturnType<typeof createProject>>
+  try {
+    // the Studio project belongs to the post's member (also when an admin starts it for them)
+    project = await runAsOwner({ ownerId: row.ownerUserId, admin: ownerScope()?.admin ?? true }, () => createProject({
+      title: row.title || row.productName,
+      productName: row.productName,
+      productUrl: row.productUrl,
+      productDescription: [row.productDescription, row.productPrice ? `Price: ${row.productPrice}` : ''].filter(Boolean).join('\n') || undefined,
+      productImages: post.productImages,
+      templateId: template.id,
+      platform: CHANNEL_PLATFORM[post.channels[0] ?? 'tiktok'],
+      language: row.language,
+      market: row.language === 'th' ? 'TH' : 'GLOBAL',
+      avatarId: optionalId(body.avatarId),
+      influencerId: optionalId(body.influencerId),
+      notes: row.notes || undefined,
+    }))
+  } catch (err) {
+    await release()
+    throw err
+  }
+  if (!project) {
+    await release()
+    throw new AppError('สร้างโปรเจกต์วิดีโอไม่สำเร็จ', 'E_SELLER_VIDEO_FAILED')
+  }
   try {
     await startStudioScript(project.id)
   } catch (err) {
     await deleteProject(project.id) // ไม่ทิ้งโปรเจกต์ค้าง เช่น สกิลต้องมี presenter แต่ไม่ได้เลือก
+    await release()
     throw err
   }
   await setVideo(id, { studioProjectId: project.id, videoUrl: null, videoTemplateId: template.id, videoAuto: true, videoError: null })

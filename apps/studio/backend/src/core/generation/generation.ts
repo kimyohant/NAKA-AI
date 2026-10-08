@@ -2,8 +2,8 @@
  * 统一生成任务服务 — 图片/视频生成共用 sys_task 表与同一条生命周期：
  * 创建(processing) → 适配器构建请求 → 同步完成或异步轮询 → 下载落盘 → 回写业务表
  */
-import { db, getInsertId, schema } from '../db/index.js'
-import { and, asc, eq } from 'drizzle-orm'
+import { db, insertedId, schema } from '../db/index.js'
+import { and, asc, eq, sql } from 'drizzle-orm'
 import { getActiveConfig, getConfigById, getConfigForRecovery } from '../ai/ai.js'
 import { now, AppError } from '../http/response.js'
 import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readImageAsCompressedDataUrl, saveBase64Image } from '../utils/storage.js'
@@ -23,6 +23,18 @@ const activeTasks = new Set<number>()
 // ─── 每Config任务队列（仅对声明 capabilities.maxConcurrent 的 provider 生效，如 unsloth = 1） ───
 /** taskId → configId：process 已认领的槽位（先于 DB status 变更登记，防止 startTask 期间的竞态多算） */
 const slotClaims = new Map<number, number>()
+
+/** pg_advisory_xact_lock class for the per-project budget check in createTask */
+const PROJECT_BUDGET_LOCK = 7_204_0100
+
+/** The slot check and the slot claim must not interleave with another startTask in this process:
+ * the check awaits the database now, so run them one at a time. */
+let slotChain: Promise<unknown> = Promise.resolve()
+function withSlotLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = slotChain.then(fn, fn)
+  slotChain = run.catch(() => undefined)
+  return run
+}
 const QUEUE_SWEEP_INTERVAL_MS = 60_000
 const DEFAULT_QUEUE_TIMEOUT_MINUTES = 240
 
@@ -46,11 +58,10 @@ function queueTimeoutMinutesFor(config: AIConfig): number {
 }
 
 /** 同一 config 正在占用 provider 的任务数（submitting/processing/unknown + 已认领未落库的槽位） */
-function videoSlotsInUse(configId: number): number {
-  const rows = db.select({ id: schema.sysTask.id, status: schema.sysTask.status })
+async function videoSlotsInUse(configId: number): Promise<number> {
+  const rows = await db.select({ id: schema.sysTask.id, status: schema.sysTask.status })
     .from(schema.sysTask)
     .where(and(eq(schema.sysTask.type, 'video'), eq(schema.sysTask.configId, configId)))
-    .all()
   const ids = new Set<number>()
   for (const row of rows) {
     if (['submitting', 'processing', 'unknown'].includes(row.status || '')) ids.add(row.id)
@@ -210,29 +221,33 @@ async function createTask(
   params: Record<string, unknown>,
 ): Promise<number> {
   const ts = now()
-  const snapshot = type === 'video' && fields.storyboardId ? sourceSnapshotForShot(fields.storyboardId) : null
-  const id = db.transaction(tx => {
+  const snapshot = type === 'video' && fields.storyboardId ? await sourceSnapshotForShot(fields.storyboardId) : null
+  const id = await db.transaction(async tx => {
+    const one = async <T>(rows: Promise<T[]>): Promise<T | null> => (await rows)[0] ?? null
     const shot = fields.storyboardId
-      ? tx.select().from(schema.storyboards).where(eq(schema.storyboards.id, fields.storyboardId)).get()
+      ? await one(tx.select().from(schema.storyboards).where(eq(schema.storyboards.id, fields.storyboardId)))
       : null
     if (fields.storyboardId && !shot) throw new Error('Storyboard not found')
-    const episode = shot ? tx.select().from(schema.episodes).where(eq(schema.episodes.id, shot.episodeId)).get() : null
-    const character = fields.characterId ? tx.select().from(schema.characters).where(eq(schema.characters.id, fields.characterId)).get() : null
-    const scene = fields.sceneId ? tx.select().from(schema.scenes).where(eq(schema.scenes.id, fields.sceneId)).get() : null
-    const prop = fields.propId ? tx.select().from(schema.props).where(eq(schema.props.id, fields.propId)).get() : null
+    const episode = shot ? await one(tx.select().from(schema.episodes).where(eq(schema.episodes.id, shot.episodeId))) : null
+    const character = fields.characterId ? await one(tx.select().from(schema.characters).where(eq(schema.characters.id, fields.characterId))) : null
+    const scene = fields.sceneId ? await one(tx.select().from(schema.scenes).where(eq(schema.scenes.id, fields.sceneId))) : null
+    const prop = fields.propId ? await one(tx.select().from(schema.props).where(eq(schema.props.id, fields.propId))) : null
     const dramaId = episode?.dramaId || character?.dramaId || scene?.dramaId || prop?.dramaId || fields.dramaId || undefined
-    const drama = dramaId ? tx.select().from(schema.dramas).where(eq(schema.dramas.id, dramaId)).get() : null
-    const configRow = config.id ? tx.select().from(schema.aiServiceConfigs).where(eq(schema.aiServiceConfigs.id, config.id)).get() : null
+    const drama = dramaId ? await one(tx.select().from(schema.dramas).where(eq(schema.dramas.id, dramaId))) : null
+    const configRow = config.id ? await one(tx.select().from(schema.aiServiceConfigs).where(eq(schema.aiServiceConfigs.id, config.id))) : null
     const estimatedCostThb = estimateCostThb(configRow?.settings || null, type, Number(params.duration))
     if (drama?.budgetThb != null) {
       if (estimatedCostThb === null) throw new Error('Set a price for this AI configuration before generating within a project budget')
-      const existing = tx.select().from(schema.sysTask).where(eq(schema.sysTask.dramaId, drama.id)).all()
+      // The old SQLite file took one writer at a time; on PostgreSQL two requests could both pass the budget check.
+      // One lock per project (released at commit) keeps "sum of tasks, then insert" atomic.
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(${PROJECT_BUDGET_LOCK}, ${drama.id})`)
+      const existing = await tx.select().from(schema.sysTask).where(eq(schema.sysTask.dramaId, drama.id))
       const allocated = existing.reduce((sum, task) => sum + (task.estimatedCostThb || 0), 0)
       if (allocated + estimatedCostThb > drama.budgetThb + 0.00001) {
         throw new Error(`Project budget exceeded. Remaining estimate: ฿${Math.max(0, drama.budgetThb - allocated).toFixed(2)}`)
       }
     }
-    const res = tx.insert(schema.sysTask).values({
+    const res = await tx.insert(schema.sysTask).values({
       type,
       ...fields,
       dramaId,
@@ -246,27 +261,31 @@ async function createTask(
       status: 'queued',
       createdAt: ts,
       updatedAt: ts,
-    }).run()
-    return getInsertId(res)
+    }).returning({ id: schema.sysTask.id })
+    return insertedId(res)
   })
-  startTask(id, config, false)
+  await startTask(id, config, false)
   return id
 }
 
-function startTask(id: number, config: AIConfig, resumePolling: boolean, taskType?: TaskType): boolean {
-  if (activeTasks.has(id)) return false
-  // 队列门槛：仅 video 且 provider 声明 maxConcurrent 时生效——超出槽位的任务保持 queued（不 submit，不占 poll 时间）
+async function startTask(id: number, config: AIConfig, resumePolling: boolean, taskType?: TaskType): Promise<boolean> {
   const maxConcurrent = maxConcurrentFor(config)
-  if (maxConcurrent > 0 && !resumePolling) {
-    let type = taskType
-    if (!type) {
-      const [row] = db.select({ type: schema.sysTask.type }).from(schema.sysTask).where(eq(schema.sysTask.id, id)).all()
-      type = row?.type as TaskType | undefined
+  const claimed = await withSlotLock(async () => {
+    if (activeTasks.has(id)) return false
+    // 队列门槛：仅 video 且 provider 声明 maxConcurrent 时生效——超出槽位的任务保持 queued（不 submit，不占 poll 时间）
+    if (maxConcurrent > 0 && !resumePolling) {
+      let type = taskType
+      if (!type) {
+        const [row] = await db.select({ type: schema.sysTask.type }).from(schema.sysTask).where(eq(schema.sysTask.id, id))
+        type = row?.type as TaskType | undefined
+      }
+      if (type === 'video' && (await videoSlotsInUse(config.id ?? 0)) >= maxConcurrent) return false
     }
-    if (type === 'video' && videoSlotsInUse(config.id ?? 0) >= maxConcurrent) return false
-  }
-  activeTasks.add(id)
-  if (maxConcurrent > 0) slotClaims.set(id, config.id ?? -1)
+    activeTasks.add(id)
+    if (maxConcurrent > 0) slotClaims.set(id, config.id ?? -1)
+    return true
+  })
+  if (!claimed) return false
   const work = resumePolling ? resumePollingTask(id, config) : processTask(id, config)
   void work.catch(async err => {
     logTaskError('SysTask', 'worker-error', { id, error: err?.message })
@@ -306,11 +325,11 @@ export async function recoverGenerationTasks(): Promise<{ resumed: number; queue
     if (!['queued', 'submitting', 'processing'].includes(record.status || '')) continue
     const config = await recoveryConfig(record)
     if (record.taskId && config) {
-      if (startTask(record.id, config, true)) counts.resumed++
+      if (await startTask(record.id, config, true)) counts.resumed++
     } else if (record.status === 'queued' && config) {
       // งาน queued กลับเข้าคิวเดิม — startTask เริ่มทันทีเมื่อมีสล็อตว่าง ไม่งั้นคงสถานะ queued รอ pump
       counts.queued++
-      startTask(record.id, config, false)
+      await startTask(record.id, config, false)
     } else {
       await markUnknown(record.id, config ? 'Submission state is uncertain after restart; check provider history before creating a new task' : 'Original provider configuration unavailable; check provider history')
       counts.unknown++
@@ -330,10 +349,9 @@ export async function pumpVideoQueue(): Promise<void> {
   if (pumpRunning) return
   pumpRunning = true
   try {
-    const queued = db.select().from(schema.sysTask)
+    const queued = await db.select().from(schema.sysTask)
       .where(and(eq(schema.sysTask.type, 'video'), eq(schema.sysTask.status, 'queued')))
       .orderBy(asc(schema.sysTask.createdAt))
-      .all()
     for (const record of queued) {
       const config = await recoveryConfig(record)
       if (!config) {
@@ -351,8 +369,8 @@ export async function pumpVideoQueue(): Promise<void> {
         )
         continue
       }
-      if (videoSlotsInUse(config.id ?? 0) >= maxConcurrentFor(config)) continue
-      startTask(record.id, config, false, 'video')
+      if ((await videoSlotsInUse(config.id ?? 0)) >= maxConcurrentFor(config)) continue
+      await startTask(record.id, config, false, 'video')
     }
   } finally {
     pumpRunning = false
@@ -370,24 +388,22 @@ function ensureQueueSweep() {
 ensureQueueSweep()
 
 /** ตำแหน่งคิว (1-based) สำหรับ UI — นับงาน video queued ของ config เดียวกันที่เก่ากว่า/เท่ากัน; null = ไม่อยู่คิว */
-export function videoQueuePosition(record: {
+export async function videoQueuePosition(record: {
   id: number
   type?: string | null
   status?: string | null
   configId?: number | null
   createdAt?: string | null
-}): number | null {
+}): Promise<number | null> {
   if (!record || record.type !== 'video' || record.status !== 'queued' || !record.configId) return null
-  const [configRow] = db.select().from(schema.aiServiceConfigs)
+  const [configRow] = await db.select().from(schema.aiServiceConfigs)
     .where(eq(schema.aiServiceConfigs.id, record.configId))
-    .all()
   if (!configRow) return null
   const config = { id: configRow.id, provider: configRow.provider || '', baseUrl: configRow.baseUrl, apiKey: configRow.apiKey, model: '', settings: parseSettingsJson(configRow.settings) }
   if (!maxConcurrentFor(config)) return null
-  const queued = db.select({ id: schema.sysTask.id }).from(schema.sysTask)
+  const queued = await db.select({ id: schema.sysTask.id }).from(schema.sysTask)
     .where(and(eq(schema.sysTask.type, 'video'), eq(schema.sysTask.configId, record.configId), eq(schema.sysTask.status, 'queued')))
     .orderBy(asc(schema.sysTask.createdAt))
-    .all()
   const index = queued.findIndex(q => q.id === record.id)
   return index >= 0 ? index + 1 : null
 }
@@ -408,7 +424,7 @@ export async function resumeGenerationTask(id: number): Promise<'resumed' | 'act
   const config = await recoveryConfig(record)
   if (!config) return 'unavailable'
   await db.update(schema.sysTask).set({ status: 'processing', errorMsg: null, updatedAt: now() }).where(eq(schema.sysTask.id, id))
-  return startTask(id, config, true) ? 'resumed' : 'active'
+  return (await startTask(id, config, true)) ? 'resumed' : 'active'
 }
 
 function parseTaskParams(raw: string | null | undefined): Record<string, any> {

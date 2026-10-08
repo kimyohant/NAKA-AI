@@ -1,0 +1,8 @@
+{
+  // server/ runs the Worker on Node (docs/adr/0004): Node types next to the Workers types src/ uses
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["@cloudflare/workers-types", "node"]
+  },
+  "include": ["server", "src"]
+}

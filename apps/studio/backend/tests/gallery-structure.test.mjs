@@ -33,8 +33,8 @@ test('gallery service: manual analytics เท่านั้น — ห้า�
 
 test('schema: creativeResults ผูก creative_id UNIQUE + gallery กรอง campaign ที่ soft-delete', () => {
   const schema = read('src/core/db/schema.ts')
-  assert.match(schema, /creativeResults = sqliteTable\('creative_results'/)
-  assert.match(schema, /creativeId: integer\('creative_id'\)\.notNull\(\)\.unique\(\)/)
+  assert.match(schema, /creativeResults = pgTable\('creative_results'/)
+  assert.match(schema, /creativeId: bigint\('creative_id', \{ mode: 'number' \}\)\.notNull\(\)\.unique\(\)/)
   const service = read('src/modules/marketer/services/gallery.ts')
   assert.match(service, /isNull\(schema\.campaigns\.deletedAt\)/)
   assert.match(service, /inArray\(schema\.campaignCreatives\.status, GALLERY_STATUSES\)/)

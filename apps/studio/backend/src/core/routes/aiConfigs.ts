@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../db/index.js'
+import { db, insertedId, schema } from '../db/index.js'
 import { success, notFound, created, badRequest, now } from '../http/response.js'
 import { toSnakeCase } from '../utils/transform.js'
 import { joinProviderUrl } from '../ai/adapters/url.js'
@@ -205,10 +205,10 @@ app.post('/', async (c) => {
     settings: Object.keys(configSettings).length ? JSON.stringify(configSettings) : null,
     createdAt: ts,
     updatedAt: ts,
-  })
+  }).returning({ id: schema.aiServiceConfigs.id })
 
   const [row] = await db.select().from(schema.aiServiceConfigs)
-    .where(eq(schema.aiServiceConfigs.id, getInsertId(res)))
+    .where(eq(schema.aiServiceConfigs.id, insertedId(res)))
 
   return created(c, withParsedFields(row))
 })

@@ -112,7 +112,7 @@ app.get('/:id', async (c) => {
   const [row] = await db.select().from(schema.sysTask)
     .where(eq(schema.sysTask.id, id))
   if (!row) return success(c, null)
-  return success(c, { ...row, queuePosition: videoQueuePosition(row) })
+  return success(c, { ...row, queuePosition: await videoQueuePosition(row) })
 })
 
 // Resume polling an accepted provider task. This endpoint never submits a new paid task.
