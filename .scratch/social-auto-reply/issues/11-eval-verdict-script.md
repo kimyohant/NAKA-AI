@@ -1,8 +1,8 @@
 ---
 id: 11
-status: open
+status: closed
 labels: [ready-for-agent]
-assignee: null
+assignee: opencode
 blocked_by: [4]
 ---
 
@@ -35,11 +35,28 @@ Do not run the script against a real LLM in this ticket. No human is there to re
 
 ## Acceptance criteria
 
-- [ ] `npm run eval:verdict` exists in `backend/` and is not run by `test:social` or by CI.
-- [ ] Unit tests cover the scoring: `human` and `unsure` match the same expected outcome; a `reply` on an expected Needs human or Skipped case is a Dangerous error; one Dangerous error in any run is a fail; average accuracy under 85% is a fail.
-- [ ] A unit test shows a wrong `fallback` flag and a Reply rule break count as a wrong answer for that Comment.
-- [ ] The script runs the set 3 times and writes a dated report with the model name, shown by a test that uses a fake LLM.
-- [ ] The sample set has about 12 cases, with every case type from the decision table, and one fake Brand Profile.
-- [ ] The cases in the "praise" type carry the switch value, and the script passes it to the agent.
-- [ ] The ticket Notes say how to run the script and where the report is written.
-- [ ] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+- [x] `npm run eval:verdict` exists in `backend/` and is not run by `test:social` or by CI.
+- [x] Unit tests cover the scoring: `human` and `unsure` match the same expected outcome; a `reply` on an expected Needs human or Skipped case is a Dangerous error; one Dangerous error in any run is a fail; average accuracy under 85% is a fail.
+- [x] A unit test shows a wrong `fallback` flag and a Reply rule break count as a wrong answer for that Comment.
+- [x] The script runs the set 3 times and writes a dated report with the model name, shown by a test that uses a fake LLM.
+- [x] The sample set has about 12 cases, with every case type from the decision table, and one fake Brand Profile.
+- [x] The cases in the "praise" type carry the switch value, and the script passes it to the agent.
+- [x] The ticket Notes say how to run the script and where the report is written.
+- [x] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+
+## Notes
+
+2026-10-08: implemented by opencode, not run against a real LLM (no human to approve the cost).
+How to run: `cd backend && npm run eval:verdict [set.json] [brand.json]` — defaults to
+`backend/eval/verdict-set.sample.json` plus the sibling `verdict-brand.sample.json`. It judges
+each case through `requestVerdict` (the same code the polling round uses) on the active text config,
+3 times, prints a per-run table, a summary (dangerous per run, accuracy per run, average, PASS/FAIL),
+and the fallback replies of the not-in-FAQ cases for a person to read for invented facts.
+Reports go to `backend/eval/reports/verdict-YYYY-MM-DD-<model>.md` and are committed as the
+pass record for that model + prompt. Scoring lives in `backend/eval/verdict-score.ts`, tested by
+`backend/tests/social-eval-scoring.test.ts`; the script run + report writing is shown with a fake
+LLM in `backend/tests/social-eval-script.test.ts`. Neither test file is in `test:social` or CI.
+Files: `backend/eval/verdict.ts`, `backend/eval/verdict-score.ts`,
+`backend/eval/verdict-set.sample.json` (13 cases, every decision-table type, mostly Thai),
+`backend/eval/verdict-brand.sample.json` (fake Naka Soap brand), `backend/package.json`
+(`eval:verdict` script).
