@@ -26,6 +26,10 @@ export class FakeSocialAdapter implements SocialPlatformAdapter {
   /** per-post comment failures, in order (checked before the shared queue) */
   commentFailures = new Map<string, Array<{ kind: SocialPlatformErrorKind; retryAfterSec?: number }>>()
   sentReplies: Array<{ account: SocialAccountAuth; comment: SocialComment; text: string }> = []
+  /** OAuth seam for connect-flow tests: pages the next exchangeCode returns. */
+  connectable: ConnectableAccount[] = []
+  /** every exchangeCode call, in order */
+  exchangeCalls: Array<{ code: string; redirectUri: string }> = []
   listPostsCalls = 0
   listCommentsCalls = 0
   refreshTokenCalls = 0
@@ -105,12 +109,13 @@ export class FakeSocialAdapter implements SocialPlatformAdapter {
     return { replyId: `fake-reply-${this.sentReplies.length}` }
   }
 
-  getAuthUrl(_redirectUri: string, _state: string): string {
-    return 'https://fake.example/auth'
+  getAuthUrl(redirectUri: string, state: string): string {
+    return `https://fake.example/auth?redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`
   }
 
-  async exchangeCode(_code: string, _redirectUri: string): Promise<ConnectableAccount[]> {
-    return []
+  async exchangeCode(code: string, redirectUri: string): Promise<ConnectableAccount[]> {
+    this.exchangeCalls.push({ code, redirectUri })
+    return this.connectable
   }
 
   async refreshToken(_account: SocialAccountAuth): Promise<SocialTokens> {

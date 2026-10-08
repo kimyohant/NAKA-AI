@@ -18,7 +18,7 @@ jobs:
         working-directory: backend
       - run: npm run typecheck
         working-directory: backend
-      - run: npx tsx --test tests/sqlite-migration-backup.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/social-poll.test.ts tests/social-board.test.ts tests/social-filter.test.ts tests/social-accounts.test.ts tests/social-verdict.test.ts tests/social-actions.test.ts tests/social-auto.test.ts tests/social-limits.test.ts tests/social-facebook.test.ts
+      - run: npx tsx --test tests/sqlite-migration-backup.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/social-poll.test.ts tests/social-board.test.ts tests/social-filter.test.ts tests/social-accounts.test.ts tests/social-verdict.test.ts tests/social-actions.test.ts tests/social-auto.test.ts tests/social-limits.test.ts tests/social-facebook.test.ts tests/social-connect.test.ts
         working-directory: backend
 
   frontend:

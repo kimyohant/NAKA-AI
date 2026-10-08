@@ -3,6 +3,7 @@
  * Ticket 02: list comments for the board (filter by account and "not in FAQ")
  * and list accounts for the board filter (never returns tokens).
  * Ticket 07: account settings + brand profile (never returns tokens).
+ * Ticket 10: connect / reconnect / disconnect via OAuth (never returns tokens).
  */
 import { Hono } from 'hono'
 import type { Context } from 'hono'
@@ -16,6 +17,14 @@ import {
   rejectDraft,
   sendCommentAsPerson,
 } from '../services/social/actions.js'
+import {
+  canConnect,
+  finishLogin,
+  pendingPages,
+  startLogin,
+  takePending,
+} from '../services/social/oauth.js'
+import type { ConnectableAccount } from '../services/social/types.js'
 
 const app = new Hono()
 
@@ -268,5 +277,111 @@ app.post('/comments/:id/bring-back', c => run(c, () => publicBoardComment(bringB
 app.post('/comments/:id/help-draft', c => run(c, async () => ({
   text: await helpMeDraft(parseCommentId(c)),
 })))
+
+/* ---- Connect / Reconnect / Disconnect (ticket 10, never returns tokens) ---- */
+
+/** "Can I Connect, and if not why" — also drives the desktop "server only" empty state. */
+app.get('/oauth/:platform/can-connect', c => success(c, canConnect(c.req.param('platform'))))
+
+/** Start login: random single-use 10-minute state, login URL from the adapter. */
+app.post('/oauth/:platform/start', c => run(c, () => startLogin(c.req.param('platform'))))
+
+/**
+ * OAuth callback: validate the state, stash the connectable Pages in server
+ * memory for 10 minutes, send the browser back to the Accounts page.
+ * A wrong, used, or expired state is refused with a clear error and saves nothing.
+ */
+app.get('/oauth/:platform/callback', async c => {
+  const platform = c.req.param('platform')
+  try {
+    const { loginId } = await finishLogin(platform, c.req.query('code') ?? '', c.req.query('state') ?? '')
+    return c.redirect(`/social/accounts?login=${encodeURIComponent(loginId)}&platform=${encodeURIComponent(platform.toLowerCase())}`, 302)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'Login failed')
+  }
+})
+
+/** Pages waiting to be ticked (this login only): names + avatars, never tokens. */
+app.get('/oauth/:platform/pending', c => run(c, () => {
+  const login = c.req.query('login') ?? ''
+  if (!login) throw new Error('Missing login. Please log in again.')
+  return { items: pendingPages(c.req.param('platform'), login) }
+}))
+
+/** Match a stored Social Account by Platform + Platform account id. */
+function findAccountRow(platform: string, platformAccountId: string) {
+  const [row] = db.select().from(schema.socialAccounts).where(and(
+    eq(schema.socialAccounts.platform, platform),
+    eq(schema.socialAccounts.platformAccountId, platformAccountId),
+  )).all()
+  return row
+}
+
+/**
+ * Save the ticked Pages. An already-stored Page updates the same row (new
+ * tokens, status `connected`) and keeps its Brand Profile, settings, history,
+ * and Drafts — this is how Reconnect and "Connect again after Disconnect" work.
+ * A new Page starts in Draft mode with Watching on (column defaults).
+ */
+function saveConnectableAccount(platform: string, item: ConnectableAccount) {
+  const ts = now()
+  const expiresAt = item.tokens.expiresAt instanceof Date ? item.tokens.expiresAt.toISOString() : null
+  const existing = findAccountRow(platform, item.platformAccountId)
+  if (existing) {
+    db.update(schema.socialAccounts).set({
+      name: item.name,
+      avatarUrl: item.avatarUrl ?? null,
+      status: 'connected',
+      accessToken: item.tokens.accessToken,
+      refreshToken: item.tokens.refreshToken ?? null,
+      tokenExpiresAt: expiresAt,
+      updatedAt: ts,
+    } as any).where(eq(schema.socialAccounts.id, existing.id)).run()
+    return publicAccount(getAccountRow(existing.id))
+  }
+  const res = db.insert(schema.socialAccounts).values({
+    platform,
+    platformAccountId: item.platformAccountId,
+    name: item.name,
+    avatarUrl: item.avatarUrl ?? null,
+    status: 'connected',
+    accessToken: item.tokens.accessToken,
+    refreshToken: item.tokens.refreshToken ?? null,
+    tokenExpiresAt: expiresAt,
+    createdAt: ts,
+    updatedAt: ts,
+  } as any).run()
+  return publicAccount(getAccountRow(Number((res as any).lastInsertRowid)))
+}
+
+app.post('/oauth/:platform/save', c => run(c, async () => {
+  const platform = c.req.param('platform').toLowerCase()
+  const body = await c.req.json().catch(() => ({})) as Record<string, unknown>
+  const login = typeof body.login === 'string' ? body.login : ''
+  if (!login) throw new Error('Missing login. Please log in again.')
+  const raw = body.platform_account_ids ?? body.platformAccountIds ?? body.ids
+  const ids = Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : []
+  if (!ids.length) throw new Error('No pages selected')
+  const picked = takePending(platform, login, ids)
+  if (!picked.length) throw new Error('No pages selected')
+  return { items: picked.map(item => saveConnectableAccount(platform, item)) }
+}))
+
+/**
+ * Disconnect: delete the stored tokens, status to Disconnected. Comments and
+ * Replies stay as history. No Platform call (the Facebook adapter has no revoke).
+ */
+app.post('/accounts/:id/disconnect', c => run(c, () => {
+  const id = parseAccountId(c)
+  getAccountRow(id)
+  db.update(schema.socialAccounts).set({
+    accessToken: null,
+    refreshToken: null,
+    tokenExpiresAt: null,
+    status: 'disconnected',
+    updatedAt: now(),
+  } as any).where(eq(schema.socialAccounts.id, id)).run()
+  return publicAccount(getAccountRow(id))
+}))
 
 export default app

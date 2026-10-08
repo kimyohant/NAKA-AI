@@ -1,8 +1,8 @@
 ---
 id: 10
-status: open
+status: closed
 labels: [ready-for-agent]
-assignee: null
+assignee: opencode
 blocked_by: [7, 9]
 ---
 
@@ -39,23 +39,24 @@ Tests use the fake adapter for the OAuth methods. No test calls Facebook.
 
 ## Acceptance criteria
 
-- [ ] A test shows "can Connect" is false with a reason when `PUBLIC_BASE_URL` is missing, and when the app id or secret is missing.
-- [ ] Unit tests show the `state` is single use and expires after 10 minutes.
-- [ ] A test shows the callback with a wrong `state` saves nothing.
-- [ ] A test shows the full flow with the fake adapter: start, callback, list of two accounts, tick one, one Social Account stored as `connected`.
-- [ ] A test shows the list of Pages returned to the browser contains no token.
-- [ ] A test shows the pending list is gone after 10 minutes.
-- [ ] A test shows Reconnect updates the same row and keeps the Brand Profile, settings, and Drafts.
-- [ ] A test shows Disconnect deletes the tokens, sets Disconnected, and keeps the Comments; a later Connect of the same Page brings the same row back.
-- [ ] A test shows a Disconnected Social Account is skipped by the Polling round.
-- [ ] The Accounts page has the Connect button (disabled with the reason when not possible), the list of Pages to tick, the Reconnect button, and Disconnect.
-- [ ] The token expired banner on the board has a Reconnect button.
-- [ ] The Social pages show the "server only" empty state when Connect is not possible and no Social Account exists.
-- [ ] The README lists the two new env vars.
-- [ ] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+- [x] A test shows "can Connect" is false with a reason when `PUBLIC_BASE_URL` is missing, and when the app id or secret is missing.
+- [x] Unit tests show the `state` is single use and expires after 10 minutes.
+- [x] A test shows the callback with a wrong `state` saves nothing.
+- [x] A test shows the full flow with the fake adapter: start, callback, list of two accounts, tick one, one Social Account stored as `connected`.
+- [x] A test shows the list of Pages returned to the browser contains no token.
+- [x] A test shows the pending list is gone after 10 minutes.
+- [x] A test shows Reconnect updates the same row and keeps the Brand Profile, settings, and Drafts.
+- [x] A test shows Disconnect deletes the tokens, sets Disconnected, and keeps the Comments; a later Connect of the same Page brings the same row back.
+- [x] A test shows a Disconnected Social Account is skipped by the Polling round.
+- [x] The Accounts page has the Connect button (disabled with the reason when not possible), the list of Pages to tick, the Reconnect button, and Disconnect.
+- [x] The token expired banner on the board has a Reconnect button.
+- [x] The Social pages show the "server only" empty state when Connect is not possible and no Social Account exists.
+- [x] The README lists the two new env vars.
+- [x] `npm run typecheck` and `npm run test:social` pass in `backend/`.
 
 ## Notes
 
 - 2026-10-08: Left open — blocked by ticket 09 (Facebook adapter, itself blocked by human ticket 01), which this ticket's Connect/Reconnect flow builds on. Starts once ticket 09 is merged. No code changes.
 - 2026-10-08 opencode-delegation: not done, blocked by human ticket 01 (Facebook live check); relabeled ready-for-human
 - 2026-10-08: Human ticket 01 is closed, so ticket 09 is unblocked. Relabeled ready-for-agent; still starts after ticket 09 (`blocked_by`).
+- 2026-10-08 opencode (ticket/10-connect): done. Backend: new `backend/src/services/social/oauth.ts` (in-memory single-use 10-min state + per-login 10-min pending lists, can-connect reasons, hosted callback URL); routes in `backend/src/routes/social.ts` (can-connect, start, callback→302 to `/social/accounts?login=&platform=`, pending names+avatars only, save with Platform+id upsert, disconnect clears tokens→disconnected); fake adapter got scriptable `connectable`/`exchangeCalls` OAuth seam; new `backend/tests/social-connect.test.ts` (8 tests, all backend criteria incl. reconnect-keeps-data, disconnect-keeps-comments+same-row-back, disconnected-skipped poll, no-token sweep); `test:social` + CI list extended. Frontend: Accounts page Connect (disabled+reason), tick-list, per-account Reconnect/Disconnect, server-only empty state; board banner Reconnect button + server-only state; brand page server-only state; 15 new en/th strings. `npm run typecheck` pass, `npm run test:social` 104/104 pass, frontend `npm run build` pass. Deviations: none — poller already skipped non-connected accounts (added test only); README row already added by ticket 09, kept as-is.

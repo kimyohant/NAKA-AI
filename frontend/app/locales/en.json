@@ -2934,6 +2934,21 @@
     "cancel": "Cancel",
     "replyPlaceholder": "Write a reply...",
     "actionFailed": "Action failed.",
-    "drafting": "Drafting..."
+    "drafting": "Drafting...",
+    "connect": "Connect Facebook",
+    "connectStarted": "Opening Facebook login...",
+    "connectUnavailable": "Connect is not available: {reason}",
+    "connectFailed": "Could not start login.",
+    "pendingTitle": "Choose Pages to connect",
+    "pendingHint": "Tick the Pages to read comments from.",
+    "savePages": "Connect selected",
+    "saveFailed": "Could not save the selected Pages.",
+    "pendingExpired": "The page list expired. Please log in again.",
+    "reconnect": "Reconnect",
+    "disconnect": "Disconnect",
+    "disconnectConfirm": "Disconnect this Page? Old comments stay as history.",
+    "disconnectFailed": "Could not disconnect.",
+    "serverOnlyTitle": "Available on the server deployment only",
+    "serverOnlyHint": "Social connect needs a public server address and the Facebook app credentials ({reason}). This looks like the desktop app."
   }
 }
