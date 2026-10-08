@@ -1,0 +1,2 @@
+# shell scripts run inside Linux containers (postgres init) — keep LF on Windows checkouts
+*.sh text eol=lf

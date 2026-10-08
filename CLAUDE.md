@@ -33,6 +33,10 @@ npm run dev:studio-admin   # studio admin on :3014/admin/
 
 CI: `.github/workflows/landing-ci.yml` and `studio-ci.yml` run only when their app's files change. Landing production deploy is manual (`landing-deploy.yml`). Studio deploys with `docker compose up -d --build` from `apps/studio/`.
 
+## Shared database (in progress — docs/adr/0004)
+
+One PostgreSQL 17 (`docker-compose.yml` at the root, `npm run db:up`) for both apps, one schema per owner: `account` (landing, role `account_app`), `studio` (studio, role `studio_app`), `reporting` (read-only views, `reporting_ro`). Each role's `search_path` is its own schema, so unqualified table names keep working; an app can't read or write the other schema except through views/`SECURITY DEFINER` functions the owner grants. Layout: `infra/postgres/init/` (runs once on an empty volume); permissions are tested with `npm run test:db` (PGlite, no Docker). No RabbitMQ/Redis: queues live in Postgres. Status: Phase 0 (database) done; landing still on D1 and studio still on SQLite until Phases 1–2.
+
 ## Architecture decisions
 
-`docs/adr/` — 0001 (merge + service boundaries), 0002 (possible Docker-only platform, not adopted yet), 0003 (planned split of the studio into per-menu modules). Check them before restructuring.
+`docs/adr/` — 0001 (merge + service boundaries), 0002 (Docker-only platform on the owner's host), 0003 (studio split into per-menu modules — done), 0004 (shared PostgreSQL, no RabbitMQ/Redis). Check them before restructuring.

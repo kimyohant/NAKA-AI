@@ -1,0 +1,36 @@
+# NAKA-AI platform on one Docker host (docs/adr/0002, docs/adr/0004).
+#
+#   cp .env.example .env    # then set every password
+#   docker compose up -d postgres
+#
+# Phase 0: the shared PostgreSQL only. landing (Phase 1) and studio (Phase 2) join this file as
+# they move onto Postgres; until then apps/studio keeps its own docker-compose.yml.
+name: naka
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: naka
+      POSTGRES_USER: ${POSTGRES_USER:-naka_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      ACCOUNT_DB_PASSWORD: ${ACCOUNT_DB_PASSWORD:?Set ACCOUNT_DB_PASSWORD in .env}
+      STUDIO_DB_PASSWORD: ${STUDIO_DB_PASSWORD:?Set STUDIO_DB_PASSWORD in .env}
+      REPORTING_DB_PASSWORD: ${REPORTING_DB_PASSWORD:?Set REPORTING_DB_PASSWORD in .env}
+      TZ: Asia/Bangkok
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # runs once, on an empty volume (schemas, roles, passwords)
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    # local tools only (psql, DBeaver); apps reach it as postgres:5432 on the compose network
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d naka"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  pgdata:

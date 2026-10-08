@@ -1,0 +1,21 @@
+# Shared PostgreSQL layout (infra/postgres): schema/role permissions, checked in PGlite.
+name: DB CI
+
+on:
+  push:
+    paths: ['infra/postgres/**', 'package.json', 'package-lock.json', '.github/workflows/db-ci.yml']
+  pull_request:
+    paths: ['infra/postgres/**', 'package.json', 'package-lock.json', '.github/workflows/db-ci.yml']
+
+jobs:
+  roles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:db
+      - run: cp .env.example .env && docker compose config --quiet
