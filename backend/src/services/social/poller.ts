@@ -1,15 +1,15 @@
 /**
  * Social poller — one timer started at backend boot, one round every 5 minutes,
  * built like the generation queue sweep: setInterval, unref'd, running guard.
- * The first round runs right after boot. In this ticket a round does the
- * reading step plus the judging step: for each connected + watching account, list posts inside
- * watch_days, page each post's comments until an already-stored comment id,
- * and store new comments with state `new`.
+ * The first round runs right after boot. Per connected + watching account:
+ * (1) stuck sending reclaim runs once globally first, then per account
+ * (2) queued older than 24h to draft, (3) read new comments, (4) judge them,
+ * (5) send queued replies.
  */
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '../../db/index.js'
 import { now } from '../../utils/response.js'
-import { reclaimStuckSending } from './actions.js'
+import { reclaimStuckSending, expireQueuedComments, sendQueuedReplies } from './actions.js'
 import { SKIP_ALREADY_REPLIED, SKIP_OWN, collectPlainRuleContext, judgePlainRule } from './filter.js'
 import { judgeNewComments } from './responder.js'
 import { getSocialAdapter } from './registry.js'
@@ -94,6 +94,7 @@ function judgeFreshComments(accountId: number, fresh: SocialComment[]): void {
 
 async function pollAccount(
   account: typeof schema.socialAccounts.$inferSelect,
+  opts: { waitBetweenSends?: () => Promise<void> } = {},
 ): Promise<number> {
   const adapter = getSocialAdapter(account.platform)
   const auth = toAuth(account)
@@ -102,6 +103,9 @@ async function pollAccount(
   let stored = 0
   /** every comment the Platform returned this round, including already-known ones */
   const fresh: SocialComment[] = []
+
+  // Step 2: queued comments that aged past 24h become drafts, never auto-sent.
+  expireQueuedComments(account.id)
 
   const known = new Set(
     db.select({ platformCommentId: schema.socialComments.platformCommentId })
@@ -180,8 +184,12 @@ async function pollAccount(
 
   judgeFreshComments(account.id, fresh)
 
-  // Ticket 04: LLM judging step — remaining `new` comments get one verdict each.
+  // Step 4: LLM judging — remaining `new` comments get one verdict each.
+  // A `reply` verdict queues in Auto mode (comment at most 24h old).
   await judgeNewComments(account.id)
+
+  // Step 5: send queued replies, oldest first, at most 10, 3 seconds apart.
+  await sendQueuedReplies(account.id, { waitBetweenSends: opts.waitBetweenSends })
 
   db.update(schema.socialAccounts)
     .set({ lastPolledAt: now(), updatedAt: now() })
@@ -190,8 +198,10 @@ async function pollAccount(
   return stored
 }
 
-/** One polling round (reading step only). Callable directly from a test. */
-export async function runSocialPollRound(): Promise<SocialPollResult> {
+/** One polling round. Callable directly from a test; the send gap wait is injectable. */
+export async function runSocialPollRound(
+  opts: { waitBetweenSends?: () => Promise<void> } = {},
+): Promise<SocialPollResult> {
   if (pollRunning) return { skipped: true, accounts: 0, newComments: 0 }
   pollRunning = true
   try {
@@ -204,7 +214,7 @@ export async function runSocialPollRound(): Promise<SocialPollResult> {
       if (account.status !== 'connected' || !account.watching || paused(account)) continue
       handled++
       try {
-        newComments += await pollAccount(account)
+        newComments += await pollAccount(account, opts)
       } catch (err) {
         console.error(`Social poll failed for account ${account.id}:`, (err as Error)?.message)
       }

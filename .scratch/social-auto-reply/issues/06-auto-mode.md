@@ -1,8 +1,8 @@
 ---
 id: 6
-status: open
+status: closed
 labels: [ready-for-agent]
-assignee: null
+assignee: opencode
 blocked_by: [5]
 ---
 
@@ -39,15 +39,19 @@ Also add the end-to-end test file from the spec: fake adapter, fake LLM, tempora
 
 ## Acceptance criteria
 
-- [ ] The end-to-end test walks the Draft mode path and the Auto mode path, and runs in CI.
-- [ ] A test shows Auto mode queues only the Verdict `reply`: `human`, `unsure`, and `skip` are never queued or sent.
-- [ ] A test shows a `reply` Comment older than 24 hours becomes a Draft in Auto mode.
-- [ ] A test shows a `queued` Comment that became older than 24 hours becomes a Draft and is not sent.
-- [ ] A test shows a Comment that could not be judged is never sent.
-- [ ] A test shows at most 10 Replies are sent per Social Account per round, oldest first, and the rest stay `queued`.
-- [ ] Tests show each error kind from `queued` gives the result above, and `unknown` gives `needs_human` after 3 rounds.
-- [ ] A test shows switching to Auto mode does not send Drafts that already wait.
-- [ ] A test shows a Social Account with Watching off sends nothing, and a send by a person still works.
-- [ ] A test shows a published Reply has `reply_source` `auto`.
-- [ ] The Queued column of the board shows `queued` Comments.
-- [ ] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+- [x] The end-to-end test walks the Draft mode path and the Auto mode path, and runs in CI.
+- [x] A test shows Auto mode queues only the Verdict `reply`: `human`, `unsure`, and `skip` are never queued or sent.
+- [x] A test shows a `reply` Comment older than 24 hours becomes a Draft in Auto mode.
+- [x] A test shows a `queued` Comment that became older than 24 hours becomes a Draft and is not sent.
+- [x] A test shows a Comment that could not be judged is never sent.
+- [x] A test shows at most 10 Replies are sent per Social Account per round, oldest first, and the rest stay `queued`.
+- [x] Tests show each error kind from `queued` gives the result above, and `unknown` gives `needs_human` after 3 rounds.
+- [x] A test shows switching to Auto mode does not send Drafts that already wait.
+- [x] A test shows a Social Account with Watching off sends nothing, and a send by a person still works.
+- [x] A test shows a published Reply has `reply_source` `auto`.
+- [x] The Queued column of the board shows `queued` Comments.
+- [x] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+
+## Notes (2026-10-08)
+
+Done. `responder.ts`: `reply` verdict → `queued` only in Auto mode with comment age ≤24h (`isAutoReplyEligible`), else `draft`. `actions.ts`: `expireQueuedComments` (poller step 2) + `sendQueuedReplies` (step 5, ≤10 oldest-first, `claimForSend`, `reply_source` `auto`, queued failure table, gap wait injectable). `poller.ts`: per-account order expire → read → judge → send; watching-off skip unchanged. `rate_limited` from queued returns to `queued` with no pause (pause is ticket 08). Frontend untouched: Queued column already exists (ticket 02). Gates: typecheck clean, `test:social` 74/74, full backend 272/274 with only the 2 known base failures.
