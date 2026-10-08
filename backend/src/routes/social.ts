@@ -2,12 +2,13 @@
  * Social routes — /api/v1/social (Social Auto Reply).
  * Ticket 02: list comments for the board (filter by account and "not in FAQ")
  * and list accounts for the board filter (never returns tokens).
+ * Ticket 07: account settings + brand profile (never returns tokens).
  */
 import { Hono } from 'hono'
 import type { Context } from 'hono'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, ne } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
-import { badRequest, success } from '../utils/response.js'
+import { badRequest, now, success } from '../utils/response.js'
 
 const app = new Hono()
 
@@ -19,17 +20,137 @@ async function run(c: Context, fn: () => Promise<unknown> | unknown) {
   }
 }
 
-/** Accounts for the board filter — status and settings only, never tokens. */
+/** Accounts for the board filter and the Accounts page — never tokens, no disconnected rows. */
 app.get('/accounts', c => run(c, () => {
   const rows = db.select({
     id: schema.socialAccounts.id,
     platform: schema.socialAccounts.platform,
     name: schema.socialAccounts.name,
+    avatarUrl: schema.socialAccounts.avatarUrl,
     status: schema.socialAccounts.status,
+    replyMode: schema.socialAccounts.replyMode,
     watching: schema.socialAccounts.watching,
+    watchDays: schema.socialAccounts.watchDays,
+    replyToPraise: schema.socialAccounts.replyToPraise,
+    tokenExpiresAt: schema.socialAccounts.tokenExpiresAt,
     lastPolledAt: schema.socialAccounts.lastPolledAt,
-  }).from(schema.socialAccounts).all()
-  return { items: rows }
+    pausedUntil: schema.socialAccounts.pausedUntil,
+  }).from(schema.socialAccounts).where(ne(schema.socialAccounts.status, 'disconnected')).all()
+  return {
+    items: rows.map(r => ({
+      ...r,
+      watching: !!r.watching,
+      replyToPraise: !!r.replyToPraise,
+    })),
+  }
+}))
+
+function parseAccountId(c: Context): number {
+  const id = Number(c.req.param('id'))
+  if (!Number.isInteger(id)) throw new Error('Invalid account id')
+  return id
+}
+
+function getAccountRow(id: number) {
+  const [row] = db.select().from(schema.socialAccounts).where(eq(schema.socialAccounts.id, id)).all()
+  if (!row) throw new Error('Social account not found')
+  return row
+}
+
+/** Public account shape — named columns only, so tokens can never leak. */
+function publicAccount(row: typeof schema.socialAccounts.$inferSelect) {
+  return {
+    id: row.id,
+    platform: row.platform,
+    name: row.name,
+    avatarUrl: row.avatarUrl,
+    status: row.status,
+    replyMode: row.replyMode,
+    watching: !!row.watching,
+    watchDays: row.watchDays,
+    replyToPraise: !!row.replyToPraise,
+    tokenExpiresAt: row.tokenExpiresAt,
+    lastPolledAt: row.lastPolledAt,
+    pausedUntil: row.pausedUntil,
+  }
+}
+
+function asBool(v: unknown, field: string): boolean {
+  if (v === true || v === 1) return true
+  if (v === false || v === 0) return false
+  throw new Error(`Invalid ${field}`)
+}
+
+/** Update settings: reply_mode, watching, watch_days, reply_to_praise. */
+app.patch('/accounts/:id/settings', c => run(c, async () => {
+  const id = parseAccountId(c)
+  getAccountRow(id)
+  const body = await c.req.json().catch(() => ({})) as Record<string, unknown>
+  const updates: Record<string, unknown> = {}
+  if (body.reply_mode !== undefined || body.replyMode !== undefined) {
+    const v = body.reply_mode ?? body.replyMode
+    if (v !== 'draft' && v !== 'auto') throw new Error('Invalid reply_mode')
+    updates.replyMode = v
+  }
+  if (body.watching !== undefined) updates.watching = asBool(body.watching, 'watching')
+  if (body.watch_days !== undefined || body.watchDays !== undefined) {
+    const v = body.watch_days ?? body.watchDays
+    if (!Number.isInteger(v) || (v as number) < 1 || (v as number) > 30) throw new Error('Invalid watch_days')
+    updates.watchDays = v
+  }
+  if (body.reply_to_praise !== undefined || body.replyToPraise !== undefined) {
+    updates.replyToPraise = asBool(body.reply_to_praise ?? body.replyToPraise, 'reply_to_praise')
+  }
+  if (!Object.keys(updates).length) throw new Error('No settings to update')
+  db.update(schema.socialAccounts).set({ ...updates, updatedAt: now() } as any).where(eq(schema.socialAccounts.id, id)).run()
+  return publicAccount(getAccountRow(id))
+}))
+
+export const BRAND_LIMITS = { about: 500, tone: 200, faq: 3000, forbidden: 500 } as const
+const BRAND_LANGS = ['th', 'en'] as const
+
+function publicBrand(row: typeof schema.socialAccounts.$inferSelect) {
+  return {
+    accountId: row.id,
+    about: row.brandAbout ?? '',
+    tone: row.brandTone ?? '',
+    faq: row.brandFaq ?? '',
+    forbidden: row.brandForbidden ?? '',
+    defaultLanguage: row.defaultLanguage,
+  }
+}
+
+/** Read the Brand Profile of one account. */
+app.get('/accounts/:id/brand', c => run(c, () => publicBrand(getAccountRow(parseAccountId(c)))))
+
+/** Update the Brand Profile. All text fields may be empty; lengths enforced. */
+app.put('/accounts/:id/brand', c => run(c, async () => {
+  const id = parseAccountId(c)
+  getAccountRow(id)
+  const body = await c.req.json().catch(() => ({})) as Record<string, unknown>
+  const updates: Record<string, unknown> = {}
+  const fields = [
+    ['about', 'brandAbout', BRAND_LIMITS.about, body.about ?? body.brandAbout],
+    ['tone', 'brandTone', BRAND_LIMITS.tone, body.tone ?? body.brandTone],
+    ['faq', 'brandFaq', BRAND_LIMITS.faq, body.faq ?? body.brandFaq],
+    ['forbidden', 'brandForbidden', BRAND_LIMITS.forbidden, body.forbidden ?? body.brandForbidden],
+  ] as const
+  for (const [label, col, limit, v] of fields) {
+    if (v === undefined) continue
+    if (typeof v !== 'string') throw new Error(`Invalid ${label}`)
+    if (v.length > limit) throw new Error(`Invalid ${label}: at most ${limit} characters`)
+    updates[col] = v
+  }
+  const lang = body.default_language ?? body.defaultLanguage
+  if (lang !== undefined) {
+    if (typeof lang !== 'string' || !(BRAND_LANGS as readonly string[]).includes(lang)) {
+      throw new Error('Invalid default_language')
+    }
+    updates.defaultLanguage = lang
+  }
+  if (!Object.keys(updates).length) throw new Error('No brand fields to update')
+  db.update(schema.socialAccounts).set({ ...updates, updatedAt: now() } as any).where(eq(schema.socialAccounts.id, id)).run()
+  return publicBrand(getAccountRow(id))
 }))
 
 /**

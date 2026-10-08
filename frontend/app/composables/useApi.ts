@@ -624,10 +624,13 @@ export const cloneAPI = {
   hypitStatus: () => api.get<{ available: boolean; reason: string | null }>('/clone/hypit/status'),
 }
 
-// ===== Social Auto Reply — inbox board (ticket 02: list only) =====
+// ===== Social Auto Reply — inbox board (ticket 02) + accounts/brand (ticket 07) =====
 export interface SocialAccount {
   id: number; platform: string; name: string | null
+  avatarUrl?: string | null
   status: string; watching: boolean; lastPolledAt: string | null
+  replyMode?: string; watchDays?: number; replyToPraise?: boolean
+  tokenExpiresAt?: string | null; pausedUntil?: string | null
 }
 export interface SocialBoardComment {
   id: number; accountId: number; platform: string | null
@@ -639,6 +642,19 @@ export interface SocialBoardComment {
   replySource: string | null; repliedAt: string | null
 }
 
+export interface SocialBrand {
+  accountId: number; about: string; tone: string; faq: string
+  forbidden: string; defaultLanguage: string
+}
+export interface SocialSettingsInput {
+  reply_mode?: 'draft' | 'auto'; watching?: boolean
+  watch_days?: number; reply_to_praise?: boolean
+}
+export interface SocialBrandInput {
+  about?: string; tone?: string; faq?: string; forbidden?: string
+  default_language?: string
+}
+
 export const socialAPI = {
   accounts: () => api.get<{ items: SocialAccount[] }>('/social/accounts'),
   comments: (params?: { account_id?: number; fallback_only?: boolean }) => {
@@ -648,6 +664,11 @@ export const socialAPI = {
     const qs = query.toString()
     return api.get<{ items: SocialBoardComment[] }>(`/social/comments${qs ? `?${qs}` : ''}`)
   },
+  updateSettings: (id: number, data: SocialSettingsInput) =>
+    api.put<SocialAccount>(`/social/accounts/${id}/settings`, data),
+  brand: (id: number) => api.get<SocialBrand>(`/social/accounts/${id}/brand`),
+  updateBrand: (id: number, data: SocialBrandInput) =>
+    api.put<SocialBrand>(`/social/accounts/${id}/brand`, data),
 }
 
 // ---------- AI Live (backend /api/v1/live → naka-live-agent on the GPU box; docs/ai-live/PLAN.md) ----------
