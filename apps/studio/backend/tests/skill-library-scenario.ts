@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { Hono } from 'hono'
-import skillsRoute from '../src/routes/skills.js'
-import { loadAgentSkills } from '../src/agents/skills.js'
-import { skillLibrary } from '../src/agents/skill-library.js'
+import skillsRoute from '../src/core/routes/skills.js'
+import { loadAgentSkills } from '../src/core/agents/skills.js'
+import { skillLibrary } from '../src/core/agents/skill-library.js'
 
 const app = new Hono()
 app.route('/api/v1/skills', skillsRoute)

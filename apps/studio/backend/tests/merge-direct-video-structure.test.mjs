@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { hasFrontend, readFrontend } from './_frontend.mjs'
 
-const mergeService = readFileSync(new URL('../src/services/ffmpeg-merge.ts', import.meta.url), 'utf8')
+const mergeService = readFileSync(new URL('../src/core/production/ffmpeg-merge.ts', import.meta.url), 'utf8')
 const episodesRoute = readFileSync(new URL('../src/routes/episodes.ts', import.meta.url), 'utf8')
 const backendIndex = readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8')
   + readFileSync(new URL('../src/modules.ts', import.meta.url), 'utf8')

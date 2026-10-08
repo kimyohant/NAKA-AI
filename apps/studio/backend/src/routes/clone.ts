@@ -5,7 +5,7 @@
  * - create/update รับ `referencePath` (path จาก uploadAPI.video) — ไม่รับ multipart (Agent B ข้อ 4)
  */
 import { Hono } from 'hono'
-import { success, created, badRequest, notFound } from '../utils/response.js'
+import { success, created, badRequest, notFound } from '../core/http/response.js'
 import type { Context } from 'hono'
 import * as clone from '../services/clone.js'
 import { getHypitStatus } from '../services/hypit-render.js'

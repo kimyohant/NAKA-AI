@@ -7,7 +7,7 @@ const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('POST /episodes auto-locks configs when not provided', () => {
   const route = read('src/routes/episodes.ts')
-  const ai = read('src/services/ai.ts')
+  const ai = read('src/core/ai/ai.ts')
 
   // 不再强制要求 config id
   assert.doesNotMatch(route, /image_config_id and video_config_id are required/)

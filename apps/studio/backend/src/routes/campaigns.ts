@@ -5,7 +5,7 @@
  */
 import { Hono } from 'hono'
 import type { Context } from 'hono'
-import { success, created, badRequest, notFound } from '../utils/response.js'
+import { success, created, badRequest, notFound } from '../core/http/response.js'
 import * as marketer from '../services/marketer.js'
 
 const app = new Hono()

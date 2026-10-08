@@ -8,11 +8,11 @@
  * สคริปต์พิธีกร (live_host) และคำตอบคอมเมนต์ (live_responder) มาจาก Mastra agent → parse JSON ฝั่งนี้
  */
 import { eq } from 'drizzle-orm'
-import { db, schema } from '../db/index.js'
-import { AppError, now } from '../utils/response.js'
-import { mastra } from '../mastra/index.js'
-import { getTextConfig } from './ai.js'
-import { joinProviderUrl } from './adapters/url.js'
+import { db, schema } from '../core/db/index.js'
+import { AppError, now } from '../core/http/response.js'
+import { mastra } from '../core/mastra/index.js'
+import { getTextConfig } from '../core/ai/ai.js'
+import { joinProviderUrl } from '../core/ai/adapters/url.js'
 
 const SETTINGS_KEY = 'ai_live'
 export const LIVE_VOICES = ['th-TH-PremwadeeNeural', 'th-TH-AcharaNeural', 'th-TH-NiwatNeural'] as const

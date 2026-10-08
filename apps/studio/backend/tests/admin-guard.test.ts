@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { Hono } from 'hono'
-import { adminGuard, assertAdminTokenConfig, needsAdmin } from '../src/middleware/admin.js'
+import { adminGuard, assertAdminTokenConfig, needsAdmin } from '../src/core/auth/admin.js'
 
 const TOKEN = 'admin-token-for-tests-0123456789'
 

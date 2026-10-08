@@ -4,10 +4,10 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/db/sqlite-schema.js'
-import { isBlockedAddress, assertPublicHttpUrl, SafeFetchError } from '../src/utils/safe-fetch.js'
-import { ingestProductUrl } from '../src/services/product-ingest.js'
-import { AppError } from '../src/utils/response.js'
+import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
+import { isBlockedAddress, assertPublicHttpUrl, SafeFetchError } from '../src/core/utils/safe-fetch.js'
+import { ingestProductUrl } from '../src/core/product/product-ingest.js'
+import { AppError } from '../src/core/http/response.js'
 
 test('migration v6 creates campaign tables and stays idempotent', () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'naka-campaign-test-'))

@@ -21,7 +21,7 @@ test('studio phase2 routes ครบ + mount', () => {
 test('studio2 error codes ใหม่ครบ', () => {
   const service = read('src/services/studio.ts')
   const autorender = read('src/services/studio-autorender.ts')
-  const captions = read('src/services/captions.ts')
+  const captions = read('src/core/production/captions.ts')
   assert.match(service + autorender, /E_STUDIO_CAMPAIGN_NOT_FOUND/)
   assert.match(captions, /E_CAPTION_FONT_MISSING/)
   assert.match(autorender, /E_TASK_INTERRUPTED/)
@@ -37,7 +37,7 @@ test('auto-render ใช้ฟังก์ชันเดิมของ studio.
   assert.match(autorender, /mergeProject\(projectId, \{ fromAutoRender: true \}\)/)
   assert.match(autorender, /from '.\/studio.js'/)
   // pipeline_tasks kind studio_render
-  const pipeline = read('src/services/pipeline-tasks.ts')
+  const pipeline = read('src/core/tasks/pipeline-tasks.ts')
   assert.match(pipeline, /'studio_render'/)
   // ห้าม poll ถี่กว่า 5s ฝั่ง server
   assert.match(autorender, /Math\.max\(opts\.pollMs \?\? POLL_MS, 5000\)/)
@@ -53,7 +53,7 @@ test('captions: merge ฝั่ง Studio เรียก burn หลัง conc
   assert.match(service, /assertCaptionFontAvailable\(project\.language\)/)
   assert.match(service, /set\(\{ mergedUrl: outputRel, captioned: true, subtitleUrl: srtRel \}\)/)
   // merge ของ drama ปกติ: ffmpeg-merge.ts ไม่มี caption logic ใด ๆ
-  const merge = read('src/services/ffmpeg-merge.ts')
+  const merge = read('src/core/production/ffmpeg-merge.ts')
   assert.doesNotMatch(merge, /captions|subtitle/i)
 })
 // desktop packaging (fonts bundled into the Electron app) is tested in desktop/tests

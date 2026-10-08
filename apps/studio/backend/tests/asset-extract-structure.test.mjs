@@ -32,7 +32,7 @@ test('extraction service runs per-target async tasks', () => {
 })
 
 test('extraction tools dedupe by normalized name so near-names reuse existing assets', () => {
-  const tools = read('src/agents/tools/extract-tools.ts')
+  const tools = read('src/core/agents/tools/extract-tools.ts')
 
   // 归一化：括号定位/别名后缀去除 + 空白/大小写统一
   assert.match(tools, /normalizeName\(name: string\)/)

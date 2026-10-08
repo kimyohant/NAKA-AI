@@ -6,8 +6,8 @@ import { execFileSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import { getFfmpegBinPaths } from '../src/utils/ffmpeg.js'
-import { buildCaptionCues, toSrt, toAss, burnSubtitles, assertCaptionFontAvailable, aiLabelText } from '../src/services/captions.js'
+import { getFfmpegBinPaths } from '../src/core/utils/ffmpeg.js'
+import { buildCaptionCues, toSrt, toAss, burnSubtitles, assertCaptionFontAvailable, aiLabelText } from '../src/core/production/captions.js'
 
 const { ffmpegPath, ffprobePath } = getFfmpegBinPaths()
 if (!ffmpegPath || !ffprobePath) { console.error('ffmpeg/ffprobe ไม่พร้อม'); process.exit(1) }

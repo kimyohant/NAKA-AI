@@ -209,7 +209,7 @@ apps/studio-web/
 | PR | งาน | ไฟล์ที่ย้าย | ความเสี่ยง | เวลา |
 |---|---|---|---|---|
 | **1** ✅ | `src/modules.ts`: แต่ละเมนูประกาศ routes + failStale/resume, `index.ts` วนลูปโหลด (commit `78efbbd4`) — dependency-cruiser ย้ายไป PR 9 เพราะ path ยังไม่ใช่ core/modules | 13 | ต่ำ | 0.5 วัน |
-| **2** | **core** — ย้าย utils, db, auth, ai, adapters, tasks, generation, production, product, agents | ~45 | **สูง** (ทุกไฟล์ import เปลี่ยน) | 2–3 วัน |
+| **2** ✅ | **core** — ย้าย 73 ไฟล์ (utils, db, auth, ai, adapters, tasks, generation, production, product, agents, mastra, system, core routes) ด้วย `git mv` + สคริปต์แก้ import; `drama-context`, `style-gallery` อยู่ core เพราะ core ใช้ | 73 | สูง | ✅ |
 | **3** | กลับทิศ agent registry (ข้อค้นพบ #3) + ย้าย `getActiveVideoProviderInfo`/`waitForMergeCompletion` เข้า core (#4) | ~5 | กลาง | 1 วัน |
 | **4** | **live** | 4 | ต่ำ | 0.5 วัน |
 | **5** | **drama** | 11 | กลาง | 1 วัน |

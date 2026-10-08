@@ -1,12 +1,12 @@
 import { Hono } from 'hono'
 import { and, eq } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../db/index.js'
-import { success, created, badRequest, now } from '../utils/response.js'
-import { toSnakeCase } from '../utils/transform.js'
-import { generateImage } from '../services/generation.js'
-import { getDramaStylePrompt } from '../services/style-preset.js'
-import { ensurePropFinalPrompt } from '../services/final-prompt.js'
-import { logTaskError, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { db, getInsertId, schema } from '../core/db/index.js'
+import { success, created, badRequest, now } from '../core/http/response.js'
+import { toSnakeCase } from '../core/utils/transform.js'
+import { generateImage } from '../core/generation/generation.js'
+import { getDramaStylePrompt } from '../core/generation/style-preset.js'
+import { ensurePropFinalPrompt } from '../core/generation/final-prompt.js'
+import { logTaskError, logTaskStart, logTaskSuccess } from '../core/tasks/task-logger.js'
 
 const app = new Hono()
 // 道具图：白底单品静物，方形画布

@@ -21,12 +21,12 @@ const dir = mkdtempSync(path.join(tmpdir(), 'naka-clone-'))
 process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
 process.env.STORAGE_PATH = path.join(dir, 'static')
 
-const { initSqliteSchema } = await import('../src/db/sqlite-schema.js')
-const { db, schema } = await import('../src/db/index.js')
-const { now, AppError } = await import('../src/utils/response.js')
+const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
+const { db, schema } = await import('../src/core/db/index.js')
+const { now, AppError } = await import('../src/core/http/response.js')
 const clone = await import('../src/services/clone.js')
-const { failStaleRunningTasks, RESUMABLE_PIPELINE_KINDS } = await import('../src/services/pipeline-tasks.js')
-const { mastra } = await import('../src/mastra/index.js')
+const { failStaleRunningTasks, RESUMABLE_PIPELINE_KINDS } = await import('../src/core/tasks/pipeline-tasks.js')
+const { mastra } = await import('../src/core/mastra/index.js')
 
 // ---------- seed: schema + configs + product/avatar + media ----------
 {
@@ -172,7 +172,7 @@ test('analyze: validate → repair 1 ครั้ง → ready; ยังพั�
 
   // mutex: key กำลัง running → analyze ซ้ำ → E_CLONE_BUSY (deterministic — ไม่พึ่ง race ของ sync calls)
   fakeAgents.set('viral_cloner', fakeScript([goodJson]))
-  const { startTask } = await import('../src/services/pipeline-tasks.js')
+  const { startTask } = await import('../src/core/tasks/pipeline-tasks.js')
   await startTask({ kind: 'clone_analyze', key: `clone_analyze:${projectId}` })
   await assert.rejects(
     () => clone.analyzeCloneProject(projectId, { async: false }),

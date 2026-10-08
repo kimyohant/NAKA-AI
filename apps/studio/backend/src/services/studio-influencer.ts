@@ -5,14 +5,14 @@
  * ห้าม import services/studio.ts กลับ (studio.ts อ้างมาที่นี่ — กัน dependency cycle)
  */
 import { and, desc, eq, isNull } from 'drizzle-orm'
-import { ownedBy } from '../auth/owner-context.js'
-import { db, getInsertId, schema } from '../db/index.js'
-import { AppError, now } from '../utils/response.js'
-import { getActiveConfig } from './ai.js'
-import { generateImage } from './generation.js'
-import { startTask, updateTask } from './pipeline-tasks.js'
-import { mastra } from '../mastra/index.js'
-import { logTaskError, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { ownedBy } from '../core/auth/owner-context.js'
+import { db, getInsertId, schema } from '../core/db/index.js'
+import { AppError, now } from '../core/http/response.js'
+import { getActiveConfig } from '../core/ai/ai.js'
+import { generateImage } from '../core/generation/generation.js'
+import { startTask, updateTask } from '../core/tasks/pipeline-tasks.js'
+import { mastra } from '../core/mastra/index.js'
+import { logTaskError, logTaskStart, logTaskSuccess } from '../core/tasks/task-logger.js'
 import { STUDIO_LANGUAGES, STUDIO_MARKETS, STUDIO_PLATFORMS, type StudioLanguage, type StudioMarket, type StudioPlatform } from './studio-templates.js'
 
 export const INFLUENCER_NICHES = ['beauty', 'fashion', 'food', 'tech', 'fitness', 'lifestyle', 'gaming', 'travel', 'home', 'mom_baby'] as const

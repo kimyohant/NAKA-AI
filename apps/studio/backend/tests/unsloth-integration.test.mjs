@@ -16,7 +16,7 @@ test('episode generation-tasks ส่ง queue_position ที่ episode workbe
 })
 
 test('boot: studio_render ถูกยกเว้นจาก failStaleRunningTasks และ resume รันทีหลัง', () => {
-  const tasks = read('src/services/pipeline-tasks.ts')
+  const tasks = read('src/core/tasks/pipeline-tasks.ts')
   assert.match(tasks, /RESUMABLE_PIPELINE_KINDS[^=]*=\s*\['studio_render', 'clone_render'\]/)
   assert.match(tasks, /notInArray\(schema\.pipelineTasks\.kind, RESUMABLE_PIPELINE_KINDS\)/)
   const index = read('src/index.ts')

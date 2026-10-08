@@ -2,12 +2,12 @@ import assert from 'node:assert/strict'
 import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { eq } from 'drizzle-orm'
-import { db, schema } from '../src/db/index.js'
-import { budgetForDrama, quoteGeneration, validateBudgetQuote } from '../src/services/generation-cost.js'
-import { generateVideo } from '../src/services/generation.js'
-import { sourceSnapshotForShot, videoSourceStatus } from '../src/services/source-freshness.js'
-import { episodeExportHealth } from '../src/services/export-health.js'
-import tasksApp from '../src/routes/tasks.js'
+import { db, schema } from '../src/core/db/index.js'
+import { budgetForDrama, quoteGeneration, validateBudgetQuote } from '../src/core/generation/generation-cost.js'
+import { generateVideo } from '../src/core/generation/generation.js'
+import { sourceSnapshotForShot, videoSourceStatus } from '../src/core/production/source-freshness.js'
+import { episodeExportHealth } from '../src/core/production/export-health.js'
+import tasksApp from '../src/core/routes/tasks.js'
 
 const ts = new Date().toISOString()
 const file = path.join(path.dirname(process.env.SQLITE_PATH!), 'invalid.mp4')

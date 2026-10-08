@@ -7,10 +7,10 @@
  */
 import assert from 'node:assert/strict'
 
-import { db, getInsertId, schema } from '../src/db/index.js'
+import { db, getInsertId, schema } from '../src/core/db/index.js'
 import { eq } from 'drizzle-orm'
-import { now } from '../src/utils/response.js'
-import { generateVideo, pumpVideoQueue, recoverGenerationTasks, videoQueuePosition } from '../src/services/generation.js'
+import { now } from '../src/core/http/response.js'
+import { generateVideo, pumpVideoQueue, recoverGenerationTasks, videoQueuePosition } from '../src/core/generation/generation.js'
 
 const realFetch = globalThis.fetch
 globalThis.fetch = (async (input: any) => {

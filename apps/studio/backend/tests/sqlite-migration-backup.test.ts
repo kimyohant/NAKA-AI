@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/db/sqlite-schema.js'
-import { backupSqlite } from '../src/db/backup.js'
+import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
+import { backupSqlite } from '../src/core/db/backup.js'
 
 test('migrates an older task table once and restores a consistent WAL snapshot', async () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'naka-sqlite-test-'))

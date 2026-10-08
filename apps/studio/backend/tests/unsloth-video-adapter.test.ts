@@ -15,7 +15,7 @@ import {
   FRAME_OFFSET,
   MIN_FRAMES,
   MAX_FRAMES,
-} from '../src/services/adapters/unsloth-video.js'
+} from '../src/core/ai/adapters/unsloth-video.js'
 
 const BASE = { provider: 'unsloth', baseUrl: 'http://127.0.0.1:8888', apiKey: 'test-key', model: 'unsloth/MiniMax-H3-GGUF' }
 

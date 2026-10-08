@@ -4,12 +4,12 @@
  * 每个分镜之间检查 cancel_requested 实现协作式取消
  */
 import { eq } from 'drizzle-orm'
-import { db, schema } from '../db/index.js'
-import { mastra } from '../mastra/index.js'
-import { buildAgentRequestContext } from '../agents/context.js'
-import { buildDramaCreativeContext } from './drama-context.js'
-import { videoPromptsKey, startTask, updateTask, getTask, isCancelRequested } from './pipeline-tasks.js'
-import { logTaskError, logTaskProgress, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { db, schema } from '../core/db/index.js'
+import { mastra } from '../core/mastra/index.js'
+import { buildAgentRequestContext } from '../core/agents/context.js'
+import { buildDramaCreativeContext } from '../core/production/drama-context.js'
+import { videoPromptsKey, startTask, updateTask, getTask, isCancelRequested } from '../core/tasks/pipeline-tasks.js'
+import { logTaskError, logTaskProgress, logTaskStart, logTaskSuccess } from '../core/tasks/task-logger.js'
 
 export interface VideoPromptBatchStatus {
   status: 'running' | 'done' | 'error' | 'cancelled'

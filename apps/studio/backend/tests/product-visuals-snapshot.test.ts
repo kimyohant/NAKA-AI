@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { buildVisualPrompt, visualSizeFor } from '../src/services/product-visuals.js'
+import { buildVisualPrompt, visualSizeFor } from '../src/core/product/product-visuals.js'
 
 /**
  * Snapshot: prompt/size ของ Marketer visuals (ย้ายจาก services/marketer.ts ตาม

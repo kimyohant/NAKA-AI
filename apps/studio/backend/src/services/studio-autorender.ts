@@ -9,16 +9,16 @@
  *   resume ไม่ได้ ⇒ failed + E_TASK_INTERRUPTED
  */
 import { and, eq, inArray } from 'drizzle-orm'
-import { db, schema } from '../db/index.js'
-import { AppError, now } from '../utils/response.js'
-import { getActiveConfig } from './ai.js'
+import { db, schema } from '../core/db/index.js'
+import { AppError, now } from '../core/http/response.js'
+import { getActiveConfig } from '../core/ai/ai.js'
 import {
   getProjectRow, getProjectShots, renderTargets, requireAvatarIfTemplateNeeds,
   submitRenderStage, mergeProject, waitForMergeCompletion, toProjectJson,
   isAutoRenderRunning, parseAutoRender, type AutoRenderState,
 } from './studio.js'
-import { startTask, updateTask, isCancelRequested } from './pipeline-tasks.js'
-import { logTaskError, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { startTask, updateTask, isCancelRequested } from '../core/tasks/pipeline-tasks.js'
+import { logTaskError, logTaskStart, logTaskSuccess } from '../core/tasks/task-logger.js'
 
 const POLL_MS = 5_000
 const MERGE_POLL_MS = 2_000

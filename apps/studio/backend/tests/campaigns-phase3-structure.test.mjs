@@ -38,14 +38,14 @@ test('Phase 3 routes: ad references + visuals ครบตาม PHASE3 ข้�
 })
 
 test('ad_analyst agent registered ครบทุกจุด และ output ผ่าน tool', () => {
-  const agents = read('src/agents/index.ts')
+  const agents = read('src/core/agents/index.ts')
   assert.match(agents, /ad_analyst: \{/) // DEFAULT_PROMPTS
   assert.match(agents, /saveReferenceAnalysis: marketerTools\.saveReferenceAnalysis/) // AGENT_TOOLS
 
-  const skills = read('src/agents/skills.ts')
+  const skills = read('src/core/agents/skills.ts')
   assert.match(skills, /ad_analyst: \['ad-analyst'\]/)
 
-  const tools = read('src/agents/tools/marketer-tools.ts')
+  const tools = read('src/core/agents/tools/marketer-tools.ts')
   assert.match(tools, /save_reference_analysis/)
   assert.match(tools, /campaignAdReferences/)
 
@@ -64,7 +64,7 @@ test('ad_analyst agent registered ครบทุกจุด และ output �
 })
 
 test('ad_scriptwriter รู้จักบล็อก reference (recreate mode) ทั้ง DEFAULT_PROMPTS และ workspace', () => {
-  const agents = read('src/agents/index.ts')
+  const agents = read('src/core/agents/index.ts')
   assert.match(agents, /【Reference ad structure】/)
 
   for (const file of ['workspace/prompts/ad_scriptwriter.md', 'workspace/prompts/ad_scriptwriter.en.md',
@@ -78,7 +78,7 @@ test('ad_scriptwriter รู้จักบล็อก reference (recreate mode
   }
 
   // save_creatives บันทึก reference_id จาก request context
-  const tools = read('src/agents/tools/marketer-tools.ts')
+  const tools = read('src/core/agents/tools/marketer-tools.ts')
   assert.match(tools, /referenceId: \(rc\?\.get\('referenceId' as never\) as number \| undefined\) \?\? null/)
   const service = read('src/services/marketer.ts')
   assert.match(service, /referenceId: reference\?\.id/)
@@ -97,13 +97,13 @@ test('product visuals อ่านสดจาก sys_task และไม่แ
   assert.match(service, /referenceImages: \[sourceImage\]/)
   // packshot สี่เหลี่ยมจัตุรัส / ขนาดตาม aspectRatio — builder อยู่ใน services/product-visuals.ts (ใช้ร่วมกับ Studio)
   assert.match(service, /visualSizeFor\(/) // เรียกผ่าน builder ที่ย้ายไป
-  const productVisuals = read('src/services/product-visuals.ts')
+  const productVisuals = read('src/core/product/product-visuals.ts')
   assert.match(productVisuals, /export function buildVisualPrompt/)
   assert.match(productVisuals, /export function visualSizeFor/)
   assert.match(productVisuals, /'1024x1024'/)
   // ห้ามแตะ writeBackImageAssets / createTask ใน generation.ts (งาน visual ไม่มี prop/character ให้ write-back)
   assert.doesNotMatch(service, /writeBackImageAssets/)
-  const generation = read('src/services/generation.ts')
+  const generation = read('src/core/generation/generation.ts')
   assert.match(generation, /async function writeBackImageAssets/) // ยังอยู่ครบ ไม่ถูกแก้ให้หาย
   // promote: ต่อท้าย productImages ไม่ซ้ำ + promoted คำนวณจาก productImages
   assert.match(service, /E_VISUAL_NOT_READY/)

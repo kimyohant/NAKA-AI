@@ -14,9 +14,9 @@ const routeBlock = (source, route) => {
 }
 
 test('backend provider registry does not expose ChatFire as a model provider', () => {
-  const registry = read('src/services/adapters/registry.ts')
-  const ai = read('src/services/ai.ts')
-  const aiConfigRoute = read('src/routes/aiConfigs.ts')
+  const registry = read('src/core/ai/adapters/registry.ts')
+  const ai = read('src/core/ai/ai.ts')
+  const aiConfigRoute = read('src/core/routes/aiConfigs.ts')
   const useApi = hasFrontend ? readFrontend('app/composables/useApi.ts') : ''
 
   assert.doesNotMatch(registry, /chatfire/i)
@@ -30,7 +30,7 @@ test('backend provider registry does not expose ChatFire as a model provider', (
 })
 
 test('text agents use the official Gemini provider for gemini configs', () => {
-  const agents = read('src/agents/index.ts')
+  const agents = read('src/core/agents/index.ts')
 
   assert.match(agents, /createGoogleGenerativeAI/)
   assert.match(agents, /providerName === 'gemini'/)
@@ -38,7 +38,7 @@ test('text agents use the official Gemini provider for gemini configs', () => {
 })
 
 test('text agents keep OpenAI provider routing for non-Gemini configs', () => {
-  const agents = read('src/agents/index.ts')
+  const agents = read('src/core/agents/index.ts')
 
   assert.match(agents, /createOpenAI/)
   assert.match(agents, /const provider = createOpenAI\(/)
@@ -46,15 +46,15 @@ test('text agents keep OpenAI provider routing for non-Gemini configs', () => {
 })
 
 test('text provider base URL handling uses official Gemini v1beta endpoint', () => {
-  const ai = read('src/services/ai.ts')
+  const ai = read('src/core/ai/ai.ts')
 
   assert.match(ai, /provider === 'gemini'/)
   assert.match(ai, /return joinProviderUrl\(config\.baseUrl,\s*'\/v1beta',\s*''\)/)
 })
 
 test('backend rejects unsupported providers at DB and route boundaries', () => {
-  const ai = read('src/services/ai.ts')
-  const route = read('src/routes/aiConfigs.ts')
+  const ai = read('src/core/ai/ai.ts')
+  const route = read('src/core/routes/aiConfigs.ts')
 
   assert.match(ai, /officialProviders/)
   assert.match(ai, /text:\s*\[\s*'openai',\s*'gemini',\s*'volcengine',\s*'zai',\s*'deepseek',\s*'qwen',\s*'moonshot',\s*'xai',\s*'unsloth'\s*\]/)
@@ -78,7 +78,7 @@ test('backend rejects unsupported providers at DB and route boundaries', () => {
 })
 
 test('AI config routes reject unsupported service/provider pairs in create, test, and update paths', () => {
-  const route = read('src/routes/aiConfigs.ts')
+  const route = read('src/core/routes/aiConfigs.ts')
   const createRoute = routeBlock(route, "app.post('/',")
   const testRoute = routeBlock(route, "app.post('/test',")
   const updateRoute = routeBlock(route, "app.put('/:id',")
@@ -100,7 +100,7 @@ test('AI config routes reject unsupported service/provider pairs in create, test
 })
 
 test('AI config update route persists service type changes after validation', () => {
-  const route = read('src/routes/aiConfigs.ts')
+  const route = read('src/core/routes/aiConfigs.ts')
   const updateRoute = routeBlock(route, "app.put('/:id',")
 
   assert.match(updateRoute, /const updates: Record<string, any> = \{ updatedAt: now\(\) \}/)
@@ -109,7 +109,7 @@ test('AI config update route persists service type changes after validation', ()
 })
 
 test('AI config probe uses provider-specific auth schemes', () => {
-  const route = read('src/routes/aiConfigs.ts')
+  const route = read('src/core/routes/aiConfigs.ts')
   const geminiHeadersStart = route.indexOf('function geminiHeaders')
   const buildProbeStart = route.indexOf('function buildProbe')
   const geminiHeaders = route.slice(geminiHeadersStart, buildProbeStart)
@@ -133,7 +133,7 @@ test('AI config probe uses provider-specific auth schemes', () => {
 })
 
 test('removed providers no longer ship adapters or webhook routes', () => {
-  const registry = read('src/services/adapters/registry.ts')
+  const registry = read('src/core/ai/adapters/registry.ts')
   const index = read('src/index.ts') + read('src/modules.ts')
 
   assert.doesNotMatch(registry, /ali-image|ali-video|vidu-video/)
@@ -142,7 +142,7 @@ test('removed providers no longer ship adapters or webhook routes', () => {
 })
 
 test('adapter registry fails closed for unsupported providers', () => {
-  const registry = read('src/services/adapters/registry.ts')
+  const registry = read('src/core/ai/adapters/registry.ts')
 
   assert.match(registry, /Unsupported image provider/)
   assert.match(registry, /Unsupported video provider/)
@@ -152,14 +152,14 @@ test('adapter registry fails closed for unsupported providers', () => {
 })
 
 test('OpenAI image adapter defaults to GPT Image instead of legacy DALL-E', () => {
-  const adapter = read('src/services/adapters/openai-image.ts')
+  const adapter = read('src/core/ai/adapters/openai-image.ts')
 
   assert.match(adapter, /record\.model\s*\|\|\s*config\.model\s*\|\|\s*'gpt-image-2'/)
   assert.doesNotMatch(adapter, /record\.model\s*\|\|\s*'dall-e-3'/)
 })
 
 test('OpenAI image adapter uses GPT Image request shape and keeps DALL-E response format', () => {
-  const adapter = read('src/services/adapters/openai-image.ts')
+  const adapter = read('src/core/ai/adapters/openai-image.ts')
 
   assert.match(adapter, /model\.startsWith\('gpt-image-'\)/)
   assert.match(adapter, /normalizeGptImageSize/)
@@ -171,10 +171,10 @@ test('OpenAI image adapter uses GPT Image request shape and keeps DALL-E respons
 })
 
 test('new image and video models use their current API shapes', () => {
-  const openaiImage = read('src/services/adapters/openai-image.ts')
-  const geminiImage = read('src/services/adapters/gemini-image.ts')
-  const volcVideo = read('src/services/adapters/volcengine-video.ts')
-  const wanVideo = read('src/services/adapters/aliyun-wan-video.ts')
+  const openaiImage = read('src/core/ai/adapters/openai-image.ts')
+  const geminiImage = read('src/core/ai/adapters/gemini-image.ts')
+  const volcVideo = read('src/core/ai/adapters/volcengine-video.ts')
+  const wanVideo = read('src/core/ai/adapters/aliyun-wan-video.ts')
 
   assert.match(openaiImage, /isGptImage2/)
   assert.match(openaiImage, /normalizeGptImage2Size/)

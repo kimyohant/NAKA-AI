@@ -12,7 +12,7 @@ import Database from 'better-sqlite3'
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-gallery-test-'))
 process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
 
-const { db, schema } = await import('../src/db/index.js')
+const { db, schema } = await import('../src/core/db/index.js')
 const gallery = await import('../src/services/gallery.js')
 const marketer = await import('../src/services/marketer.js')
 const { eq } = await import('drizzle-orm')
@@ -56,7 +56,7 @@ async function seedCreative(campaignId: number, overrides: Record<string, unknow
 }
 
 test('migration v16: ตาราง creative_results มี UNIQUE(creative_id) และ init ซ้ำได้', async () => {
-  const { initSqliteSchema } = await import('../src/db/sqlite-schema.js')
+  const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
   const sqlite = new Database(path.join(dir, 'test.sqlite3'))
   initSqliteSchema(sqlite) // รีเพลย์ต้องเงียบ ๆ ผ่าน
   const ddl = sqlite.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'creative_results'").get() as { sql: string }

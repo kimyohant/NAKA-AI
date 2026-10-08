@@ -4,17 +4,17 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import Database from 'better-sqlite3'
-import { buildCaptionCues, splitCaptionLines, toSrt, toAss, assertCaptionFontAvailable, aiLabelText } from '../src/services/captions.js'
+import { buildCaptionCues, splitCaptionLines, toSrt, toAss, assertCaptionFontAvailable, aiLabelText } from '../src/core/production/captions.js'
 
 // ตั้ง env ก่อน import services (db singleton) — ทำผ่าน dynamic import
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-studio2-'))
 process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
 
-const { initSqliteSchema } = await import('../src/db/sqlite-schema.js')
-const { db, schema } = await import('../src/db/index.js')
+const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
+const { db, schema } = await import('../src/core/db/index.js')
 const { createProjectFromCampaign } = await import('../src/services/studio.js')
 const { startAutoRender, runAutoRenderPipeline } = await import('../src/services/studio-autorender.js')
-const { now } = await import('../src/utils/response.js')
+const { now } = await import('../src/core/http/response.js')
 
 // seed: migration + configs (dummy) + campaign/creative + project/drama/episode/storyboards
 {
@@ -110,7 +110,7 @@ test('captions: cue เวลาสะสมจากความยาวจร
   const boxed = toAss(cues, { style: 'boxed', language: 'th', aspectRatio: '16:9', aiLabelText: null, totalDurationSec: 5.5 })
   assert.match(boxed, /PlayResX: 1280/)
   // font missing → E_CAPTION_FONT_MISSING (errorCode)
-  const { AppError } = await import('../src/utils/response.js')
+  const { AppError } = await import('../src/core/http/response.js')
   try {
     assertCaptionFontAvailable('th', path.join(dir, 'no-fonts'))
     assert.fail('should throw')
@@ -257,7 +257,7 @@ test('auto-render resume: sys_task หายจริง ⇒ E_TASK_INTERRUPTED'
 })
 
 test('boot: failStaleRunningTasks ไม่แตะ studio_render — ปล่อยให้ resumeStaleAutoRenders รับช่วง', async () => {
-  const { failStaleRunningTasks } = await import('../src/services/pipeline-tasks.js')
+  const { failStaleRunningTasks } = await import('../src/core/tasks/pipeline-tasks.js')
   {
     const sqlite = new Database(path.join(dir, 'test.sqlite3'))
     sqlite.prepare("INSERT INTO pipeline_tasks (kind, key, status, created_at, updated_at) VALUES ('studio_render','studio_render:boot','running',datetime('now'),datetime('now'))").run()
@@ -274,7 +274,7 @@ test('boot: failStaleRunningTasks ไม่แตะ studio_render — ปล่
 
 test('drama merge เดิมไม่ถูกเปลี่ยน (mergeEpisodeVideos ยังไม่ผูก captions)', async () => {
   const { readFileSync } = await import('node:fs')
-  const src = readFileSync(new URL('../src/services/ffmpeg-merge.ts', import.meta.url), 'utf8')
+  const src = readFileSync(new URL('../src/core/production/ffmpeg-merge.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(src, /captions|subtitle/i)
   // เส้นทาง merge ของ drama ปกติ (routes/merge.ts) ยังเรียก mergeEpisodeVideos ตรง ๆ ไม่ผ่าน studio
   const mergeRoute = readFileSync(new URL('../src/routes/merge.ts', import.meta.url), 'utf8')

@@ -3,7 +3,7 @@
  * อ่านรวมผลงานทุกแคมเปญ + upsert/ลบผลตอบรับต่อ creative (manual analytics — ผู้ใช้กรอกเอง)
  */
 import { Hono } from 'hono'
-import { success, badRequest, notFound } from '../utils/response.js'
+import { success, badRequest, notFound } from '../core/http/response.js'
 import * as gallery from '../services/gallery.js'
 
 const app = new Hono()

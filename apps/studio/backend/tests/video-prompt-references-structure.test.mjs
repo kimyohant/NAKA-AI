@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('prompt_generator video prompt format uses @name references instead of XML tags', () => {
-  const agents = read('src/agents/index.ts')
+  const agents = read('src/core/agents/index.ts')
   const skill = read('workspace/skills/prompt-generator/video-prompt/SKILL.md')
 
   // 场景/角色用 @名字 引用（名字必须与场景/角色列表完全一致）

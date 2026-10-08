@@ -9,7 +9,7 @@
  */
 import { Hono } from 'hono'
 import type { Context } from 'hono'
-import { success, badRequest } from '../utils/response.js'
+import { success, badRequest } from '../core/http/response.js'
 import * as live from '../services/ai-live.js'
 import * as tiktok from '../services/tiktok-live.js'
 import * as avatars from '../services/live-avatars.js'

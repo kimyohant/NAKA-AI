@@ -17,7 +17,7 @@ process.env.STORAGE_PATH = path.join(dir, 'static')
 mkdirSync(path.join(dir, 'static', 'uploads'), { recursive: true })
 mkdirSync(path.join(dir, 'static', 'videos'), { recursive: true })
 
-const { initSqliteSchema } = await import('../src/db/sqlite-schema.js')
+const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 {
   const { default: Database } = await import('better-sqlite3')
   const sqlite = new Database(process.env.SQLITE_PATH!)

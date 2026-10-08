@@ -8,8 +8,8 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { WanCreateImageAdapter, WanCreateVideoAdapter } from '../src/services/adapters/wan-create'
-import type { AIConfig } from '../src/services/adapters/types'
+import { WanCreateImageAdapter, WanCreateVideoAdapter } from '../src/core/ai/adapters/wan-create'
+import type { AIConfig } from '../src/core/ai/adapters/types'
 
 const key = process.env.WAN_ACCESS_KEY || ''
 if (!/^wan-sk\.[^.\s]+\.[^.\s]+$/.test(key)) throw new Error('set WAN_ACCESS_KEY=wan-sk.…')

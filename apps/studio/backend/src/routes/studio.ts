@@ -3,7 +3,7 @@
  * Response helper เดิม; ความผิดพลาดทางธุรกิจส่ง errorCode (E_STUDIO_*, E_AVATAR_REQUIRED, ...)
  */
 import { Hono } from 'hono'
-import { success, created, badRequest, notFound } from '../utils/response.js'
+import { success, created, badRequest, notFound } from '../core/http/response.js'
 import * as studio from '../services/studio.js'
 import * as influencerService from '../services/studio-influencer.js'
 import { startAutoRender, cancelAutoRender } from '../services/studio-autorender.js'

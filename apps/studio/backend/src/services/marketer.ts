@@ -6,31 +6,31 @@
  * 对外 JSON 统一 camelCase（docs/ai-marketer/PLAN.md ข้อ 4 API Contract）。
  */
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
-import { ownedBy } from '../auth/owner-context.js'
-import { db, getInsertId, schema } from '../db/index.js'
-import { AppError, now } from '../utils/response.js'
-import { getTextConfig, getActiveConfigId, getActiveConfig } from './ai.js'
-import { ingestProductUrl, type IngestedProduct } from './product-ingest.js'
-import { generateImage } from './generation.js'
-import { buildVisualPrompt, visualSizeFor, VISUAL_KINDS, type VisualKind } from './product-visuals.js'
-import { mastra } from '../mastra/index.js'
-import { buildCampaignRequestContext } from '../agents/context.js'
-import { startTask, updateTask, type PipelineTaskKind } from './pipeline-tasks.js'
+import { ownedBy } from '../core/auth/owner-context.js'
+import { db, getInsertId, schema } from '../core/db/index.js'
+import { AppError, now } from '../core/http/response.js'
+import { getTextConfig, getActiveConfigId, getActiveConfig } from '../core/ai/ai.js'
+import { ingestProductUrl, type IngestedProduct } from '../core/product/product-ingest.js'
+import { generateImage } from '../core/generation/generation.js'
+import { buildVisualPrompt, visualSizeFor, VISUAL_KINDS, type VisualKind } from '../core/product/product-visuals.js'
+import { mastra } from '../core/mastra/index.js'
+import { buildCampaignRequestContext } from '../core/agents/context.js'
+import { startTask, updateTask, type PipelineTaskKind } from '../core/tasks/pipeline-tasks.js'
 import { performanceEvidenceBlock } from './gallery.js'
-import { logTaskError, logTaskProgress, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { logTaskError, logTaskProgress, logTaskStart, logTaskSuccess } from '../core/tasks/task-logger.js'
 import {
   MARKETER_DOC_KINDS,
   MARKETER_PLATFORMS,
   MARKETER_CREATIVE_FORMATS,
   snapshotDocRevision,
-} from '../agents/tools/marketer-tools.js'
+} from '../core/agents/tools/marketer-tools.js'
 
 export const DOC_KINDS = MARKETER_DOC_KINDS
 export const PLATFORMS = MARKETER_PLATFORMS
 export const CREATIVE_FORMATS = MARKETER_CREATIVE_FORMATS
 // Phase 3: Product Visuals
 // VISUAL_KINDS / VisualKind / buildVisualPrompt / visualSizeFor ย้ายไป services/product-visuals.ts (ใช้ร่วมกับ Studio)
-export { VISUAL_KINDS, type VisualKind } from './product-visuals.js'
+export { VISUAL_KINDS, type VisualKind } from '../core/product/product-visuals.js'
 export const MAX_TRANSCRIPT_LENGTH = 20_000
 export const DEFAULT_VISUALS_COUNT = 2
 

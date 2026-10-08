@@ -1,4 +1,4 @@
-import { backupSqlite } from '../src/db/backup.js'
+import { backupSqlite } from '../src/core/db/backup.js'
 
 const [mode, source, destination] = process.argv.slice(2)
 if (!['backup', 'restore'].includes(mode) || !source || !destination) {

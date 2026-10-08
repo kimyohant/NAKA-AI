@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { AliyunWanVideoAdapter } from '../src/services/adapters/aliyun-wan-video'
+import { AliyunWanVideoAdapter } from '../src/core/ai/adapters/aliyun-wan-video'
 
 const adapter = new AliyunWanVideoAdapter()
 const config = {

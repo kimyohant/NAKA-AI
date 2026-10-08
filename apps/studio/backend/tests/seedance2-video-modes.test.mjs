@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('volcengine video adapter only supports Seedance 2.0 models and reference mode only', () => {
-  const adapter = read('src/services/adapters/volcengine-video.ts')
+  const adapter = read('src/core/ai/adapters/volcengine-video.ts')
 
   // 模型白名单：仅 doubao-seedance-2-0-* 前缀
   assert.match(adapter, /SEEDANCE2_MODEL_PREFIX = 'doubao-seedance-2-0'/)
@@ -37,7 +37,7 @@ test('volcengine video adapter only supports Seedance 2.0 models and reference m
 })
 
 test('video generation service resolves reference media and persists new fields', () => {
-  const service = read('src/services/generation.ts')
+  const service = read('src/core/generation/generation.ts')
 
   assert.match(service, /PUBLIC_BASE_URL/)
   assert.match(service, /resolvePublicMediaUrl/)
@@ -52,8 +52,8 @@ test('video generation service resolves reference media and persists new fields'
 
 test('video resolution is fixed per episode, editable, and locked into video tasks', () => {
   const episodes = read('src/routes/episodes.ts')
-  const tasks = read('src/routes/tasks.ts')
-  const service = read('src/services/generation.ts')
+  const tasks = read('src/core/routes/tasks.ts')
+  const service = read('src/core/generation/generation.ts')
 
   // 创建集时固定（默认 720p，接受 480p/720p/1080p）
   assert.match(episodes, /\['480p', '720p', '1080p'\]\.includes\(body\.resolution\)/)
@@ -61,7 +61,7 @@ test('video resolution is fixed per episode, editable, and locked into video tas
   assert.match(episodes, /'status', 'resolution', 'hook'\]/)
   assert.match(episodes, /resolution 只支持 480p \/ 720p \/ 1080p/)
   // 视频任务锁定集的分辨率（优先于请求体）— logic อยู่ใน services/task-prep.ts แล้ว (refactor Product Studio)
-  const taskPrep = read('src/services/task-prep.ts')
+  const taskPrep = read('src/core/generation/task-prep.ts')
   assert.match(taskPrep, /episodeResolution = ep\.resolution/)
   assert.match(tasks, /resolution: episodeResolution \|\| videoBody!\.resolution/)
   // 服务落入 params 并传给适配器
@@ -70,7 +70,7 @@ test('video resolution is fixed per episode, editable, and locked into video tas
 })
 
 test('upload route exposes validated video and audio endpoints', () => {
-  const route = read('src/routes/upload.ts')
+  const route = read('src/core/routes/upload.ts')
 
   assert.match(route, /app\.post\('\/video'/)
   assert.match(route, /app\.post\('\/audio'/)
@@ -81,7 +81,7 @@ test('upload route exposes validated video and audio endpoints', () => {
 })
 
 test('tasks route validates reference-mode requirements for video tasks', () => {
-  const route = read('src/routes/tasks.ts')
+  const route = read('src/core/routes/tasks.ts')
 
   // 统一任务入口：type 分派 image/video
   assert.match(route, /type 必须为 image 或 video/)
@@ -95,7 +95,7 @@ test('tasks route validates reference-mode requirements for video tasks', () => 
   // Wan 3.0 官方入参兼容层会把 input.media 归一到 first_frame_url/last_frame_url 等扁平字段
 
   // 多模态参考校验并固定 reference 模式（校验 logic อยู่ใน services/task-prep.ts แล้ว — route เรียกผ่าน service）
-  const taskPrep2 = read('src/services/task-prep.ts')
+  const taskPrep2 = read('src/core/generation/task-prep.ts')
   assert.match(taskPrep2, /参考素材超限：图片≤9、视频≤3、音频≤3/)
   assert.match(taskPrep2, /参考音频需要至少 1 个参考图片或视频/)
   assert.match(taskPrep2, /视频生成需要至少一个参考素材或 prompt/)
@@ -107,8 +107,8 @@ test('tasks route validates reference-mode requirements for video tasks', () => 
 })
 
 test('image/video generation tasks are unified into a single sys_task table', () => {
-  const schema = read('src/db/schema.ts')
-  const sqliteSchema = read('src/db/sqlite-schema.ts')
+  const schema = read('src/core/db/schema.ts')
+  const sqliteSchema = read('src/core/db/sqlite-schema.ts')
   const envExample = read('.env.example')
 
   // sys_task：type 区分 image/video，生成参数收进 params(JSON)（SQLite 化：sqliteTable + text）
@@ -130,8 +130,8 @@ test('image/video generation tasks are unified into a single sys_task table', ()
   assert.match(sqliteSchema, /result_url TEXT/)
 
   // 路由与服务只操作 sys_task（统一 /tasks 入口，type 过滤）
-  const tasksRoute = read('src/routes/tasks.ts')
-  const service = read('src/services/generation.ts')
+  const tasksRoute = read('src/core/routes/tasks.ts')
+  const service = read('src/core/generation/generation.ts')
   assert.match(tasksRoute, /schema\.sysTask/)
   assert.match(tasksRoute, /r\.type === type/)
   assert.match(service, /insert\(schema\.sysTask\)/) // db/tx 事务内插入

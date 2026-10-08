@@ -10,7 +10,7 @@
  * - 目标库已有业务数据时须 --force 才允许写入；写入前自动备份 .bak
  * - 逐表行数对照，不一致则非零退出
  *
- * 注意：服务启动时已内置同逻辑的自动迁移（src/db/mysql-import.ts，
+ * 注意：服务启动时已内置同逻辑的自动迁移（src/core/db/mysql-import.ts，
  * 显式配置 MySQL + 空库时触发），本脚本用于手动/强制场景。
  */
 import 'dotenv/config'
@@ -19,8 +19,8 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import mysql from 'mysql2/promise'
 import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/db/sqlite-schema.js'
-import { importMysqlData, mysqlUrlFromEnv, sqliteBusinessRowCount } from '../src/db/mysql-import.js'
+import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
+import { importMysqlData, mysqlUrlFromEnv, sqliteBusinessRowCount } from '../src/core/db/mysql-import.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const force = process.argv.includes('--force')

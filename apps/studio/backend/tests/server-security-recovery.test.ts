@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/db/sqlite-schema.js'
+import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
 
 async function listen(server: ReturnType<typeof createServer>): Promise<number> {
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))

@@ -7,8 +7,8 @@ const read = (path) => readFileSync(new URL(path, root), 'utf8')
 const exists = (path) => existsSync(new URL(path, root))
 
 test('backend removes the voice assignment agent and tools', () => {
-  const agents = read('src/agents/index.ts')
-  const skills = read('src/agents/skills.ts')
+  const agents = read('src/core/agents/index.ts')
+  const skills = read('src/core/agents/skills.ts')
 
   assert.doesNotMatch(agents, /voice_assigner/)
   assert.doesNotMatch(agents, /createVoiceTools/)
@@ -19,9 +19,9 @@ test('backend removes the voice assignment agent and tools', () => {
 
 test('backend removes audio service providers, TTS adapters, and voice routes', () => {
   const index = read('src/index.ts') + read('src/modules.ts')
-  const ai = read('src/services/ai.ts')
-  const registry = read('src/services/adapters/registry.ts')
-  const types = read('src/services/adapters/types.ts')
+  const ai = read('src/core/ai/ai.ts')
+  const registry = read('src/core/ai/adapters/registry.ts')
+  const types = read('src/core/ai/adapters/types.ts')
 
   assert.doesNotMatch(index, /aiVoices/)
   assert.doesNotMatch(ai, /audio/)
@@ -32,15 +32,15 @@ test('backend removes audio service providers, TTS adapters, and voice routes', 
   assert.equal(exists('src/routes/aiVoices.ts'), false)
   assert.equal(exists('src/services/tts-generation.ts'), false)
   assert.equal(exists('src/services/adapters/minimax-tts.ts'), false)
-  assert.match(read('src/services/adapters/volcengine-video.ts'), /generate_audio:\s*record\.generateAudio/)
-  assert.doesNotMatch(read('src/services/adapters/volcengine-video.ts'), /generate_audio:\s*false/)
+  assert.match(read('src/core/ai/adapters/volcengine-video.ts'), /generate_audio:\s*record\.generateAudio/)
+  assert.doesNotMatch(read('src/core/ai/adapters/volcengine-video.ts'), /generate_audio:\s*false/)
 })
 
 test('backend removes TTS endpoints and audio-specific schema fields', () => {
   const episodes = read('src/routes/episodes.ts')
   const storyboards = read('src/routes/storyboards.ts')
   const characters = read('src/routes/characters.ts')
-  const schema = read('src/db/schema.ts')
+  const schema = read('src/core/db/schema.ts')
 
   assert.doesNotMatch(episodes, /audio_config_id/)
   assert.doesNotMatch(episodes, /assign_voices/)

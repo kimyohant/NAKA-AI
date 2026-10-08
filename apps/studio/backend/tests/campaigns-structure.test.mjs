@@ -36,14 +36,14 @@ test('campaigns route implements the full API contract', () => {
 })
 
 test('product-ingest enforces SSRF guards via safe-fetch', () => {
-  const service = read('src/services/product-ingest.ts')
+  const service = read('src/core/product/product-ingest.ts')
   assert.match(service, /safeFetch\(/)
   assert.match(service, /MAX_PAGE_BYTES/)
   assert.match(service, /MAX_IMAGE_BYTES/)
   assert.match(service, /E_INGEST_FAILED/)
 
   // SSRF 原语在 utils/safe-fetch.ts：协议白名单 + 建连时 DNS 复检 + 手动重定向 + 体积上限
-  const safeFetch = read('src/utils/safe-fetch.ts')
+  const safeFetch = read('src/core/utils/safe-fetch.ts')
   assert.match(safeFetch, /assertPublicHttpUrl/)
   assert.match(safeFetch, /isBlockedAddress/)
   assert.match(safeFetch, /Only http\/https URLs are allowed/)
@@ -86,7 +86,7 @@ test('marketer service guards async jobs and reuses pipeline tasks', () => {
 })
 
 test('marketer agents are registered with tools, prompts and skills', () => {
-  const agents = read('src/agents/index.ts')
+  const agents = read('src/core/agents/index.ts')
   for (const type of ['market_researcher', 'strategist', 'ad_scriptwriter']) {
     assert.match(agents, new RegExp(`${type}: \\{`), `${type} missing in DEFAULT_PROMPTS`)
   }
@@ -94,7 +94,7 @@ test('marketer agents are registered with tools, prompts and skills', () => {
   assert.match(agents, /marketerTools\.saveCampaignDoc/)
   assert.match(agents, /marketerTools\.saveCreatives/)
 
-  const skills = read('src/agents/skills.ts')
+  const skills = read('src/core/agents/skills.ts')
   assert.match(skills, /market_researcher: \['market-researcher'\]/)
   assert.match(skills, /strategist: \['strategist'\]/)
   assert.match(skills, /ad_scriptwriter: \['ad-scriptwriter'\]/)
@@ -110,18 +110,18 @@ test('marketer agents are registered with tools, prompts and skills', () => {
 })
 
 test('campaign schema and pipeline task kinds are wired', () => {
-  const sqliteSchema = read('src/db/sqlite-schema.ts')
+  const sqliteSchema = read('src/core/db/sqlite-schema.ts')
   assert.match(sqliteSchema, /version: 6/)
   assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS campaigns/)
   assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS campaign_docs/)
   assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS campaign_creatives/)
 
-  const drizzle = read('src/db/schema.ts')
+  const drizzle = read('src/core/db/schema.ts')
   assert.match(drizzle, /export const campaigns = sqliteTable\('campaigns'/)
   assert.match(drizzle, /export const campaignDocs = sqliteTable\('campaign_docs'/)
   assert.match(drizzle, /export const campaignCreatives = sqliteTable\('campaign_creatives'/)
 
-  const pipeline = read('src/services/pipeline-tasks.ts')
+  const pipeline = read('src/core/tasks/pipeline-tasks.ts')
   assert.match(pipeline, /campaign_research/)
   assert.match(pipeline, /campaign_strategy/)
   assert.match(pipeline, /campaign_creatives/)

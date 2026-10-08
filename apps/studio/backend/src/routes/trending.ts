@@ -3,7 +3,7 @@
  * คลังเทรนด์ไทยแบบ curated อ่านอย่างเดียว — filter/sort ที่ฝั่ง service
  */
 import { Hono } from 'hono'
-import { success, badRequest } from '../utils/response.js'
+import { success, badRequest } from '../core/http/response.js'
 import { listTrendVideos } from '../services/trending.js'
 
 const app = new Hono()

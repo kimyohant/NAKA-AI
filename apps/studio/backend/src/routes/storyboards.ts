@@ -1,10 +1,10 @@
 import { Hono } from 'hono'
 import { and, eq } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../db/index.js'
-import { success, created, now, badRequest } from '../utils/response.js'
-import { toSnakeCase } from '../utils/transform.js'
-import { logTaskPayload, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
-import { storyboardReadiness, taskMediaSlot, type MediaSlot } from '../services/storyboard-readiness.js'
+import { db, getInsertId, schema } from '../core/db/index.js'
+import { success, created, now, badRequest } from '../core/http/response.js'
+import { toSnakeCase } from '../core/utils/transform.js'
+import { logTaskPayload, logTaskStart, logTaskSuccess } from '../core/tasks/task-logger.js'
+import { storyboardReadiness, taskMediaSlot, type MediaSlot } from '../core/production/storyboard-readiness.js'
 
 const app = new Hono()
 

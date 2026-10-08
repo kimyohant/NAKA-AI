@@ -6,16 +6,16 @@
  * mergeEpisodeVideos, task-prep, product-visuals, budget guard ใน createTask
  */
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
-import { ownedBy } from '../auth/owner-context.js'
-import { db, getInsertId, schema } from '../db/index.js'
-import { AppError, now } from '../utils/response.js'
-import { getActiveConfig } from './ai.js'
-import { generateImage, generateVideo, videoQueuePosition } from './generation.js'
-import { videoAdapters } from './adapters/registry.js'
-import { mergeEpisodeVideos } from './ffmpeg-merge.js'
+import { ownedBy } from '../core/auth/owner-context.js'
+import { db, getInsertId, schema } from '../core/db/index.js'
+import { AppError, now } from '../core/http/response.js'
+import { getActiveConfig } from '../core/ai/ai.js'
+import { generateImage, generateVideo, videoQueuePosition } from '../core/generation/generation.js'
+import { videoAdapters } from '../core/ai/adapters/registry.js'
+import { mergeEpisodeVideos } from '../core/production/ffmpeg-merge.js'
 import { ingestUrl } from './marketer.js'
-import { resolveTaskContext, prepareVideoTask } from './task-prep.js'
-import { buildVisualPrompt, visualSizeFor } from './product-visuals.js'
+import { resolveTaskContext, prepareVideoTask } from '../core/generation/task-prep.js'
+import { buildVisualPrompt, visualSizeFor } from '../core/product/product-visuals.js'
 import {
   getStudioTemplate, scaleBeats, templateDurationSec, STUDIO_TEMPLATES,
   STUDIO_LANGUAGES, STUDIO_MARKETS, STUDIO_PLATFORMS,
@@ -23,17 +23,17 @@ import {
 } from './studio-templates.js'
 import { buildShotPrompts, clearEpisodeStoryboards, writeStudioShot } from './studio-shots.js'
 import { getInfluencerWithTask } from './studio-influencer.js'
-import { mastra } from '../mastra/index.js'
-import { buildStudioRequestContext } from '../agents/context.js'
-import { startTask, updateTask } from './pipeline-tasks.js'
+import { mastra } from '../core/mastra/index.js'
+import { buildStudioRequestContext } from '../core/agents/context.js'
+import { startTask, updateTask } from '../core/tasks/pipeline-tasks.js'
 import {
   assertCaptionFontAvailable, buildCaptionCues, burnSubtitles, toAss, toSrt, aiLabelText,
-} from './captions.js'
-import { STORAGE_ROOT } from '../utils/paths.js'
+} from '../core/production/captions.js'
+import { STORAGE_ROOT } from '../core/utils/paths.js'
 import fs from 'fs'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
-import { logTaskError, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { logTaskError, logTaskStart, logTaskSuccess } from '../core/tasks/task-logger.js'
 
 export const STUDIO_PROJECT_ING_STATUSES = ['scripting']
 export const STUDIO_IMAGE_KINDS = ['packshot', 'lifestyle', 'on_model', 'banner'] as const

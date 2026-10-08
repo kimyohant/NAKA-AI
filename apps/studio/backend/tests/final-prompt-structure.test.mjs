@@ -6,8 +6,8 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('characters and scenes tables store the agent-written final prompt', () => {
-  const schema = read('src/db/schema.ts')
-  const sqliteSchema = read('src/db/sqlite-schema.ts')
+  const schema = read('src/core/db/schema.ts')
+  const sqliteSchema = read('src/core/db/sqlite-schema.ts')
 
   // Drizzle 表定义（SQLite 化：sqliteTable + text）
   assert.match(schema, /export const characters = sqliteTable\('characters'[\s\S]*?finalPrompt: text\('final_prompt'\)/)
@@ -18,7 +18,7 @@ test('characters and scenes tables store the agent-written final prompt', () => 
 })
 
 test('grid prompt agent tools save agent-written final prompts with style injection', () => {
-  const tools = read('src/agents/tools/image-prompt-tools.ts')
+  const tools = read('src/core/agents/tools/image-prompt-tools.ts')
 
   assert.match(tools, /save_character_final_prompt/)
   assert.match(tools, /save_scene_final_prompt/)
@@ -31,7 +31,7 @@ test('grid prompt agent tools save agent-written final prompts with style inject
 })
 
 test('prompt agent instructions reference per-asset skills; skill files define the specs', () => {
-  const agents = read('src/agents/index.ts')
+  const agents = read('src/core/agents/index.ts')
   const charSkill = read('workspace/skills/prompt-generator/character-prompt/SKILL.md')
   const sceneSkill = read('workspace/skills/prompt-generator/scene-prompt/SKILL.md')
 
@@ -53,7 +53,7 @@ test('prompt agent instructions reference per-asset skills; skill files define t
 })
 
 test('image generation prefers the stored final prompt with agent generation and legacy fallback', () => {
-  const service = read('src/services/final-prompt.ts')
+  const service = read('src/core/generation/final-prompt.ts')
   const characters = read('src/routes/characters.ts')
   const scenes = read('src/routes/scenes.ts')
 

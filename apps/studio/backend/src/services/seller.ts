@@ -7,18 +7,18 @@
  * → auto-render → แนบวิดีโอที่รวมเสร็จเข้าโพสต์เอง (driveVideo วนเช็กทุก 5s + getPost sync ซ้ำ กันหลุดหลัง restart)
  */
 import { and, desc, eq, isNull } from 'drizzle-orm'
-import { ownedBy, ownerScope, runAsOwner } from '../auth/owner-context.js'
-import { db, getInsertId, schema } from '../db/index.js'
-import { AppError, now } from '../utils/response.js'
-import { getActiveConfig, getTextConfig } from './ai.js'
-import { mastra } from '../mastra/index.js'
+import { ownedBy, ownerScope, runAsOwner } from '../core/auth/owner-context.js'
+import { db, getInsertId, schema } from '../core/db/index.js'
+import { AppError, now } from '../core/http/response.js'
+import { getActiveConfig, getTextConfig } from '../core/ai/ai.js'
+import { mastra } from '../core/mastra/index.js'
 import { ingestUrl } from './marketer.js'
 import {
   createProject, deleteProject, getProjectDetail, getProjectRow, listProjects, parseAutoRender, startStudioScript,
 } from './studio.js'
 import { cancelAutoRender, startAutoRender } from './studio-autorender.js'
 import { getStudioTemplate, type StudioPlatform } from './studio-templates.js'
-import { logTaskError } from '../utils/task-logger.js'
+import { logTaskError } from '../core/tasks/task-logger.js'
 
 export const SELLER_CHANNELS = ['tiktok', 'shopee', 'facebook', 'instagram'] as const
 export type SellerChannel = typeof SELLER_CHANNELS[number]

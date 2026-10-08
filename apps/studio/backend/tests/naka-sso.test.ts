@@ -1,5 +1,5 @@
 /**
- * Studio side of naka-ai SSO (src/auth/naka-sso.ts) against a fake naka-ai token endpoint,
+ * Studio side of naka-ai SSO (src/core/auth/naka-sso.ts) against a fake naka-ai token endpoint,
  * plus a contract check with the real Worker side (kimyohant/naka-ai-landing src/auth/studio.ts, checked out
  * next to this repo or via NAKA_LANDING_DIR; skipped when absent).
  */
@@ -14,7 +14,7 @@ import { test, after } from 'node:test'
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-sso-'))
 process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
 process.env.STORAGE_PATH = path.join(dir, 'static')
-const { initSqliteSchema } = await import('../src/db/sqlite-schema.js')
+const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 {
   const { default: Database } = await import('better-sqlite3')
   const sqlite = new Database(process.env.SQLITE_PATH)
@@ -22,9 +22,9 @@ const { initSqliteSchema } = await import('../src/db/sqlite-schema.js')
   sqlite.close()
 }
 const { Hono } = await import('hono')
-const sso = await import('../src/auth/naka-sso.js')
-const { adminGuard } = await import('../src/middleware/admin.js')
-const { db, schema } = await import('../src/db/index.js')
+const sso = await import('../src/core/auth/naka-sso.js')
+const { adminGuard } = await import('../src/core/auth/admin.js')
+const { db, schema } = await import('../src/core/db/index.js')
 
 const SECRET = 'x'.repeat(40)
 const CODE = 'c'.repeat(43)
@@ -44,7 +44,7 @@ await new Promise<void>(r => naka.listen(0, '127.0.0.1', () => r()))
 const NAKA = `http://127.0.0.1:${(naka.address() as any).port}`
 after(() => naka.close())
 
-const { isAdminRequest } = await import('../src/middleware/admin.js')
+const { isAdminRequest } = await import('../src/core/auth/admin.js')
 function makeApp() {
   const app = new Hono()
   app.use('/api/v1/*', sso.requireSession(() => [], isAdminRequest))

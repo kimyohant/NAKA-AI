@@ -11,8 +11,8 @@ import path from 'path'
 import { spawn } from 'child_process'
 import { fileURLToPath } from 'url'
 import { v4 as uuid } from 'uuid'
-import { DATA_ROOT, STORAGE_ROOT } from '../utils/paths.js'
-import { ffmpeg, getFfmpegBinPaths } from '../utils/ffmpeg.js'
+import { DATA_ROOT, STORAGE_ROOT } from '../core/utils/paths.js'
+import { ffmpeg, getFfmpegBinPaths } from '../core/utils/ffmpeg.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // src/services → ขึ้นสามระดับเป็นรากของ repo

@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { imageAdapters, getImageAdapter } from '../src/services/adapters/registry.js'
-import { OpenAIImageAdapter } from '../src/services/adapters/openai-image.js'
-import { UnslothImageAdapter } from '../src/services/adapters/unsloth-image.js'
-import { officialProviders, isOfficialProvider } from '../src/services/ai.js'
+import { imageAdapters, getImageAdapter } from '../src/core/ai/adapters/registry.js'
+import { OpenAIImageAdapter } from '../src/core/ai/adapters/openai-image.js'
+import { UnslothImageAdapter } from '../src/core/ai/adapters/unsloth-image.js'
+import { officialProviders, isOfficialProvider } from '../src/core/ai/ai.js'
 import { readFileSync } from 'node:fs'
 
 const root = new URL('..', import.meta.url)
@@ -25,7 +25,7 @@ test('officialProviders accepts unsloth for image only (not text-missing, not vi
 })
 
 test('unsloth image test probe reports models without generating anything', () => {
-  const route = read('src/routes/aiConfigs.ts')
+  const route = read('src/core/routes/aiConfigs.ts')
   // defaults: ราคารูปภาพ = 0 อัตโนมัติสำหรับ unsloth (กัน budget guard บล็อก)
   assert.match(route, /isUnslothImage && configSettings\.price_thb_per_image === undefined/)
   // probe ฝั่ง image: อ่าน /v1/models เท่านั้น — ห้าม POST สร้างรูป

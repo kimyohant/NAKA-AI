@@ -32,7 +32,7 @@ test('gallery service: manual analytics เท่านั้น — ห้า�
 })
 
 test('schema: creativeResults ผูก creative_id UNIQUE + gallery กรอง campaign ที่ soft-delete', () => {
-  const schema = read('src/db/schema.ts')
+  const schema = read('src/core/db/schema.ts')
   assert.match(schema, /creativeResults = sqliteTable\('creative_results'/)
   assert.match(schema, /creativeId: integer\('creative_id'\)\.notNull\(\)\.unique\(\)/)
   const service = read('src/services/gallery.ts')

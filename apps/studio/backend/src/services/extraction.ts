@@ -4,11 +4,11 @@
  * 状态持久化到 pipeline_tasks 表：重启后状态可恢复（boot 时遗留 running 行被标记失败），
  * cancelRequested 支持协作式取消（启动前检查；已在跑的单次 Agent 调用无法中断）
  */
-import { mastra } from '../mastra/index.js'
-import { buildAgentRequestContext } from '../agents/context.js'
-import { buildDramaCreativeContext } from './drama-context.js'
-import { extractKey, startTask, updateTask, getTask, isCancelRequested } from './pipeline-tasks.js'
-import { logTaskError, logTaskProgress, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
+import { mastra } from '../core/mastra/index.js'
+import { buildAgentRequestContext } from '../core/agents/context.js'
+import { buildDramaCreativeContext } from '../core/production/drama-context.js'
+import { extractKey, startTask, updateTask, getTask, isCancelRequested } from '../core/tasks/pipeline-tasks.js'
+import { logTaskError, logTaskProgress, logTaskStart, logTaskSuccess } from '../core/tasks/task-logger.js'
 
 export type ExtractTarget = 'characters' | 'scenes' | 'props'
 export const EXTRACT_TARGETS: ExtractTarget[] = ['characters', 'scenes', 'props']

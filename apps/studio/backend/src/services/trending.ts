@@ -6,7 +6,7 @@
  * เพิ่ม/แก้เทรนด์: แก้ TREND_VIDEOS ตรงนี้ได้เลย (อ่านอย่างเดียว ไม่มี DB — Phase 2 ค่อยทำ UI จัดการ)
  */
 
-import { AppError } from '../utils/response.js'
+import { AppError } from '../core/http/response.js'
 
 export type TrendIndustry = 'beauty' | 'food' | 'fashion' | 'gadgets' | 'home' | 'health' | 'pets' | 'other'
 

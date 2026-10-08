@@ -4,11 +4,11 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/db/sqlite-schema.js'
+import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
 import {
   loadBuiltinStyles, categoryCode, composeStylePrompt, builtinDisplayName,
   BUILTIN_VALUE_PREFIX, composePreviewPrompt,
-} from '../src/services/style-gallery.js'
+} from '../src/core/generation/style-gallery.js'
 
 test('handraw style catalog: 305 items, unique numbers, 8 groups, fields present', () => {
   const styles = loadBuiltinStyles()

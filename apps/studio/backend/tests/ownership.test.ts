@@ -1,5 +1,5 @@
 /**
- * Per-member data (unified system, step 2): src/auth/ownership.ts + owner-context.ts on the real routes.
+ * Per-member data (unified system, step 2): src/core/auth/ownership.ts + owner-context.ts on the real routes.
  * Members are injected the way requireSession does it (c.set('user')), so no token server is needed.
  */
 import assert from 'node:assert/strict'
@@ -12,13 +12,13 @@ const dir = mkdtempSync(path.join(tmpdir(), 'naka-owner-'))
 process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
 process.env.STORAGE_PATH = path.join(dir, 'static')
 const { Hono } = await import('hono')
-const { ownership } = await import('../src/auth/ownership.js')
-const { db, schema } = await import('../src/db/index.js')
+const { ownership } = await import('../src/core/auth/ownership.js')
+const { db, schema } = await import('../src/core/db/index.js')
 const { default: dramas } = await import('../src/routes/dramas.js')
 const { default: episodes } = await import('../src/routes/episodes.js')
 const { default: campaigns } = await import('../src/routes/campaigns.js')
 const { default: seller } = await import('../src/routes/seller.js')
-const { default: tasks } = await import('../src/routes/tasks.js')
+const { default: tasks } = await import('../src/core/routes/tasks.js')
 
 type Member = { id: string; name: string; email: null; admin: boolean }
 const A: Member = { id: 'u-a', name: 'A', email: null, admin: false }

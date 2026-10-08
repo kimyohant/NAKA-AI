@@ -4,7 +4,7 @@
  */
 process.env.SQLITE_PATH = process.env.SQLITE_PATH || 'data/gallery-smoke.sqlite3'
 
-const { db, schema } = await import('../src/db/index.js')
+const { db, schema } = await import('../src/core/db/index.js')
 const { eq } = await import('drizzle-orm')
 
 const ts = new Date().toISOString()

@@ -56,12 +56,12 @@ test('studio error codes ใหม่ครบตามสัญญา', () => {
 })
 
 test('review_director register ครบทุกจุด + save_studio_shots ผ่าน tool', () => {
-  const agents = read('src/agents/index.ts')
+  const agents = read('src/core/agents/index.ts')
   assert.match(agents, /review_director: \{/) // DEFAULT_PROMPTS
   assert.match(agents, /saveStudioShots: studioTools\.saveStudioShots/) // AGENT_TOOLS
-  const skills = read('src/agents/skills.ts')
+  const skills = read('src/core/agents/skills.ts')
   assert.match(skills, /review_director: \['review-director'\]/)
-  const tools = read('src/agents/tools/studio-tools.ts')
+  const tools = read('src/core/agents/tools/studio-tools.ts')
   assert.match(tools, /save_studio_shots/)
   assert.match(tools, /expectedShots/) // จำนวนช็อตต้องเท่า beats
   assert.match(tools, /buildShotPrompts/) // deterministic prompts จาก builder เดียวกับ PUT shots
@@ -99,13 +99,13 @@ test('render/merge ใช้ของเดิม (task-prep + generateImage/Vid
 })
 
 test('migration v10 ถูกเตรียมใน schema + drizzle tables', () => {
-  const sqliteSchema = read('src/db/sqlite-schema.ts')
+  const sqliteSchema = read('src/core/db/sqlite-schema.ts')
   assert.match(sqliteSchema, /version: 10/)
   assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS studio_projects/)
   assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS studio_shots/)
   assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS studio_avatars/)
   assert.match(sqliteSchema, /CREATE TABLE IF NOT EXISTS studio_images/)
-  const drizzle = read('src/db/schema.ts')
+  const drizzle = read('src/core/db/schema.ts')
   assert.match(drizzle, /export const studioProjects = sqliteTable\('studio_projects'/)
   assert.match(drizzle, /export const studioShots = sqliteTable\('studio_shots'/)
   assert.match(drizzle, /export const studioAvatars = sqliteTable\('studio_avatars'/)

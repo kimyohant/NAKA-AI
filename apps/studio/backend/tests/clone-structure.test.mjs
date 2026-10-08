@@ -39,7 +39,7 @@ test('routes/clone.ts ครบ endpoint ตามสัญญา (รวม DEL
 test('clone service: kind + boot-resume + error codes + สัญญา field', () => {
   const service = read('src/services/clone.ts')
   // pipeline kinds
-  const pipeline = read('src/services/pipeline-tasks.ts')
+  const pipeline = read('src/core/tasks/pipeline-tasks.ts')
   assert.match(pipeline, /'clone_analyze' \| 'clone_render'/)
   assert.match(pipeline, /RESUMABLE_PIPELINE_KINDS: PipelineTaskKind\[\] = \['studio_render', 'clone_render'\]/)
   // boot wiring
@@ -57,7 +57,7 @@ test('clone service: kind + boot-resume + error codes + สัญญา field', 
 })
 
 test('agents: viral_cloner + viral_translator ลงทะเบียนครบทุกจุด', () => {
-  const agents = read('src/agents/index.ts')
+  const agents = read('src/core/agents/index.ts')
   for (const needle of ["viral_cloner: {", "viral_translator: {"]) {
     const count = agents.split(needle).length - 1
     assert.equal(count, 2, `${needle} ต้องมีทั้งใน DEFAULT_PROMPTS และ AGENT_TOOLS (พบ ${count})`)
@@ -69,18 +69,18 @@ test('agents: viral_cloner + viral_translator ลงทะเบียนคร�
 test('render driver reuse pipeline เดิม (ห้ามสร้าง renderer ใหม่)', () => {
   const service = read('src/services/clone.ts')
   // ใช้ service ร่วมของ generation (sys_task + คิว maxConcurrent) ไม่ใช่ยิง provider เอง
-  assert.match(service, /import \{ generateImage, generateVideo \} from '\.\/generation\.js'/)
+  assert.match(service, /import \{ generateImage, generateVideo \} from '\.\.\/core\/generation\/generation\.js'/)
   assert.match(service, /mergeEpisodeVideos/)
   assert.match(service, /waitForMergeCompletion/)
   // captions primitives ของ Studio (ไม่คัดลอก logic ซับ)
-  assert.match(service, /from '\.\/captions\.js'/)
+  assert.match(service, /from '\.\.\/core\/production\/captions\.js'/)
   // beat สั้นกว่า minDurationSec → รวมติดกัน (capabilities ของ video config)
   assert.match(service, /getActiveVideoProviderInfo/)
   assert.match(service, /mergeShortBeats/)
 })
 
 test('migration v12 tables ตาม PLAN §3', () => {
-  const schemaSql = read('src/db/sqlite-schema.ts')
+  const schemaSql = read('src/core/db/sqlite-schema.ts')
   assert.match(schemaSql, /version: 12/)
   for (const col of ['reference_path', 'reference_transcript', 'blueprint_json', 'error_code', 'render_state']) {
     assert.ok(schemaSql.includes(col), `clone_projects missing column ${col}`)

@@ -8,7 +8,7 @@
  * - ไม่ reconnect เอง (เลี่ยง rate limit ของ sign server) — หลุดแล้ว status = 'disconnected' ให้ผู้ใช้กดเชื่อมใหม่
  */
 import { ControlEvent, TikTokLiveConnection, WebcastEvent } from 'tiktok-live-connector'
-import { AppError } from '../utils/response.js'
+import { AppError } from '../core/http/response.js'
 
 export type TikTokEventKind = 'chat' | 'gift' | 'follow' | 'share' | 'member' | 'system'
 export interface TikTokUser { uniqueId: string; nickname: string }

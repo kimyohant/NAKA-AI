@@ -4,8 +4,8 @@
  * ตั้งใจไม่ import mastra เพื่อไม่ให้เกิด dependency cycle (studio.ts → mastra → agents → tools → ที่นี่)
  */
 import { and, eq, isNull } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../db/index.js'
-import { now } from '../utils/response.js'
+import { db, getInsertId, schema } from '../core/db/index.js'
+import { now } from '../core/http/response.js'
 
 /** ข้อมูลที่ prompt builder ต้องใช้ — caller อ่านจาก DB แล้วส่งมาเป็น plain object */
 export interface ShotPromptContext {

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/db/sqlite-schema.js'
+import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
 import {
   INFLUENCER_NICHES, INFLUENCER_REVIEW_SCENES,
   composeInfluencerPortraitPrompt, composeInfluencerReviewPrompt,

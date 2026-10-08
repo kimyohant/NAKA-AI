@@ -14,17 +14,17 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { and, eq } from 'drizzle-orm'
-import { db, schema } from '../src/db/index.js'
-import { getTextConfig } from '../src/services/ai.js'
-import { ingestProductUrl } from '../src/services/product-ingest.js'
+import { db, schema } from '../src/core/db/index.js'
+import { getTextConfig } from '../src/core/ai/ai.js'
+import { ingestProductUrl } from '../src/core/product/product-ingest.js'
 import {
   createCampaign, startResearch, startStrategy, startCreatives,
   getCampaignDetail, produceCreative,
 } from '../src/services/marketer.js'
 import { startExtraction, getExtractionStatus } from '../src/services/extraction.js'
-import { mastra } from '../src/mastra/index.js'
-import { buildAgentRequestContext } from '../src/agents/context.js'
-import { buildDramaCreativeContext } from '../src/services/drama-context.js'
+import { mastra } from '../src/core/mastra/index.js'
+import { buildAgentRequestContext } from '../src/core/agents/context.js'
+import { buildDramaCreativeContext } from '../src/core/production/drama-context.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const args = process.argv.slice(2)
