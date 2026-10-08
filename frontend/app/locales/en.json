@@ -2885,6 +2885,42 @@
       "queued": "Queued",
       "replied": "Replied",
       "skipped": "Skipped"
+    },
+    "accountsPage": {
+      "title": "Social accounts",
+      "subtitle": "Settings for each Page",
+      "empty": "No accounts yet",
+      "emptyHint": "Connect a Facebook Page to get started (coming in a later ticket)",
+      "statusConnected": "Connected",
+      "statusReconnect": "Reconnect needed",
+      "replyMode": "Reply mode",
+      "modeDraft": "Draft",
+      "modeAuto": "Auto",
+      "watching": "Watching",
+      "watchDays": "Days back to read",
+      "replyToPraise": "Reply to praise",
+      "toBrand": "Brand Profile",
+      "checkedAgo": "Checked {n} min ago",
+      "checkedJustNow": "Checked just now",
+      "checkedNever": "Never checked",
+      "pausedUntil": "Paused until {t}",
+      "saveFailed": "Save failed",
+      "autoNote": "Auto mode only sends reply verdicts on comments at most 24 hours old. It never sends complaints or comments the AI is unsure about."
+    },
+    "brandPage": {
+      "title": "Brand Profile",
+      "subtitle": "Identity and facts the AI replies with",
+      "pickAccount": "Account",
+      "about": "About",
+      "tone": "Tone",
+      "faq": "FAQ",
+      "forbidden": "Forbidden topics",
+      "defaultLanguage": "Default language",
+      "save": "Save",
+      "saved": "Saved",
+      "saveFailed": "Save failed",
+      "loadFailed": "Could not load the brand profile.",
+      "retry": "Retry"
     }
   }
 }
