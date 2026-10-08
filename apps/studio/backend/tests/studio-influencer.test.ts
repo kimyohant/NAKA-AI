@@ -1,10 +1,7 @@
+import './_memory-db.js'
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
 import { test } from 'node:test'
-import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
+import { sqlite } from './_sql.js'
 import {
   INFLUENCER_NICHES, INFLUENCER_REVIEW_SCENES,
   composeInfluencerPortraitPrompt, composeInfluencerReviewPrompt,
@@ -43,29 +40,13 @@ test('review prompt: pins presenter identity to first reference and product desi
   assert.match(collapsed, /Lip tint number one/)
 })
 
-test('migration v14 adds influencer tables + influencer_id and stays idempotent', () => {
-  const directory = mkdtempSync(path.join(tmpdir(), 'naka-influencer-test-'))
-  const dbFile = path.join(directory, 'test.sqlite3')
-  let sqlite: Database.Database | undefined
-  try {
-    sqlite = new Database(dbFile)
-    sqlite.pragma('journal_mode = WAL')
-    initSqliteSchema(sqlite)
-    initSqliteSchema(sqlite) // replay — idempotent
-    const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
-    const projectCols = (sqlite.pragma('table_info(studio_projects)') as Array<{ name: string }>).map(r => r.name)
-    assert.ok(projectCols.includes('influencer_id'), 'studio_projects missing influencer_id')
-    for (const table of ['studio_influencers', 'studio_influencer_contents']) {
-      const cols = (sqlite.pragma(`table_info(${table})`) as Array<{ name: string }>).map(r => r.name)
-      assert.ok(cols.includes('id'), `${table} missing id`)
-    }
-    const contentCols = (sqlite.pragma('table_info(studio_influencer_contents)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['influencer_id', 'kind', 'task_id', 'script', 'status']) {
-      assert.ok(contentCols.includes(col), `studio_influencer_contents missing column ${col}`)
-    }
-  } finally {
-    sqlite?.close()
-    rmSync(directory, { recursive: true, force: true })
+test('influencer tables + studio_projects.influencer_id exist in the PostgreSQL schema', async () => {
+  assert.ok((await sqlite.columns('studio_projects')).includes('influencer_id'), 'studio_projects missing influencer_id')
+  for (const table of ['studio_influencers', 'studio_influencer_contents']) {
+    assert.ok((await sqlite.columns(table)).includes('id'), `${table} missing id`)
+  }
+  const contentCols = await sqlite.columns('studio_influencer_contents')
+  for (const col of ['influencer_id', 'kind', 'task_id', 'script', 'status']) {
+    assert.ok(contentCols.includes(col), `studio_influencer_contents missing column ${col}`)
   }
 })

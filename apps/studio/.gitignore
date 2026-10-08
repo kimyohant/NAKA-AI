@@ -69,3 +69,6 @@ data/workspace-backup/
 
 # Hypit render engine source (installed separately, see study/README.md)
 study/hypit/
+
+# PostgreSQL dev data (DATABASE_URL unset → pglite in data/pglite)
+data/pglite/

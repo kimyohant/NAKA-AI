@@ -1,10 +1,7 @@
+import './_memory-db.js'
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
 import { test } from 'node:test'
-import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
+import { rawQuery } from '../src/core/db/index.js'
 import {
   loadBuiltinStyles, categoryCode, composeStylePrompt, builtinDisplayName,
   BUILTIN_VALUE_PREFIX, composePreviewPrompt,
@@ -49,27 +46,15 @@ test('builtin display name keeps the number for humans (name only — never the 
   assert.equal(BUILTIN_VALUE_PREFIX, 'handraw-')
 })
 
-test('migration v13 adds style gallery columns and stays idempotent', () => {
-  const directory = mkdtempSync(path.join(tmpdir(), 'naka-stylegal-test-'))
-  const dbFile = path.join(directory, 'test.sqlite3')
-  let sqlite: Database.Database | undefined
-  try {
-    sqlite = new Database(dbFile)
-    sqlite.pragma('journal_mode = WAL')
-    initSqliteSchema(sqlite)
-    initSqliteSchema(sqlite) // replay — idempotent
-    const versions = sqlite.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
-    assert.deepEqual(versions.map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
-    const cols = (sqlite.pragma('table_info(style_presets)') as Array<{ name: string }>).map(r => r.name)
-    for (const col of ['preview_path', 'category', 'source']) {
-      assert.ok(cols.includes(col), `style_presets missing column ${col}`)
-    }
-    // fresh-install DDL เองก็ต้องมีคอลัมน์ใหม่ (ตารางสร้างครั้งแรก)
-    const createSql = sqlite.prepare("SELECT sql FROM sqlite_master WHERE name = 'style_presets'").get() as { sql: string }
-    assert.match(createSql.sql, /preview_path TEXT/)
-    assert.match(createSql.sql, /source TEXT NOT NULL DEFAULT 'custom'/)
-  } finally {
-    sqlite?.close()
-    rmSync(directory, { recursive: true, force: true })
+test('style_presets has the style gallery columns in the PostgreSQL schema', async () => {
+  const cols = await rawQuery(
+    `SELECT column_name AS name, is_nullable, column_default FROM information_schema.columns
+      WHERE table_schema = current_schema() AND table_name = 'style_presets'`)
+  const byName = new Map(cols.map(c => [String(c.name), c]))
+  for (const col of ['preview_path', 'category', 'source']) {
+    assert.ok(byName.has(col), `style_presets missing column ${col}`)
   }
+  // source TEXT NOT NULL DEFAULT 'custom'
+  assert.equal(byName.get('source')!.is_nullable, 'NO')
+  assert.match(String(byName.get('source')!.column_default), /^'custom'/)
 })

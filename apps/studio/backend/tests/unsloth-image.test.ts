@@ -1,3 +1,4 @@
+import './_memory-db.js'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { imageAdapters, getImageAdapter } from '../src/core/ai/adapters/registry.js'

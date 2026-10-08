@@ -1,6 +1,7 @@
 /**
  * Viral Clone unit tests — blueprint schema, beat merging, matrix Cartesian (docs/viral-clone/AGENT-A Task 4-5)
  */
+import './_memory-db.js'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
