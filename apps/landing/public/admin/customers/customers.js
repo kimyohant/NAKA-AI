@@ -7,7 +7,7 @@
   var labels = { active: 'ใช้งาน', disabled: 'ระงับ', cancelled: 'ยกเลิก', expired: 'หมดอายุ',
     pending: 'รอชำระ', successful: 'สำเร็จ', failed: 'ไม่สำเร็จ', revoked: 'ยกเลิกการเชื่อมต่อ', error: 'ขัดข้อง',
     monthly: 'รายเดือน', yearly: 'รายปี', card: 'บัตร', promptpay: 'พร้อมเพย์',
-    grant: 'เติมเครดิต', purchase: 'ซื้อเครดิต', job_hold: 'ใช้เครดิต', job_refund: 'คืนเครดิต',
+    grant: 'เติมเครดิต', purchase: 'ซื้อเครดิต', job_hold: 'ใช้เครดิต', job_refund: 'คืนเครดิต', studio_hold: 'ใช้เครดิต (สตูดิโอ)', studio_refund: 'คืนเครดิต (สตูดิโอ)',
     credits: 'เติมเครดิต', package: 'จัดการแพ็กเกจ', status: 'เปลี่ยนสถานะ', password: 'ตั้งรหัสผ่านใหม่', stripe_checkout: 'Stripe', free: 'ฟรี',
     starter: 'เริ่มต้น', pro: 'โปร', business: 'ธุรกิจ', max: 'สูงสุด',
     facebook: 'Facebook', instagram: 'Instagram' };

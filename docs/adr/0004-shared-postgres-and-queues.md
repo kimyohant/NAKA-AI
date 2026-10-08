@@ -1,6 +1,6 @@
 # ADR-0004: ใช้ฐานข้อมูลตัวเดียวกัน (PostgreSQL) — และต้องมี RabbitMQ / Redis ไหม
 
-**Status:** Accepted (2026-10-08) — Phase 0, 1 and 2 done
+**Status:** Accepted (2026-10-08) — Phase 0, 1 and 2 done; Phase 3 account side done (studio side open)
 **Date:** 2026-10-08
 **Deciders:** เจ้าของระบบ NAKA-AI TECH
 
@@ -195,8 +195,11 @@ PostgreSQL 17  (database: naka)
 - ไม่ได้ย้ายข้อมูล SQLite เดิม (ตามคำตอบด้านบน: ยังเป็น dev) — สื่อใน volume ยังอยู่ แต่แถวในฐานข้อมูลเริ่มใหม่
 
 ### Phase 3 — ใช้ประโยชน์จาก DB เดียว (1–2 สัปดาห์)
-- [ ] `account.hold_credits/commit_hold/refund_hold` + GRANT ให้ `studio_app`; studio หักเครดิต
-- [ ] `studio.users` → view อ่าน `account.users`; คิวงาน studio บน Postgres (pg-boss); `reporting` views
+- [x] `account.hold_credits/commit_hold/refund_hold` (SECURITY DEFINER) + GRANT EXECUTE ให้ `studio_app` — `apps/landing/migrations/pg/0002_shared.sql`; hold = แถว `credit_ledger` reason `studio_hold` + สถานะใน `credit_holds`, idempotent ต่อ ref, คืนเครดิตครั้งเดียว, commit แล้วคืนไม่ได้; ล็อกเดียวกับที่ adapter ของ landing ใช้เขียน (ล็อกต่อผู้ใช้ไม่พอ — แข่งกับการเช็คยอดของ landing เองได้ ทดสอบแล้วใน `tests/postgres.integration.test.cjs`)
+- [ ] studio หักเครดิต (ฝั่ง studio)
+- [x] view `account.users_public` (id, display_name, status, created_at — ไม่มีข้อมูลลับ) + GRANT SELECT ให้ `studio_app`, `reporting_ro`
+- [ ] `studio.users` → ใช้ `account.users_public` แทนสำเนา (ฝั่ง studio); คิวงาน studio บน Postgres (pg-boss)
+- [x] `reporting` views: `revenue_by_day`, `credits_used_by_user`, `active_subscriptions` — `infra/postgres/init/03-reporting.sql` (เจ้าของคือ superuser; ตอนสร้าง volume ใหม่ตารางยังไม่มี จึงข้ามทุก view — รันไฟล์นี้ซ้ำหลัง migrate แอป, idempotent); สิทธิ์ทดสอบใน `infra/postgres/tests/credits.test.mjs`
 
 ---
 

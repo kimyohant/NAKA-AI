@@ -151,3 +151,35 @@ test('concurrent admin grants and renewals are serialized with an exact audit be
   assert.equal(Number((await sql`SELECT sum(delta) AS n FROM credit_ledger WHERE user_id = 'u1'`)[0].n), 40);
   for (let i = 1; i < 5; i++) assert.deepEqual(packageAudit[i].before, packageAudit[i - 1].after);
 });
+
+// Studio credit holds (migrations/pg/0002_shared.sql), called as the studio calls them: one SQL call each.
+const hold = (sql, user, amount, ref) =>
+  sql`SELECT ok, hold_id, balance FROM hold_credits(${user}, ${amount}::bigint, ${ref})`.then(rows => rows[0]);
+const balanceOf = async (sql, user) => Number((await sql`SELECT coalesce(sum(delta), 0) AS b FROM credit_ledger WHERE user_id = ${user}`)[0].b);
+
+test('ten studio holds at once for a balance that covers five: five are held, none overdraws, refunds happen once', { skip, timeout: 60000 }, async t => {
+  const { sql } = await setup(t);
+  await sql`INSERT INTO credit_ledger (user_id, delta, reason) VALUES ('u1', 50, 'grant')`;
+  const results = await Promise.all(Array.from({ length: 10 }, (_, i) => hold(sql, 'u1', 10, `studio:task-${i}`)));
+  const held = results.filter(r => r.ok);
+  assert.equal(held.length, 5);
+  assert.deepEqual(held.map(r => r.balance).sort((a, b) => a - b), [0, 10, 20, 30, 40], 'each hold saw the one before it');
+  for (const refused of results.filter(r => !r.ok)) assert.deepEqual([refused.hold_id, refused.balance], [null, 0]);
+  assert.equal(await balanceOf(sql, 'u1'), 0);
+
+  // every hold refunded twice, all at once: the credits come back once
+  await Promise.all([...held, ...held].map(r => sql`SELECT refund_hold(${r.hold_id}::bigint)`));
+  assert.equal(await balanceOf(sql, 'u1'), 50);
+  assert.equal(Number((await sql`SELECT count(*) AS n FROM credit_ledger WHERE reason = 'studio_refund'`)[0].n), 5);
+});
+
+test('studio holds and landing jobs at once draw on one balance without overdrawing it', { skip, timeout: 60000 }, async t => {
+  const { env, sql } = await setup(t);
+  const { enqueueJob } = require('../src/jobs.ts');
+  await sql`INSERT INTO credit_ledger (user_id, delta, reason) VALUES ('u2', 50, 'grant')`;
+  const results = await Promise.all(Array.from({ length: 10 }, (_, i) => i % 2
+    ? hold(sql, 'u2', 10, `studio:mixed-${i}`).then(r => Boolean(r.ok))
+    : enqueueJob(env.DB, { userId: 'u2', kind: 'image', input: {}, costCredits: 10, countsTowardLimit: false }).then(r => r.ok)));
+  assert.equal(results.filter(Boolean).length, 5);
+  assert.equal(await balanceOf(sql, 'u2'), 0);
+});
