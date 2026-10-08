@@ -27,7 +27,17 @@
       {{ t('social.loadFailed') }} <span class="mono">{{ error }}</span>
       <button class="btn btn-sm" type="button" @click="reload">{{ t('social.retry') }}</button>
     </p>
-    <p v-else-if="!loading && reconnectIds.size" class="sc-warn">{{ t('social.reconnectBanner') }}</p>
+    <div v-else-if="!loading && reconnectIds.size" class="sc-warn">
+      <span>{{ t('social.reconnectBanner') }}</span>
+      <button class="btn btn-sm btn-primary" type="button" :disabled="!canConnect?.can || connecting" @click="connect('facebook')">{{ t('social.reconnect') }}</button>
+    </div>
+    <div v-else-if="!loading && serverOnly" class="card sc-empty">
+      <MessagesSquare :size="22" :stroke-width="1.7" />
+      <div>
+        <h3>{{ t('social.serverOnlyTitle') }}</h3>
+        <p>{{ t('social.serverOnlyHint', { reason: canConnect?.reason || '' }) }}</p>
+      </div>
+    </div>
     <div v-else-if="!loading && !accounts.length" class="card sc-empty">
       <MessagesSquare :size="22" :stroke-width="1.7" />
       <div>
@@ -97,7 +107,7 @@
 <script setup lang="ts">
 import { Inbox, MessagesSquare } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
-import { socialAPI, type SocialAccount, type SocialBoardComment } from '~/composables/useApi'
+import { socialAPI, type SocialAccount, type SocialBoardComment, type SocialCanConnect } from '~/composables/useApi'
 
 const { t } = useI18n()
 
@@ -118,6 +128,24 @@ const editing = ref<Record<number, boolean>>({})
 const busyId = ref<number | null>(null)
 const helping = ref(false)
 const actionError = ref('')
+const canConnect = ref<SocialCanConnect | null>(null)
+const connecting = ref(false)
+
+/** server-only empty state: connect not possible and no account exists */
+const serverOnly = computed(() => !!canConnect.value && !canConnect.value.can && !accounts.value.length)
+
+/** Reconnect runs the same login flow as Connect; the browser leaves for the Platform */
+async function connect(platform: string) {
+  connecting.value = true
+  actionError.value = ''
+  try {
+    const { url } = await socialAPI.startLogin(platform)
+    window.location.href = url
+  } catch (err: any) {
+    actionError.value = err?.message || ''
+    connecting.value = false
+  }
+}
 
 /** a send failed but the card stays: show send-again / do-not-reply */
 function isFailed(c: SocialBoardComment): boolean {
@@ -195,13 +223,15 @@ async function reload() {
   loading.value = true
   error.value = ''
   try {
-    const [acc, list] = await Promise.all([
+    const [cc, acc, list] = await Promise.all([
+      socialAPI.canConnect('facebook').catch(() => null),
       socialAPI.accounts(),
       socialAPI.comments({
         account_id: accountId.value || undefined,
         fallback_only: fallbackOnly.value || undefined,
       }),
     ])
+    if (cc) canConnect.value = cc
     accounts.value = acc.items
     comments.value = list.items
   } catch (err: any) {
@@ -225,7 +255,8 @@ onMounted(reload)
 .sc-flex { flex: 1; min-width: 200px; }
 .sc-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-1); padding-bottom: 10px; }
 .sc-error { margin: 0 0 12px; font-size: 12.5px; color: var(--danger, #ef4444); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.sc-warn { margin: 0 0 12px; font-size: 12.5px; color: var(--warn, #f59e0b); padding: 10px 14px; border: 1px solid color-mix(in srgb, #f59e0b 40%, transparent); border-radius: var(--radius); background: color-mix(in srgb, #f59e0b 10%, transparent); }
+.sc-warn { margin: 0 0 12px; font-size: 12.5px; color: var(--warn, #f59e0b); padding: 10px 14px; border: 1px solid color-mix(in srgb, #f59e0b 40%, transparent); border-radius: var(--radius); background: color-mix(in srgb, #f59e0b 10%, transparent); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sc-warn .btn { margin-left: auto; }
 .sc-empty { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 14px; }
 .sc-empty h3 { margin: 0 0 2px; font-size: 15px; }
 .sc-empty p { margin: 0; font-size: 12.5px; color: var(--text-2); }

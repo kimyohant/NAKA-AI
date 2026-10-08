@@ -654,9 +654,25 @@ export interface SocialBrandInput {
   about?: string; tone?: string; faq?: string; forbidden?: string
   default_language?: string
 }
+export interface SocialCanConnect {
+  can: boolean; reason?: string
+}
+export interface SocialPendingPage {
+  platformAccountId: string; name: string; avatarUrl?: string | null
+}
 
 export const socialAPI = {
   accounts: () => api.get<{ items: SocialAccount[] }>('/social/accounts'),
+  canConnect: (platform: string) =>
+    api.get<SocialCanConnect>(`/social/oauth/${platform}/can-connect`),
+  startLogin: (platform: string) =>
+    api.post<{ url: string; state: string }>(`/social/oauth/${platform}/start`, {}),
+  pendingPages: (platform: string, login: string) =>
+    api.get<{ items: SocialPendingPage[] }>(`/social/oauth/${platform}/pending?login=${encodeURIComponent(login)}`),
+  savePages: (platform: string, login: string, ids: string[]) =>
+    api.post<{ items: SocialAccount[] }>(`/social/oauth/${platform}/save`, { login, platform_account_ids: ids }),
+  disconnect: (id: number) =>
+    api.post<SocialAccount>(`/social/accounts/${id}/disconnect`, {}),
   comments: (params?: { account_id?: number; fallback_only?: boolean }) => {
     const query = new URLSearchParams()
     if (params?.account_id) query.set('account_id', String(params.account_id))

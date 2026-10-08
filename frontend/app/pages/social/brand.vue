@@ -25,6 +25,12 @@
       {{ t('social.brandPage.loadFailed') }} <span class="mono">{{ error }}</span>
       <button class="btn btn-sm" type="button" @click="reload">{{ t('social.brandPage.retry') }}</button>
     </p>
+    <div v-else-if="serverOnly" class="card sc-empty">
+      <div>
+        <h3>{{ t('social.serverOnlyTitle') }}</h3>
+        <p>{{ t('social.serverOnlyHint', { reason: canConnect?.reason || '' }) }}</p>
+      </div>
+    </div>
     <div v-else-if="accountId" class="card sc-form">
       <label class="field">
         <span class="field-label">{{ t('social.brandPage.about') }} ({{ form.about.length }}/500)</span>
@@ -62,23 +68,31 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { socialAPI, type SocialAccount } from '~/composables/useApi'
+import { socialAPI, type SocialAccount, type SocialCanConnect } from '~/composables/useApi'
 
 const { t } = useI18n()
 const route = useRoute()
 
 const accounts = ref<SocialAccount[]>([])
 const accountId = ref(0)
+const canConnect = ref<SocialCanConnect | null>(null)
 const form = ref({ about: '', tone: '', faq: '', forbidden: '', defaultLanguage: 'th' })
 const error = ref('')
 const saving = ref(false)
 const saved = ref(false)
 const saveError = ref('')
 
+/** server-only empty state: connect not possible and no account exists */
+const serverOnly = computed(() => !!canConnect.value && !canConnect.value.can && !accounts.value.length)
+
 async function reload() {
   error.value = ''
   try {
-    const res = await socialAPI.accounts()
+    const [cc, res] = await Promise.all([
+      socialAPI.canConnect('facebook').catch(() => null),
+      socialAPI.accounts(),
+    ])
+    if (cc) canConnect.value = cc
     accounts.value = res.items
     const q = Number(route.query.account_id)
     accountId.value = res.items.some(a => a.id === q) ? q : (res.items[0]?.id ?? 0)
@@ -137,6 +151,9 @@ onMounted(reload)
 .sc-sub { margin: 0; font-size: 13px; color: var(--text-2); max-width: 640px; }
 .sc-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sc-picker { padding: 12px 16px; margin-bottom: 14px; }
+.sc-empty { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 14px; }
+.sc-empty h3 { margin: 0 0 2px; font-size: 15px; }
+.sc-empty p { margin: 0; font-size: 12.5px; color: var(--text-2); }
 .sc-flex { flex: 1; min-width: 200px; }
 .sc-error { margin: 0 0 12px; font-size: 12.5px; color: var(--danger, #ef4444); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sc-form { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; max-width: 720px; }
