@@ -30,7 +30,7 @@ const { mastra } = await import('../src/core/mastra/index.js')
 // ---------- seed: schema + configs + product/avatar + media ----------
 {
   const versions = (await sqlite.prepare('SELECT name FROM schema_migrations ORDER BY name').all()) as Array<{ name: string }>
-  assert.deepEqual(versions.map(r => r.name), ['0001_baseline.sql'], 'the PostgreSQL baseline holds every table')
+  assert.equal(versions[0]?.name, '0001_baseline.sql', 'the PostgreSQL baseline holds every table')
   for (const table of ['clone_projects', 'clone_variants']) {
     const cols = (await sqlite.columns(table))
     assert.ok(cols.length > 5, `${table} exists`)

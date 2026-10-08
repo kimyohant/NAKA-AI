@@ -18,6 +18,7 @@ import type { Context, Next } from 'hono'
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { eq } from 'drizzle-orm'
+import { entitlementsOn, memberFeatures, type MemberFeature } from './entitlements.js'
 import { db, schema } from '../db/index.js'
 import { now } from '../http/response.js'
 
@@ -211,12 +212,15 @@ app.get('/callback', async (c) => {
   return c.redirect(pending.next)
 })
 
-app.get('/me', (c) => {
+app.get('/me', async (c) => {
   const config = ssoConfig()
   const user = currentUser(c)
   c.header('Cache-Control', 'no-store')
   if (!user) return c.json({ code: 401, message: 'not signed in', errorCode: 'E_AUTH_REQUIRED', data: { sso: true } }, 401)
-  return c.json({ code: 200, message: 'success', data: { user, sso: !!config, accountUrl: config ? `${config.origin}/app/` : null } })
+  // the studio menus this member's plan includes; null = all of them (admin, single-user, checks off)
+  let features: MemberFeature[] | null = null
+  if (entitlementsOn() && !user.admin) features = await memberFeatures(user.id).catch(() => null)
+  return c.json({ code: 200, message: 'success', data: { user, sso: !!config, accountUrl: config ? `${config.origin}/app/` : null, features } })
 })
 
 app.post('/logout', (c) => {

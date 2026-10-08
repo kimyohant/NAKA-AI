@@ -3,7 +3,7 @@
  * 创建(processing) → 适配器构建请求 → 同步完成或异步轮询 → 下载落盘 → 回写业务表
  */
 import { db, insertedId, schema } from '../db/index.js'
-import { and, asc, eq, sql } from 'drizzle-orm'
+import { and, asc, eq, inArray, sql } from 'drizzle-orm'
 import { getActiveConfig, getConfigById, getConfigForRecovery } from '../ai/ai.js'
 import { now, AppError } from '../http/response.js'
 import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readImageAsCompressedDataUrl, saveBase64Image } from '../utils/storage.js'
@@ -13,6 +13,8 @@ import type { AIConfig, ImageGenerationRecord, VideoCapabilities, VideoGeneratio
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess, logTaskWarn, redactUrl } from '../tasks/task-logger.js'
 import { taskMediaSlot } from '../production/storyboard-readiness.js'
 import { estimateCostThb } from './generation-cost.js'
+import { releaseFeatureUse, useVideoQuota } from '../auth/entitlements.js'
+import { currentOwnerId } from '../auth/owner-context.js'
 import { sourceSnapshotForShot } from '../production/source-freshness.js'
 
 type TaskType = 'image' | 'video'
@@ -158,6 +160,22 @@ export async function generateImage(params: GenerateImageParams): Promise<number
   return id
 }
 
+/** Whose quota a new video counts against: the project's owner, the same member createTask stamps on the task. */
+async function generationOwner(params: { storyboardId?: number; dramaId?: number }): Promise<string> {
+  let dramaId = params.dramaId
+  if (params.storyboardId) {
+    const [shot] = await db.select({ dramaId: schema.episodes.dramaId }).from(schema.storyboards)
+      .innerJoin(schema.episodes, eq(schema.episodes.id, schema.storyboards.episodeId))
+      .where(eq(schema.storyboards.id, params.storyboardId))
+    dramaId = shot?.dramaId || dramaId
+  }
+  if (dramaId) {
+    const [drama] = await db.select({ owner: schema.dramas.ownerUserId }).from(schema.dramas).where(eq(schema.dramas.id, dramaId))
+    if (drama?.owner) return drama.owner
+  }
+  return currentOwnerId()
+}
+
 export async function generateVideo(params: GenerateVideoParams): Promise<number> {
   // 指定配置（集锁定）可能已停用/删除/厂商收敛，失效时回退到当前启用配置
   const config = params.configId
@@ -165,30 +183,38 @@ export async function generateVideo(params: GenerateVideoParams): Promise<number
     : await getActiveConfig('video')
   if (!config) throw new AppError('未配置视频模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_VIDEO_MODEL')
 
-  const id = await createTask('video', config, {
-    storyboardId: params.storyboardId,
-    dramaId: params.dramaId,
-    prompt: params.prompt,
-    model: params.model || config.model,
-  }, {
-    referenceMode: params.referenceMode || 'reference',
-    imageUrl: params.imageUrl,
-    firstFrameUrl: params.firstFrameUrl,
-    lastFrameUrl: params.lastFrameUrl,
-    referenceImageUrls: params.referenceImageUrls,
-    referenceVideoUrls: params.referenceVideoUrls,
-    referenceAudioUrls: params.referenceAudioUrls,
-    referenceFileUrl: params.referenceFileUrl,
-    referenceLinkUrl: params.referenceLinkUrl,
-    generateAudio: params.generateAudio === false ? 0 : 1,
-    duration: params.duration,
-    aspectRatio: params.aspectRatio,
-    // 统一存为项目内部格式，各适配器再转换为官方大小写与枚举。
-    resolution: normalizeStoredVideoResolution(params.resolution),
-    seed: params.seed,
-    promptExtend: params.promptExtend,
-    watermark: params.watermark,
-  })
+  // the owner's monthly AI videos (docs/entitlements.md): counted first, given back if the task is not created
+  const quota = await useVideoQuota(await generationOwner(params))
+  let id: number
+  try {
+    id = await createTask('video', config, {
+      storyboardId: params.storyboardId,
+      dramaId: params.dramaId,
+      prompt: params.prompt,
+      model: params.model || config.model,
+    }, {
+      referenceMode: params.referenceMode || 'reference',
+      imageUrl: params.imageUrl,
+      firstFrameUrl: params.firstFrameUrl,
+      lastFrameUrl: params.lastFrameUrl,
+      referenceImageUrls: params.referenceImageUrls,
+      referenceVideoUrls: params.referenceVideoUrls,
+      referenceAudioUrls: params.referenceAudioUrls,
+      referenceFileUrl: params.referenceFileUrl,
+      referenceLinkUrl: params.referenceLinkUrl,
+      generateAudio: params.generateAudio === false ? 0 : 1,
+      duration: params.duration,
+      aspectRatio: params.aspectRatio,
+      // 统一存为项目内部格式，各适配器再转换为官方大小写与枚举。
+      resolution: normalizeStoredVideoResolution(params.resolution),
+      seed: params.seed,
+      promptExtend: params.promptExtend,
+      watermark: params.watermark,
+    })
+  } catch (err) {
+    await releaseFeatureUse(quota).catch(() => {})
+    throw err
+  }
 
   logTaskStart('VideoTask', 'enqueue', {
     id,
@@ -319,7 +345,10 @@ async function resumePollingTask(id: number, config: AIConfig) {
 }
 
 export async function recoverGenerationTasks(): Promise<{ resumed: number; queued: number; unknown: number }> {
+  // oldest first, as SQLite returned them: a freed GPU slot goes to the task that has waited longest
   const rows = await db.select().from(schema.sysTask)
+    .where(inArray(schema.sysTask.status, ['queued', 'submitting', 'processing']))
+    .orderBy(asc(schema.sysTask.id))
   const counts = { resumed: 0, queued: 0, unknown: 0 }
   for (const record of rows) {
     if (!['queued', 'submitting', 'processing'].includes(record.status || '')) continue
@@ -388,24 +417,43 @@ function ensureQueueSweep() {
 ensureQueueSweep()
 
 /** ตำแหน่งคิว (1-based) สำหรับ UI — นับงาน video queued ของ config เดียวกันที่เก่ากว่า/เท่ากัน; null = ไม่อยู่คิว */
-export async function videoQueuePosition(record: {
+type QueueRecord = {
   id: number
   type?: string | null
   status?: string | null
   configId?: number | null
   createdAt?: string | null
-}): Promise<number | null> {
-  if (!record || record.type !== 'video' || record.status !== 'queued' || !record.configId) return null
-  const [configRow] = await db.select().from(schema.aiServiceConfigs)
-    .where(eq(schema.aiServiceConfigs.id, record.configId))
-  if (!configRow) return null
-  const config = { id: configRow.id, provider: configRow.provider || '', baseUrl: configRow.baseUrl, apiKey: configRow.apiKey, model: '', settings: parseSettingsJson(configRow.settings) }
-  if (!maxConcurrentFor(config)) return null
-  const queued = await db.select({ id: schema.sysTask.id }).from(schema.sysTask)
-    .where(and(eq(schema.sysTask.type, 'video'), eq(schema.sysTask.configId, record.configId), eq(schema.sysTask.status, 'queued')))
-    .orderBy(asc(schema.sysTask.createdAt))
-  const index = queued.findIndex(q => q.id === record.id)
-  return index >= 0 ? index + 1 : null
+}
+
+export async function videoQueuePosition(record: QueueRecord): Promise<number | null> {
+  if (!record) return null
+  return (await videoQueuePositions([record])).get(record.id) ?? null
+}
+
+/**
+ * Place in the per-config GPU queue (1 = next) for many tasks at once; null when a task is not waiting in such
+ * a queue. Two statements however many tasks: the configs, then every queued video of the configs that queue.
+ */
+export async function videoQueuePositions(records: QueueRecord[]): Promise<Map<number, number | null>> {
+  const positions = new Map<number, number | null>(records.map(r => [r.id, null]))
+  const waiting = records.filter(r => r.type === 'video' && r.status === 'queued' && r.configId)
+  const configIds = [...new Set(waiting.map(r => r.configId!))]
+  if (!configIds.length) return positions
+  const configRows = await db.select().from(schema.aiServiceConfigs).where(inArray(schema.aiServiceConfigs.id, configIds))
+  const queuing = configRows
+    .filter(row => maxConcurrentFor({ id: row.id, provider: row.provider || '', baseUrl: row.baseUrl, apiKey: row.apiKey, model: '', settings: parseSettingsJson(row.settings) }))
+    .map(row => row.id)
+  if (!queuing.length) return positions
+  const queued = await db.select({ id: schema.sysTask.id, configId: schema.sysTask.configId }).from(schema.sysTask)
+    .where(and(eq(schema.sysTask.type, 'video'), inArray(schema.sysTask.configId, queuing), eq(schema.sysTask.status, 'queued')))
+    .orderBy(asc(schema.sysTask.createdAt), asc(schema.sysTask.id))
+  const seen = new Map<number, number>()
+  for (const row of queued) {
+    const place = (seen.get(row.configId!) ?? 0) + 1
+    seen.set(row.configId!, place)
+    if (positions.has(row.id)) positions.set(row.id, place)
+  }
+  return positions
 }
 
 function parseSettingsJson(raw: string | null): Record<string, any> {

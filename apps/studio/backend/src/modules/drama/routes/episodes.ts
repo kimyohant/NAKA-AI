@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { db, insertedId, schema } from '../../../core/db/index.js'
 import { success, notFound, badRequest, now } from '../../../core/http/response.js'
 import { toSnakeCaseArray, toSnakeCase } from '../../../core/utils/transform.js'
@@ -10,7 +10,7 @@ import { buildAgentRequestContext } from '../../../core/agents/context.js'
 import { buildDramaCreativeContext } from '../../../core/production/drama-context.js'
 import { mastra } from '../../../core/mastra/index.js'
 import { extractKey, cancelTask, videoPromptsKey } from '../../../core/tasks/pipeline-tasks.js'
-import { videoQueuePosition } from '../../../core/generation/generation.js'
+import { videoQueuePositions } from '../../../core/generation/generation.js'
 
 const app = new Hono()
 
@@ -102,8 +102,9 @@ app.get('/:id/characters', async (c) => {
     .where(eq(schema.episodeCharacters.episodeId, episodeId))
   const charIds = links.map(l => l.characterId)
   if (!charIds.length) return success(c, [])
-  const allChars = await db.select().from(schema.characters)
-  const result = allChars.filter(ch => charIds.includes(ch.id) && !ch.deletedAt)
+  const result = await db.select().from(schema.characters)
+    .where(and(inArray(schema.characters.id, charIds), isNull(schema.characters.deletedAt)))
+    .orderBy(schema.characters.id)
   return success(c, toSnakeCaseArray(result))
 })
 
@@ -114,8 +115,9 @@ app.get('/:id/scenes', async (c) => {
     .where(eq(schema.episodeScenes.episodeId, episodeId))
   const sceneIds = links.map(l => l.sceneId)
   if (!sceneIds.length) return success(c, [])
-  const allScenes = await db.select().from(schema.scenes)
-  const result = allScenes.filter(sc => sceneIds.includes(sc.id) && !sc.deletedAt)
+  const result = await db.select().from(schema.scenes)
+    .where(and(inArray(schema.scenes.id, sceneIds), isNull(schema.scenes.deletedAt)))
+    .orderBy(schema.scenes.id)
   return success(c, toSnakeCaseArray(result))
 })
 
@@ -126,8 +128,9 @@ app.get('/:id/props', async (c) => {
     .where(eq(schema.episodeProps.episodeId, episodeId))
   const propIds = links.map(l => l.propId)
   if (!propIds.length) return success(c, [])
-  const allProps = await db.select().from(schema.props)
-  const result = allProps.filter(p => propIds.includes(p.id) && !p.deletedAt)
+  const result = await db.select().from(schema.props)
+    .where(and(inArray(schema.props.id, propIds), isNull(schema.props.deletedAt)))
+    .orderBy(schema.props.id)
   return success(c, toSnakeCaseArray(result))
 })
 
@@ -173,11 +176,27 @@ app.get('/:id/video-prompts-status', async (c) => {
 // GET /episodes/:episode_id/storyboards
 app.get('/:episode_id/storyboards', async (c) => {
   const episodeId = Number(c.req.param('episode_id'))
-  const rows = await db.select().from(schema.storyboards)
-    .where(eq(schema.storyboards.episodeId, episodeId))
-    .orderBy(schema.storyboards.storyboardNumber)
+  const [rows, episodeCharLinks, episodePropLinks] = await Promise.all([
+    db.select().from(schema.storyboards)
+      .where(eq(schema.storyboards.episodeId, episodeId))
+      .orderBy(schema.storyboards.storyboardNumber),
+    db.select().from(schema.episodeCharacters).where(eq(schema.episodeCharacters.episodeId, episodeId)),
+    db.select().from(schema.episodeProps).where(eq(schema.episodeProps.episodeId, episodeId)),
+  ])
+  const shotIds = rows.map(row => row.id)
+  const episodeCharIds = episodeCharLinks.map(link => link.characterId)
+  const episodePropIds = episodePropLinks.map(link => link.propId)
+  const [links, propLinks, allChars, allProps] = await Promise.all([
+    shotIds.length ? db.select().from(schema.storyboardCharacters).where(inArray(schema.storyboardCharacters.storyboardId, shotIds)) : [],
+    shotIds.length ? db.select().from(schema.storyboardProps).where(inArray(schema.storyboardProps.storyboardId, shotIds)) : [],
+    episodeCharIds.length
+      ? db.select().from(schema.characters).where(and(inArray(schema.characters.id, episodeCharIds), isNull(schema.characters.deletedAt))).orderBy(schema.characters.id)
+      : [],
+    episodePropIds.length
+      ? db.select().from(schema.props).where(and(inArray(schema.props.id, episodePropIds), isNull(schema.props.deletedAt))).orderBy(schema.props.id)
+      : [],
+  ])
 
-  const links = await db.select().from(schema.storyboardCharacters)
   const charIdsByStoryboard = new Map<number, number[]>()
   for (const link of links) {
     const arr = charIdsByStoryboard.get(link.storyboardId) || []
@@ -185,7 +204,6 @@ app.get('/:episode_id/storyboards', async (c) => {
     charIdsByStoryboard.set(link.storyboardId, arr)
   }
 
-  const propLinks = await db.select().from(schema.storyboardProps)
   const propIdsByStoryboard = new Map<number, number[]>()
   for (const link of propLinks) {
     const arr = propIdsByStoryboard.get(link.storyboardId) || []
@@ -193,17 +211,6 @@ app.get('/:episode_id/storyboards', async (c) => {
     propIdsByStoryboard.set(link.storyboardId, arr)
   }
 
-  const episodeCharLinks = await db.select().from(schema.episodeCharacters)
-    .where(eq(schema.episodeCharacters.episodeId, episodeId))
-  const episodeCharIds = episodeCharLinks.map(link => link.characterId)
-  const allChars = (await db.select().from(schema.characters))
-    .filter(ch => episodeCharIds.includes(ch.id) && !ch.deletedAt)
-
-  const episodePropLinks = await db.select().from(schema.episodeProps)
-    .where(eq(schema.episodeProps.episodeId, episodeId))
-  const episodePropIds = episodePropLinks.map(link => link.propId)
-  const allProps = (await db.select().from(schema.props))
-    .filter(p => episodePropIds.includes(p.id) && !p.deletedAt)
 
   return success(c, rows.map((row) => ({
     ...toSnakeCase(row),
@@ -222,11 +229,13 @@ app.get('/:episode_id/storyboards', async (c) => {
 // GET /episodes/:id/generation-tasks — 按集聚合 sys_task + video_merges
 app.get('/:id/character-looks', async (c) => {
   const episodeId = Number(c.req.param('id'))
-  const storyboards = await db.select().from(schema.storyboards).where(eq(schema.storyboards.episodeId, episodeId))
-  const ids = new Set(storyboards.map(row => row.id))
+  const storyboards = await db.select({ id: schema.storyboards.id }).from(schema.storyboards).where(eq(schema.storyboards.episodeId, episodeId))
+  if (!storyboards.length) return success(c, [])
   const assignments = await db.select().from(schema.storyboardCharacterLooks)
-  const looks = await db.select().from(schema.characterLooks)
-  return success(c, assignments.filter(row => ids.has(row.storyboardId)).map(row => ({
+    .where(inArray(schema.storyboardCharacterLooks.storyboardId, storyboards.map(row => row.id)))
+  const lookIds = [...new Set(assignments.map(row => row.lookId))]
+  const looks = lookIds.length ? await db.select().from(schema.characterLooks).where(inArray(schema.characterLooks.id, lookIds)) : []
+  return success(c, assignments.map(row => ({
     storyboard_id: row.storyboardId,
     character_id: row.characterId,
     look_id: row.lookId,
@@ -241,22 +250,22 @@ app.get('/:id/generation-tasks', async (c) => {
   const [ep] = await db.select().from(schema.episodes).where(eq(schema.episodes.id, episodeId))
   if (!ep) return notFound(c, '剧集不存在')
 
-  const sbs = await db.select().from(schema.storyboards).where(eq(schema.storyboards.episodeId, episodeId))
+  const [sbs, epScenes, directScenes, epChars, dramaProps, allTasks, mergeRows] = await Promise.all([
+    db.select({ id: schema.storyboards.id }).from(schema.storyboards).where(eq(schema.storyboards.episodeId, episodeId)),
+    db.select({ sceneId: schema.episodeScenes.sceneId }).from(schema.episodeScenes).where(eq(schema.episodeScenes.episodeId, episodeId)),
+    // 兼容 scenes.episodeId 直挂的旧数据
+    db.select({ id: schema.scenes.id }).from(schema.scenes).where(eq(schema.scenes.episodeId, episodeId)),
+    db.select({ characterId: schema.episodeCharacters.characterId }).from(schema.episodeCharacters).where(eq(schema.episodeCharacters.episodeId, episodeId)),
+    db.select({ id: schema.props.id }).from(schema.props).where(eq(schema.props.dramaId, ep.dramaId)),
+    db.select().from(schema.sysTask).where(eq(schema.sysTask.dramaId, ep.dramaId)),
+    db.select().from(schema.videoMerges).where(and(eq(schema.videoMerges.episodeId, episodeId), isNull(schema.videoMerges.deletedAt))),
+  ])
   const storyboardIds = new Set(sbs.map(s => s.id))
-
-  const epScenes = await db.select().from(schema.episodeScenes).where(eq(schema.episodeScenes.episodeId, episodeId))
   const sceneIds = new Set(epScenes.map(r => r.sceneId))
-  // 兼容 scenes.episodeId 直挂的旧数据
-  const directScenes = await db.select().from(schema.scenes).where(eq(schema.scenes.episodeId, episodeId))
   directScenes.forEach(s => sceneIds.add(s.id))
-
-  const epChars = await db.select().from(schema.episodeCharacters).where(eq(schema.episodeCharacters.episodeId, episodeId))
   const characterIds = new Set(epChars.map(r => r.characterId))
-
-  const dramaProps = await db.select().from(schema.props).where(eq(schema.props.dramaId, ep.dramaId))
   const propIds = new Set(dramaProps.map(p => p.id))
 
-  const allTasks = await db.select().from(schema.sysTask).where(eq(schema.sysTask.dramaId, ep.dramaId))
   const tasks = allTasks
     .filter(t =>
       (t.storyboardId && storyboardIds.has(t.storyboardId)) ||
@@ -266,14 +275,14 @@ app.get('/:id/generation-tasks', async (c) => {
     )
     .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
 
-  const merges = (await db.select().from(schema.videoMerges)
-    .where(and(eq(schema.videoMerges.episodeId, episodeId), isNull(schema.videoMerges.deletedAt))))
+  const merges = mergeRows
     .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
     .slice(0, 20)
 
+  const positions = await videoQueuePositions(tasks)
   return success(c, {
     // queue_position: งานวิดีโอที่รอคิว provider ทำทีละงาน (เช่น Unsloth H3) — UI แสดง "คิวที่ n"; อื่น ๆ = null
-    tasks: toSnakeCaseArray(await Promise.all(tasks.map(async t => ({ ...t, queuePosition: await videoQueuePosition(t) })))),
+    tasks: toSnakeCaseArray(tasks.map(t => ({ ...t, queuePosition: positions.get(t.id) ?? null }))),
     merges: toSnakeCaseArray(merges),
   })
 })

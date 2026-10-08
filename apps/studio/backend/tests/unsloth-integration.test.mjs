@@ -10,7 +10,8 @@ const read = (p) => readFileSync(new URL(p, root), 'utf8')
 test('episode generation-tasks ส่ง queue_position ที่ episode workbench อ่าน (t.queue_position)', () => {
   const route = read('src/modules/drama/routes/episodes.ts')
   const block = route.slice(route.indexOf("app.get('/:id/generation-tasks'"))
-  assert.match(block, /queuePosition: await videoQueuePosition\(t\)/)
+  assert.match(block, /queuePosition: positions\.get\(t\.id\)/)
+  assert.match(block, /await videoQueuePositions\(tasks\)/)
   // toSnakeCase แปลง queuePosition → queue_position
   if (hasFrontend) assert.match(readFrontend('menus/drama/views/episode.vue'), /t\.queue_position/)
 })

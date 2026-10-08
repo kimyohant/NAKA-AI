@@ -781,7 +781,9 @@ export const sellerAPI = {
 
 // ===== บัญชีผู้ใช้ (naka-ai SSO) =====
 export interface StudioUser { id: string; name: string; email: string | null; admin: boolean }
-export interface StudioSession { user: StudioUser; sso: boolean; accountUrl: string | null }
+export interface StudioFeature { key: string; label: string; quotaUnit: string | null; enabled: boolean; monthlyLimit: number | null; used: number }
+/** features: the studio menus/quotas of the member's plan; null = everything (admin, single-user mode) */
+export interface StudioSession { user: StudioUser; sso: boolean; accountUrl: string | null; features: StudioFeature[] | null }
 export const authAPI = {
   me: () => api.get<StudioSession>('/auth/naka/me'),
   logout: () => api.post<{ loggedOut: boolean; accountUrl: string | null }>('/auth/naka/logout', {}),

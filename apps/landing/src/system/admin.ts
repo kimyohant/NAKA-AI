@@ -4,6 +4,7 @@ import type { Env } from '../types';
 import type { AdminActor } from '../admin/auth';
 import { constantTimeEqual, readBodyBytes } from '../auth/common';
 import { LOCKED, normalizeSetting, secretHint, SETTING_BY_KEY, SETTINGS, type SettingDef } from './registry';
+import { FeatureAdminError, featureCatalog, planFeatureMap, setPlanFeatures } from '../admin/features';
 import { decryptSetting, encryptSetting, invalidateSettings, settingsKeyReady, type StoredRow } from './store';
 
 const BASE = '/api/admin/system';
@@ -142,8 +143,10 @@ async function plansResponse(env: Env): Promise<Response> {
   const { results } = await env.DB.prepare(`SELECT p.id, p.name, p.monthly_credits AS monthlyCredits, p.max_parallel_jobs AS parallelJobs,
     p.price_thb AS price, p.on_sale AS onSale,
     (SELECT COUNT(*) FROM subscriptions s WHERE s.plan_id = p.id AND s.status = 'active' AND (s.expires_at IS NULL OR s.expires_at > ?)) AS subscribers
-    FROM plans p ORDER BY p.price_thb, p.id`).bind(now()).all();
-  return json({ plans: results.map(p => ({ ...p, onSale: p.onSale === 1 })) });
+    FROM plans p ORDER BY p.price_thb, p.id`).bind(now()).all<{ id: string; onSale: number }>();
+  // what each plan includes (docs/entitlements.md): feature key → monthly limit, null = unlimited
+  const [features, included] = await Promise.all([featureCatalog(env), planFeatureMap(env)]);
+  return json({ plans: results.map(p => ({ ...p, onSale: p.onSale === 1, features: included[p.id] ?? {} })), features });
 }
 
 function int(input: Record<string, unknown>, field: string, label: string, min: number, max: number): number {
@@ -249,10 +252,16 @@ export async function handleAdminSystem(request: Request, env: Env, url: URL, ac
     if (path === '/plans' && method === 'POST') return await createPlan(request, env, who);
     const plan = path.match(/^\/plans\/([a-z][a-z0-9_-]{0,30})$/);
     if (plan && method === 'PUT') return await updatePlan(request, env, plan[1], who);
+    const planFeatures = path.match(/^\/plans\/([a-z][a-z0-9_-]{0,30})\/features$/);
+    if (planFeatures && method === 'PUT') {
+      const input = await body(request);
+      await setPlanFeatures(env, planFeatures[1], input, note(input), who);
+      return await plansResponse(env);
+    }
     if (path === '/audit' && method === 'GET') return await auditResponse(env);
     return json({ error: 'not found' }, 404);
   } catch (error) {
-    if (error instanceof SystemError) return json({ error: error.message }, error.status);
+    if (error instanceof SystemError || error instanceof FeatureAdminError) return json({ error: error.message }, error.status);
     console.error('system admin error'); // no detail: requests here carry secrets
     return json({ error: 'internal error' }, 500);
   }

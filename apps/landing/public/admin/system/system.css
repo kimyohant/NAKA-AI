@@ -165,6 +165,13 @@ input:disabled { background: var(--fx-steel); color: var(--ink-3); }
 #new-plan .plan-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .plan-card .btn { margin-top: auto; align-self: flex-start; }
 .plan-card .check { margin: 14px 0 16px; }
+.plan-features { margin-top: 16px; border-top: 1px solid var(--line, #e3e7ef); padding-top: 12px; }
+.plan-features summary { cursor: pointer; font-weight: 600; }
+.plan-features .feature-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; margin: 8px 0; }
+.plan-features .feature-row .check { margin: 0; }
+.plan-features .feature-row label:not(.check) { grid-column: 1; font-size: .85em; }
+.plan-features .feature-row input[type=number] { grid-column: 2; grid-row: 2; max-width: 120px; }
+.plan-features .btn { margin-top: 8px; }
 #new-plan { margin-top: 14px; }
 #new-plan .btn { margin-top: 8px; }
 .check { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); }

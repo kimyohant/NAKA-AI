@@ -2,6 +2,7 @@ import type { Env } from '../types';
 import type { AdminActor } from './auth';
 import { constantTimeEqual } from '../auth/common';
 import { ledgerFor } from '../credits';
+import { customerFeatures, FeatureAdminError, featureCatalog, setCustomerFeature } from './features';
 import { hashPassword, temporaryPassword } from '../auth/password';
 
 const BASE = '/api/admin/customers';
@@ -53,6 +54,7 @@ async function detail(env: Env, userId: string): Promise<Response> {
     env.DB.prepare("SELECT id, name, monthly_credits AS monthlyCredits, price_thb AS price FROM plans WHERE price_thb > 0 AND id <> 'free' ORDER BY price_thb, id").all(),
   ]);
   return json({ customer, subscription, ledger, payments: payments.results, receipts: receipts.results,
+    ...(await customerFeatures(env, userId)), featureCatalog: await featureCatalog(env),
     socialAccounts: socialAccounts.results, audit: audit.results.map(row => ({ ...row, detail: JSON.parse(row.detail) })), plans: plans.results });
 }
 
@@ -208,19 +210,25 @@ export async function handleAdminCustomers(request: Request, env: Env, url: URL,
       throw new AdminError(403, 'คำขอไม่ถูกต้อง');
     }
     if ((url.pathname === BASE || url.pathname === BASE + '/') && request.method === 'GET') return await customers(env, url);
-    const match = url.pathname.slice(BASE.length).match(/^\/([^/]+)(?:\/(credits|package|status|password))?$/);
+    const match = url.pathname.slice(BASE.length).match(/^\/([^/]+)(?:\/(credits|package|status|password|feature))?$/);
     if (!match) return json({ error: 'ไม่พบรายการนี้' }, 404);
     let userId: string;
     try { userId = decodeURIComponent(match[1]); } catch { throw new AdminError(400, 'รหัสลูกค้าไม่ถูกต้อง'); }
     if (!userId || userId.length > 200) throw new AdminError(400, 'รหัสลูกค้าไม่ถูกต้อง');
     if (!match[2] && request.method === 'GET') return await detail(env, userId);
     if (match[2] === 'password' && request.method === 'POST') return await resetPassword(request, env, userId, who);
+    if (match[2] === 'feature' && request.method === 'POST') {
+      const data = await body(request);
+      const note = typeof data.note === 'string' ? data.note.trim() : '';
+      if (!note || note.length > 200) throw new AdminError(400, 'กรุณาระบุเหตุผล 1–200 ตัวอักษร');
+      return json({ ok: true, auditId: await setCustomerFeature(env, userId, data, note, who) });
+    }
     if (match[2] && request.method === 'POST') return await change(request, env, userId, match[2] as Action, who);
     const response = json({ error: 'ไม่รองรับวิธีเรียกใช้งานนี้' }, 405);
     response.headers.set('Allow', match[2] ? 'POST' : 'GET');
     return response;
   } catch (error) {
-    if (error instanceof AdminError) return json({ error: error.message }, error.status);
+    if (error instanceof AdminError || error instanceof FeatureAdminError) return json({ error: error.message }, error.status);
     console.error('admin customers: request failed');
     return json({ error: 'ระบบขัดข้อง กรุณาโหลดข้อมูลล่าสุดก่อนลองอีกครั้ง' }, 500);
   }

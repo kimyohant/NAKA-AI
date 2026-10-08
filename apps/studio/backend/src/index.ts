@@ -22,6 +22,7 @@ import { requestLogger, errorHandler } from './core/http/logger.js'
 import { adminGuard, assertAdminTokenConfig, guardOn, isAdminRequest } from './core/auth/admin.js'
 import nakaSso, { requireSession, ssoConfig, ssoEnabled } from './core/auth/naka-sso.js'
 import { ownership } from './core/auth/ownership.js'
+import { entitlementGuard } from './core/auth/entitlements.js'
 import { failStaleRunningTasks } from './core/tasks/pipeline-tasks.js'
 import { recoverGenerationTasks } from './core/generation/generation.js'
 import { studioModules, recoverModules } from './modules.js'
@@ -93,6 +94,8 @@ app.get('/api/v1/health', (c) => c.json({
 // members (naka-ai SSO) → each member's own data (auth/ownership.ts) → system-settings API for admins only (middleware/admin.ts)
 app.use('/api/v1/*', requireSession(() => ['http://localhost:3013', 'http://localhost:3014', ...adminOrigins], isAdminRequest))
 app.use('/api/v1/*', ownership)
+// menus outside the member's plan → 403 E_FEATURE_DISABLED (core/auth/entitlements.ts, docs/entitlements.md)
+app.use('/api/v1/*', entitlementGuard)
 app.use('/api/v1/*', adminGuard)
 const api = new Hono()
 // back-office login check: 401 E_ADMIN_REQUIRED unless the token is valid (guard off → always ok)

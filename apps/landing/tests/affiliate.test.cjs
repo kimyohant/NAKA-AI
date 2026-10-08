@@ -128,6 +128,8 @@ test("an Anthropic rejection is stored and logged by status code, never by its m
 });
 
 test("the API enqueues, reports queue position, and hides failures and other users' jobs", async () => {
+  // members with a row: the free plan includes landing.clips (3 a month, docs/entitlements.md)
+  sqlite.prepare("INSERT INTO users (id, display_name, created_at) VALUES ('u1', 'ทดสอบ', 0), ('u2', 'อื่น', 0)").run();
   const call = (method, pathname, body, userId = "u1") => affiliate.handleAffiliateApi(
     new Request(`https://naka-ai.com${pathname}`, {
       method, headers: { "Content-Type": "application/json" }, body: body && JSON.stringify(body),

@@ -21,6 +21,7 @@ import { handleAdminMarketer } from "./marketer/admin";
 import { AI_VIDEO_JOB_KIND, makeAiVideoHandler } from "./video";
 import { handleAdminSystem } from "./system/admin";
 import { featureOn, withSettings } from "./system/store";
+import { featureRefusal, hasFeature } from "./entitlements";
 import type { Env } from "./types";
 
 interface LineEvent {
@@ -65,6 +66,7 @@ export default {
     if (url.pathname === "/api/social" || url.pathname.startsWith("/api/social/")) {
       // Signed media links are fetched by Instagram without a session; every other route needs one.
       const userId = url.pathname.startsWith("/api/social/media/") ? null : (await requireUser(request, env))?.id ?? null;
+      if (userId && !(await hasFeature(env, userId, "landing.social"))) return featureRefusal({ reason: "disabled" }, "โพสต์โซเชียลอัตโนมัติ");
       return (await handleSocial(request, env, url, userId)) ?? json({ error: "not found" }, 404);
     }
     if (url.pathname === "/api/marketer" || url.pathname.startsWith("/api/marketer/")) {
@@ -77,6 +79,7 @@ export default {
     if (url.pathname === "/api/inbox" || url.pathname.startsWith("/api/inbox/")) {
       const user = await requireUser(request, env);
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      if (!(await hasFeature(env, user.id, "landing.inbox"))) return featureRefusal({ reason: "disabled" }, " AI Inbox");
       return (await handleInbox(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
     }
     if (url.pathname.startsWith("/api/billing/")) {

@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readEpisodeWorkbench } from './_episode.mjs'
 import { loadLocale } from './_locales.mjs'
 import {
   UNSLOTH_PROVIDER, UNSLOTH_VIDEO_DEFAULTS, isLocalOrPrivateBaseUrl,
@@ -22,7 +23,7 @@ const providerIcon = read('app/composables/useProviderIcon.ts')
 const unslothFlow = read('menus/product-studio/utils/unslothFlow.js')
 const workspace = read('menus/product-studio/views/workspace.vue')
 const shotCard = read('menus/product-studio/components/StudioShotCard.vue')
-const episode = read('menus/drama/views/episode.vue')
+const episode = readEpisodeWorkbench()
 const campaign = read('menus/marketer/views/campaign.vue')
 const docCard = read('menus/marketer/components/MarketerDocCard.vue')
 const refCard = read('menus/marketer/components/MarketerReferenceCard.vue')

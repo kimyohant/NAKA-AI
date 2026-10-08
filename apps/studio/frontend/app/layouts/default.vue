@@ -3,7 +3,7 @@
     <!-- 左侧导航栏（参考 Topview Drama Studio 布局；剧集工作台使用独立的 studio 布局） -->
     <aside class="sidebar" :class="{ open: navOpen }" :aria-label="t('layout.nav.home')">
       <div class="side-top">
-        <button class="brand" :title="t('app.title')" @click="go('/seller')">
+        <button class="brand" :title="t('app.title')" @click="go(homePath)">
           <span class="brand-mark">
             <img v-if="showBrandImage" :src="brandLogo" :alt="t('app.title')" class="brand-logo" @error="showBrandImage = false" />
             <span v-else class="brand-fallback">H</span>
@@ -17,23 +17,23 @@
 
       <!-- เมนูหลัก (คลังสกิลไม่อยู่ในเมนู — รวมอยู่ใน AI นักขายแล้ว; /studio ยังเข้าทาง URL ได้) -->
       <nav class="side-nav">
-        <NuxtLink to="/drama" class="side-link" :class="{ active: isDramaRoute }" :title="t('layout.nav.home')" @click="navOpen = false">
+        <NuxtLink v-if="menuAllowed('studio.drama')" to="/drama" class="side-link" :class="{ active: isDramaRoute }" :title="t('layout.nav.home')" @click="navOpen = false">
           <Clapperboard :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.home') }}</span>
         </NuxtLink>
-        <NuxtLink to="/marketer" class="side-link" :class="{ active: isMarketerRoute }" :title="t('layout.nav.marketer')" @click="navOpen = false">
+        <NuxtLink v-if="menuAllowed('studio.marketer')" to="/marketer" class="side-link" :class="{ active: isMarketerRoute }" :title="t('layout.nav.marketer')" @click="navOpen = false">
           <Megaphone :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.marketer') }}</span>
         </NuxtLink>
-        <NuxtLink to="/seller" class="side-link" :class="{ active: isSellerRoute }" :title="t('layout.nav.seller')" @click="navOpen = false">
+        <NuxtLink v-if="menuAllowed('studio.seller')" to="/seller" class="side-link" :class="{ active: isSellerRoute }" :title="t('layout.nav.seller')" @click="navOpen = false">
           <Store :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.seller') }}</span>
         </NuxtLink>
-        <NuxtLink to="/viral-clone" class="side-link" :class="{ active: isViralCloneRoute }" :title="t('layout.nav.viralClone')" @click="navOpen = false">
+        <NuxtLink v-if="menuAllowed('studio.viral_clone')" to="/viral-clone" class="side-link" :class="{ active: isViralCloneRoute }" :title="t('layout.nav.viralClone')" @click="navOpen = false">
           <Copy :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.viralClone') }}</span>
         </NuxtLink>
-        <NuxtLink to="/live" class="side-link" :class="{ active: isLiveRoute }" :title="t('layout.nav.live')" @click="navOpen = false">
+        <NuxtLink v-if="menuAllowed('studio.live')" to="/live" class="side-link" :class="{ active: isLiveRoute }" :title="t('layout.nav.live')" @click="navOpen = false">
           <Radio :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.live') }}</span>
         </NuxtLink>
@@ -109,6 +109,13 @@ const session = ref(null)
 onMounted(async () => {
   try { session.value = await authAPI.me() } catch { /* 401 → useApi พาไปล็อกอินเอง */ }
 })
+// menus the member's naka-ai plan includes (docs/entitlements.md); features null = all (admin, single-user)
+const MENU_HOME = [['studio.seller', '/seller'], ['studio.drama', '/drama'], ['studio.marketer', '/marketer'], ['studio.viral_clone', '/viral-clone'], ['studio.live', '/live']]
+function menuAllowed(key) {
+  const features = session.value?.features
+  return !features || features.some(f => f.key === key && f.enabled)
+}
+const homePath = computed(() => (MENU_HOME.find(([key]) => menuAllowed(key)) || MENU_HOME[0])[1])
 async function signOut() {
   try {
     const r = await authAPI.logout()

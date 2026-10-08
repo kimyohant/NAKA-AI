@@ -334,11 +334,13 @@ export async function listCloneProjects() {
 
 /** หน้าแรกของสตูดิโอโคลน: สถิติรวม + ตัวแปรต่อโปรเจกต์ + คลิปที่เรนเดอร์ล่าสุด */
 export async function getCloneOverview(recentLimit = 8) {
-  const [projects, variants] = await Promise.all([
-    db.select({ id: schema.cloneProjects.id, name: schema.cloneProjects.name }).from(schema.cloneProjects)
-      .where(ownedBy(schema.cloneProjects.ownerUserId)),
-    db.select().from(schema.cloneVariants).orderBy(desc(schema.cloneVariants.updatedAt)),
-  ])
+  const projects = await db.select({ id: schema.cloneProjects.id, name: schema.cloneProjects.name }).from(schema.cloneProjects)
+    .where(ownedBy(schema.cloneProjects.ownerUserId))
+  const variants = projects.length
+    ? await db.select().from(schema.cloneVariants)
+      .where(inArray(schema.cloneVariants.projectId, projects.map(p => p.id)))
+      .orderBy(desc(schema.cloneVariants.updatedAt))
+    : []
   const names = new Map(projects.map(p => [p.id, p.name]))
   const stats = { projects: projects.length, variants: 0, completed: 0, busy: 0, failed: 0, renderedSec: 0 }
   const perProject: Record<number, { total: number; completed: number; busy: number; failed: number; latestOutput: string | null }> = {}

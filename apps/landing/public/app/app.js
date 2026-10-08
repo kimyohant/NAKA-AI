@@ -39,6 +39,7 @@
       var firstName = String(user.displayName || "").split(" ")[0] || "ผู้ใช้";
       greetingName.textContent = ", " + firstName;
       creditsValue.textContent = String(state.credits);
+      renderQuotas(state.features);
       if (state.source === "server") {
         modeText.textContent = "เชื่อมต่อระบบแล้ว · ข้อมูลจากเซิร์ฟเวอร์";
       } else {
@@ -56,6 +57,27 @@
       errorPanel.hidden = false;
     }
   });
+
+  // Monthly quotas of the features this member's plan includes (docs/entitlements.md)
+  function renderQuotas(features) {
+    var panel = document.getElementById("quota-panel");
+    var list = document.getElementById("quota-list");
+    var rows = (features || []).filter(function (f) { return f.enabled && f.quotaUnit && f.app === "landing"; });
+    list.textContent = "";
+    rows.forEach(function (f) {
+      var item = document.createElement("li");
+      var name = document.createElement("span");
+      name.textContent = f.label;
+      var value = document.createElement("strong");
+      value.textContent = f.monthlyLimit == null
+        ? "ใช้แล้ว " + f.used + " " + f.quotaUnit + " · ไม่จำกัด"
+        : f.used + " / " + f.monthlyLimit + " " + f.quotaUnit;
+      if (f.monthlyLimit != null && f.used >= f.monthlyLimit) item.className = "quota-full";
+      item.append(name, value);
+      list.appendChild(item);
+    });
+    panel.hidden = !rows.length;
+  }
 
   signoutButton.addEventListener("click", async function () {
     signoutStatus.textContent = "";

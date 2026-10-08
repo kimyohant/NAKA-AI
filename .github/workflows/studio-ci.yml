@@ -3,9 +3,11 @@ name: Studio CI
 
 on:
   push:
-    paths: ['apps/studio/**', '.github/workflows/studio-ci.yml']
+    # the entitlement test loads the account migrations (docs/entitlements.md)
+    paths: ['apps/studio/**', 'apps/landing/migrations/pg/**', '.github/workflows/studio-ci.yml']
   pull_request:
-    paths: ['apps/studio/**', '.github/workflows/studio-ci.yml']
+    # the entitlement test loads the account migrations (docs/entitlements.md)
+    paths: ['apps/studio/**', 'apps/landing/migrations/pg/**', '.github/workflows/studio-ci.yml']
 
 jobs:
   backend:
@@ -24,7 +26,7 @@ jobs:
       - run: npm run typecheck
       # tests run on PGlite (in-process PostgreSQL, DATABASE_URL=pglite://…): no database service needed
       # naka-sso.test.ts also checks the contract against apps/landing/src/auth/studio.ts (same checkout)
-      - run: npx tsx --test tests/campaigns-migration.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts tests/module-boundaries.test.mjs
+      - run: npx tsx --test tests/campaigns-migration.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts tests/entitlements.test.ts tests/concurrency.test.ts tests/query-budget.test.ts tests/module-boundaries.test.mjs
 
   admin:
     runs-on: ubuntu-latest

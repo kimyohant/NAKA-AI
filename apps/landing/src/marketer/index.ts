@@ -2,6 +2,7 @@
 import type { Env, User } from "../types";
 import { readBodyBytes } from "../auth/common";
 import { enqueueJob, getJobForUser } from "../jobs";
+import { featureRefusal, hasFeature, releaseFeature, useFeature } from "../entitlements";
 import { CATEGORIES, EXPERTS, GROUPS, TEMPLATES } from "./catalog";
 import { MARKETER_COST_CREDITS, MARKETER_JOB_KINDS, MarketerInputError, parseMarketerInput, type MarketerKind } from "./ai";
 import { ProductUrlError, proxyImage, readProductPage } from "./product";
@@ -104,6 +105,8 @@ export async function handleMarketer(request: Request, env: Env, url: URL, user:
     }
 
     if (!user) throw new MarketerError(401, "กรุณาเข้าสู่ระบบก่อนใช้งาน");
+    // the member's plan must include the marketer menu (docs/entitlements.md)
+    if (!(await hasFeature(env, user.id, "landing.marketer"))) return featureRefusal({ reason: "disabled" }, "นักการตลาด AI");
     if (method !== "GET" && (request.headers.get("Origin") !== url.origin || request.headers.get("Sec-Fetch-Site") === "cross-site")) {
       throw new MarketerError(403, "คำขอไม่ถูกต้อง");
     }
@@ -116,8 +119,11 @@ export async function handleMarketer(request: Request, env: Env, url: URL, user:
     if (create && method === "POST") {
       const kind = create[1] as MarketerKind;
       const input = parseMarketerInput(kind, await readJson(request, kind === "recreate" ? MAX_RECREATE_BODY : MAX_SMALL_BODY));
+      const use = await useFeature(env, user.id, "landing.marketer");
+      if (!use.ok) return featureRefusal(use, "นักการตลาด AI");
       const result = await enqueueJob(env.DB, { userId: user.id, kind: MARKETER_JOB_KINDS[kind], input, costCredits: MARKETER_COST_CREDITS, maxAttempts: 2 });
       if (!result.ok) {
+        await releaseFeature(env, user.id, "landing.marketer", 1, use.period);
         return result.reason === "insufficient_credits" ? json({ error: "เครดิตไม่พอ กรุณาเติมเครดิตก่อน", reason: "credits" }, 402)
           : json({ error: "มีงานที่กำลังทำอยู่ครบตามแพ็กเกจแล้ว รอให้เสร็จก่อนนะ", reason: "busy" }, 429);
       }

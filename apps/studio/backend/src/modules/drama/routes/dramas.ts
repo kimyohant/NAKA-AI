@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { and, eq, isNull, like, desc } from 'drizzle-orm'
+import { and, eq, inArray, isNull, like, desc } from 'drizzle-orm'
 import { ownedBy } from '../../../core/auth/owner-context.js'
 import { db, insertedId, schema } from '../../../core/db/index.js'
 import { success, badRequest, notFound, created, now } from '../../../core/http/response.js'
@@ -38,14 +38,23 @@ app.get('/', async (c) => {
   const total = filtered.length
   const items = filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  // Attach episode/character/scene counts
-  const enriched = await Promise.all(items.map(async (drama) => {
-    const eps = await db.select().from(schema.episodes)
-      .where(and(eq(schema.episodes.dramaId, drama.id), isNull(schema.episodes.deletedAt)))
-    const chars = await db.select().from(schema.characters)
-      .where(eq(schema.characters.dramaId, drama.id))
-    const scns = await db.select().from(schema.scenes)
-      .where(eq(schema.scenes.dramaId, drama.id))
+  // Attach episodes/characters/scenes: one statement each for the whole page, grouped by drama
+  const ids = items.map(d => d.id)
+  const [epRows, charRows, sceneRows] = ids.length ? await Promise.all([
+    db.select().from(schema.episodes).where(and(inArray(schema.episodes.dramaId, ids), isNull(schema.episodes.deletedAt))).orderBy(schema.episodes.id),
+    db.select().from(schema.characters).where(inArray(schema.characters.dramaId, ids)).orderBy(schema.characters.id),
+    db.select().from(schema.scenes).where(inArray(schema.scenes.dramaId, ids)).orderBy(schema.scenes.id),
+  ]) : [[], [], []]
+  const group = <T extends { dramaId: number }>(rows: T[]) => {
+    const map = new Map<number, T[]>()
+    for (const row of rows) map.set(row.dramaId, [...(map.get(row.dramaId) ?? []), row])
+    return map
+  }
+  const epsBy = group(epRows), charsBy = group(charRows), scenesBy = group(sceneRows)
+  const enriched = items.map((drama) => {
+    const eps = epsBy.get(drama.id) ?? []
+    const chars = charsBy.get(drama.id) ?? []
+    const scns = scenesBy.get(drama.id) ?? []
     return {
       ...toSnakeCase(drama),
       tags: drama.tags ? JSON.parse(drama.tags) : [],
@@ -55,7 +64,7 @@ app.get('/', async (c) => {
       characters: toSnakeCaseArray(chars),
       scenes: toSnakeCaseArray(scns),
     }
-  }))
+  })
 
   return success(c, {
     items: enriched,
@@ -115,14 +124,12 @@ app.get('/:id', async (c) => {
   const [drama] = await db.select().from(schema.dramas).where(eq(schema.dramas.id, id))
   if (!drama) return notFound(c, '剧本不存在')
 
-  const eps = await db.select().from(schema.episodes)
-    .where(and(eq(schema.episodes.dramaId, id), isNull(schema.episodes.deletedAt)))
-  const chars = await db.select().from(schema.characters)
-    .where(eq(schema.characters.dramaId, id))
-  const scns = await db.select().from(schema.scenes)
-    .where(eq(schema.scenes.dramaId, id))
-  const prps = await db.select().from(schema.props)
-    .where(eq(schema.props.dramaId, id))
+  const [eps, chars, scns, prps] = await Promise.all([
+    db.select().from(schema.episodes).where(and(eq(schema.episodes.dramaId, id), isNull(schema.episodes.deletedAt))).orderBy(schema.episodes.id),
+    db.select().from(schema.characters).where(eq(schema.characters.dramaId, id)).orderBy(schema.characters.id),
+    db.select().from(schema.scenes).where(eq(schema.scenes.dramaId, id)).orderBy(schema.scenes.id),
+    db.select().from(schema.props).where(eq(schema.props.dramaId, id)).orderBy(schema.props.id),
+  ])
 
   return success(c, {
     ...toSnakeCase(drama),

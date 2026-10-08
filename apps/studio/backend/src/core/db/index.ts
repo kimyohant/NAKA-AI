@@ -34,6 +34,11 @@ export let rawExec: (script: string) => Promise<void>
 export let rawTransaction: <T>(fn: (q: typeof rawQuery) => Promise<T>) => Promise<T>
 export let closeDb: () => Promise<void>
 
+const stats = { queries: 0, rows: 0 }
+/** Statements run and rows returned since the last reset — counted on PGlite only (tests); zeros on postgres.js. */
+export const queryStats = () => ({ ...stats })
+export const resetQueryStats = () => { stats.queries = 0; stats.rows = 0 }
+
 let client: unknown
 if (databaseUrl.startsWith('pglite://')) {
   const { PGlite } = await import('@electric-sql/pglite')
@@ -44,6 +49,14 @@ if (databaseUrl.startsWith('pglite://')) {
   const pg = location === 'memory' || location === '' ? new PGlite() : new PGlite(location)
   // one connection: the search path set here holds for every query
   await pg.exec(`CREATE SCHEMA IF NOT EXISTS "${DB_SCHEMA}"; SET search_path TO "${DB_SCHEMA}";`)
+  // count statements and rows (queryStats(): tests hold hot endpoints to a query budget)
+  const query = pg.query.bind(pg)
+  pg.query = (async (...args: Parameters<typeof query>) => {
+    const result = await query(...args)
+    stats.queries++
+    stats.rows += result.rows.length
+    return result
+  }) as typeof pg.query
   rawQuery = async (text, params = []) => (await pg.query<Row>(text, params)).rows
   rawExec = async script => { await pg.exec(script) }
   rawTransaction = fn => pg.transaction(tx => fn(async (text, params = []) => (await tx.query<Row>(text, params)).rows))

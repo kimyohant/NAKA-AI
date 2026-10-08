@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readEpisodeWorkbench } from './_episode.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
-const page = read('menus/drama/views/episode.vue')
+const page = readEpisodeWorkbench()
 const useAgent = read('app/composables/useAgent.ts')
 const useApi = read('app/composables/useApi.ts')
 

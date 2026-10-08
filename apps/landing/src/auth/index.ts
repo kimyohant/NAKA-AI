@@ -1,5 +1,6 @@
 import type { Env } from '../types';
 import { getBalance } from '../credits';
+import { memberFeatures } from '../entitlements';
 import { appOrigin, AuthError, json, secret } from './common';
 import { emailProvider } from './email';
 import { googleCallback, googleStart } from './google';
@@ -61,7 +62,7 @@ export async function handleAuth(request: Request, env: Env, url: URL, ctx?: Exe
           const user = await requireUser(request, env);
           if (user) {
             const password = await hasPassword(env, user.id);
-            response = json({ user, credits: await getBalance(env.DB, user.id),
+            response = json({ user, credits: await getBalance(env.DB, user.id), features: await memberFeatures(env, user.id),
               ...(password === undefined ? {} : { hasPassword: password }), ...(await studioLink(env, user)) });
           } else response = json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
         }
