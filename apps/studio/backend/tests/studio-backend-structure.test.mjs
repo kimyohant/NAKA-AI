@@ -58,11 +58,13 @@ test('studio error codes ใหม่ครบตามสัญญา', () => {
 test('review_director register ครบทุกจุด + save_studio_shots ผ่าน tool', () => {
   const agents = read('src/core/agents/index.ts')
   assert.match(agents, /review_director: \{/) // DEFAULT_PROMPTS
-  assert.match(agents, /saveStudioShots: studioTools\.saveStudioShots/) // AGENT_TOOLS
   const skills = read('src/core/agents/skills.ts')
   assert.match(skills, /review_director: \['review-director'\]/)
-  const tools = read('src/core/agents/tools/studio-tools.ts')
+  const tools = read('src/modules/product-studio/agent-tools.ts')
   assert.match(tools, /save_studio_shots/)
+  // tools come from the product-studio module, loaded by services/studio.ts before the agent runs
+  assert.match(tools, /registerAgentTools\('review_director', \{\s*saveStudioShots: studioTools\.saveStudioShots/)
+  assert.match(read('src/services/studio.ts'), /import '\.\.\/modules\/product-studio\/agent-tools\.js'/)
   assert.match(tools, /expectedShots/) // จำนวนช็อตต้องเท่า beats
   assert.match(tools, /buildShotPrompts/) // deterministic prompts จาก builder เดียวกับ PUT shots
 

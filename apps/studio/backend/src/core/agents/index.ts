@@ -14,8 +14,6 @@ import { scriptTools } from './tools/script-tools.js'
 import { extractTools } from './tools/extract-tools.js'
 import { storyboardTools } from './tools/storyboard-tools.js'
 import { imagePromptTools } from './tools/image-prompt-tools.js'
-import { marketerTools } from './tools/marketer-tools.js'
-import { studioTools } from './tools/studio-tools.js'
 import { loadAgentSkills, skillWorkspaces } from './skills.js'
 import { loadAgentPromptFile, loadBasePromptFile } from './prompts.js'
 import { buildLanguageDirective, buildPacingDirective } from './language.js'
@@ -640,7 +638,11 @@ async function getModel(fileModel: string | undefined, modelOverride?: string, t
   return provider.chat(modelName)
 }
 
-const AGENT_TOOLS: Record<string, Record<string, any>> = {
+type AgentToolSet = Record<string, any>
+
+/** Tools per agent type. Core agents are filled here; agents owned by a menu module get their
+ *  tools from that module (registerAgentTools), so core never imports menu code. */
+const AGENT_TOOLS: Record<string, AgentToolSet> = {
   script_rewriter: scriptTools,
   extractor: extractTools,
   storyboard_breaker: storyboardTools,
@@ -656,31 +658,8 @@ const AGENT_TOOLS: Record<string, Record<string, any>> = {
     readEpisodeScript: scriptTools.readEpisodeScript,
     saveScript: scriptTools.saveScript,
   },
-  // AI Marketer：调研/策略/广告脚本（campaignId 经 CampaignRequestContext 注入）
-  market_researcher: {
-    readCampaign: marketerTools.readCampaign,
-    readCampaignDocs: marketerTools.readCampaignDocs,
-    saveCampaignDoc: marketerTools.saveCampaignDoc,
-  },
-  strategist: {
-    readCampaign: marketerTools.readCampaign,
-    readCampaignDocs: marketerTools.readCampaignDocs,
-    saveCampaignDoc: marketerTools.saveCampaignDoc,
-  },
-  ad_scriptwriter: {
-    readCampaign: marketerTools.readCampaign,
-    readCampaignDocs: marketerTools.readCampaignDocs,
-    saveCampaignDoc: marketerTools.saveCampaignDoc,
-    saveCreatives: marketerTools.saveCreatives,
-  },
-  // Phase 3 Recreate Viral Ad：วิเคราะห์โครงสร้างโฆษณาอ้างอิงจาก transcript ที่ผู้ใช้วาง (sync, tool เดียว)
-  ad_analyst: {
-    saveReferenceAnalysis: marketerTools.saveReferenceAnalysis,
-  },
-  // Product Studio: review_director เขียน shot list ตามเทมเพลต (บันทึกผ่าน save_studio_shots)
-  review_director: {
-    saveStudioShots: studioTools.saveStudioShots,
-  },
+  // AI Marketer (market_researcher / strategist / ad_scriptwriter / ad_analyst) → modules/marketer/agent-tools.ts
+  // Product Studio (review_director) → modules/product-studio/agent-tools.ts
   // Viral Clone: viral_cloner คืน Blueprint JSON ในข้อความ (ไม่มี tool — backend parse/validate เอง)
   viral_cloner: {},
   viral_translator: {},
@@ -690,6 +669,13 @@ const AGENT_TOOLS: Record<string, Record<string, any>> = {
   // AI Live: คืน JSON ในข้อความ (backend parse/validate เอง)
   live_host: {},
   live_responder: {},
+}
+
+/** A menu module adds tools to one of its agents. Tools are resolved per request (see agentRegistry),
+ *  so registering after the registry is built is fine — it only has to happen before the agent runs. */
+export function registerAgentTools(type: string, tools: AgentToolSet): void {
+  if (!(type in DEFAULT_PROMPTS)) throw new Error(`registerAgentTools: unknown agent type "${type}"`)
+  AGENT_TOOLS[type] = { ...AGENT_TOOLS[type], ...tools }
 }
 
 /** instructions 按请求解析：prompt 文件（或默认）+ 技能全文拼接 + 目标语言指令块
@@ -730,7 +716,7 @@ export const agentRegistry: Record<string, Agent> = Object.fromEntries(
       name: DEFAULT_PROMPTS[type].name,
       instructions: buildInstructions(type),
       model: buildModel(type),
-      tools: AGENT_TOOLS[type],
+      tools: () => AGENT_TOOLS[type] ?? {},
       workspace: skillWorkspaces[type],
       skillsFormat: 'markdown',
     }),

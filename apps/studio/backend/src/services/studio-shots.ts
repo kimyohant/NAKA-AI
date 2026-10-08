@@ -1,6 +1,6 @@
 /**
  * Studio shot helpers — ใช้ร่วมกันระหว่าง services/studio.ts (PUT shots/:shotId)
- * และ agents/tools/studio-tools.ts (save_studio_shots)
+ * และ modules/product-studio/agent-tools.ts (save_studio_shots)
  * ตั้งใจไม่ import mastra เพื่อไม่ให้เกิด dependency cycle (studio.ts → mastra → agents → tools → ที่นี่)
  */
 import { and, eq, isNull } from 'drizzle-orm'

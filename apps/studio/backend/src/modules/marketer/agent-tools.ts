@@ -8,9 +8,10 @@
 import { createTool } from '@mastra/core/tools'
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../../db/index.js'
-import { now } from '../../http/response.js'
-import { getCampaignId } from '../context.js'
+import { db, getInsertId, schema } from '../../core/db/index.js'
+import { now } from '../../core/http/response.js'
+import { getCampaignId } from '../../core/agents/context.js'
+import { registerAgentTools } from '../../core/agents/index.js'
 
 export const MARKETER_DOC_KINDS = [
   'product_brief', 'market_research', 'audience_insight', 'message_map', 'campaign_plan', 'content_brief',
@@ -215,3 +216,26 @@ const saveReferenceAnalysis = createTool({
 })
 
 export const marketerTools = { readCampaign, readCampaignDocs, saveCampaignDoc, saveCreatives, saveReferenceAnalysis }
+
+// AI Marketer agents (campaignId / referenceId come in through the request context).
+// Registered on import: services/marketer.ts imports this file before it runs any of these agents.
+registerAgentTools('market_researcher', {
+  readCampaign: marketerTools.readCampaign,
+  readCampaignDocs: marketerTools.readCampaignDocs,
+  saveCampaignDoc: marketerTools.saveCampaignDoc,
+})
+registerAgentTools('strategist', {
+  readCampaign: marketerTools.readCampaign,
+  readCampaignDocs: marketerTools.readCampaignDocs,
+  saveCampaignDoc: marketerTools.saveCampaignDoc,
+})
+registerAgentTools('ad_scriptwriter', {
+  readCampaign: marketerTools.readCampaign,
+  readCampaignDocs: marketerTools.readCampaignDocs,
+  saveCampaignDoc: marketerTools.saveCampaignDoc,
+  saveCreatives: marketerTools.saveCreatives,
+})
+// Phase 3 Recreate Viral Ad: วิเคราะห์โครงสร้างโฆษณาอ้างอิงจาก transcript ที่ผู้ใช้วาง (sync, tool เดียว)
+registerAgentTools('ad_analyst', {
+  saveReferenceAnalysis: marketerTools.saveReferenceAnalysis,
+})

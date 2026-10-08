@@ -210,7 +210,7 @@ apps/studio-web/
 |---|---|---|---|---|
 | **1** ✅ | `src/modules.ts`: แต่ละเมนูประกาศ routes + failStale/resume, `index.ts` วนลูปโหลด (commit `78efbbd4`) — dependency-cruiser ย้ายไป PR 9 เพราะ path ยังไม่ใช่ core/modules | 13 | ต่ำ | 0.5 วัน |
 | **2** ✅ | **core** — ย้าย 73 ไฟล์ (utils, db, auth, ai, adapters, tasks, generation, production, product, agents, mastra, system, core routes) ด้วย `git mv` + สคริปต์แก้ import; `drama-context`, `style-gallery` อยู่ core เพราะ core ใช้ | 73 | สูง | ✅ |
-| **3** | กลับทิศ agent registry (ข้อค้นพบ #3) + ย้าย `getActiveVideoProviderInfo`/`waitForMergeCompletion` เข้า core (#4) | ~5 | กลาง | 1 วัน |
+| **3** ✅ | `registerAgentTools()` ใน core + tools ของ marketer/product-studio ย้ายไป `modules/<menu>/agent-tools.ts` (ลงทะเบียนตอน import; Agent resolve tools ต่อ request) · `getActiveVideoProviderInfo` → `core/generation/video-provider.ts`, `waitForMergeCompletion` → `core/production/ffmpeg-merge.ts` · core → menu imports = 0 · tools ของ drama (script/extract/storyboard) อยู่ core ต่อเพราะทำงานกับตาราง production กลาง | 12 | กลาง | ✅ |
 | **4** | **live** | 4 | ต่ำ | 0.5 วัน |
 | **5** | **drama** | 11 | กลาง | 1 วัน |
 | **6** | **marketer** | 8 | กลาง | 1 วัน |

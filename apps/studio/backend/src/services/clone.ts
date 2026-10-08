@@ -17,9 +17,9 @@ import { db, getInsertId, schema } from '../core/db/index.js'
 import { AppError, now } from '../core/http/response.js'
 import { generateImage, generateVideo } from '../core/generation/generation.js'
 import { getActiveConfig, getTextConfig } from '../core/ai/ai.js'
-import { getActiveVideoProviderInfo, waitForMergeCompletion } from './studio.js'
+import { getActiveVideoProviderInfo } from '../core/generation/video-provider.js'
 import { clearEpisodeStoryboards } from './studio-shots.js'
-import { mergeEpisodeVideos } from '../core/production/ffmpeg-merge.js'
+import { mergeEpisodeVideos, waitForMergeCompletion } from '../core/production/ffmpeg-merge.js'
 import {
   assertCaptionFontAvailable, buildCaptionCues, burnSubtitles, toAss, toSrt, aiLabelText, probeDurationSec,
 } from '../core/production/captions.js'

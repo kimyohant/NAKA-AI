@@ -23,7 +23,7 @@ import {
   MARKETER_PLATFORMS,
   MARKETER_CREATIVE_FORMATS,
   snapshotDocRevision,
-} from '../core/agents/tools/marketer-tools.js'
+} from '../modules/marketer/agent-tools.js' // also registers market_researcher / strategist / ad_scriptwriter / ad_analyst tools
 
 export const DOC_KINDS = MARKETER_DOC_KINDS
 export const PLATFORMS = MARKETER_PLATFORMS

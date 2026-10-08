@@ -170,3 +170,15 @@ function getVideoDuration(filePath: string): Promise<number> {
     })
   })
 }
+
+/** Poll a video_merges row until the merge finishes (shared by Product Studio and Viral Clone). */
+export async function waitForMergeCompletion(mergeId: number, timeoutMs = 30 * 60_000): Promise<typeof schema.videoMerges.$inferSelect> {
+  const start = Date.now()
+  for (;;) {
+    const [row] = await db.select().from(schema.videoMerges).where(eq(schema.videoMerges.id, mergeId))
+    if (row?.status === 'completed') return row
+    if (row?.status === 'failed') throw new Error(row.errorMsg || 'merge failed')
+    if (Date.now() - start > timeoutMs) throw new Error('merge timeout')
+    await new Promise(r => setTimeout(r, 2000))
+  }
+}

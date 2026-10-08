@@ -6,9 +6,10 @@
 import { createTool } from '@mastra/core/tools'
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
-import { db, schema } from '../../db/index.js'
-import { getStudioProjectId } from '../context.js'
-import { buildShotPrompts, writeStudioShot } from '../../../services/studio-shots.js'
+import { db, schema } from '../../core/db/index.js'
+import { getStudioProjectId } from '../../core/agents/context.js'
+import { registerAgentTools } from '../../core/agents/index.js'
+import { buildShotPrompts, writeStudioShot } from '../../services/studio-shots.js'
 
 const saveStudioShots = createTool({
   id: 'save_studio_shots',
@@ -74,3 +75,9 @@ const saveStudioShots = createTool({
 })
 
 export const studioTools = { saveStudioShots }
+
+// Product Studio: review_director เขียน shot list ตามเทมเพลต (บันทึกผ่าน save_studio_shots).
+// Registered on import: services/studio.ts imports this file before it runs the agent.
+registerAgentTools('review_director', {
+  saveStudioShots: studioTools.saveStudioShots,
+})

@@ -40,13 +40,14 @@ test('Phase 3 routes: ad references + visuals ครบตาม PHASE3 ข้�
 test('ad_analyst agent registered ครบทุกจุด และ output ผ่าน tool', () => {
   const agents = read('src/core/agents/index.ts')
   assert.match(agents, /ad_analyst: \{/) // DEFAULT_PROMPTS
-  assert.match(agents, /saveReferenceAnalysis: marketerTools\.saveReferenceAnalysis/) // AGENT_TOOLS
 
   const skills = read('src/core/agents/skills.ts')
   assert.match(skills, /ad_analyst: \['ad-analyst'\]/)
 
-  const tools = read('src/core/agents/tools/marketer-tools.ts')
+  const tools = read('src/modules/marketer/agent-tools.ts')
   assert.match(tools, /save_reference_analysis/)
+  // tools come from the marketer module (core never imports menu code)
+  assert.match(tools, /registerAgentTools\('ad_analyst', \{\s*saveReferenceAnalysis: marketerTools\.saveReferenceAnalysis/)
   assert.match(tools, /campaignAdReferences/)
 
   // prompt/skill ไฟล์ครบ + หัวข้อบังคับ 6 อัน (PHASE3 ข้อ 3) + กฎห้ามลอก
@@ -78,7 +79,7 @@ test('ad_scriptwriter รู้จักบล็อก reference (recreate mode
   }
 
   // save_creatives บันทึก reference_id จาก request context
-  const tools = read('src/core/agents/tools/marketer-tools.ts')
+  const tools = read('src/modules/marketer/agent-tools.ts')
   assert.match(tools, /referenceId: \(rc\?\.get\('referenceId' as never\) as number \| undefined\) \?\? null/)
   const service = read('src/services/marketer.ts')
   assert.match(service, /referenceId: reference\?\.id/)

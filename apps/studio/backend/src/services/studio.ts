@@ -11,8 +11,8 @@ import { db, getInsertId, schema } from '../core/db/index.js'
 import { AppError, now } from '../core/http/response.js'
 import { getActiveConfig } from '../core/ai/ai.js'
 import { generateImage, generateVideo, videoQueuePosition } from '../core/generation/generation.js'
-import { videoAdapters } from '../core/ai/adapters/registry.js'
-import { mergeEpisodeVideos } from '../core/production/ffmpeg-merge.js'
+import { getActiveVideoProviderInfo } from '../core/generation/video-provider.js'
+import { mergeEpisodeVideos, waitForMergeCompletion } from '../core/production/ffmpeg-merge.js'
 import { ingestUrl } from './marketer.js'
 import { resolveTaskContext, prepareVideoTask } from '../core/generation/task-prep.js'
 import { buildVisualPrompt, visualSizeFor } from '../core/product/product-visuals.js'
@@ -34,6 +34,8 @@ import fs from 'fs'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
 import { logTaskError, logTaskStart, logTaskSuccess } from '../core/tasks/task-logger.js'
+// registers review_director's save_studio_shots tool
+import '../modules/product-studio/agent-tools.js'
 
 export const STUDIO_PROJECT_ING_STATUSES = ['scripting']
 export const STUDIO_IMAGE_KINDS = ['packshot', 'lifestyle', 'on_model', 'banner'] as const
@@ -281,23 +283,6 @@ export function getStudioOptions() {
 }
 
 /** ข้อจำกัดของโมเดลวิดีโอที่ active (capabilities) — null เมื่อ provider ไม่ประกาศ capabilities */
-export async function getActiveVideoProviderInfo() {
-  const config = await getActiveConfig('video')
-  if (!config) return null
-  const caps = videoAdapters[config.provider.toLowerCase()]?.capabilities
-  if (!caps) return null
-  const fromSettings = Number(config.settings?.max_concurrent)
-  const maxConcurrent = Number.isFinite(fromSettings) && fromSettings >= 1 ? Math.floor(fromSettings) : (caps.maxConcurrent ?? null)
-  return {
-    provider: config.provider,
-    configId: config.id ?? null,
-    minDurationSec: caps.minDurationSec ?? null,
-    maxConcurrent,
-    nativeAudio: !!caps.nativeAudio,
-    estimatedSecondsPerClip: caps.estimatedSecondsPerClip ?? null,
-  }
-}
-
 export function getStudioTemplates() {
   return STUDIO_TEMPLATES
 }
@@ -869,17 +854,6 @@ export async function renderStage(projectId: number, body: { stage?: unknown; sh
 }
 
 /** รอ video_merges จบ (concat ทำงานหลังบ้าน) — auto-render ต้องรอก่อน burn ซับ */
-export async function waitForMergeCompletion(mergeId: number, timeoutMs = 30 * 60_000): Promise<typeof schema.videoMerges.$inferSelect> {
-  const start = Date.now()
-  for (;;) {
-    const [row] = await db.select().from(schema.videoMerges).where(eq(schema.videoMerges.id, mergeId))
-    if (row?.status === 'completed') return row
-    if (row?.status === 'failed') throw new Error(row.errorMsg || 'merge failed')
-    if (Date.now() - start > timeoutMs) throw new Error('merge timeout')
-    await new Promise(r => setTimeout(r, 2000))
-  }
-}
-
 /** ฝังซับ: cues จากบทพูด/onScreenText + เวลาจริง (ffprobe) → .srt/.ass → burn-in → อัปเดต video_merges */
 async function burnCaptionsAfterMerge(project: ProjectRow, mergeId: number): Promise<void> {
   assertCaptionFontAvailable(project.language)
@@ -1206,3 +1180,6 @@ export async function deleteAvatar(avatarId: number): Promise<boolean> {
     .where(eq(schema.studioAvatars.id, avatarId))
   return true
 }
+
+// shared with Viral Clone — live in core; re-exported for this menu's existing callers
+export { getActiveVideoProviderInfo, waitForMergeCompletion }

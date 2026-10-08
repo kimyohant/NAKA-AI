@@ -90,9 +90,15 @@ test('marketer agents are registered with tools, prompts and skills', () => {
   for (const type of ['market_researcher', 'strategist', 'ad_scriptwriter']) {
     assert.match(agents, new RegExp(`${type}: \\{`), `${type} missing in DEFAULT_PROMPTS`)
   }
-  assert.match(agents, /marketerTools\.readCampaign/)
-  assert.match(agents, /marketerTools\.saveCampaignDoc/)
-  assert.match(agents, /marketerTools\.saveCreatives/)
+  // tools are registered by the marketer module (core never imports menu code)
+  const tools = read('src/modules/marketer/agent-tools.ts')
+  for (const type of ['market_researcher', 'strategist', 'ad_scriptwriter']) {
+    assert.match(tools, new RegExp(`registerAgentTools\\('${type}'`), `${type} tools not registered`)
+  }
+  assert.match(tools, /marketerTools\.readCampaign/)
+  assert.match(tools, /marketerTools\.saveCampaignDoc/)
+  assert.match(tools, /marketerTools\.saveCreatives/)
+  assert.match(read('src/services/marketer.ts'), /from '\.\.\/modules\/marketer\/agent-tools\.js'/)
 
   const skills = read('src/core/agents/skills.ts')
   assert.match(skills, /market_researcher: \['market-researcher'\]/)
