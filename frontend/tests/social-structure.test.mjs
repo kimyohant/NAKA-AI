@@ -63,7 +63,7 @@ test('new comments are kept off the board', () => {
 })
 
 test('every t() key on the page exists in th and en', () => {
-  const keys = [...new Set([...page.matchAll(/t\('([a-zA-Z0-9_.]+)'/g)].map(m => m[1]))]
+  const keys = [...new Set([...page.matchAll(/(?<![\w$])t\('([a-zA-Z0-9_.]+)'/g)].map(m => m[1]))]
   assert.ok(keys.length > 10)
   for (const k of keys) {
     assert.equal(typeof get(th, k), 'string', `th missing ${k}`)

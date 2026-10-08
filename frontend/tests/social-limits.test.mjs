@@ -49,7 +49,7 @@ test('accounts page: checked-ago, paused-until, and reconnect badge', () => {
 })
 
 test('every t() key on the board page exists in th and en', () => {
-  const keys = [...new Set([...board.matchAll(/t\('([a-zA-Z0-9_.]+)'/g)].map(m => m[1]))]
+  const keys = [...new Set([...board.matchAll(/(?<![\w$])t\('([a-zA-Z0-9_.]+)'/g)].map(m => m[1]))]
   assert.ok(keys.length > 5, 'too few keys')
   for (const k of keys) {
     assert.equal(typeof get(th, k), 'string', `th missing ${k}`)

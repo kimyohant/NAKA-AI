@@ -67,7 +67,7 @@ test('inbox header links open both pages', () => {
 
 test('every t() key on both pages exists in th and en', () => {
   for (const [name, page] of [['accounts', accounts], ['brand', brand]]) {
-    const keys = [...new Set([...page.matchAll(/t\('([a-zA-Z0-9_.]+)'/g)].map(m => m[1]))]
+    const keys = [...new Set([...page.matchAll(/(?<![\w$])t\('([a-zA-Z0-9_.]+)'/g)].map(m => m[1]))]
     assert.ok(keys.length > 5, `${name}: too few keys`)
     for (const k of keys) {
       assert.equal(typeof get(th, k), 'string', `th missing ${k}`)
