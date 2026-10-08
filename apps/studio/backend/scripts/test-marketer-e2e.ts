@@ -5,7 +5,7 @@
  *   npx tsx scripts/test-marketer-e2e.ts                # flow เต็ม (ต้องมี text config ใน DB ก่อน)
  *   npx tsx scripts/test-marketer-e2e.ts --ingest-only  # ทดสอบเฉพาะ URL ingest (ไม่ต้องมี key)
  *   npx tsx scripts/test-marketer-e2e.ts --products=2   # จำกัดจำนวนสินค้า
- *   flow เต็มต้องตั้ง SQLITE_PATH ไปที่สำเนา DB (ที่มี text config) หรือใส่ --use-default-db เพื่อยอมเขียนลง data/naka.sqlite3
+ *   flow เต็มต้องตั้ง DATABASE_URL ใน shell ไปที่สำเนา DB (ที่มี text config) หรือใส่ --use-default-db เพื่อยอมเขียนลง DB ของ backend/.env (หรือ data/pglite)
  *
  * - แคมเปญทดสอบตั้งชื่อนำหน้า [E2E] เพื่อให้เจอ/ลบง่ายในหน้า UI
  * - รายงานเขียนที่ data/e2e/marketer-e2e-report-<ts>.json
@@ -14,17 +14,6 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { and, eq } from 'drizzle-orm'
-import { db, schema } from '../src/core/db/index.js'
-import { getTextConfig } from '../src/core/ai/ai.js'
-import { ingestProductUrl } from '../src/core/product/product-ingest.js'
-import {
-  createCampaign, startResearch, startStrategy, startCreatives,
-  getCampaignDetail, produceCreative,
-} from '../src/modules/marketer/services/marketer.js'
-import { startExtraction, getExtractionStatus } from '../src/modules/drama/services/extraction.js'
-import { mastra } from '../src/core/mastra/index.js'
-import { buildAgentRequestContext } from '../src/core/agents/context.js'
-import { buildDramaCreativeContext } from '../src/core/production/drama-context.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const args = process.argv.slice(2)
@@ -32,12 +21,25 @@ const ingestOnly = args.includes('--ingest-only')
 const limitArg = args.find(a => a.startsWith('--products='))
 const productLimit = limitArg ? Number(limitArg.split('=')[1]) : 5
 
-// 完整流程会写入 [E2E] 活动/剧集并调用付费模型：默认库（data/naka.sqlite3）即生产库，须显式确认
+// 完整流程会写入 [E2E] 活动/剧集并调用付费模型：DB ของ backend/.env คือ production ได้ ต้องยืนยันเอง
+// checked before importing src/core/db: that import loads backend/.env (dotenv) into process.env
 if (!ingestOnly && !process.env.DATABASE_URL && !args.includes('--use-default-db')) {
-  console.error('Refusing to run the full E2E against the default database (data/pglite).')
-  console.error('Point DATABASE_URL at a copy that has a text model configured, or pass --use-default-db to write [E2E] campaigns into it.')
+  console.error('Refusing to run the full E2E against the configured database (backend/.env, else data/pglite).')
+  console.error('Set DATABASE_URL in the shell to a copy that has a text model configured, or pass --use-default-db to write [E2E] campaigns into it.')
   process.exit(2)
 }
+
+const { db, schema } = await import('../src/core/db/index.js')
+const { getTextConfig } = await import('../src/core/ai/ai.js')
+const { ingestProductUrl } = await import('../src/core/product/product-ingest.js')
+const {
+  createCampaign, startResearch, startStrategy, startCreatives,
+  getCampaignDetail, produceCreative,
+} = await import('../src/modules/marketer/services/marketer.js')
+const { startExtraction, getExtractionStatus } = await import('../src/modules/drama/services/extraction.js')
+const { mastra } = await import('../src/core/mastra/index.js')
+const { buildAgentRequestContext } = await import('../src/core/agents/context.js')
+const { buildDramaCreativeContext } = await import('../src/core/production/drama-context.js')
 
 /** สินค้าไทยจริง — url ให้ ingest เมื่อทำได้, ฟิลด์มือเป็นค่า fallback (ระบุตามของจริง) */
 const PRODUCTS = [

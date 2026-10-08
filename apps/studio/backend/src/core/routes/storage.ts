@@ -26,7 +26,7 @@ async function computeUsage() {
   if (cache.computing) return
   cache.computing = true
   try {
-    const usage = await dirUsage(DATA_ROOT, '')
+    const usage = await dirUsage(DATA_ROOT)
     // the database is PostgreSQL now: count this app's schema (tables + indexes + TOAST)
     const [size] = await rawQuery(`SELECT COALESCE(SUM(pg_total_relation_size(c.oid)), 0)::bigint AS bytes
       FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = current_schema() AND c.relkind = 'r'`)
