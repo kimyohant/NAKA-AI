@@ -1,5 +1,5 @@
 /**
- * Wrapper — รัน scenario คิวใน child process ที่ชี้ SQLITE_PATH ไปที่ DB ชั่วคราว
+ * Wrapper — รัน scenario คิวใน child process บน DB ชั่วคราว (DATABASE_URL=pglite://memory)
  * (pattern เดียวกับ production-guards.test.ts)
  */
 import assert from 'node:assert/strict'
