@@ -9,7 +9,8 @@ Tracking moved here from GitHub Issues on 2026-10-08 (GitHub API rate limits). I
 - One feature per directory: `.scratch/<feature-slug>/`
 - The spec is `.scratch/<feature-slug>/spec.md`
 - Implementation issues are one file per ticket at `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01`, never a single combined tickets file
-- Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings)
+- Implementation issues start with YAML frontmatter, which is what the delegators (`/opencode-delegation:delegate` and the like) read: `id` (the file number), `status` (`open` / `closed`), `labels` (one triage label, see `triage-labels.md`), `assignee` (`null` until an agent takes it), `blocked_by` (a list of ids in the same feature)
+- The spec and wayfinder files have no frontmatter; they record triage state as a `Status:` line near the top
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
 
 ## When a skill says "publish to the issue tracker"

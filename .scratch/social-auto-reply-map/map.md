@@ -44,10 +44,11 @@ One spec plus implementation tickets for **Social Auto Reply on Facebook**, read
 - [Social inbox UI prototype](decisions.md#social-inbox-ui-prototype): the inbox is a Kanban board with one column per user-visible state and one card per Comment, all Social Accounts together with an account filter and a "not in FAQ" filter; Accounts and Brand Profile are separate pages linked from the inbox; the drawn empty, error, and token-expired states are accepted.
 - [Polling schedule and rate limits](decisions.md#polling-schedule-and-rate-limits): one Polling round every 5 minutes from `services/social/poller.ts` (`setInterval` at boot); per Social Account per round at most 30 read calls, 50 judged Comments, and 10 sent Replies 3 seconds apart; page until a known Comment or 10 pages, no special catch-up; rate-limit backoff lives in `paused_until` + `backoff_step` on `social_accounts` (15 minutes doubling to 1 hour, no Redis); "answered outside our app" is seen for free on Facebook; no "check now" button.
 - [Thai test set for the Verdict prompt](decisions.md#thai-test-set-for-the-verdict-prompt): a hand-written Verdict test set of about 100 Comments (70% Thai, 20% English, 10% mixed) with minimums per case type and one fake Brand Profile; `npm run eval:verdict` runs it 3 times on the active text config and commits a dated report; Auto mode is allowed at zero Dangerous errors in every run plus average accuracy of at least 85%; no code gate, and a new model or prompt means a new run; real Comments are added later, rewritten in our own words.
+- [Testing approach](issues/01-testing-approach.md): a scripted fake adapter in `backend/tests/helpers/` (test-only, platform `fake`); the real Facebook adapter is tested against a local HTTP stub, OAuth included; one end-to-end test with a fake LLM walks the Draft mode and Auto mode paths in CI; eight named unit tests plus one "API never returns tokens" route test; no frontend tests, a manual Kanban checklist instead; the newest-first live check is the first implementation ticket, run by hand on a new company test Page; files are `backend/tests/social-*.test.ts`, run by `npm run test:social` and in CI.
 
 ## Not yet specified
 
-Nothing. The last open question is the ticket in `issues/`.
+Nothing. Every ticket is resolved: the way is clear. The next step is to write `.scratch/social-auto-reply/spec.md` and its implementation tickets.
 
 ## Out of scope
 
