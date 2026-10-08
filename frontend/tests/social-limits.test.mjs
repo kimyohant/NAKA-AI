@@ -10,7 +10,7 @@ import assert from 'node:assert/strict'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
-const board = read('app/pages/social.vue')
+const board = read('app/pages/social/index.vue')
 const accounts = read('app/pages/social/accounts.vue')
 const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))

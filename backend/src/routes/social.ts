@@ -88,8 +88,8 @@ function asBool(v: unknown, field: string): boolean {
   throw new Error(`Invalid ${field}`)
 }
 
-/** Update settings: reply_mode, watching, watch_days, reply_to_praise. */
-app.patch('/accounts/:id/settings', c => run(c, async () => {
+/** Update settings: reply_mode, watching, watch_days, reply_to_praise. Accepts PATCH and PUT (frontend updateSettings uses PUT). */
+const updateSettings = (c: Context) => run(c, async () => {
   const id = parseAccountId(c)
   getAccountRow(id)
   const body = await c.req.json().catch(() => ({})) as Record<string, unknown>
@@ -111,7 +111,9 @@ app.patch('/accounts/:id/settings', c => run(c, async () => {
   if (!Object.keys(updates).length) throw new Error('No settings to update')
   db.update(schema.socialAccounts).set({ ...updates, updatedAt: now() } as any).where(eq(schema.socialAccounts.id, id)).run()
   return publicAccount(getAccountRow(id))
-}))
+})
+app.patch('/accounts/:id/settings', updateSettings)
+app.put('/accounts/:id/settings', updateSettings)
 
 export const BRAND_LIMITS = { about: 500, tone: 200, faq: 3000, forbidden: 500 } as const
 const BRAND_LANGS = ['th', 'en'] as const

@@ -79,3 +79,27 @@ Deviations: brand `default_language` accepts `th`/`en` (400 otherwise);
 `watch_days` valid range 1-30; settings/brand bodies accept camelCase
 aliases next to the snake_case keys. Merged `feat/social-auto-reply`
 (ticket 03) keeping both test files in `test:social` and CI.
+
+### 2026-10-08
+
+Review fixes (2 points):
+
+1. Settings route accepts PUT: `PATCH /accounts/:id/settings` handler
+   extracted to `updateSettings` and registered for both `PATCH` and `PUT`
+   (`backend/src/routes/social.ts`), matching frontend `updateSettings`
+   which calls `api.put(...)`. Added a backend test in
+   `tests/social-accounts.test.ts` that PUTs the settings route and
+   asserts the update is saved. Brand route was already PUT — untouched.
+2. `/social/accounts` and `/social/brand` render as full pages:
+   moved the inbox `frontend/app/pages/social.vue` to
+   `frontend/app/pages/social/index.vue` (standard Nuxt file routing —
+   no parent route without `<NuxtPage />`, no `nuxt.config.ts` change
+   needed; `app/views/` manual registration stays reserved for dynamic
+   `[id]` routes). Updated the four frontend tests that read the inbox
+   path (`social-accounts`, `social-structure`, `social-actions`,
+   `social-limits` test files).
+
+Gates: `npm run typecheck` clean; `npm run test:social` 85/85 pass;
+frontend `node --test tests/*.test.mjs` 177/177 pass;
+`npm run generate` prerenders `/social`, `/social/accounts`,
+`/social/brand` as separate routes.

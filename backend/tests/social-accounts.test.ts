@@ -106,6 +106,17 @@ test('settings update saves reply mode, watching, watch days, reply to praise', 
   assert.equal(row.watchDays, 14)
 })
 
+test('settings update also accepts PUT (frontend updateSettings)', async () => {
+  const { status, json } = await send('PUT', `/accounts/${accId}/settings`, {
+    reply_mode: 'draft', watching: true, watch_days: 7, reply_to_praise: true,
+  })
+  assert.equal(status, 200, JSON.stringify(json))
+  assert.equal(json.data.replyMode, 'draft')
+  assert.equal(json.data.watching, true)
+  assert.equal(json.data.watchDays, 7)
+  assert.equal(json.data.replyToPraise, true)
+})
+
 test('settings update refuses invalid values', async () => {
   for (const body of [
     { reply_mode: 'turbo' },
