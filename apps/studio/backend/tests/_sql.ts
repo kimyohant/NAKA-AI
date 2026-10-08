@@ -31,6 +31,18 @@ async function columns(table: string): Promise<string[]> {
   )).map(r => String(r.name))
 }
 
+/** UNIQUE constraints of a table as comma-joined column lists in key order, e.g. ['campaign_id,kind'] */
+async function uniques(table: string): Promise<string[]> {
+  return (await rawQuery(
+    `SELECT string_agg(a.attname, ',' ORDER BY k.ord) AS cols
+       FROM pg_constraint c
+       CROSS JOIN LATERAL unnest(c.conkey) WITH ORDINALITY AS k(attnum, ord)
+       JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = k.attnum
+      WHERE c.contype = 'u' AND c.conrelid = to_regclass($1)
+      GROUP BY c.oid`, [table],
+  )).map(r => String(r.cols))
+}
+
 export const sqlite = {
   prepare(sql: string) {
     return {
@@ -49,5 +61,6 @@ export const sqlite = {
   exec: async (sql: string) => { await rawExec(sql) },
   /** column names of a table in the app's schema (was PRAGMA table_info) */
   columns,
+  uniques,
   close() {},
 }
