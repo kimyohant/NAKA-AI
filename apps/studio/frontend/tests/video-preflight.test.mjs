@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { analyzeVideoShot } from '../app/utils/videoPreflight.js'
+import { analyzeVideoShot } from '../menus/drama/utils/videoPreflight.js'
 
 test('preview and submission use the same ordered images and numbered mentions', () => {
   const plan = analyzeVideoShot({

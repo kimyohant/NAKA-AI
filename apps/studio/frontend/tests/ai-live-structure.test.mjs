@@ -6,15 +6,16 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { LIVE_VOICES, nextQueueIndex, waitUntilQuiet } from '../app/utils/liveFlow.js'
+import { LIVE_VOICES, nextQueueIndex, waitUntilQuiet } from '../menus/live/utils/liveFlow.js'
+import { loadLocale } from './_locales.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
-const page = read('app/pages/live.vue')
+const page = read('menus/live/pages/live.vue')
 const api = read('app/composables/useApi.ts')
 const layout = read('app/layouts/default.vue')
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const th = loadLocale('th')
+const en = loadLocale('en')
 const get = (o, k) => k.split('.').reduce((a, p) => (a == null ? a : a[p]), o)
 
 test('queue index: advances, loops or ends', () => {
@@ -76,7 +77,7 @@ test('live page exists; every t() key on the page exists in th and en', () => {
 })
 
 test('TikTok helpers: answerable comments, bounded queue, fixed thank-you lines', async () => {
-  const { isAnswerable, enqueueLimited, thanksLine } = await import('../app/utils/liveFlow.js')
+  const { isAnswerable, enqueueLimited, thanksLine } = await import('../menus/live/utils/liveFlow.js')
   assert.equal(isAnswerable('ราคาเท่าไหร่คะ'), true)
   assert.equal(isAnswerable('ok'), true)
   assert.equal(isAnswerable('5555'), false)

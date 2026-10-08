@@ -8,17 +8,18 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { loadLocale } from './_locales.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 const useApi = read('app/composables/useApi.ts')
-const studioPage = read('app/pages/studio.vue')
-const workspace = read('app/views/studio/workspace.vue')
-const card = read('app/components/StudioInfluencerCard.vue')
-const dialog = read('app/components/StudioInfluencerContentDialog.vue')
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const studioPage = read('menus/product-studio/pages/studio.vue')
+const workspace = read('menus/product-studio/views/workspace.vue')
+const card = read('menus/product-studio/components/StudioInfluencerCard.vue')
+const dialog = read('menus/product-studio/components/StudioInfluencerContentDialog.vue')
+const th = loadLocale('th')
+const en = loadLocale('en')
 
 test('studioAPI implements every influencer endpoint', () => {
   for (const m of ['influencers', 'createInfluencer', 'updateInfluencer', 'deleteInfluencer', 'generateInfluencerImage', 'influencerContents', 'generateInfluencerReviewImages', 'generateInfluencerScript', 'deleteInfluencerContent']) {

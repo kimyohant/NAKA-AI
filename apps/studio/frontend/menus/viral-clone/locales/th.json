@@ -1,0 +1,232 @@
+{
+  "viralClone": {
+    "delete": {
+      "title": "ลบโปรเจกต์โคลน",
+      "message": "ลบ “{name}”? Blueprint, ตัวแปร และวิดีโอที่เรนเดอร์แล้วทั้งหมดจะหายไปด้วย"
+    },
+    "eyebrow": "NAKA-AI TECH",
+    "title": "สตูดิโอโคลนไวรัล",
+    "subtitle": "โคลนโครงคลิปต้นแบบเป็นตัวแปรโฆษณาหลายชุด — สลับ hook สินค้า ผู้พูด และภาษา แล้ว render ทั้งชุด",
+    "languages": {
+      "th": "ไทย",
+      "en": "English"
+    },
+    "status": {
+      "draft": "ร่าง",
+      "analyzing": "กำลังวิเคราะห์",
+      "ready": "พร้อม",
+      "error": "ผิดพลาด",
+      "queued": "รอคิว",
+      "rendering": "กำลังเรนเดอร์",
+      "completed": "เสร็จ",
+      "failed": "ล้มเหลว"
+    },
+    "list": {
+      "new": "สร้างโปรเจกต์ใหม่",
+      "emptyTitle": "ยังไม่มีโปรเจกต์โคลน",
+      "emptyDesc": "หยิบโครงคลิปต้นแบบมาทำเป็นตัวแปรโฆษณาหลายชุดในคลิกเดียว",
+      "openAria": "เปิดโปรเจกต์ {name}",
+      "delete": "ลบโปรเจกต์",
+      "deleted": "ลบโปรเจกต์แล้ว",
+      "beats": "{n} beat",
+      "noBlueprint": "ยังไม่มีโครงคลิป"
+    },
+    "create": {
+      "title": "สร้างโปรเจกต์โคลน",
+      "desc": "วาง transcript ของคลิปต้นแบบ แล้วให้ AI แยกเป็นโครง (Blueprint) ที่แก้ไขได้",
+      "name": "ชื่อโปรเจกต์",
+      "namePlaceholder": "เช่น โคลนคลิปขายเซรั่ม",
+      "transcript": "Transcript ของคลิปต้นแบบ",
+      "transcriptPlaceholder": "วางบทพูด/ซับของคลิปต้นแบบ ทีละประโยค — ยิ่งครบ โครงยิ่งแม่น",
+      "language": "ภาษาหลัก",
+      "reference": "อัปโหลดคลิปต้นแบบ",
+      "referenceHint": "ไม่บังคับ — เก็บไว้ดูเทียบในหน้าโปรเจกต์ (ระบบไม่ดึงคลิปจากแพลตฟอร์มเอง)",
+      "referenceDone": "แนบคลิปต้นแบบแล้ว",
+      "referenceRemove": "ถอดคลิปต้นแบบ",
+      "uploading": "กำลังอัปโหลด…",
+      "licenseNotice": "โคลน “โครง” ไม่ใช่ทรัพย์สิน: ใช้เฉพาะคลิป/ภาพ/เสียงที่คุณเป็นเจ้าของหรือได้รับสิทธิ์แล้ว และตรวจกฎของแพลตฟอร์มปลายทางก่อนเผยแพร่",
+      "submit": "สร้างโปรเจกต์",
+      "creating": "กำลังสร้าง…",
+      "created": "สร้างโปรเจกต์แล้ว",
+      "needTranscript": "ใส่ transcript ก่อน"
+    },
+    "work": {
+      "back": "กลับ",
+      "tabsLabel": "ส่วนของโปรเจกต์",
+      "tab_blueprint": "Blueprint",
+      "tab_variants": "ตัวแปร",
+      "tab_reference": "อ้างอิง",
+      "loadFailed": "โหลดโปรเจกต์ไม่สำเร็จ"
+    },
+    "roles": {
+      "hook": "Hook",
+      "demo": "สาธิต",
+      "proof": "หลักฐาน",
+      "offer": "ข้อเสนอ",
+      "cta": "เรียกให้ทำ"
+    },
+    "visuals": {
+      "product": "สินค้า",
+      "avatar": "ผู้พูด",
+      "broll": "B-roll",
+      "text": "ข้อความ"
+    },
+    "blueprint": {
+      "panelTitle": "แยกโครงคลิปด้วย AI",
+      "panelDesc": "ให้ AI อ่าน transcript แล้วจัดเป็น beat ที่ยึดกับคำพูด — พร้อม hook สำรองสำหรับทดสอบหลายแบบ แก้ไขได้ทุกส่วนหลังวิเคราะห์",
+      "analyze": "วิเคราะห์ transcript",
+      "analyzeStarted": "เริ่มวิเคราะห์แล้ว — จะอัปเดตเองเมื่อเสร็จ",
+      "beats": "Beats",
+      "beatLinePlaceholder": "ข้อความพูด/ซับของ beat นี้",
+      "beatSeconds": "ความยาว (วินาที)",
+      "beatHintPlaceholder": "คำอธิบายภาพ (เช่น B-roll หน้าจอแอป)",
+      "addBeat": "เพิ่ม beat",
+      "removeBeat": "ลบ beat",
+      "hooks": "Hooks สำรอง",
+      "hooksHint": "ทางเลือกแทนประโยคเปิด — เลือกได้ตอนสร้างตัวแปร",
+      "hookPlaceholder": "ใส่ hook สำรองใหม่…",
+      "addHook": "เพิ่ม",
+      "removeHook": "ลบ hook",
+      "total": "รวม {n}s",
+      "invalid": "ยังสมบูรณ์ไม่พอบันทึก — ตรวจ role/ความยาวของทุก beat",
+      "save": "บันทึก Blueprint",
+      "saved": "บันทึก Blueprint แล้ว",
+      "reanalyze": "วิเคราะห์ใหม่",
+      "unsaved": "มีการแก้ไขที่ยังไม่บันทึก",
+      "moveUp": "เลื่อนขึ้น",
+      "moveDown": "เลื่อนลง"
+    },
+    "variants": {
+      "needBlueprint": "ต้องมี Blueprint ก่อน — ไปแท็บ Blueprint แล้วกดวิเคราะห์",
+      "hooksLabel": "Hook (ไม่เลือก = ใช้ของเดิม)",
+      "productsLabel": "สินค้า (จาก Product Studio)",
+      "productsEmpty": "ยังไม่มีโปรเจกต์สินค้า — สร้างใน Product Studio ก่อน",
+      "avatarsLabel": "ผู้พูด (Avatar)",
+      "avatarsEmpty": "ยังไม่มี avatar — สร้างใน Product Studio ก่อน",
+      "languagesLabel": "ภาษา (ไม่เลือก = ภาษาหลักของโปรเจกต์)",
+      "countWill": "จะสร้าง {n} ตัวแปร",
+      "overCap": "เกินจำนวนสูงสุด {cap} ตัวแปรต่อรอบ",
+      "create": "สร้างตัวแปร",
+      "created": "สร้าง {n} ตัวแปรแล้ว",
+      "renderAll": "เรนเดอร์ทั้งหมด",
+      "renderAllQueued": "เข้าคิว {n} งานแล้ว",
+      "render": "เรนเดอร์",
+      "queuePosition": "คิวที่ {n}",
+      "duration": "{n}s",
+      "download": "ดาวน์โหลด",
+      "hookOriginal": "hook เดิม",
+      "delete": "ลบตัวแปร",
+      "deleteTitle": "ลบตัวแปร",
+      "deleteMessage": "ลบตัวแปร “{label}”? วิดีโอที่เรนเดอร์แล้วจะเรียกดูจากหน้านี้ไม่ได้อีก",
+      "deleted": "ลบตัวแปรแล้ว",
+      "noneYet": "ยังไม่มีตัวแปร — เลือก hook/สินค้า/ภาษา แล้วกดสร้าง",
+      "engineLabel": "เอนจินเรนเดอร์ขั้นสุดท้าย",
+      "engineNaka": "NAKA (ffmpeg + ซับ)",
+      "engineHypit": "Hypit (HyperFrames)",
+      "engineNakaHint": "ต่อคลิปด้วย ffmpeg แล้วฝังซับ ASS — ค่าเริ่มต้น",
+      "engineHypitHint": "ต่อคลิปและวาดซับด้วย Hypit (headless Chromium) — ล้มเมื่อไหร่จะถอยกลับเอนจิน NAKA ให้อัตโนมัติ · Powered by Hypit (hypit.ai)",
+      "engineHypitUnavailable": "Hypit ยังไม่พร้อมในเครื่องนี้: {reason}",
+      "matrixTitle": "สร้างตัวแปร (Matrix)",
+      "matrixHint": "โครงคลิปเดิมทั้งหมด — เปลี่ยนเฉพาะส่วนที่เลือก",
+      "queueTitle": "คิวเรนเดอร์",
+      "statAll": "ทั้งหมด {n}",
+      "statBusy": "กำลังทำ {n}",
+      "statDone": "เสร็จ {n}",
+      "statFailed": "ล้ม {n}"
+    },
+    "reference": {
+      "transcriptTitle": "Transcript",
+      "transcriptHint": "แก้แล้วกดบันทึก — ใช้ทำ Blueprint ใหม่ได้",
+      "saveTranscript": "บันทึก Transcript",
+      "saved": "บันทึก Transcript แล้ว",
+      "videoTitle": "คลิปต้นแบบ",
+      "noVideo": "ไม่ได้แนบคลิปต้นแบบ"
+    },
+    "steps": {
+      "reference": "ต้นแบบ",
+      "blueprint": "โครงคลิป",
+      "variants": "ตัวแปร",
+      "results": "ผลลัพธ์",
+      "referenceSub": "Transcript",
+      "referenceSubVideo": "Transcript + คลิป",
+      "blueprintSub": "{n} beat · {s}s",
+      "variantsSub": "{n} ตัวแปร",
+      "resultsSub": "เสร็จ {n} คลิป"
+    },
+    "flow": {
+      "aria": "ขั้นตอนการโคลน",
+      "reference": "วาง transcript และแนบคลิปต้นแบบ",
+      "blueprint": "AI แยก beat ที่ยึดกับคำพูด แก้และพรีวิวได้",
+      "variants": "สลับ hook สินค้า ผู้พูด ภาษา เป็น matrix",
+      "results": "เรนเดอร์ทั้งชุดด้วย NAKA หรือ Hypit"
+    },
+    "timeline": {
+      "title": "ไทม์ไลน์ (ยึดกับคำพูด)",
+      "hint": "แต่ละช่องคือ beat — กว้างตามความยาว ภายในคือคำพูดที่ภาพและซับยึดอยู่ คลิกเพื่อแก้",
+      "aria": "ไทม์ไลน์ {n} beat ยาว {s} วินาที"
+    },
+    "preview": {
+      "title": "พรีวิว 9:16",
+      "play": "เล่น",
+      "pause": "หยุด",
+      "prev": "beat ก่อนหน้า",
+      "next": "beat ถัดไป"
+    },
+    "captions": {
+      "title": "ซับในคลิป",
+      "enabled": "เปิด/ปิดซับ",
+      "style": "สไตล์ซับ",
+      "bold": "ขอบหนา",
+      "clean": "เงานุ่ม",
+      "boxed": "กล่องทึบ"
+    },
+    "results": {
+      "empty": "ยังไม่มีคลิปที่เรนเดอร์เสร็จ",
+      "goVariants": "ไปที่ตัวแปร",
+      "poweredHypit": "เรนเดอร์ขั้นสุดท้ายด้วย Hypit (hypit.ai) · ถอยกลับ NAKA อัตโนมัติเมื่อไม่พร้อม",
+      "poweredNaka": "เรนเดอร์ขั้นสุดท้ายด้วยเอนจิน NAKA (ffmpeg + ซับ)"
+    },
+    "home": {
+      "statsAria": "สรุปภาพรวมสตูดิโอโคลน",
+      "statProjects": "โปรเจกต์โคลน",
+      "statVariants": "ตัวแปรทั้งหมด",
+      "statVariantsBusy": "กำลังเรนเดอร์ {n} ตัว",
+      "statCompleted": "คลิปที่เสร็จ · รวม {d}",
+      "engineReady": "Hypit พร้อม",
+      "engineReadyHint": "เรนเดอร์ได้ทั้ง NAKA และ Hypit",
+      "engineNakaOnly": "NAKA",
+      "engineNakaOnlyHint": "ยังไม่ได้ติดตั้ง Hypit ในเครื่องนี้",
+      "templatesTitle": "เริ่มจากเทมเพลต",
+      "templatesSub": "โครงคลิปไวรัลที่ใช้บ่อย — กดเพื่อสร้างโปรเจกต์พร้อม transcript ตัวอย่าง แล้วแก้เป็นของคุณ",
+      "useTemplate": "ใช้เทมเพลตนี้",
+      "recentTitle": "คลิปที่เรนเดอร์ล่าสุด",
+      "recentSub": "จากทุกโปรเจกต์ — กดชื่อเพื่อเปิดโปรเจกต์",
+      "projectsTitle": "โปรเจกต์ของคุณ",
+      "variantProgress": "เสร็จ {done}/{total} ตัวแปร",
+      "seconds": "{n} วินาที",
+      "minutes": "{n} นาที"
+    },
+    "templates": {
+      "ugcReview": {
+        "title": "รีวิวสินค้าแบบ UGC",
+        "desc": "คนจริงถือสินค้า เปิดด้วยปัญหา โชว์ผลลัพธ์ ปิดด้วยโปร — เหมาะกับ TikTok Shop",
+        "transcript": "ใครผิวหมองแบบเราบ้าง ยกมือ!\nตัวนี้เราใช้มาสองอาทิตย์ ทาเช้าเย็น เนื้อบางซึมไว ไม่เหนอะหนะเลย\nดูหน้าเราตอนนี้สิ ใสขึ้นจริง เพื่อนทักทุกวัน\nวันนี้ลดเหลือครึ่งราคา แถมส่งฟรีด้วย\nกดตะกร้าเหลืองด้านล่างเลย ของหมดไวมาก"
+      },
+      "podcast": {
+        "title": "พอดแคสต์โต้วาที",
+        "desc": "สองคนเถียงกันในห้องอัด ประโยคแรกต้องแรง แล้วค่อยใช้หลักฐานกลับเกม",
+        "transcript": "เธอยังไม่กินโปรตีนตอนเช้าอีกเหรอ บ้าไปแล้ว\nก็มันไม่จำเป็นป่ะ กินข้าวก็อิ่มแล้ว\nงานวิจัยบอกว่ากล้ามเนื้อซ่อมตัวดีสุดช่วงเช้า เราลองมาสามเดือน แรงขึ้นชัดเจน\nแค่ชงน้ำสามสิบวิ จบ\nลิงก์อยู่ในโปรไฟล์ ไปลองเองแล้วกลับมาเถียงใหม่"
+      },
+      "streetInterview": {
+        "title": "สัมภาษณ์ข้างถนน",
+        "desc": "ถามคนที่ดูประสบความสำเร็จ เฉลยทีละข้อจนถึงคำตอบหลัก",
+        "transcript": "ขอถามหน่อยครับ รถคันนี้ทำงานอะไรถึงซื้อได้\nขายของออนไลน์ค่ะ เริ่มจากศูนย์เลย\nกฎข้อแรก ทำคลิปทุกวัน ข้อสอง ทดสอบ hook หลายแบบ\nข้อสามสำคัญสุด ใช้ระบบช่วยทำคลิปทีละเยอะ ๆ\nอยากรู้ว่าใช้อะไร ดูในคอมเมนต์แรกได้เลย"
+      },
+      "ranking": {
+        "title": "จัดอันดับ Tier List",
+        "desc": "ไล่จัดอันดับทีละตัว ให้คนดูอยากเถียงในคอมเมนต์ จบด้วยตัวท็อป",
+        "transcript": "จัดอันดับครีมกันแดดที่เคยใช้ ใครไม่เห็นด้วยเถียงมา\nอันดับ C ตัวนี้ เหนียวไปหน่อย\nอันดับ B ตัวนี้ บางเบาแต่ติดทนน้อย\nอันดับ S ตัวนี้เลย บางเหมือนไม่ได้ทา กันน้ำกันเหงื่อ\nตัวไหนคืออันดับหนึ่งของคุณ คอมเมนต์มา"
+      }
+    }
+  }
+}

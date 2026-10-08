@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url'
+import { MENUS, MENU_ROUTES } from './menus'
 
 export default defineNuxtConfig({
   srcDir: 'app/',
@@ -13,58 +14,27 @@ export default defineNuxtConfig({
   experimental: {
     appManifest: false,
   },
+  // Each Studio menu is a Nuxt layer in menus/<menu>/ (pages, views, components, utils) — menus/index.ts
+  extends: MENUS.map(menu => `./menus/${menu}`),
+  pages: true,
   hooks: {
-    // 动态路由页面统一放在 app/views/ 手动注册，避免文件路径中出现 [id] 方括号
+    // 动态路由页面统一放在各菜单的 views/ 手动注册，避免文件路径中出现 [id] 方括号
     // （方括号路径在 git/shell 中需转义，且部分部署环境不兼容）。URL 保持不变。
       'pages:extend'(pages) {
-        // เปิดแอป (/) → AI นักขาย (/seller); สตูดิโอละครอยู่ที่ /drama
+        // เปิดแอป (/) → AI นักขาย (/seller); สตูดิโอละครอยู่ที่ /drama (menus/drama/pages/index.vue)
         // คลังสกิล (/studio) ไม่อยู่ในเมนู — รวมอยู่ใน AI นักขายแล้ว แต่ยังเข้าทาง URL ได้
         const dramaHome = pages.find(p => p.path === '/')
         if (dramaHome) dramaHome.path = '/drama'
         pages.push({ path: '/', redirect: '/seller' })
-        pages.push(
-          {
-            name: 'drama-detail',
-            path: '/drama/:id',
-            file: fileURLToPath(new URL('./app/views/drama/detail.vue', import.meta.url)),
-          },
-          {
-            name: 'drama-board',
-            path: '/drama/:id/board',
-            file: fileURLToPath(new URL('./app/views/drama/board.vue', import.meta.url)),
-          },
-          {
-            name: 'drama-episode',
-            path: '/drama/:id/episode/:episodeNumber',
-            file: fileURLToPath(new URL('./app/views/drama/episode.vue', import.meta.url)),
-          },
-          {
-            // ต้องมาก่อน marketer-campaign — vue-router เดาแบบ first-match
-            name: 'marketer-gallery',
-            path: '/marketer/gallery',
-            file: fileURLToPath(new URL('./app/views/marketer/gallery.vue', import.meta.url)),
-          },
-          {
-            name: 'marketer-campaign',
-            path: '/marketer/:id',
-            file: fileURLToPath(new URL('./app/views/marketer/campaign.vue', import.meta.url)),
-          },
-          {
-            name: 'studio-workspace',
-            path: '/studio/:id',
-            file: fileURLToPath(new URL('./app/views/studio/workspace.vue', import.meta.url)),
-          },
-          {
-            name: 'seller-workspace',
-            path: '/seller/:id',
-            file: fileURLToPath(new URL('./app/views/seller/workspace.vue', import.meta.url)),
-          },
-          {
-            name: 'viralclone-workspace',
-            path: '/viral-clone/:id',
-            file: fileURLToPath(new URL('./app/views/viralclone/workspace.vue', import.meta.url)),
-          },
-        )
+        for (const menu of MENUS) {
+          for (const route of MENU_ROUTES[menu]) {
+            pages.push({
+              name: route.name,
+              path: route.path,
+              file: fileURLToPath(new URL(`./menus/${menu}/${route.view}`, import.meta.url)),
+            })
+          }
+        }
       },
   },
   app: {

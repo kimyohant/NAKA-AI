@@ -1,0 +1,169 @@
+{
+  "seller": {
+    "eyebrow": "NAKA-AI TECH",
+    "title": "AI Seller",
+    "subtitle": "Turn a product review video into ready-to-post sales posts with images, product link and a pinned comment. AI writes relaxed captions for TikTok, Shopee, Facebook and Instagram.",
+    "steps": {
+      "aria": "Steps",
+      "product": "Product",
+      "productDesc": "Paste a shop link to pull the name, images and price",
+      "video": "Review video",
+      "videoDesc": "Let AI make the video with a skill from the library, or upload your clip",
+      "copy": "Captions & channels",
+      "copyDesc": "AI writes captions, hashtags and a comment with your link"
+    },
+    "list": {
+      "new": "New sales post",
+      "openAria": "Open post {title}",
+      "emptyTitle": "No sales posts yet",
+      "emptyDesc": "Start from a product link, or pick a finished video from the Skills Library."
+    },
+    "status": {
+      "draft": "Draft",
+      "ready": "Ready to post",
+      "failed": "Writing failed"
+    },
+    "channels": {
+      "tiktok": "TikTok",
+      "shopee": "Shopee",
+      "facebook": "Facebook",
+      "instagram": "Instagram"
+    },
+    "tones": {
+      "casual": "Relaxed",
+      "fun": "Fun",
+      "pro": "Professional",
+      "urgent": "Buy now"
+    },
+    "create": {
+      "title": "New sales post",
+      "desc": "Add a product link (Shopee, Lazada, TikTok Shop…) or a product name. You can pick the video in the next step.",
+      "urlHint": "We pull the name, images and price automatically when the site allows it.",
+      "fromStudio": "Or pick a finished video from the Skills Library",
+      "fromStudioHint": "Uses the product details and images from that project.",
+      "needProduct": "Add a link or product name",
+      "submit": "Create post",
+      "creating": "Creating…",
+      "ingestFailed": "Could not read that link. Fill in the details on the next page.",
+      "withSkill": "Selected skill: {skill}. Add the product and we take you to the video step."
+    },
+    "delete": {
+      "title": "Delete sales post",
+      "message": "Delete \"{title}\"? Videos and images are kept.",
+      "deleted": "Deleted"
+    },
+    "product": {
+      "name": "Product name",
+      "namePlaceholder": "e.g. Vitamin C serum 30ml",
+      "price": "Price",
+      "pricePlaceholder": "e.g. ฿299",
+      "url": "Product link",
+      "urlPlaceholder": "https://shopee.co.th/…",
+      "ingest": "Fetch details",
+      "ingested": "Product details fetched",
+      "affiliate": "Affiliate / short link (optional)",
+      "affiliatePlaceholder": "https://s.shopee.co.th/…",
+      "affiliateHint": "When set, the comment uses this link instead of the product link.",
+      "details": "Selling points",
+      "detailsPlaceholder": "e.g. absorbs fast, not sticky, light scent, daily use",
+      "detailsHint": "AI only uses what you write here and never invents claims.",
+      "images": "Product images",
+      "addImage": "Add image",
+      "removeImage": "Remove image"
+    },
+    "video": {
+      "none": "No video yet",
+      "upload": "Upload video",
+      "fromStudio": "Pick a finished video",
+      "remove": "Remove video",
+      "hint": "Vertical 9:16, 15–60 seconds works best.",
+      "studioEmpty": "No finished (merged) videos in the Skills Library yet."
+    },
+    "copy": {
+      "channels": "Where to post",
+      "tone": "Caption style",
+      "notes": "Extra notes for AI (optional)",
+      "notesPlaceholder": "e.g. 50% off until month end, free shipping",
+      "language": "Language",
+      "generate": "Write captions with AI",
+      "regenerate": "Rewrite",
+      "generating": "AI is writing…",
+      "done": "Captions are ready",
+      "failed": "The last attempt failed. Try again.",
+      "needProduct": "Add a product name first",
+      "needChannel": "Pick at least one channel"
+    },
+    "ready": {
+      "title": "Ready to post",
+      "empty": "Pick channels and press \"Write captions with AI\". Copy-ready text appears here.",
+      "caption": "Caption",
+      "hashtags": "Hashtags",
+      "comment": "Pinned comment",
+      "linkAppended": "Link added automatically:",
+      "noLink": "No product link yet. Add one in step 1 to include it in the comment.",
+      "copyPost": "Copy caption",
+      "copyComment": "Copy comment + link",
+      "copiedPost": "Caption copied",
+      "copiedComment": "Comment copied",
+      "copyFailed": "Could not copy. Select the text and copy it yourself.",
+      "downloadVideo": "Download video",
+      "downloadImages": "Download images ({n})",
+      "openChannel": "Post on {channel}",
+      "autoTitle": "Auto-posting",
+      "soon": "Coming soon",
+      "autoDesc": "Connect Facebook / Instagram / TikTok accounts and schedule posts. For now, copy the text and download the files to post."
+    },
+    "tips": {
+      "tiktok": "TikTok: upload the video, paste the caption, then post the comment + link (or pin the cart if you use TikTok Shop).",
+      "shopee": "Shopee: post through Shopee Video in the app and tag the product from your shop.",
+      "facebook": "Facebook: post as a Reel or Page video, then comment the link and pin it.",
+      "instagram": "Instagram: links in captions are not clickable, so put the link in a comment or your bio."
+    },
+    "workspace": {
+      "back": "Back to posts",
+      "untitled": "New sales post",
+      "titleAria": "Post title",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "notFound": "Post not found"
+    },
+    "skillVideo": {
+      "title": "Skills Library: pick a video style",
+      "divider": "Or let AI make a new video with the Skills Library",
+      "making": "AI is making \"{skill}\"",
+      "openStudio": "View/edit in Studio",
+      "runningHint": "This takes a few minutes. You can close this page; the video is attached to the post when it is done.",
+      "stop": "Stop",
+      "stage": {
+        "scripting": "Script",
+        "keyframes": "Images",
+        "videos": "Video clips",
+        "merging": "Merge",
+        "done": "Video attached",
+        "failed": "Video failed",
+        "cancelled": "Video stopped"
+      },
+      "selectedHint": "About {n} seconds · uses the product name, details, price and images from step 1",
+      "presenter": "Presenter",
+      "presenterPick": "Pick a presenter",
+      "presenterNone": "No presenter",
+      "noPresenter": "No avatar or influencer with an image yet.",
+      "createPresenter": "Create one in the Skills Library",
+      "needPresenter": "This skill needs a presenter",
+      "make": "Make the video with this skill",
+      "costHint": "Uses your configured image and video models (provider charges apply).",
+      "placeholder": "AI is making the video…",
+      "attached": "Video is ready and attached to the post",
+      "badge": "Making video"
+    },
+    "home": {
+      "kicker": "NAKA AI Seller",
+      "subtitle": "Pick a skill, add a product, and AI makes the review video, writes captions and attaches images and links, ready for TikTok, Shopee, Facebook and Instagram.",
+      "searchPlaceholder": "Search skills or posts, e.g. review, unboxing…",
+      "skillsTitle": "Pick a skill to start selling",
+      "skillsDesc": "Each skill is a sales-video format. Pick one, add your product, and AI makes the video and captions.",
+      "postsTitle": "My posts",
+      "noPostMatch": "No posts match your search"
+    }
+  }
+}

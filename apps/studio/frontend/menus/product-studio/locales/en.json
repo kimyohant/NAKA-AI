@@ -1,0 +1,620 @@
+{
+  "productStudio": {
+    "autoRender": {
+      "start": "Generate all (auto)",
+      "force": "Regenerate all shots",
+      "forceHint": "Regenerate every keyframe and video, even completed ones",
+      "stage": {
+        "idle": "Not started",
+        "keyframes": "Generating keyframes",
+        "videos": "Generating videos",
+        "merging": "Merging videos",
+        "done": "All done",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      },
+      "failedCount": "{n} shots failed",
+      "cancel": "Cancel",
+      "done": "Every shot is generated",
+      "doneToast": "Auto-render finished — head to Export",
+      "failedToast": "Auto-render failed",
+      "cancelledToast": "Cancelled — tasks already sent to the provider finish normally",
+      "failed": "Auto-render failed",
+      "retry": "Retry",
+      "started": "Auto-render started — you can leave this page, the server continues"
+    },
+    "captions": {
+      "enable": "Burn captions into the video (from dialogue)",
+      "style": "Caption style",
+      "styles": {
+        "clean": "Clean",
+        "bold": "Bold",
+        "boxed": "Boxed"
+      },
+      "previewText": "Sample caption",
+      "burnIn": "Burn in an AI-generated corner label",
+      "burnInHint": "A small corner label in the project language — enable per the platform you post to",
+      "exportSwitch": "Burn captions when merging",
+      "downloadSrt": "Download captions (.srt)",
+      "hasSubs": "Captioned",
+      "noCaptionBadge": "No caption",
+      "noCaptionHint": "No dialogue and no on-screen text — this shot gets no caption",
+      "shotsNoCaption": "{n} shots will have no caption (no dialogue or on-screen text)"
+    },
+    "fromCampaign": {
+      "title": "Make a review video in Product Studio",
+      "desc": "Copies the product, photos and market from this campaign into Product Studio — {creative} Pick a template to start",
+      "noCreative": "no creative selected",
+      "needTemplate": "Pick a template first",
+      "creating": "Creating project",
+      "submit": "Create Studio project",
+      "created": "Studio project created from campaign",
+      "loadFailed": "Failed to load templates",
+      "backToCampaign": "Source campaign"
+    },
+    "eyebrow": "NAKA-AI TECH",
+    "title": "Skills Library",
+    "subtitle": "Turn one product + one template into a ready-to-post review video with spoken audio — for TikTok, Shopee, Lazada and worldwide.",
+    "creating": "Creating",
+    "tabs": {
+      "skills": "Skills",
+      "projects": "Projects",
+      "avatars": "Avatars",
+      "influencers": "Influencer"
+    },
+    "list": {
+      "new": "New project",
+      "openAria": "Open project {title}",
+      "delete": "Delete project",
+      "emptyTitle": "No projects yet",
+      "emptyDesc": "Start with one product, pick a template, and let AI write the script and build the video."
+    },
+    "create": {
+      "title": "New project",
+      "desc": "Name your product and pick a starting template — everything else can be adjusted later.",
+      "template": "Starting template",
+      "needProduct": "Add a product name or link first",
+      "created": "Project created",
+      "submit": "Create project"
+    },
+    "delete": {
+      "title": "Delete project?",
+      "message": "Delete “{title}” — videos already stored in the linked drama stay.",
+      "deleted": "Project deleted"
+    },
+    "status": {
+      "draft": "Draft",
+      "scripting": "Writing script",
+      "script_ready": "Script ready",
+      "failed": "Failed"
+    },
+    "steps": {
+      "product": "Product",
+      "productSub": "Link, photos, details",
+      "template": "Template",
+      "templateSub": "Pick a video skeleton",
+      "settings": "Settings",
+      "settingsSub": "Language, market, length",
+      "script": "Script",
+      "scriptSub": "Shot-by-shot list",
+      "render": "Generate",
+      "renderSub": "Keyframes + video",
+      "export": "Export",
+      "exportSub": "Merge + pre-post checklist"
+    },
+    "workspace": {
+      "steps": "Steps",
+      "failedTitle": "Something went wrong",
+      "notFound": "Project not found (it may have been deleted)",
+      "scripting": "AI is writing the script… editing is locked meanwhile",
+      "scriptDone": "Script ready — review and edit freely",
+      "scriptFailed": "Script generation failed"
+    },
+    "product": {
+      "title": "Product",
+      "desc": "Paste a link to fetch details automatically, or fill it in yourself, plus real product photos",
+      "url": "Product link",
+      "urlPlaceholder": "https://…",
+      "ingest": "Fetch",
+      "ingestHint": "Works with Shopee, Lazada and most product pages — if it fails, just fill in manually",
+      "ingested": "Product details fetched",
+      "name": "Product name",
+      "namePlaceholder": "e.g. Vitamin C serum",
+      "description": "Product details",
+      "descriptionPlaceholder": "Selling points, size, price, key ingredients…",
+      "images": "Product photos",
+      "upload": "Upload photos",
+      "uploaded": "Photos uploaded",
+      "noImages": "No photos yet — upload at least one to build keyframes",
+      "removeImage": "Remove photo",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "unsaved": "Unsaved changes",
+      "saved": "Saved",
+      "next": "Next: Template"
+    },
+    "template": {
+      "title": "Pick a template",
+      "desc": "Video skeletons designed in-house. Choose the style you want — AI writes the script to match.",
+      "selected": "Selected: {name}",
+      "changeWarn": "Template changed — the existing script stays, but you need to regenerate it to match the new structure",
+      "next": "Next: Settings"
+    },
+    "categories": {
+      "review": "Review",
+      "demo": "Demo",
+      "fashion_beauty": "Fashion & beauty",
+      "showcase": "Showcase",
+      "promo": "Promotion"
+    },
+    "settings": {
+      "minDurationHint": "This video model makes clips no shorter than {n}s — shorter shots get their beats merged",
+      "belowMinWarn": "{n} shots are below the minimum",
+      "estimateTotal": "Local model: ~{n} minutes for the whole project (one clip at a time)",
+      "queuedCount": "{n} shots queued",
+      "queuePosition": "Queue #{n}",
+      "title": "Settings",
+      "desc": "Spoken language, market, platform, length and avatar (when the template needs one)",
+      "language": "Spoken language",
+      "market": "Market",
+      "platform": "Platform",
+      "aspect": "Aspect ratio",
+      "duration": "Video length ({min}–{max} seconds)",
+      "durationValue": "{n} seconds",
+      "durationTemplate": "Template designed for ~{n}s",
+      "avatar": "Avatar",
+      "avatarNone": "No avatar",
+      "avatarRequiredWarn": "This template needs an avatar or influencer with an image — pick one in Settings",
+      "pickAvatar": "Pick an avatar",
+      "noAvatars": "No avatars yet — create one in the Avatars tab",
+      "manageAvatars": "Manage avatars →",
+      "tone": "Tone of voice",
+      "tonePlaceholder": "e.g. friendly, funny, premium",
+      "notes": "Notes for AI",
+      "notesPlaceholder": "What to emphasize, what not to say…",
+      "budget": "Budget (THB)",
+      "budgetPlaceholder": "e.g. 500",
+      "aiDisclosure": "AI-generated label",
+      "aiDisclosureHint": "Included in the pre-post checklist per platform rules",
+      "audioQualityWarn": "Speech quality for this language depends on the video model — en or zh sounds best",
+      "saved": "Saved",
+      "next": "Next: Script",
+      "influencer": "AI Influencer",
+      "influencerNone": "No influencer",
+      "noInfluencers": "No influencer yet — create one in the Influencer tab",
+      "manageInfluencers": "Manage influencers →"
+    },
+    "script": {
+      "title": "Script",
+      "desc": "AI writes the shot list from the template, spoken in your chosen language — every shot is editable",
+      "generate": "Generate script",
+      "regenerate": "Regenerate script",
+      "instructionPlaceholder": "Extra direction, e.g. highlight the promo, target young parents…",
+      "regenerateWarn": "Regenerating replaces the whole shot list — finish editing the current one first",
+      "empty": "No script yet — hit “Generate script” and let AI write it from the template",
+      "next": "Next: Generate"
+    },
+    "shots": {
+      "durationSec": "{n}s",
+      "durationLabel": "Length (seconds)",
+      "dialogue": "Dialogue",
+      "dialogueNone": "No dialogue in this shot",
+      "dialogueHint": "Leave empty = this shot has no speech",
+      "speechEstimate": "Takes about {est}s / shot is {limit}s",
+      "visual": "What is on screen",
+      "onScreenText": "On-screen text",
+      "onScreenTextNone": "No on-screen text",
+      "saved": "Shot saved"
+    },
+    "render": {
+      "title": "Generate video",
+      "desc": "Build a keyframe per shot (real product photo + avatar as reference), then turn them into videos with spoken audio",
+      "keyframesAll": "Generate missing keyframes",
+      "videosAll": "Generate missing videos",
+      "all": "Generate all",
+      "queued": "{n} tasks queued",
+      "keepOpenWarn": "Keep this page open while generating — closing the tab pauses the pipeline",
+      "keyframe": "Keyframe",
+      "video": "Video",
+      "regenerateShot": "Regenerate",
+      "needKeyframe": "Needs a keyframe first",
+      "needScript": "No script yet — go to the Script step",
+      "toScript": "Go to Script",
+      "next": "Next: Export"
+    },
+    "export": {
+      "title": "Export",
+      "desc": "Merge every shot into one clip, then run the pre-post checklist",
+      "merge": "Merge all videos",
+      "merging": "Merging videos…",
+      "noneVideos": "No finished shot videos yet — generate them first",
+      "download": "Download",
+      "checklistTitle": "Pre-post checklist",
+      "checkDisclosure": "Add the AI-generated label required by the platform you post to",
+      "checkPrice": "Check prices/promos mentioned in the video match your shop page",
+      "checkClaims": "No exaggerated claims, no posing as real customer reviews",
+      "openEpisode": "Open in episode workbench"
+    },
+    "mediaStatus": {
+      "none": "Not generated",
+      "processing": "Generating",
+      "completed": "Ready",
+      "failed": "Failed"
+    },
+    "imageKinds": {
+      "packshot": "Packshot",
+      "lifestyle": "Lifestyle",
+      "on_model": "On model",
+      "banner": "Banner"
+    },
+    "productImages": {
+      "title": "Product images",
+      "kind": "Visual type",
+      "source": "Source photo",
+      "platform": "Platform (for banners)",
+      "count": "Count",
+      "instructionPlaceholder": "Extra direction, e.g. sweet pink pastel background",
+      "generate": "Generate images",
+      "generated": "{n} images queued",
+      "empty": "No generated images yet",
+      "failedHint": "Image generation failed",
+      "viewPrompt": "View prompt",
+      "hidePrompt": "Hide prompt",
+      "promote": "Use as product photo",
+      "promoted": "Now used as a product photo",
+      "promotedBadge": "In use",
+      "delete": "Delete image",
+      "deleted": "Image deleted"
+    },
+    "avatars": {
+      "create": "New avatar",
+      "createDesc": "An avatar is the character who holds/uses your product. Describe their look clearly — AI uses it to build images",
+      "name": "Name",
+      "namePlaceholder": "e.g. young presenter girl",
+      "description": "Appearance description",
+      "descriptionPlaceholder": "Age, gender, hairstyle, outfit, visual style…",
+      "descriptionHint": "The more detail, the better the avatar — used as reference when generating videos",
+      "locale": "Main market",
+      "localeAny": "Any",
+      "image": "Avatar photo",
+      "uploadImage": "Upload photo",
+      "changeImage": "Change photo",
+      "uploadHint": "No photo? Create it and use the AI generate button later",
+      "aiGenerate": "AI generate photo",
+      "regenerate": "Regenerate photo",
+      "generating": "Generating avatar photo",
+      "imageFailed": "Photo generation failed",
+      "created": "Avatar created",
+      "saved": "Avatar saved",
+      "deleted": "Avatar deleted",
+      "edit": "Edit",
+      "delete": "Delete avatar",
+      "deleteTitle": "Delete avatar?",
+      "deleteMessage": "Delete “{name}” — projects using it will show no avatar",
+      "needFields": "Fill in name and description first",
+      "emptyTitle": "No avatars yet",
+      "emptyDesc": "Create the presenter character for your products — reusable across projects"
+    },
+    "influencers": {
+      "create": "New influencer",
+      "createDesc": "Design your own AI presenter — looks, personality and niche. AI keeps the same face across every generated image and script.",
+      "name": "Name",
+      "namePlaceholder": "e.g. Mint · beauty reviewer",
+      "niche": "Niche",
+      "nicheAny": "Unspecified",
+      "niches": {
+        "beauty": "Beauty",
+        "fashion": "Fashion",
+        "food": "Food",
+        "tech": "Tech/Gadgets",
+        "fitness": "Fitness/Health",
+        "lifestyle": "Lifestyle",
+        "gaming": "Gaming",
+        "travel": "Travel",
+        "home": "Home/Living",
+        "mom_baby": "Mom & Baby"
+      },
+      "persona": "Personality / speaking style",
+      "personaPlaceholder": "e.g. fast talker, funny, teen slang, talks like a friend",
+      "personaHint": "Used to write review scripts and set the on-camera vibe",
+      "appearance": "Look / appearance",
+      "appearancePlaceholder": "e.g. Thai woman, 25, brown bob hair, casual style, tan skin",
+      "appearanceHint": "The more detail, the better — used as identity reference for every image",
+      "locale": "Main market",
+      "localeAny": "Unspecified",
+      "tone": "Tone",
+      "tonePlaceholder": "e.g. fun, friendly",
+      "image": "Reference face",
+      "uploadImage": "Upload reference face",
+      "changeImage": "Change image",
+      "uploadHint": "Have a face photo? Upload it so AI matches the real face (recommended)",
+      "aiGenerate": "Generate with AI",
+      "regenerate": "Regenerate",
+      "generating": "Generating influencer portrait",
+      "imageFailed": "Portrait generation failed",
+      "created": "Influencer created",
+      "saved": "Influencer saved",
+      "deleted": "Influencer deleted",
+      "edit": "Edit",
+      "delete": "Delete influencer",
+      "deleteTitle": "Delete influencer?",
+      "deleteMessage": "Delete “{name}” — projects using it will show no influencer",
+      "needFields": "Name is required",
+      "emptyTitle": "No influencers yet",
+      "emptyDesc": "Create your own AI presenter and reuse it for every product review — same face, every clip",
+      "contentTitle": "Review content",
+      "contentDesc": "Generate review photos and spoken scripts with this influencer for any product",
+      "productName": "Product name",
+      "productNamePlaceholder": "e.g. Waterproof cushion SPF50",
+      "productImage": "Product image",
+      "uploadProduct": "Upload product image",
+      "needProductImage": "Upload a product image first",
+      "scenes": "Scenes",
+      "scenesHint": "Pick multiple — one run generates every selected scene",
+      "sceneNames": {
+        "unboxing": "Unboxing",
+        "holding": "Holding",
+        "using": "Using",
+        "closeup": "Close-up",
+        "lifestyle": "Lifestyle"
+      },
+      "aspect": "Aspect ratio",
+      "instruction": "Extra direction",
+      "instructionPlaceholder": "e.g. bright bedroom background, white t-shirt",
+      "generateImages": "Generate review photos",
+      "generatingImages": "Generating review photos",
+      "imagesCreated": "Queued {n} review photos",
+      "needPortrait": "This influencer has no portrait — generate or upload one first",
+      "scriptTitle": "Review script",
+      "productDescription": "Product details (optional)",
+      "language": "Spoken language",
+      "platform": "Platform",
+      "duration": "Length (seconds)",
+      "generateScript": "Generate review script",
+      "generatingScript": "Writing script",
+      "scriptReady": "Script ready",
+      "copy": "Copy script",
+      "copied": "Copied",
+      "results": "Results",
+      "resultsEmpty": "No content yet — generate review photos or a script above",
+      "deleteContent": "Delete content",
+      "contentFailed": "Generation failed"
+    },
+    "templates": {
+      "seconds": "~{n}s",
+      "avatarRequired": "Avatar required",
+      "avatarHands": "Hands hold the product",
+      "noDialogue": "No dialogue",
+      "filterCategory": "Filter by category",
+      "filterPlatform": "Filter by platform",
+      "filterAvatar": "Uses an avatar",
+      "emptyFilter": "No templates match these filters",
+      "ugc_review": {
+        "name": "Talking-head review",
+        "description": "A real-experience talking review: open with the problem, show the product in use, close with results",
+        "beats": {
+          "hook": "Opening",
+          "problem": "Problem",
+          "use_product": "Using it",
+          "result": "Result",
+          "cta": "Call to action"
+        }
+      },
+      "unboxing": {
+        "name": "Unboxing",
+        "description": "Open the box layer by layer on camera — great when packaging looks good",
+        "beats": {
+          "hook": "Opening",
+          "unbox": "Unboxing",
+          "reveal": "The reveal",
+          "details": "Details",
+          "cta": "Call to action"
+        }
+      },
+      "before_after": {
+        "name": "Before & after",
+        "description": "Show before and after side by side so the change is obvious",
+        "beats": {
+          "hook": "Before",
+          "during": "Using it",
+          "after": "After",
+          "cta": "Call to action"
+        }
+      },
+      "problem_solution": {
+        "name": "Problem & solution",
+        "description": "Start from a problem viewers know, then introduce the product as the fix",
+        "beats": {
+          "problem": "Problem",
+          "intro": "Meet the product",
+          "solve": "It solves it",
+          "cta": "Call to action"
+        }
+      },
+      "how_to_use": {
+        "name": "How to use",
+        "description": "Teach the product step by step — viewers can follow along right away",
+        "beats": {
+          "hook": "Opening",
+          "step1": "Step 1",
+          "step2": "Step 2",
+          "step3": "Step 3",
+          "cta": "Call to action"
+        }
+      },
+      "three_reasons": {
+        "name": "Three reasons",
+        "description": "Three quick reasons this product is worth it, closed with a CTA",
+        "beats": {
+          "hook": "Opening",
+          "reason1": "Reason 1",
+          "reason2": "Reason 2",
+          "reason3": "Reason 3",
+          "cta": "Call to action"
+        }
+      },
+      "comparison": {
+        "name": "Clear comparison",
+        "description": "Compare the usual way with our product without naming anyone — focus on feelable differences",
+        "beats": {
+          "hook": "Opening",
+          "generic": "The usual way",
+          "ours": "Our product",
+          "cta": "Call to action"
+        }
+      },
+      "try_on": {
+        "name": "Try it on",
+        "description": "Apply, wear or use it live, then turn to show every angle",
+        "beats": {
+          "hook": "Opening",
+          "try": "Trying it",
+          "show": "All angles",
+          "cta": "Call to action"
+        }
+      },
+      "creator_story": {
+        "name": "Creator story",
+        "description": "A creator tells their personal experience with the product up to the turning point",
+        "beats": {
+          "story": "Experience",
+          "turning_point": "Turning point",
+          "result": "Result",
+          "cta": "Call to action"
+        }
+      },
+      "lifestyle_showcase": {
+        "name": "Lifestyle showcase",
+        "description": "The product in three everyday scenes, closed with a beautiful packshot and narration",
+        "beats": {
+          "scene1": "Scene 1",
+          "scene2": "Scene 2",
+          "scene3": "Scene 3",
+          "packshot": "Packshot"
+        }
+      },
+      "asmr_closeup": {
+        "name": "ASMR close-up",
+        "description": "Macro close-ups and real product sounds, no dialogue — all about the feel",
+        "beats": {
+          "macro": "Macro",
+          "texture": "Texture",
+          "sound": "Sound",
+          "packshot": "Packshot"
+        }
+      },
+      "flash_deal": {
+        "name": "Flash deal",
+        "description": "Live-selling style: announce the price/deal fast and push an instant decision",
+        "beats": {
+          "hook": "Deal intro",
+          "show": "Show the product",
+          "offer": "The offer",
+          "cta": "Order now"
+        }
+      }
+    },
+    "languages": {
+      "th": "Thai",
+      "en": "English",
+      "id": "Indonesian",
+      "vi": "Vietnamese",
+      "ms": "Malay",
+      "fil": "Filipino",
+      "zh": "Chinese",
+      "ja": "Japanese",
+      "ko": "Korean",
+      "es": "Spanish",
+      "pt": "Portuguese",
+      "ar": "Arabic"
+    },
+    "markets": {
+      "TH": "Thailand",
+      "SG": "Singapore",
+      "MY": "Malaysia",
+      "ID": "Indonesia",
+      "VN": "Vietnam",
+      "PH": "Philippines",
+      "US": "United States",
+      "UK": "United Kingdom",
+      "EU": "Europe",
+      "JP": "Japan",
+      "KR": "South Korea",
+      "CN": "China",
+      "LATAM": "Latin America",
+      "MENA": "Middle East & North Africa",
+      "GLOBAL": "Global"
+    },
+    "platforms": {
+      "tiktok": "TikTok",
+      "tiktok_shop": "TikTok Shop",
+      "shopee": "Shopee",
+      "lazada": "Lazada",
+      "facebook": "Facebook",
+      "instagram_reels": "Instagram Reels",
+      "youtube_shorts": "YouTube Shorts",
+      "amazon": "Amazon"
+    },
+    "library": {
+      "kicker": "NAKA Skills",
+      "title": "Skills Library",
+      "subtitle": "Creative workflows at your fingertips. Pick an AI skill for short dramas, ads, product reviews or live selling and start creating right away.",
+      "searchPlaceholder": "Search skills, e.g. review, unboxing, drama…",
+      "clearSearch": "Clear search",
+      "categoriesAria": "Skill categories",
+      "all": "All",
+      "workflowChip": "NAKA workflows",
+      "featuredTitle": "Featured workflows",
+      "featuredDesc": "End-to-end skills from every NAKA-AI studio",
+      "productTitle": "Product video skills",
+      "productDesc": "Pick a skill and continue in AI Seller: add one product, AI makes a voiced review video and writes ready-to-post captions.",
+      "badgeWorkflow": "Workflow",
+      "use": "Use this skill",
+      "useAria": "Use skill {name}",
+      "tagAvatar": "Presenter",
+      "tagHands": "Hands only",
+      "tagVoice": "Voiceover",
+      "tagNoVoice": "No dialogue",
+      "emptyTitle": "No skills found",
+      "emptyDesc": "Try another search or pick \"All\".",
+      "reset": "Clear filters",
+      "workflows": {
+        "seller": {
+          "name": "AI Seller",
+          "description": "Add a product, pick a skill, get a review video with captions for every channel.",
+          "tag": "Selling"
+        },
+        "drama": {
+          "name": "AI Short Drama",
+          "description": "Novel → script → characters & scenes → storyboard → video, all in one place.",
+          "tag": "Drama/anime"
+        },
+        "marketer": {
+          "name": "AI Marketer",
+          "description": "Research the market, plan a strategy and write ad creatives from one brief.",
+          "tag": "Ads"
+        },
+        "viralClone": {
+          "name": "Viral Clone",
+          "description": "Break down a viral clip and generate many versions of your own.",
+          "tag": "Social"
+        },
+        "live": {
+          "name": "AI Live",
+          "description": "Sell live with an AI host.",
+          "tag": "Live commerce"
+        },
+        "avatar": {
+          "name": "AI Avatar",
+          "description": "Create a consistent presenter you can reuse in every video.",
+          "tag": "Presenter"
+        },
+        "influencer": {
+          "name": "AI Influencer",
+          "description": "Create a virtual influencer with a persona, review images and scripts.",
+          "tag": "Creator"
+        }
+      }
+    }
+  }
+}

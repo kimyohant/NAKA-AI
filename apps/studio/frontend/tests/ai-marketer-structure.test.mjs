@@ -8,19 +8,20 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { loadLocale } from './_locales.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 const useApi = read('app/composables/useApi.ts')
-const listPage = read('app/pages/marketer.vue')
-const workbench = read('app/views/marketer/campaign.vue')
+const listPage = read('menus/marketer/pages/marketer.vue')
+const workbench = read('menus/marketer/views/campaign.vue')
 const components = ['MarketerBriefForm', 'MarketerDocCard', 'MarketerCreativeCard', 'MarketerReferencePanel', 'MarketerReferenceCard', 'MarketerVisualCard']
-  .map((n) => [`components/${n}.vue`, read(`app/components/${n}.vue`)])
-const nuxtConfig = read('nuxt.config.ts')
+  .map((n) => [`components/${n}.vue`, read(`menus/marketer/components/${n}.vue`)])
+const nuxtConfig = read('nuxt.config.ts') + read('menus/index.ts') + read('menus/marketer/routes.ts')
 const layout = read('app/layouts/default.vue')
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const th = loadLocale('th')
+const en = loadLocale('en')
 const uiFiles = [['pages/marketer.vue', listPage], ['views/marketer/campaign.vue', workbench], ...components]
 
 const backendRoutesUrl = new URL('../backend/src/modules/marketer/routes/campaigns.ts', root)
@@ -83,7 +84,7 @@ test('JSON fields follow the camelCase contract', () => {
 test('marketer routes are registered and reachable', () => {
   assert.match(nuxtConfig, /name: 'marketer-campaign'/)
   assert.match(nuxtConfig, /path: '\/marketer\/:id'/)
-  assert.match(nuxtConfig, /views\/marketer\/campaign\.vue/)
+  assert.match(nuxtConfig, /view: 'views\/campaign\.vue'/)
   // เมนูหลักเหลือ AI นักขายเมนูเดียว — หน้านี้เข้าทาง URL ได้ (ดู ai-seller-structure.test.mjs)
 })
 

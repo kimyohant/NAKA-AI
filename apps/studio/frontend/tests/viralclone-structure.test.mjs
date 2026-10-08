@@ -7,25 +7,26 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { loadLocale } from './_locales.mjs'
 import {
   CLONE_MATRIX_CAP, cloneErrorCodeOf, matrixVariantCount, matrixOverCap,
   beatsTotalSeconds, usableHooks, isValidBlueprint, isCloneProjectBusy, isCloneVariantBusy,
-} from '../app/utils/viralCloneFlow.js'
+} from '../menus/viral-clone/utils/viralCloneFlow.js'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 
 const layout = read('app/layouts/default.vue')
-const nuxtConfig = read('nuxt.config.ts')
+const nuxtConfig = read('nuxt.config.ts') + read('menus/index.ts') + read('menus/viral-clone/routes.ts')
 const useApi = read('app/composables/useApi.ts')
-const flow = read('app/utils/viralCloneFlow.js')
-const listPage = read('app/pages/viral-clone.vue')
-const workspace = read('app/views/viralclone/workspace.vue')
-const editor = read('app/components/ViralCloneBlueprintEditor.vue')
-const matrix = read('app/components/ViralCloneMatrixBuilder.vue')
-const card = read('app/components/ViralCloneVariantCard.vue')
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const flow = read('menus/viral-clone/utils/viralCloneFlow.js')
+const listPage = read('menus/viral-clone/pages/viral-clone.vue')
+const workspace = read('menus/viral-clone/views/workspace.vue')
+const editor = read('menus/viral-clone/components/ViralCloneBlueprintEditor.vue')
+const matrix = read('menus/viral-clone/components/ViralCloneMatrixBuilder.vue')
+const card = read('menus/viral-clone/components/ViralCloneVariantCard.vue')
+const th = loadLocale('th')
+const en = loadLocale('en')
 
 const NEW_FILES = { listPage, workspace, editor, matrix, card }
 
@@ -33,8 +34,8 @@ test('dynamic route is registered', () => {
   // เมนูหลักเหลือ AI นักขายเมนูเดียว — หน้านี้เข้าทาง URL ได้ (ดู ai-seller-structure.test.mjs)
   assert.match(nuxtConfig, /viralclone-workspace/)
   assert.match(nuxtConfig, /\/viral-clone\/:id/)
-  assert.ok(existsSync(new URL('app/views/viralclone/workspace.vue', root)), 'workspace view missing')
-  assert.ok(existsSync(new URL('app/pages/viral-clone.vue', root)), 'list page missing')
+  assert.ok(existsSync(new URL('menus/viral-clone/views/workspace.vue', root)), 'workspace view missing')
+  assert.ok(existsSync(new URL('menus/viral-clone/pages/viral-clone.vue', root)), 'list page missing')
 })
 
 test('cloneAPI covers every endpoint in PLAN §3', () => {
@@ -102,7 +103,7 @@ test('no auto-import name collisions with other flow utils', () => {
   const exportsOf = (src) => [...src.matchAll(/export\s+(?:const|function|let)\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1])
   const mine = new Set(exportsOf(flow))
   assert.ok(mine.size >= 8, 'viralCloneFlow should export its helpers')
-  for (const other of ['app/utils/marketerFlow.js', 'app/utils/studioFlow.js', 'app/utils/unslothFlow.js']) {
+  for (const other of ['menus/marketer/utils/marketerFlow.js', 'menus/product-studio/utils/studioFlow.js', 'menus/product-studio/utils/unslothFlow.js']) {
     const theirs = exportsOf(read(other))
     const clash = theirs.filter((name) => mine.has(name))
     assert.deepEqual(clash, [], `export name clash with ${other}: ${clash.join(', ')}`)

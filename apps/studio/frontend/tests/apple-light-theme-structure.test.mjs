@@ -8,9 +8,9 @@ const layout = read('../app/layouts/default.vue')
 const surfaces = [
   studioCss,
   layout,
-  read('../app/pages/index.vue'),
-  read('../app/views/drama/detail.vue'),
-  read('../app/views/drama/episode.vue'),
+  read('../menus/drama/pages/index.vue'),
+  read('../menus/drama/views/detail.vue'),
+  read('../menus/drama/views/episode.vue'),
 ].join('\n')
 
 // rebrand หลังชุด Apple-light: ChatFire 火焰橙 + IBM Plex Sans Thai (ดู commit 82877d0)

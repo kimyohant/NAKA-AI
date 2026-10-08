@@ -8,24 +8,25 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { loadLocale } from './_locales.mjs'
 import {
   STUDIO_STEPS, STUDIO_IMAGE_KINDS, STUDIO_DURATION_MIN, STUDIO_DURATION_MAX,
   isStepDone, nextIncompleteStep, clampStudioDuration, speechSeconds, dialogueTooLong, beatBars, applyPlatformDefaults,
-} from '../app/utils/studioFlow.js'
+} from '../menus/product-studio/utils/studioFlow.js'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 
 const useApi = read('app/composables/useApi.ts')
-const listPage = read('app/pages/studio.vue')
-const workspace = read('app/views/studio/workspace.vue')
+const listPage = read('menus/product-studio/pages/studio.vue')
+const workspace = read('menus/product-studio/views/workspace.vue')
 const components = ['StudioTemplateCard', 'StudioTemplateGallery', 'StudioShotCard', 'StudioAvatarCard', 'StudioImageCard', 'StudioProductImages']
-  .map((n) => [`components/${n}.vue`, read(`app/components/${n}.vue`)])
-const nuxtConfig = read('nuxt.config.ts')
+  .map((n) => [`components/${n}.vue`, read(`menus/product-studio/components/${n}.vue`)])
+const nuxtConfig = read('nuxt.config.ts') + read('menus/index.ts') + read('menus/product-studio/routes.ts')
 const layout = read('app/layouts/default.vue')
 const plan = read('../docs/product-studio/PLAN.md')
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const th = loadLocale('th')
+const en = loadLocale('en')
 const uiFiles = [['pages/studio.vue', listPage], ['views/studio/workspace.vue', workspace], ...components]
 
 const phase2DocUrl = new URL('../docs/product-studio/PHASE2.md', root)
@@ -78,7 +79,7 @@ test('studioAPI methods exist by name', () => {
 test('routes and menu are registered', () => {
   assert.match(nuxtConfig, /name: 'studio-workspace'/)
   assert.match(nuxtConfig, /path: '\/studio\/:id'/)
-  assert.match(nuxtConfig, /views\/studio\/workspace\.vue/)
+  assert.match(nuxtConfig, /view: 'views\/workspace\.vue'/)
   // เมนูหลักเหลือ AI นักขายเมนูเดียว — หน้านี้เข้าทาง URL ได้ (ดู ai-seller-structure.test.mjs)
 })
 

@@ -6,8 +6,21 @@
  * - legacy:false 必须显式，否则 global.locale 不是 ref 无法运行时切换
  */
 import { createI18n } from 'vue-i18n'
-import th from '../locales/th.json'
-import en from '../locales/en.json'
+import thShared from '../locales/th.json'
+import enShared from '../locales/en.json'
+
+// Shared strings live in app/locales; each menu owns its own section in menus/<menu>/locales
+// (top-level keys never overlap, so a shallow merge is enough).
+const menuMessages = import.meta.glob<Record<string, unknown>>('../../menus/*/locales/*.json', { eager: true, import: 'default' })
+function messagesFor(lang: 'th' | 'en', shared: Record<string, unknown>) {
+  const out = { ...shared }
+  for (const [file, msgs] of Object.entries(menuMessages)) {
+    if (file.endsWith(`/locales/${lang}.json`)) Object.assign(out, msgs)
+  }
+  return out
+}
+const th = messagesFor('th', thShared)
+const en = messagesFor('en', enShared)
 
 export const LOCALE_STORAGE_KEY = 'naka:locale'
 

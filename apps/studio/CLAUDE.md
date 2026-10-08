@@ -58,10 +58,11 @@ study/hypit/ — Full source of Hypit (hypit-ai/hypit @ 7f730ab); the Viral Clon
 - **Hypit render engine**: `services/hypit-render.ts`; when a Viral Clone project has `render_engine='hypit'`, SVML is generated from the beat segments and `study/hypit/bin/hypit.mjs build` is spawned; if unavailable or failing it automatically falls back to the ffmpeg path
 
 ### Frontend
-- Nuxt 3 SPA; dynamic routes are registered manually in `pages:extend` in `nuxt.config.ts`; `/` redirects to `/seller` (AI Seller), the drama studio is at `/drama`
+- Nuxt 3 SPA; `/` redirects to `/seller` (AI Seller), the drama studio is at `/drama`
+- **Menus are Nuxt layers** in `frontend/menus/<menu>/` (same six names as the backend modules): `pages/`, `views/` (pages with params), `components/`, `utils/`, `locales/{th,en}.json` (that menu's top-level i18n section) and `routes.ts` (its param routes). `menus/index.ts` `MENUS` is the switch: `nuxt.config.ts` extends those layers and registers their `routes.ts` in `pages:extend`. Shared UI stays in `app/` (layouts, base components, composables, plugins, assets, public, shared strings in `app/locales`); `app/composables/i18n.ts` merges `app/locales` with every `menus/*/locales`. Inside a layer `~/` still means `app/`; import another file of the same menu relatively. Frontend tests read merged messages through `tests/_locales.mjs`
 - No Settings page: "configure AI" links go to the back-office (`runtimeConfig.public.adminUrl`, default `/admin/`); a 401 `E_AUTH_REQUIRED` sends the browser to the naka-ai sign-in
 - `app/composables/useApi.ts` is the unified fetch client (all relative paths, same origin as the backend in production)
-- Core workbenches: `app/views/drama/episode.vue` (drama pipeline), `app/views/seller/workspace.vue` (AI Seller)
+- Core workbenches: `menus/drama/views/episode.vue` (drama pipeline), `menus/seller/views/workspace.vue` (AI Seller)
 
 ## Database
 Single SQLite file (default `data/naka.sqlite3`). `initSqliteSchema` idempotently creates tables and seeds style presets at startup. One-off MySQL→SQLite migration: `cd backend && npx tsx scripts/import-mysql-to-sqlite.ts [--force]` (per-table row-count verification, backup before writing).

@@ -51,12 +51,12 @@ test('covers exist for template categories, skill categories and agents', () => 
 })
 
 test('cards use the art and fall back to the icon when an image fails', () => {
-  const card = read('app/components/StudioTemplateCard.vue')
+  const card = read('menus/product-studio/components/StudioTemplateCard.vue')
   assert.match(card, /templateArt\(props\.template\.id\)/)
   assert.match(card, /@error="artFailed = true"/)
   assert.match(card, /<component :is="icon" v-else/)
   assert.match(card, /prefers-reduced-motion/)
-  const gallery = read('app/components/StudioTemplateGallery.vue')
+  const gallery = read('menus/product-studio/components/StudioTemplateGallery.vue')
   assert.match(gallery, /:art-index=/)
   assert.match(gallery, /coverArt\('template-category'/)
 })
@@ -68,7 +68,7 @@ test('every seeded visual style has an example image, and the picker falls back 
   assert.ok(seeded.length >= 8)
   for (const v of seeded) assert.ok(existsSync(publicFile(styleExample(v))), `missing style example ${v}`)
   assert.equal(styleExample('a/b'), '')
-  const index = read('app/pages/index.vue')
+  const index = read('menus/drama/pages/index.vue')
   assert.match(index, /styleImg\[p\.value\] = 'error'/)
   assert.match(index, /v-if="styleImg\[p\.value\] !== 'ok'" class="style-glyph"/)
   assert.doesNotMatch(index, /overflow-x: auto; scroll-snap-type: x mandatory/)

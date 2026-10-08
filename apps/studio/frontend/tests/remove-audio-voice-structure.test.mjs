@@ -5,8 +5,8 @@ import assert from 'node:assert/strict'
 const appRoot = new URL('../app/', import.meta.url)
 const readApp = (path) => readFileSync(new URL(path, appRoot), 'utf8')
 
-const episodePage = readApp('views/drama/episode.vue')
-const dramaPage = readApp('views/drama/detail.vue')
+const episodePage = readApp('../menus/drama/views/episode.vue')
+const dramaPage = readApp('../menus/drama/views/detail.vue')
 const useApi = readApp('composables/useApi.ts')
 
 test('frontend API client no longer exposes TTS or voice endpoints', () => {

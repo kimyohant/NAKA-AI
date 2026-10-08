@@ -8,25 +8,26 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { loadLocale } from './_locales.mjs'
 import {
   UNSLOTH_PROVIDER, UNSLOTH_VIDEO_DEFAULTS, isLocalOrPrivateBaseUrl,
   estimateRenderSeconds, estimateRenderMinutes, shotsBelowMinDuration,
-} from '../app/utils/unslothFlow.js'
+} from '../menus/product-studio/utils/unslothFlow.js'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 
 const useApi = read('app/composables/useApi.ts')
 const providerIcon = read('app/composables/useProviderIcon.ts')
-const unslothFlow = read('app/utils/unslothFlow.js')
-const workspace = read('app/views/studio/workspace.vue')
-const shotCard = read('app/components/StudioShotCard.vue')
-const episode = read('app/views/drama/episode.vue')
-const campaign = read('app/views/marketer/campaign.vue')
-const docCard = read('app/components/MarketerDocCard.vue')
-const refCard = read('app/components/MarketerReferenceCard.vue')
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const unslothFlow = read('menus/product-studio/utils/unslothFlow.js')
+const workspace = read('menus/product-studio/views/workspace.vue')
+const shotCard = read('menus/product-studio/components/StudioShotCard.vue')
+const episode = read('menus/drama/views/episode.vue')
+const campaign = read('menus/marketer/views/campaign.vue')
+const docCard = read('menus/marketer/components/MarketerDocCard.vue')
+const refCard = read('menus/marketer/components/MarketerReferenceCard.vue')
+const th = loadLocale('th')
+const en = loadLocale('en')
 
 test('no real API keys or public server IPs in delivered code', () => {
   for (const [name, src] of [['unslothFlow.js', unslothFlow]]) {

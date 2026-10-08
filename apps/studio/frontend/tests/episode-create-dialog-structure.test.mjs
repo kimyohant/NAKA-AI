@@ -7,7 +7,7 @@ const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 // หน้ารายการตอนปัจจุบันคือ views/drama/detail.vue (สร้างตอน + การ์ดตอน)
 test('add episode dialog asks for a title and a fixed video resolution', () => {
-  const page = read('app/views/drama/detail.vue')
+  const page = read('menus/drama/views/detail.vue')
 
   // ไม่มีให้เลือก image/video service ใน dialog อีกต่อไป (backend ล็อก config ให้เอง)
   assert.doesNotMatch(page, /图片生成服务/)
@@ -35,7 +35,7 @@ test('add episode dialog asks for a title and a fixed video resolution', () => {
 })
 
 test('addEpisode posts drama_id, title and resolution', () => {
-  const page = read('app/views/drama/detail.vue')
+  const page = read('menus/drama/views/detail.vue')
 
   const addEpisodeBody = page.slice(page.indexOf('async function addEpisode'), page.indexOf('async function confirmDelEpisode'))
   assert.match(addEpisodeBody, /drama_id: dramaId/)
@@ -47,7 +47,7 @@ test('addEpisode posts drama_id, title and resolution', () => {
 })
 
 test('episode card resolution is editable via a dropdown persisted to episodes.resolution', () => {
-  const page = read('app/views/drama/detail.vue')
+  const page = read('menus/drama/views/detail.vue')
 
   // ตัวเลือกความละเอียดบนการ์ดตอน (เมนูเดียวกับสถานะ) + persist ผ่าน episodeAPI.update
   assert.match(page, /epResMenuId/)
@@ -57,7 +57,7 @@ test('episode card resolution is editable via a dropdown persisted to episodes.r
 })
 
 test('add episode dialog does not preload config lists', () => {
-  const page = read('app/views/drama/detail.vue')
+  const page = read('menus/drama/views/detail.vue')
 
   assert.doesNotMatch(page, /loadConfigs/)
   assert.doesNotMatch(page, /aiConfigAPI\.list/)

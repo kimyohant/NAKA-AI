@@ -1,0 +1,232 @@
+{
+  "viralClone": {
+    "delete": {
+      "title": "Delete clone project",
+      "message": "Delete “{name}”? Its blueprint, variants and rendered videos will all be removed"
+    },
+    "eyebrow": "NAKA-AI TECH",
+    "title": "Viral Clone Studio",
+    "subtitle": "Clone a reference clip's structure into many ad variants — swap the hook, product, presenter and language, then render the whole batch",
+    "languages": {
+      "th": "Thai",
+      "en": "English"
+    },
+    "status": {
+      "draft": "Draft",
+      "analyzing": "Analyzing",
+      "ready": "Ready",
+      "error": "Error",
+      "queued": "Queued",
+      "rendering": "Rendering",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "list": {
+      "new": "New clone project",
+      "emptyTitle": "No clone projects yet",
+      "emptyDesc": "Turn a reference clip's structure into a batch of ad variants in one click",
+      "openAria": "Open project {name}",
+      "delete": "Delete project",
+      "deleted": "Project deleted",
+      "beats": "{n} beats",
+      "noBlueprint": "No blueprint yet"
+    },
+    "create": {
+      "title": "New clone project",
+      "desc": "Paste the reference clip's transcript and let AI split it into an editable blueprint",
+      "name": "Project name",
+      "namePlaceholder": "e.g. Serum ad clone",
+      "transcript": "Reference transcript",
+      "transcriptPlaceholder": "Paste the reference clip's spoken lines/captions, one sentence per line — the more complete, the better",
+      "language": "Primary language",
+      "reference": "Upload reference clip",
+      "referenceHint": "Optional — kept for side-by-side viewing in the project (the app never downloads from platforms)",
+      "referenceDone": "Reference clip attached",
+      "referenceRemove": "Remove reference clip",
+      "uploading": "Uploading…",
+      "licenseNotice": "Clone the structure, not the assets: only use videos/images/audio you own or are licensed to use, and check the destination platform's rules before publishing",
+      "submit": "Create project",
+      "creating": "Creating…",
+      "created": "Project created",
+      "needTranscript": "Transcript is required"
+    },
+    "work": {
+      "back": "Back",
+      "tabsLabel": "Project sections",
+      "tab_blueprint": "Blueprint",
+      "tab_variants": "Variants",
+      "tab_reference": "Reference",
+      "loadFailed": "Failed to load the project"
+    },
+    "roles": {
+      "hook": "Hook",
+      "demo": "Demo",
+      "proof": "Proof",
+      "offer": "Offer",
+      "cta": "CTA"
+    },
+    "visuals": {
+      "product": "Product",
+      "avatar": "Presenter",
+      "broll": "B-roll",
+      "text": "Text"
+    },
+    "blueprint": {
+      "panelTitle": "Split the clip into beats with AI",
+      "panelDesc": "AI reads the transcript and lays out word-anchored beats, plus spare hooks for A/B testing — everything stays editable afterwards",
+      "analyze": "Analyze transcript",
+      "analyzeStarted": "Analysis started — this page will update when it finishes",
+      "beats": "Beats",
+      "beatLinePlaceholder": "Spoken line / caption for this beat",
+      "beatSeconds": "Duration (seconds)",
+      "beatHintPlaceholder": "Visual description (e.g. app screen B-roll)",
+      "addBeat": "Add beat",
+      "removeBeat": "Remove beat",
+      "hooks": "Spare hooks",
+      "hooksHint": "Alternatives for the opening line — pick per variant",
+      "hookPlaceholder": "Add a new spare hook…",
+      "addHook": "Add",
+      "removeHook": "Remove hook",
+      "total": "Total {n}s",
+      "invalid": "Not ready to save — check every beat's role and duration",
+      "save": "Save blueprint",
+      "saved": "Blueprint saved",
+      "reanalyze": "Re-analyze",
+      "unsaved": "Unsaved changes",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
+    },
+    "variants": {
+      "needBlueprint": "A blueprint is required first — open the Blueprint tab and analyze",
+      "hooksLabel": "Hooks (none selected = keep the original)",
+      "productsLabel": "Products (from Product Studio)",
+      "productsEmpty": "No product projects yet — create one in Product Studio first",
+      "avatarsLabel": "Presenters (avatars)",
+      "avatarsEmpty": "No avatars yet — create one in Product Studio first",
+      "languagesLabel": "Languages (none selected = project's primary language)",
+      "countWill": "Will create {n} variants",
+      "overCap": "Over the {cap}-variant batch limit",
+      "create": "Create variants",
+      "created": "Created {n} variants",
+      "renderAll": "Render all",
+      "renderAllQueued": "Queued {n} renders",
+      "render": "Render",
+      "queuePosition": "Queue #{n}",
+      "duration": "{n}s",
+      "download": "Download",
+      "hookOriginal": "original hook",
+      "delete": "Delete variant",
+      "deleteTitle": "Delete variant",
+      "deleteMessage": "Delete variant “{label}”? Its rendered video will no longer be reachable here",
+      "deleted": "Variant deleted",
+      "noneYet": "No variants yet — pick hooks/products/languages and create",
+      "engineLabel": "Final render engine",
+      "engineNaka": "NAKA (ffmpeg + captions)",
+      "engineHypit": "Hypit (HyperFrames)",
+      "engineNakaHint": "Joins clips with ffmpeg and burns ASS captions — default",
+      "engineHypitHint": "Joins clips and draws captions with Hypit (headless Chromium) — falls back to the NAKA engine automatically on failure · Powered by Hypit (hypit.ai)",
+      "engineHypitUnavailable": "Hypit is not ready on this machine: {reason}",
+      "matrixTitle": "Build variants (matrix)",
+      "matrixHint": "Same structure throughout — only the chosen parts change",
+      "queueTitle": "Render queue",
+      "statAll": "{n} total",
+      "statBusy": "{n} running",
+      "statDone": "{n} done",
+      "statFailed": "{n} failed"
+    },
+    "reference": {
+      "transcriptTitle": "Transcript",
+      "transcriptHint": "Edit and save — used when analyzing the blueprint again",
+      "saveTranscript": "Save transcript",
+      "saved": "Transcript saved",
+      "videoTitle": "Reference clip",
+      "noVideo": "No reference clip attached"
+    },
+    "steps": {
+      "reference": "Reference",
+      "blueprint": "Blueprint",
+      "variants": "Variants",
+      "results": "Results",
+      "referenceSub": "Transcript",
+      "referenceSubVideo": "Transcript + clip",
+      "blueprintSub": "{n} beats · {s}s",
+      "variantsSub": "{n} variants",
+      "resultsSub": "{n} rendered"
+    },
+    "flow": {
+      "aria": "Clone workflow",
+      "reference": "Paste the transcript and attach the reference clip",
+      "blueprint": "AI splits word-anchored beats you can edit and preview",
+      "variants": "Swap hook, product, presenter and language as a matrix",
+      "results": "Render the whole batch with NAKA or Hypit"
+    },
+    "timeline": {
+      "title": "Timeline (anchored to words)",
+      "hint": "Each block is a beat — width follows its length, inside are the words its picture and captions anchor to. Click to edit.",
+      "aria": "Timeline of {n} beats, {s} seconds"
+    },
+    "preview": {
+      "title": "9:16 preview",
+      "play": "Play",
+      "pause": "Pause",
+      "prev": "Previous beat",
+      "next": "Next beat"
+    },
+    "captions": {
+      "title": "Captions",
+      "enabled": "Toggle captions",
+      "style": "Caption style",
+      "bold": "Bold outline",
+      "clean": "Soft shadow",
+      "boxed": "Boxed"
+    },
+    "results": {
+      "empty": "No rendered clips yet",
+      "goVariants": "Go to variants",
+      "poweredHypit": "Final render by Hypit (hypit.ai) · falls back to NAKA automatically when unavailable",
+      "poweredNaka": "Final render by the NAKA engine (ffmpeg + captions)"
+    },
+    "home": {
+      "statsAria": "Clone Studio overview",
+      "statProjects": "Clone projects",
+      "statVariants": "Total variants",
+      "statVariantsBusy": "{n} rendering now",
+      "statCompleted": "Clips rendered · {d} total",
+      "engineReady": "Hypit ready",
+      "engineReadyHint": "Render with NAKA or Hypit",
+      "engineNakaOnly": "NAKA",
+      "engineNakaOnlyHint": "Hypit is not installed on this machine",
+      "templatesTitle": "Start from a template",
+      "templatesSub": "Proven viral structures — pick one to create a project with a sample transcript, then make it yours",
+      "useTemplate": "Use this template",
+      "recentTitle": "Recently rendered",
+      "recentSub": "Across all projects — click a name to open its project",
+      "projectsTitle": "Your projects",
+      "variantProgress": "{done}/{total} variants done",
+      "seconds": "{n}s",
+      "minutes": "{n} min"
+    },
+    "templates": {
+      "ugcReview": {
+        "title": "UGC product review",
+        "desc": "A real person with the product: open with the pain, show the result, close with the offer — built for TikTok Shop",
+        "transcript": "Who else has dull skin? Hands up!\nI have used this for two weeks, morning and night. Light, absorbs fast, never sticky.\nLook at my face now. Brighter, and friends notice every day.\nToday it is half price with free shipping.\nTap the cart below — it sells out fast."
+      },
+      "podcast": {
+        "title": "Podcast debate",
+        "desc": "Two hosts argue on mic: a punchy first line, then evidence flips the argument",
+        "transcript": "You still skip protein in the morning? Are you serious?\nIt is not necessary. Breakfast fills me up.\nStudies say muscles repair best in the morning. I tried it for three months and I am clearly stronger.\nThirty seconds to mix. Done.\nLink in bio. Try it, then come back and argue."
+      },
+      "streetInterview": {
+        "title": "Street interview",
+        "desc": "Ask someone who looks successful and reveal the answer one rule at a time",
+        "transcript": "Quick question — what do you do to afford this car?\nI sell online. Started from zero.\nRule one: post every day. Rule two: test lots of hooks.\nRule three matters most: use a system that makes clips in bulk.\nWant to know which one? Check the first comment."
+      },
+      "ranking": {
+        "title": "Tier list ranking",
+        "desc": "Rank items one by one so viewers argue in the comments, ending on the top pick",
+        "transcript": "Ranking every sunscreen I have used. Disagree? Fight me.\nC tier: this one, a bit sticky.\nB tier: this one, light but wears off.\nS tier: this one. Feels like nothing, sweat and water proof.\nWhat is your number one? Comment below."
+      }
+    }
+  }
+}

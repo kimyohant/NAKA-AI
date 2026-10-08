@@ -8,21 +8,22 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { MARKETER_STEPS, VISUALS_STEP, VISUAL_KINDS, stepDone, suggestedStep } from '../app/utils/marketerFlow.js'
+import { MARKETER_STEPS, VISUALS_STEP, VISUAL_KINDS, stepDone, suggestedStep } from '../menus/marketer/utils/marketerFlow.js'
+import { loadLocale } from './_locales.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 const useApi = read('app/composables/useApi.ts')
-const workbench = read('app/views/marketer/campaign.vue')
+const workbench = read('menus/marketer/views/campaign.vue')
 const phase3Files = [
-  ['components/MarketerReferencePanel.vue', read('app/components/MarketerReferencePanel.vue')],
-  ['components/MarketerReferenceCard.vue', read('app/components/MarketerReferenceCard.vue')],
-  ['components/MarketerVisualCard.vue', read('app/components/MarketerVisualCard.vue')],
+  ['components/MarketerReferencePanel.vue', read('menus/marketer/components/MarketerReferencePanel.vue')],
+  ['components/MarketerReferenceCard.vue', read('menus/marketer/components/MarketerReferenceCard.vue')],
+  ['components/MarketerVisualCard.vue', read('menus/marketer/components/MarketerVisualCard.vue')],
 ]
 const allP3 = [['views/marketer/campaign.vue', workbench], ...phase3Files]
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const th = loadLocale('th')
+const en = loadLocale('en')
 
 test('marketerAPI implements every Phase 3 endpoint from PHASE3.md §2', () => {
   for (const m of ['addReference', 'updateReference', 'deleteReference', 'analyzeReference', 'generateVisuals', 'deleteVisual', 'promoteVisual']) {

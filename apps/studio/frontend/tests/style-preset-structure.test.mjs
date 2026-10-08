@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('project creation dialog only asks for title and visual style', () => {
-  const page = read('app/pages/index.vue')
+  const page = read('menus/drama/pages/index.vue')
 
   // dialog ผ่าน i18n ทั้งหมด (ตัวติดตั้งใหม่ไม่ hardcode จีน)
   assert.match(page, /t\('index\.createDialog\.title'\)/)

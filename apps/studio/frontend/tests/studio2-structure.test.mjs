@@ -8,26 +8,27 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isAutoRenderActive, autoRenderProgress, shotsWithoutCaptions, captionSourceOf } from '../app/utils/studioFlow.js'
+import { isAutoRenderActive, autoRenderProgress, shotsWithoutCaptions, captionSourceOf } from '../menus/product-studio/utils/studioFlow.js'
+import { loadLocale } from './_locales.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 
 const useApi = read('app/composables/useApi.ts')
-const workspace = read('app/views/studio/workspace.vue')
-const listPage = read('app/pages/studio.vue')
-const campaign = read('app/views/marketer/campaign.vue')
-const creativeCard = read('app/components/MarketerCreativeCard.vue')
-const fromCampaignDialog = read('app/components/StudioFromCampaignDialog.vue')
-const shotCard = read('app/components/StudioShotCard.vue')
+const workspace = read('menus/product-studio/views/workspace.vue')
+const listPage = read('menus/product-studio/pages/studio.vue')
+const campaign = read('menus/marketer/views/campaign.vue')
+const creativeCard = read('menus/marketer/components/MarketerCreativeCard.vue')
+const fromCampaignDialog = read('menus/product-studio/components/StudioFromCampaignDialog.vue')
+const shotCard = read('menus/product-studio/components/StudioShotCard.vue')
 const studioUiFiles = [
   ['views/studio/workspace.vue', workspace],
   ['pages/studio.vue', listPage],
   ['components/StudioFromCampaignDialog.vue', fromCampaignDialog],
   ['components/StudioShotCard.vue', shotCard],
 ]
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const th = loadLocale('th')
+const en = loadLocale('en')
 
 test('studioAPI implements the PHASE2 §2 endpoints', () => {
   for (const m of ['autoRender', 'cancelAutoRender', 'fromCampaign']) {
@@ -126,7 +127,7 @@ test('Phase 2 error codes are localized', () => {
 })
 
 test('Studio UI never uses the forbidden studio.* prefix', () => {
-  for (const [name, src] of [...studioUiFiles, ['components/StudioTemplateCard.vue', read('app/components/StudioTemplateCard.vue')], ['components/StudioTemplateGallery.vue', read('app/components/StudioTemplateGallery.vue')], ['components/StudioAvatarCard.vue', read('app/components/StudioAvatarCard.vue')], ['components/StudioImageCard.vue', read('app/components/StudioImageCard.vue')], ['components/StudioProductImages.vue', read('app/components/StudioProductImages.vue')]]) {
+  for (const [name, src] of [...studioUiFiles, ['components/StudioTemplateCard.vue', read('menus/product-studio/components/StudioTemplateCard.vue')], ['components/StudioTemplateGallery.vue', read('menus/product-studio/components/StudioTemplateGallery.vue')], ['components/StudioAvatarCard.vue', read('menus/product-studio/components/StudioAvatarCard.vue')], ['components/StudioImageCard.vue', read('menus/product-studio/components/StudioImageCard.vue')], ['components/StudioProductImages.vue', read('menus/product-studio/components/StudioProductImages.vue')]]) {
     assert.doesNotMatch(src, /\bt\('studio\./, `${name} uses the home-page studio.* prefix`)
     assert.doesNotMatch(src, /\bt\(`studio\./, `${name} uses the home-page studio.* prefix`)
   }

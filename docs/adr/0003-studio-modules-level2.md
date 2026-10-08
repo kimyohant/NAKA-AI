@@ -213,9 +213,9 @@ apps/studio-web/
 | **3** ✅ | `registerAgentTools()` ใน core + tools ของ marketer/product-studio ย้ายไป `modules/<menu>/agent-tools.ts` (ลงทะเบียนตอน import; Agent resolve tools ต่อ request) · `getActiveVideoProviderInfo` → `core/generation/video-provider.ts`, `waitForMergeCompletion` → `core/production/ffmpeg-merge.ts` · core → menu imports = 0 · tools ของ drama (script/extract/storyboard) อยู่ core ต่อเพราะทำงานกับตาราง production กลาง | 12 | กลาง | ✅ |
 | **4–8** ✅ | ย้ายทั้ง 6 เมนูเข้า `modules/<menu>/{routes,services}` + `index.ts` ต่อเมนู (StudioModule + public API), import ข้ามเมนูผ่าน index เท่านั้น — ทำใน commit เดียวเพราะไฟล์ที่ import กันทับซ้อนกันข้ามเมนู | 30 | กลาง | ✅ |
 | **9** ✅ | ใช้ `tests/module-boundaries.test.mjs` (ไม่ต้องเพิ่ม dependency) แทน dependency-cruiser — ตรวจ core→menu, ผ่าน index เท่านั้น, ทิศที่อนุญาต, ทุกเมนูลงทะเบียน; อยู่ใน Studio CI แล้ว | 1 | ต่ำ | ✅ |
-| **10** | Frontend: สร้าง layers + ย้าย (ทีละ layer ได้เหมือนกัน) | ~60 | กลาง | 3–4 วัน |
-| **11** | แยก locales ตามเมนู (สคริปต์) | 2→14 | ต่ำ | 0.5 วัน |
-| **12** | อัปเดต CLAUDE.md, openwiki, README ให้ตรงโครงใหม่ | — | ต่ำ | 0.5 วัน |
+| **10** ✅ | Frontend: 6 Nuxt layers ใน `frontend/menus/<menu>/` (ใช้ชื่อ `menus/` แทน `layers/` เพราะ Nuxt สแกน `layers/` อัตโนมัติ จะปิดเมนูด้วยรายการไม่ได้) · ย้าย 47 ไฟล์ · route ที่มี param อยู่ใน `menus/<menu>/routes.ts` · `MENUS` ใน `menus/index.ts` เป็นสวิตช์เดียว · ทดสอบ build + เปิดทุกหน้าในเบราว์เซอร์จริง | 47 | กลาง | ✅ |
+| **11** ✅ | locales: key ที่เมนูเดียวใช้ (episode/board/productionGuard, marketer, productStudio, seller, viralClone, live) ย้ายไป `menus/<menu>/locales`; key ที่ใช้ร่วม (common, detail, index, errors, …) อยู่ `app/locales`; ตรวจแล้วว่ารวมกลับได้ครบไม่หาย และ UI ไม่มี key ดิบทั้ง th/en | 2→14 | ต่ำ | ✅ |
+| **12** ◐ | CLAUDE.md อัปเดตแล้ว · openwiki ยังอ้าง path เก่า (สร้างอัตโนมัติ — ให้ openwiki อัปเดตเอง) | — | ต่ำ | |
 
 **รวมประมาณ 2.5–3 สัปดาห์** (คนเดียว + AI agent)
 

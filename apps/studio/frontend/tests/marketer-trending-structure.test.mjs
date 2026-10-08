@@ -7,16 +7,17 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { loadLocale } from './_locales.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
-const section = read('app/components/MarketerTrendingSection.vue')
-const card = read('app/components/MarketerTrendingCard.vue')
-const listPage = read('app/pages/marketer.vue')
+const section = read('menus/marketer/components/MarketerTrendingSection.vue')
+const card = read('menus/marketer/components/MarketerTrendingCard.vue')
+const listPage = read('menus/marketer/pages/marketer.vue')
 const useApi = read('app/composables/useApi.ts')
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const th = loadLocale('th')
+const en = loadLocale('en')
 const backendTrending = new URL('../backend/src/modules/marketer/routes/trending.ts', root)
 
 test('trending section is wired into the marketer list page', () => {

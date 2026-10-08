@@ -6,17 +6,18 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { composeChannel, parseHashtags, postLink, SELLER_CHANNELS, CHANNEL_POST_URLS } from '../app/utils/sellerCopy.js'
+import { composeChannel, parseHashtags, postLink, SELLER_CHANNELS, CHANNEL_POST_URLS } from '../menus/seller/utils/sellerCopy.js'
+import { loadLocale } from './_locales.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 const useApi = read('app/composables/useApi.ts')
 const routes = read('../backend/src/modules/seller/routes/seller.ts')
 const layout = read('app/layouts/default.vue')
-const nuxtConfig = read('nuxt.config.ts')
-const workspace = read('app/views/seller/workspace.vue')
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const nuxtConfig = read('nuxt.config.ts') + read('menus/index.ts') + read('menus/seller/routes.ts')
+const workspace = read('menus/seller/views/workspace.vue')
+const th = loadLocale('th')
+const en = loadLocale('en')
 
 test('sellerAPI calls exactly the backend seller routes', () => {
   const block = useApi.slice(useApi.indexOf('export const sellerAPI'))
@@ -38,7 +39,7 @@ test('main menu: every module except the Skills Library; AI Seller is the app ho
   assert.match(nuxtConfig, /pages\.push\(\{ path: '\/', redirect: '\/seller' \}\)/)
   assert.match(nuxtConfig, /dramaHome\.path = '\/drama'/)
   // หน้าแรกของ AI นักขายแนวคลังสกิล: hero + ค้นหา + ชิปหมวด + การ์ดสกิล
-  const home = read('app/pages/seller.vue')
+  const home = read('menus/seller/pages/seller.vue')
   for (const need of ['sh-hero', 'v-model="query"', 'sh-chip', '<StudioSkillCard', '@use="useSkill(tpl)"', 'studioAPI.templates()']) {
     assert.ok(home.includes(need), `seller home missing ${need}`)
   }
@@ -77,8 +78,8 @@ test('composeChannel / parseHashtags / postLink', () => {
 })
 
 test('skills library is built into AI Seller (skill → Studio video → attached to the post)', () => {
-  const skillVideo = read('app/components/SellerSkillVideo.vue')
-  const list = read('app/pages/seller.vue')
+  const skillVideo = read('menus/seller/components/SellerSkillVideo.vue')
+  const list = read('menus/seller/pages/seller.vue')
   assert.match(workspace, /<SellerSkillVideo/)
   assert.match(workspace, /:before-start="save"/)
   assert.match(workspace, /route\.query\.skill/)

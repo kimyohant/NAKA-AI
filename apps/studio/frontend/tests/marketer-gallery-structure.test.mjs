@@ -5,16 +5,17 @@
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { loadLocale } from './_locales.mjs'
 
 const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
-const view = read('app/views/marketer/gallery.vue')
-const listPage = read('app/pages/marketer.vue')
-const nuxtConfig = read('nuxt.config.ts')
+const view = read('menus/marketer/views/gallery.vue')
+const listPage = read('menus/marketer/pages/marketer.vue')
+const nuxtConfig = read('nuxt.config.ts') + read('menus/index.ts') + read('menus/marketer/routes.ts')
 const useApi = read('app/composables/useApi.ts')
-const th = JSON.parse(read('app/locales/th.json'))
-const en = JSON.parse(read('app/locales/en.json'))
+const th = loadLocale('th')
+const en = loadLocale('en')
 const backendRoute = new URL('../backend/src/modules/marketer/routes/gallery.ts', root)
 
 test('gallery route registered before /marketer/:id + reachable from the marketer page', () => {
@@ -23,7 +24,7 @@ test('gallery route registered before /marketer/:id + reachable from the markete
   assert.ok(galleryIdx !== -1, 'marketer-gallery route missing')
   assert.ok(campaignIdx !== -1)
   assert.ok(galleryIdx < campaignIdx, '/marketer/gallery must be registered BEFORE /marketer/:id (first-match)')
-  assert.match(nuxtConfig, /views\/marketer\/gallery\.vue/)
+  assert.match(nuxtConfig, /view: 'views\/gallery\.vue'/)
   assert.match(listPage, /navigateTo\('\/marketer\/gallery'\)/)
 })
 

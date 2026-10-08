@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-const page = readFileSync(new URL('../app/pages/index.vue', import.meta.url), 'utf8')
+const page = readFileSync(new URL('../menus/drama/pages/index.vue', import.meta.url), 'utf8')
 const studioCss = readFileSync(new URL('../app/assets/studio.css', import.meta.url), 'utf8')
 
 test('project list opens project detail before choosing an episode', () => {

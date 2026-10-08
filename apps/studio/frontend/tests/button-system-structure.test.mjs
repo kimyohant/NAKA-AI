@@ -3,13 +3,13 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
 const studioCss = readFileSync(new URL('../app/assets/studio.css', import.meta.url), 'utf8')
-const indexPage = readFileSync(new URL('../app/pages/index.vue', import.meta.url), 'utf8')
+const indexPage = readFileSync(new URL('../menus/drama/pages/index.vue', import.meta.url), 'utf8')
 const defaultLayout = readFileSync(new URL('../app/layouts/default.vue', import.meta.url), 'utf8')
 const baseSelect = readFileSync(new URL('../app/components/BaseSelect.vue', import.meta.url), 'utf8')
 const appMenu = readFileSync(new URL('../app/components/AppMenu.vue', import.meta.url), 'utf8')
 const appMenuItem = readFileSync(new URL('../app/components/AppMenuItem.vue', import.meta.url), 'utf8')
-const dramaDetail = readFileSync(new URL('../app/views/drama/detail.vue', import.meta.url), 'utf8')
-const episodeWorkbench = readFileSync(new URL('../app/views/drama/episode.vue', import.meta.url), 'utf8')
+const dramaDetail = readFileSync(new URL('../menus/drama/views/detail.vue', import.meta.url), 'utf8')
+const episodeWorkbench = readFileSync(new URL('../menus/drama/views/episode.vue', import.meta.url), 'utf8')
 
 test('global button system exposes complete button tokens and states', () => {
   assert.match(studioCss, /--button-height:\s*36px/)
