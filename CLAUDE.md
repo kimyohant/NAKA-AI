@@ -72,7 +72,7 @@ Single SQLite file (default `data/naka.sqlite3`; in userData for the desktop app
 
 ### Issue tracker
 
-Issues live in GitHub Issues on `kimyohant/naka-drama-studio` (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
+Issues and specs live as local markdown files under `.scratch/<feature>/`. Older issues stay on GitHub (`kimyohant/naka-drama-studio`) as history. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
