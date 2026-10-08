@@ -2,10 +2,9 @@
  * Seed scratch DB สำหรับ smoke test gallery (รัน: npx tsx tests/gallery-seed.ts)
  * สร้าง campaign + creative (approved/in_production) เพื่อทดสอบ GET /gallery + PUT result
  */
-process.env.SQLITE_PATH = process.env.SQLITE_PATH || 'data/gallery-smoke.sqlite3'
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'pglite://data/gallery-smoke'
 
-const { db, schema } = await import('../src/core/db/index.js')
-const { eq } = await import('drizzle-orm')
+const { db, schema, insertedId, closeDb } = await import('../src/core/db/index.js')
 
 const ts = new Date().toISOString()
 const res = await db.insert(schema.campaigns).values({
@@ -20,8 +19,8 @@ const res = await db.insert(schema.campaigns).values({
   dramaId: 1,
   createdAt: ts,
   updatedAt: ts,
-})
-const campaignId = Number(res.lastInsertRowid)
+}).returning({ id: schema.campaigns.id })
+const campaignId = insertedId(res)
 
 for (const c of [
   { angle: 'POV วัยรุ่นรีวิวโทนเนอร์', hook: 'หน้ามันทั้งวัน?', status: 'in_production', episodeId: 7, episodeNumber: 1 },
@@ -43,5 +42,6 @@ for (const c of [
   })
 }
 
-console.log(`seeded campaign ${campaignId} + 2 creatives at ${process.env.SQLITE_PATH}`)
+console.log(`seeded campaign ${campaignId} + 2 creatives at ${process.env.DATABASE_URL}`)
+await closeDb()
 process.exit(0)

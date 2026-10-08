@@ -1,18 +1,14 @@
 /**
  * Creative Gallery & Ad Analytics — unit tests (docs/ai-marketer/GALLERY.md)
- * env ก่อน import services (pattern เดียวกับ clone-pipeline) — SQLITE_PATH ชี้ DB ชั่วคราว
+ * env ก่อน import services (pattern เดียวกับ clone-pipeline) — DATABASE_URL=pglite://memory
  */
 import assert from 'node:assert/strict'
-import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
 import { test } from 'node:test'
-import Database from 'better-sqlite3'
 
-const dir = mkdtempSync(path.join(tmpdir(), 'naka-gallery-test-'))
 process.env.DATABASE_URL = 'pglite://memory'
 
-const { db, schema } = await import('../src/core/db/index.js')
+const { db, schema, insertedId } = await import('../src/core/db/index.js')
+const { sqlite } = await import('./_sql.js')
 const gallery = await import('../src/modules/marketer/services/gallery.js')
 const marketer = await import('../src/modules/marketer/services/marketer.js')
 const { eq } = await import('drizzle-orm')
@@ -32,8 +28,8 @@ async function seedCampaign(overrides: Record<string, unknown> = {}) {
     createdAt: ts(),
     updatedAt: ts(),
     ...overrides,
-  })
-  const [row] = await db.select().from(schema.campaigns).where(eq(schema.campaigns.id, Number(res.lastInsertRowid)))
+  }).returning({ id: schema.campaigns.id })
+  const [row] = await db.select().from(schema.campaigns).where(eq(schema.campaigns.id, insertedId(res)))
   return row
 }
 
@@ -50,17 +46,18 @@ async function seedCreative(campaignId: number, overrides: Record<string, unknow
     createdAt: ts(),
     updatedAt: ts(),
     ...overrides,
-  })
-  const [row] = await db.select().from(schema.campaignCreatives).where(eq(schema.campaignCreatives.id, Number(res.lastInsertRowid)))
+  }).returning({ id: schema.campaignCreatives.id })
+  const [row] = await db.select().from(schema.campaignCreatives).where(eq(schema.campaignCreatives.id, insertedId(res)))
   return row
 }
 
-test('migration v16: ตาราง creative_results มี UNIQUE(creative_id) และ init ซ้ำได้', async () => {
-    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
-  initSqliteSchema(sqlite) // รีเพลย์ต้องเงียบ ๆ ผ่าน
-  const ddl = sqlite.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'creative_results'").get() as { sql: string }
-  assert.match(ddl.sql, /creative_id INTEGER NOT NULL UNIQUE/)
-  sqlite.close()
+test('schema: ตาราง creative_results มี creative_id NOT NULL + UNIQUE(creative_id)', async () => {
+  assert.ok((await sqlite.columns('creative_results')).includes('creative_id'))
+  assert.ok((await sqlite.uniques('creative_results')).includes('creative_id'), 'UNIQUE (creative_id) missing')
+  const [col] = await sqlite.prepare(
+    "SELECT is_nullable FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'creative_results' AND column_name = 'creative_id'",
+  ).all()
+  assert.equal(col.is_nullable, 'NO')
 })
 
 test('listGalleryEntries: เอาเฉพาะ approved/in_production ของ campaign ที่ยังไม่ลบ + สรุปถูกต้อง', async () => {
