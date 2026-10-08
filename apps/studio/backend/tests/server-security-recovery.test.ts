@@ -5,8 +5,6 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import Database from 'better-sqlite3'
-import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
 
 async function listen(server: ReturnType<typeof createServer>): Promise<number> {
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
@@ -17,7 +15,8 @@ async function listen(server: ReturnType<typeof createServer>): Promise<number> 
 
 test('server masks saved keys and resumes provider polling without a new submission', { timeout: 60_000 }, async () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'naka-server-test-'))
-  const dbPath = path.join(directory, 'test.sqlite3')
+  // a PGlite data dir: seeded here, then opened by the server child (one process at a time)
+  const databaseUrl = `pglite://${path.join(directory, 'db')}`
   const requests: string[] = []
   const provider = createServer((req, res) => {
     requests.push(req.url || '')
@@ -28,24 +27,25 @@ test('server masks saved keys and resumes provider polling without a new submiss
   const portHolder = createServer()
   const appPort = await listen(portHolder)
   await new Promise<void>(resolve => portHolder.close(() => resolve()))
-  const sqlite = new Database(dbPath)
-  initSqliteSchema(sqlite)
+  process.env.DATABASE_URL = databaseUrl
+  const { closeDb } = await import('../src/core/db/index.js')
+  const { sqlite } = await import('./_sql.js')
   const ts = new Date().toISOString()
-  sqlite.prepare("INSERT INTO ai_service_configs (service_type, provider, name, base_url, api_key, model, is_active, created_at, updated_at) VALUES ('video', 'wancreate', 'Mock Wan', ?, 'synthetic-test-secret', '[\"wan2.7\"]', 1, ?, ?)")
+  await sqlite.prepare("INSERT INTO ai_service_configs (service_type, provider, name, base_url, api_key, model, is_active, created_at, updated_at) VALUES ('video', 'wancreate', 'Mock Wan', ?, 'synthetic-test-secret', '[\"wan2.7\"]', true, ?, ?)")
     .run(`http://127.0.0.1:${providerPort}`, ts, ts)
-  sqlite.prepare("INSERT INTO sys_task (type, provider, config_id, prompt, status, created_at, updated_at) VALUES ('video', 'wancreate', 1, 'test', 'submitting', ?, ?)").run(ts, ts)
-  sqlite.prepare("INSERT INTO sys_task (type, provider, config_id, prompt, status, task_id, created_at, updated_at) VALUES ('video', 'wancreate', 1, 'test', 'processing', 'provider-123', ?, ?)").run(ts, ts)
-  sqlite.prepare("INSERT INTO storyboards (episode_id, storyboard_number, video_prompt, created_at, updated_at) VALUES (1, 1, 'test shot', ?, ?)").run(ts, ts)
-  sqlite.prepare("INSERT INTO characters (drama_id, name, image_url, created_at, updated_at) VALUES (1, 'Actor', 'static/images/base.png', ?, ?)").run(ts, ts)
-  sqlite.exec('INSERT INTO storyboard_characters (storyboard_id, character_id) VALUES (1, 1)')
-  sqlite.prepare("INSERT INTO character_looks (character_id, name, created_at, updated_at) VALUES (1, 'Blue coat', ?, ?)").run(ts, ts)
-  sqlite.prepare("INSERT INTO sys_task (type, storyboard_id, status, local_path, params, created_at, updated_at) VALUES ('image', 1, 'completed', 'static/images/candidate.png', '{}', ?, ?)").run(ts, ts)
-  sqlite.close()
+  await sqlite.prepare("INSERT INTO sys_task (type, provider, config_id, prompt, status, created_at, updated_at) VALUES ('video', 'wancreate', 1, 'test', 'submitting', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO sys_task (type, provider, config_id, prompt, status, task_id, created_at, updated_at) VALUES ('video', 'wancreate', 1, 'test', 'processing', 'provider-123', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO storyboards (episode_id, storyboard_number, video_prompt, created_at, updated_at) VALUES (1, 1, 'test shot', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO characters (drama_id, name, image_url, created_at, updated_at) VALUES (1, 'Actor', 'static/images/base.png', ?, ?)").run(ts, ts)
+  await sqlite.exec('INSERT INTO storyboard_characters (storyboard_id, character_id) VALUES (1, 1)')
+  await sqlite.prepare("INSERT INTO character_looks (character_id, name, created_at, updated_at) VALUES (1, 'Blue coat', ?, ?)").run(ts, ts)
+  await sqlite.prepare("INSERT INTO sys_task (type, storyboard_id, status, local_path, params, created_at, updated_at) VALUES ('image', 1, 'completed', 'static/images/candidate.png', '{}', ?, ?)").run(ts, ts)
+  await closeDb()
 
   const backendDir = path.resolve(import.meta.dirname, '..')
   const child = spawn(process.execPath, [path.join(backendDir, 'node_modules/tsx/dist/cli.mjs'), 'src/index.ts'], {
     cwd: backendDir,
-    env: { ...process.env, SQLITE_PATH: dbPath, PORT: String(appPort), NAKA_HOST: '127.0.0.1', NAKA_AUTH_USER: 'test-user', NAKA_AUTH_PASSWORD: 'test-password' },
+    env: { ...process.env, DATABASE_URL: databaseUrl, PORT: String(appPort), NAKA_HOST: '127.0.0.1', NAKA_AUTH_USER: 'test-user', NAKA_AUTH_PASSWORD: 'test-password' },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let output = ''
