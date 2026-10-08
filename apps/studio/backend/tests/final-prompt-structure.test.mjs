@@ -54,8 +54,8 @@ test('prompt agent instructions reference per-asset skills; skill files define t
 
 test('image generation prefers the stored final prompt with agent generation and legacy fallback', () => {
   const service = read('src/core/generation/final-prompt.ts')
-  const characters = read('src/routes/characters.ts')
-  const scenes = read('src/routes/scenes.ts')
+  const characters = read('src/modules/drama/routes/characters.ts')
+  const scenes = read('src/modules/drama/routes/scenes.ts')
 
   assert.match(service, /export async function ensureCharacterFinalPrompt/)
   assert.match(service, /export async function ensureSceneFinalPrompt/)

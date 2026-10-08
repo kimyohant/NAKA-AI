@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('characters route supports manual create and soft delete', () => {
-  const route = read('src/routes/characters.ts')
+  const route = read('src/modules/drama/routes/characters.ts')
 
   assert.match(route, /app\.post\('\/'/)
   assert.match(route, /名称必填/)
@@ -19,7 +19,7 @@ test('characters route supports manual create and soft delete', () => {
 })
 
 test('scenes route links new scenes to episode and soft deletes', () => {
-  const route = read('src/routes/scenes.ts')
+  const route = read('src/modules/drama/routes/scenes.ts')
 
   assert.match(route, /app\.post\('\/'/)
   assert.match(route, /地点必填/)
@@ -31,7 +31,7 @@ test('scenes route links new scenes to episode and soft deletes', () => {
 })
 
 test('props route supports manual create and soft delete', () => {
-  const route = read('src/routes/props.ts')
+  const route = read('src/modules/drama/routes/props.ts')
 
   assert.match(route, /app\.post\('\/'/)
   assert.match(route, /名称必填/)

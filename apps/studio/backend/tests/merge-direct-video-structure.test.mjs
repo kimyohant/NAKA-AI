@@ -4,9 +4,10 @@ import assert from 'node:assert/strict'
 import { hasFrontend, readFrontend } from './_frontend.mjs'
 
 const mergeService = readFileSync(new URL('../src/core/production/ffmpeg-merge.ts', import.meta.url), 'utf8')
-const episodesRoute = readFileSync(new URL('../src/routes/episodes.ts', import.meta.url), 'utf8')
+const episodesRoute = readFileSync(new URL('../src/modules/drama/routes/episodes.ts', import.meta.url), 'utf8')
 const backendIndex = readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8')
   + readFileSync(new URL('../src/modules.ts', import.meta.url), 'utf8')
+  + readFileSync(new URL('../src/modules/drama/index.ts', import.meta.url), 'utf8')
 const useApi = hasFrontend ? readFrontend('app/composables/useApi.ts') : ''
 const composeRoutePath = new URL('../src/routes/compose.ts', import.meta.url)
 const composeServicePath = new URL('../src/services/ffmpeg-compose.ts', import.meta.url)

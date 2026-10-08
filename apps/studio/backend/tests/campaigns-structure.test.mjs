@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('campaigns route implements the full API contract', () => {
-  const route = read('src/routes/campaigns.ts')
+  const route = read('src/modules/marketer/routes/campaigns.ts')
 
   // CRUD
   assert.match(route, /app\.get\('\/'/)
@@ -31,8 +31,8 @@ test('campaigns route implements the full API contract', () => {
   assert.match(route, /E_INGEST_FAILED/)
   assert.match(route, /mode 只支持 replace \/ append/)
   // 挂载
-  assert.match(read('src/index.ts') + read('src/modules.ts'), /api\.route\('\/campaigns', campaigns\)/)
-  assert.match(read('src/index.ts') + read('src/modules.ts'), /failStaleCampaigns/)
+  assert.match(['src/index.ts', 'src/modules.ts', ...['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live'].map(m => `src/modules/${m}/index.ts`)].map(read).join('\n'), /api\.route\('\/campaigns', campaigns\)/)
+  assert.match(['src/index.ts', 'src/modules.ts', ...['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live'].map(m => `src/modules/${m}/index.ts`)].map(read).join('\n'), /failStaleCampaigns/)
 })
 
 test('product-ingest enforces SSRF guards via safe-fetch', () => {
@@ -54,7 +54,7 @@ test('product-ingest enforces SSRF guards via safe-fetch', () => {
 })
 
 test('marketer service guards async jobs and reuses pipeline tasks', () => {
-  const service = read('src/services/marketer.ts')
+  const service = read('src/modules/marketer/services/marketer.ts')
   assert.match(service, /E_CAMPAIGN_BUSY/)
   assert.match(service, /E_STRATEGY_NEEDS_RESEARCH/)
   assert.match(service, /E_CREATIVES_NEED_STRATEGY/)
@@ -82,7 +82,7 @@ test('marketer service guards async jobs and reuses pipeline tasks', () => {
   assert.match(service, /referenceImages: JSON\.stringify\(images\)/)
   assert.match(service, /db\.insert\(schema\.episodeProps\)/)
   // prop 生图路由把参考图传给生成任务
-  assert.match(read('src/routes/props.ts'), /referenceImages/)
+  assert.match(read('src/modules/drama/routes/props.ts'), /referenceImages/)
 })
 
 test('marketer agents are registered with tools, prompts and skills', () => {
@@ -98,7 +98,7 @@ test('marketer agents are registered with tools, prompts and skills', () => {
   assert.match(tools, /marketerTools\.readCampaign/)
   assert.match(tools, /marketerTools\.saveCampaignDoc/)
   assert.match(tools, /marketerTools\.saveCreatives/)
-  assert.match(read('src/services/marketer.ts'), /from '\.\.\/modules\/marketer\/agent-tools\.js'/)
+  assert.match(read('src/modules/marketer/services/marketer.ts'), /from '\.\.\/agent-tools\.js'/)
 
   const skills = read('src/core/agents/skills.ts')
   assert.match(skills, /market_researcher: \['market-researcher'\]/)

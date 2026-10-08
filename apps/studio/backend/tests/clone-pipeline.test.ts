@@ -24,7 +24,7 @@ process.env.STORAGE_PATH = path.join(dir, 'static')
 const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 const { db, schema } = await import('../src/core/db/index.js')
 const { now, AppError } = await import('../src/core/http/response.js')
-const clone = await import('../src/services/clone.js')
+const clone = await import('../src/modules/viral-clone/services/clone.js')
 const { failStaleRunningTasks, RESUMABLE_PIPELINE_KINDS } = await import('../src/core/tasks/pipeline-tasks.js')
 const { mastra } = await import('../src/core/mastra/index.js')
 

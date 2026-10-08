@@ -13,8 +13,8 @@ const dir = mkdtempSync(path.join(tmpdir(), 'naka-gallery-test-'))
 process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
 
 const { db, schema } = await import('../src/core/db/index.js')
-const gallery = await import('../src/services/gallery.js')
-const marketer = await import('../src/services/marketer.js')
+const gallery = await import('../src/modules/marketer/services/gallery.js')
+const marketer = await import('../src/modules/marketer/services/marketer.js')
 const { eq } = await import('drizzle-orm')
 
 const ts = () => new Date().toISOString()

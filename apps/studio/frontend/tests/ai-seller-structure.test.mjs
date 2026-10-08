@@ -11,7 +11,7 @@ import { composeChannel, parseHashtags, postLink, SELLER_CHANNELS, CHANNEL_POST_
 const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 const useApi = read('app/composables/useApi.ts')
-const routes = read('../backend/src/routes/seller.ts')
+const routes = read('../backend/src/modules/seller/routes/seller.ts')
 const layout = read('app/layouts/default.vue')
 const nuxtConfig = read('nuxt.config.ts')
 const workspace = read('app/views/seller/workspace.vue')

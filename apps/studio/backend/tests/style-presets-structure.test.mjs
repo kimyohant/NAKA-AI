@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('drama creation no longer pre-creates episodes from total_episodes', () => {
-  const dramas = read('src/routes/dramas.ts')
+  const dramas = read('src/modules/drama/routes/dramas.ts')
 
   assert.doesNotMatch(dramas, /total_episodes \|\| 1/)
   assert.doesNotMatch(dramas, /第\$\{i\}集/)
@@ -14,7 +14,7 @@ test('drama creation no longer pre-creates episodes from total_episodes', () => 
 })
 
 test('drama creation records a fixed aspect ratio for video generation', () => {
-  const dramas = read('src/routes/dramas.ts')
+  const dramas = read('src/modules/drama/routes/dramas.ts')
 
   assert.match(dramas, /aspectRatio: body\.aspect_ratio \|\| '16:9'/)
   assert.match(dramas, /if \(body\.aspect_ratio !== undefined\) updates\.aspectRatio = body\.aspect_ratio/)
@@ -40,8 +40,8 @@ test('style presets route is mounted and implements CRUD', () => {
 test('drama style prompt is injected into image prompt composition', () => {
   const service = read('src/core/generation/style-preset.ts')
   const gridTools = read('src/core/agents/tools/image-prompt-tools.ts')
-  const characters = read('src/routes/characters.ts')
-  const scenes = read('src/routes/scenes.ts')
+  const characters = read('src/modules/drama/routes/characters.ts')
+  const scenes = read('src/modules/drama/routes/scenes.ts')
 
   assert.match(service, /getDramaStylePrompt/)
   assert.match(service, /stylePresets\.value, drama\.style/)

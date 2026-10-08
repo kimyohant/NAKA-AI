@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { buildHypitComposition, layoutClipFrames, wrapCaptionLines } from '../src/services/hypit-render.ts'
+import { buildHypitComposition, layoutClipFrames, wrapCaptionLines } from '../src/modules/viral-clone/services/hypit-render.ts'
 
 test('layoutClipFrames places clips back to back on whole frames', () => {
   assert.deepEqual(layoutClipFrames([{ durationSec: 3 }, { durationSec: 2.51 }, { durationSec: 0.01 }]), [

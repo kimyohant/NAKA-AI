@@ -18,7 +18,7 @@ test('backend removes the voice assignment agent and tools', () => {
 })
 
 test('backend removes audio service providers, TTS adapters, and voice routes', () => {
-  const index = read('src/index.ts') + read('src/modules.ts')
+  const index = ['src/index.ts', 'src/modules.ts', ...['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live'].map(m => `src/modules/${m}/index.ts`)].map(read).join('\n')
   const ai = read('src/core/ai/ai.ts')
   const registry = read('src/core/ai/adapters/registry.ts')
   const types = read('src/core/ai/adapters/types.ts')
@@ -37,9 +37,9 @@ test('backend removes audio service providers, TTS adapters, and voice routes', 
 })
 
 test('backend removes TTS endpoints and audio-specific schema fields', () => {
-  const episodes = read('src/routes/episodes.ts')
-  const storyboards = read('src/routes/storyboards.ts')
-  const characters = read('src/routes/characters.ts')
+  const episodes = read('src/modules/drama/routes/episodes.ts')
+  const storyboards = read('src/modules/drama/routes/storyboards.ts')
+  const characters = read('src/modules/drama/routes/characters.ts')
   const schema = read('src/core/db/schema.ts')
 
   assert.doesNotMatch(episodes, /audio_config_id/)

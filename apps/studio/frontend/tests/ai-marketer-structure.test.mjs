@@ -1,7 +1,7 @@
 /**
  * AI Marketer — structure & contract tests
  *
- * ตรวจว่า frontend เรียก API ตรงกับ route จริงของ backend (backend/src/routes/campaigns.ts,
+ * ตรวจว่า frontend เรียก API ตรงกับ route จริงของ backend (backend/src/modules/marketer/routes/campaigns.ts,
  * สัญญาใน docs/ai-marketer/PLAN.md ข้อ 4), ไม่มี hardcoded UI text, ไม่มี mock data,
  * และ locale th/en มี key ครบสมมาตรกัน (marketer.* + errors.codes ที่ backend ส่งจริง)
  */
@@ -23,7 +23,7 @@ const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
 const uiFiles = [['pages/marketer.vue', listPage], ['views/marketer/campaign.vue', workbench], ...components]
 
-const backendRoutesUrl = new URL('../backend/src/routes/campaigns.ts', root)
+const backendRoutesUrl = new URL('../backend/src/modules/marketer/routes/campaigns.ts', root)
 const phase3DocUrl = new URL('../docs/ai-marketer/PHASE3.md', root)
 
 /** Phase 3 contract (PHASE3.md §2) — backend อยู่บน feat/p3-backend ซึ่งทำขนานกันอยู่

@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('Phase 3 routes: ad references + visuals ครบตาม PHASE3 ข้อ 2', () => {
-  const route = read('src/routes/campaigns.ts')
+  const route = read('src/modules/marketer/routes/campaigns.ts')
 
   // Ad references CRUD + analyze
   assert.match(route, /app\.post\('\/:id\/references'/)
@@ -20,7 +20,7 @@ test('Phase 3 routes: ad references + visuals ครบตาม PHASE3 ข้�
 
   // error codes ใหม่ตามสัญญา
   assert.match(route, /E_REFERENCE_NOT_ANALYZED/) // ใน service แต่ route ต้องส่งต่อ errorCode
-  const service = read('src/services/marketer.ts')
+  const service = read('src/modules/marketer/services/marketer.ts')
   assert.match(service, /E_REFERENCE_NOT_ANALYZED/)
   assert.match(service, /E_VISUAL_NOT_READY/)
   assert.match(service, /E_NO_IMAGE_MODEL/)
@@ -81,12 +81,12 @@ test('ad_scriptwriter รู้จักบล็อก reference (recreate mode
   // save_creatives บันทึก reference_id จาก request context
   const tools = read('src/modules/marketer/agent-tools.ts')
   assert.match(tools, /referenceId: \(rc\?\.get\('referenceId' as never\) as number \| undefined\) \?\? null/)
-  const service = read('src/services/marketer.ts')
+  const service = read('src/modules/marketer/services/marketer.ts')
   assert.match(service, /referenceId: reference\?\.id/)
 })
 
 test('product visuals อ่านสดจาก sys_task และไม่แตะ write-back ของ generation.ts', () => {
-  const service = read('src/services/marketer.ts')
+  const service = read('src/modules/marketer/services/marketer.ts')
   // อ่าน status/imageUrl จาก sys_task (ไม่เก็บซ้ำใน campaign_visuals)
   assert.match(service, /schema\.sysTask/)
   assert.match(service, /visualStatusFromTask/)

@@ -17,7 +17,7 @@ const listPage = read('app/pages/marketer.vue')
 const useApi = read('app/composables/useApi.ts')
 const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
-const backendTrending = new URL('../backend/src/routes/trending.ts', root)
+const backendTrending = new URL('../backend/src/modules/marketer/routes/trending.ts', root)
 
 test('trending section is wired into the marketer list page', () => {
   assert.match(listPage, /<MarketerTrendingSection/)
@@ -35,7 +35,7 @@ test('trending client matches the backend route (GET /trending-videos only)', { 
   assert.doesNotMatch(useApi, /\/trending-videos[^`']*['`]?\s*,\s*\{/)
 
   // service ฝั่ง backend เป็น static seed — ห้ามมี scraper
-  const service = read('../backend/src/services/trending.ts')
+  const service = read('../backend/src/modules/marketer/services/trending.ts')
   assert.doesNotMatch(service, /fetch\(|axios|playwright|puppeteer/)
 })
 

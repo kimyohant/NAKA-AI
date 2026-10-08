@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import {
   STUDIO_TEMPLATES, getStudioTemplate, scaleBeats, templateDurationSec,
   STUDIO_LANGUAGES, STUDIO_MARKETS, STUDIO_PLATFORMS,
-} from '../src/services/studio-templates.js'
+} from '../src/modules/product-studio/services/studio-templates.js'
 
 /**
  * ชื่อ role ต้องตรงกับ "รายการที่ Agent B ส่งมา" (frontend แปลผ่าน

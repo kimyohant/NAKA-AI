@@ -23,7 +23,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       # naka-sso.test.ts also checks the contract against apps/landing/src/auth/studio.ts (same checkout)
-      - run: npx tsx --test tests/sqlite-migration-backup.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts
+      - run: npx tsx --test tests/sqlite-migration-backup.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts tests/module-boundaries.test.mjs
 
   admin:
     runs-on: ubuntu-latest

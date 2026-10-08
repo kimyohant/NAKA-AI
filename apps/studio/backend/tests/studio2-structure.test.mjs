@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('studio phase2 routes ครบ + mount', () => {
-  const route = read('src/routes/studio.ts')
+  const route = read('src/modules/product-studio/routes/studio.ts')
   assert.match(route, /app\.post\('\/projects\/:id\/auto-render'/)
   assert.match(route, /app\.post\('\/projects\/:id\/auto-render\/cancel'/)
   assert.match(route, /app\.post\('\/projects\/from-campaign'/)
@@ -14,13 +14,13 @@ test('studio phase2 routes ครบ + mount', () => {
   assert.match(route, /app\.post\('\/projects\/:id\/merge'/)
   // 202 สำหรับ auto-render
   assert.match(route, /202/)
-  const index = read('src/index.ts') + read('src/modules.ts')
+  const index = ['src/index.ts', 'src/modules.ts', ...['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live'].map(m => `src/modules/${m}/index.ts`)].map(read).join('\n')
   assert.match(index, /resumeStaleAutoRenders/)
 })
 
 test('studio2 error codes ใหม่ครบ', () => {
-  const service = read('src/services/studio.ts')
-  const autorender = read('src/services/studio-autorender.ts')
+  const service = read('src/modules/product-studio/services/studio.ts')
+  const autorender = read('src/modules/product-studio/services/studio-autorender.ts')
   const captions = read('src/core/production/captions.ts')
   assert.match(service + autorender, /E_STUDIO_CAMPAIGN_NOT_FOUND/)
   assert.match(captions, /E_CAPTION_FONT_MISSING/)
@@ -32,7 +32,7 @@ test('studio2 error codes ใหม่ครบ', () => {
 })
 
 test('auto-render ใช้ฟังก์ชันเดิมของ studio.ts (ไม่ก๊อป logic ส่งงาน)', () => {
-  const autorender = read('src/services/studio-autorender.ts')
+  const autorender = read('src/modules/product-studio/services/studio-autorender.ts')
   assert.match(autorender, /submitRenderStage\(/)
   assert.match(autorender, /mergeProject\(projectId, \{ fromAutoRender: true \}\)/)
   assert.match(autorender, /from '.\/studio.js'/)
@@ -46,7 +46,7 @@ test('auto-render ใช้ฟังก์ชันเดิมของ studio.
 })
 
 test('captions: merge ฝั่ง Studio เรียก burn หลัง concat, drama merge ปกติไม่กระทบ', () => {
-  const service = read('src/services/studio.ts')
+  const service = read('src/modules/product-studio/services/studio.ts')
   assert.match(service, /burnCaptionsAfterMerge\(/)
   assert.match(service, /waitForMergeCompletion\(mergeId\)/)
   assert.match(service, /captionsEnabled = opts\.captions \?\?/)

@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('studio routes ครบตามตาราง PLAN ข้อ 4 และ mount แล้ว', () => {
-  const route = read('src/routes/studio.ts')
+  const route = read('src/modules/product-studio/routes/studio.ts')
 
   // Global + Gallery
   assert.match(route, /app\.get\('\/options'/)
@@ -36,19 +36,19 @@ test('studio routes ครบตามตาราง PLAN ข้อ 4 และ
   // 202 สำหรับ script async
   assert.match(route, /202/)
 
-  const index = read('src/index.ts') + read('src/modules.ts')
+  const index = ['src/index.ts', 'src/modules.ts', ...['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live'].map(m => `src/modules/${m}/index.ts`)].map(read).join('\n')
   assert.match(index, /api\.route\('\/studio', studio\)/)
   assert.match(index, /failStaleStudioProjects/)
 })
 
 test('studio error codes ใหม่ครบตามสัญญา', () => {
-  const service = read('src/services/studio.ts')
+  const service = read('src/modules/product-studio/services/studio.ts')
   assert.match(service, /E_STUDIO_BUSY/)
   assert.match(service, /E_STUDIO_NEEDS_SCRIPT/)
   assert.match(service, /E_STUDIO_NEEDS_KEYFRAMES/)
   assert.match(service, /E_STUDIO_NO_VIDEOS/)
   assert.match(service, /E_AVATAR_REQUIRED/)
-  const routes = read('src/routes/studio.ts') + read('src/services/studio.ts')
+  const routes = read('src/modules/product-studio/routes/studio.ts') + read('src/modules/product-studio/services/studio.ts')
   assert.match(routes, /E_TEMPLATE_UNKNOWN/)
   assert.match(service, /E_NO_IMAGE_MODEL/)
   assert.match(service, /E_NO_VIDEO_MODEL/)
@@ -64,7 +64,7 @@ test('review_director register ครบทุกจุด + save_studio_shots �
   assert.match(tools, /save_studio_shots/)
   // tools come from the product-studio module, loaded by services/studio.ts before the agent runs
   assert.match(tools, /registerAgentTools\('review_director', \{\s*saveStudioShots: studioTools\.saveStudioShots/)
-  assert.match(read('src/services/studio.ts'), /import '\.\.\/modules\/product-studio\/agent-tools\.js'/)
+  assert.match(read('src/modules/product-studio/services/studio.ts'), /import '\.\.\/agent-tools\.js'/)
   assert.match(tools, /expectedShots/) // จำนวนช็อตต้องเท่า beats
   assert.match(tools, /buildShotPrompts/) // deterministic prompts จาก builder เดียวกับ PUT shots
 
@@ -78,7 +78,7 @@ test('review_director register ครบทุกจุด + save_studio_shots �
 })
 
 test('render/merge ใช้ของเดิม (task-prep + generateImage/Video + mergeEpisodeVideos) และไม่แตะ writeBackImageAssets', () => {
-  const service = read('src/services/studio.ts')
+  const service = read('src/modules/product-studio/services/studio.ts')
   // videos ผ่าน service จาก task 1 — resolveTaskContext + prepareVideoTask ไม่ก๊อป logic แยก
   assert.match(service, /resolveTaskContext\(/)
   assert.match(service, /prepareVideoTask\(/)

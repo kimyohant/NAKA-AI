@@ -17,7 +17,7 @@ process.env.STORAGE_PATH = path.join(dir, 'static')
 const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 const { db, schema } = await import('../src/core/db/index.js')
 const { now } = await import('../src/core/http/response.js')
-const live = await import('../src/services/ai-live.js')
+const live = await import('../src/modules/live/services/ai-live.js')
 const { mastra } = await import('../src/core/mastra/index.js')
 {
   const { default: Database } = await import('better-sqlite3')

@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('POST /episodes auto-locks configs when not provided', () => {
-  const route = read('src/routes/episodes.ts')
+  const route = read('src/modules/drama/routes/episodes.ts')
   const ai = read('src/core/ai/ai.ts')
 
   // 不再强制要求 config id
@@ -22,7 +22,7 @@ test('POST /episodes auto-locks configs when not provided', () => {
 })
 
 test('POST /episodes still honors explicit config ids when caller passes them', () => {
-  const route = read('src/routes/episodes.ts')
+  const route = read('src/modules/drama/routes/episodes.ts')
 
   assert.match(route, /body\.image_config_id \?\? await getActiveConfigId/)
   assert.match(route, /body\.video_config_id \?\? await getActiveConfigId/)

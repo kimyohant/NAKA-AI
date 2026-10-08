@@ -10,7 +10,7 @@ const root = new URL('..', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 
 test('routes/clone.ts ครบ endpoint ตามสัญญา (รวม DELETE + PUT/PATCH ของ Agent B)', () => {
-  const routes = read('src/routes/clone.ts')
+  const routes = read('src/modules/viral-clone/routes/clone.ts')
   for (const endpoint of [
     "app.post('/projects'",
     "app.get('/projects'",
@@ -31,19 +31,19 @@ test('routes/clone.ts ครบ endpoint ตามสัญญา (รวม DEL
   assert.match(routes, /accepted\(c, project\)/)
   assert.match(routes, /accepted\(c, result\)/)
   // mount path
-  const index = read('src/index.ts') + read('src/modules.ts')
+  const index = ['src/index.ts', 'src/modules.ts', ...['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live'].map(m => `src/modules/${m}/index.ts`)].map(read).join('\n')
   assert.match(index, /import clone from '\.\/routes\/clone\.js'/)
   assert.match(index, /api\.route\('\/clone', clone\)/)
 })
 
 test('clone service: kind + boot-resume + error codes + สัญญา field', () => {
-  const service = read('src/services/clone.ts')
+  const service = read('src/modules/viral-clone/services/clone.ts')
   // pipeline kinds
   const pipeline = read('src/core/tasks/pipeline-tasks.ts')
   assert.match(pipeline, /'clone_analyze' \| 'clone_render'/)
   assert.match(pipeline, /RESUMABLE_PIPELINE_KINDS: PipelineTaskKind\[\] = \['studio_render', 'clone_render'\]/)
   // boot wiring
-  const index = read('src/index.ts') + read('src/modules.ts')
+  const index = ['src/index.ts', 'src/modules.ts', ...['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live'].map(m => `src/modules/${m}/index.ts`)].map(read).join('\n')
   assert.match(index, /failStaleCloneAnalyzes/)
   assert.match(index, /resumeStaleCloneRenders/)
   // error codes ใหม่ตาม PLAN + ที่ Agent A เพิ่ม
@@ -67,13 +67,13 @@ test('agents: viral_cloner + viral_translator ลงทะเบียนคร�
 })
 
 test('render driver reuse pipeline เดิม (ห้ามสร้าง renderer ใหม่)', () => {
-  const service = read('src/services/clone.ts')
+  const service = read('src/modules/viral-clone/services/clone.ts')
   // ใช้ service ร่วมของ generation (sys_task + คิว maxConcurrent) ไม่ใช่ยิง provider เอง
-  assert.match(service, /import \{ generateImage, generateVideo \} from '\.\.\/core\/generation\/generation\.js'/)
+  assert.match(service, /import \{ generateImage, generateVideo \} from '(\.\.\/)+core\/generation\/generation\.js'/)
   assert.match(service, /mergeEpisodeVideos/)
   assert.match(service, /waitForMergeCompletion/)
   // captions primitives ของ Studio (ไม่คัดลอก logic ซับ)
-  assert.match(service, /from '\.\.\/core\/production\/captions\.js'/)
+  assert.match(service, /from '(\.\.\/)+core\/production\/captions\.js'/)
   // beat สั้นกว่า minDurationSec → รวมติดกัน (capabilities ของ video config)
   assert.match(service, /getActiveVideoProviderInfo/)
   assert.match(service, /mergeShortBeats/)

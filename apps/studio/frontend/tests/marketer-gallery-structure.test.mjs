@@ -15,7 +15,7 @@ const nuxtConfig = read('nuxt.config.ts')
 const useApi = read('app/composables/useApi.ts')
 const th = JSON.parse(read('app/locales/th.json'))
 const en = JSON.parse(read('app/locales/en.json'))
-const backendRoute = new URL('../backend/src/routes/gallery.ts', root)
+const backendRoute = new URL('../backend/src/modules/marketer/routes/gallery.ts', root)
 
 test('gallery route registered before /marketer/:id + reachable from the marketer page', () => {
   const galleryIdx = nuxtConfig.indexOf("name: 'marketer-gallery'")

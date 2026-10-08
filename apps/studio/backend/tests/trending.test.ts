@@ -9,7 +9,7 @@ import {
   TREND_INDUSTRIES,
   TRENDING_CURATED_AT,
   type TrendVideo,
-} from '../src/services/trending.js'
+} from '../src/modules/marketer/services/trending.js'
 
 const all = listTrendVideos().entries
 

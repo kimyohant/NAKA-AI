@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 import { EventEmitter } from 'node:events'
 import { test } from 'node:test'
 
-const tiktok = await import('../src/services/tiktok-live.js')
+const tiktok = await import('../src/modules/live/services/tiktok-live.js')
 
 class FakeConn extends EventEmitter {
   static last: FakeConn | null = null

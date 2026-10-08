@@ -12,8 +12,8 @@ process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
 
 const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 const { db, schema } = await import('../src/core/db/index.js')
-const { createProjectFromCampaign } = await import('../src/services/studio.js')
-const { startAutoRender, runAutoRenderPipeline } = await import('../src/services/studio-autorender.js')
+const { createProjectFromCampaign } = await import('../src/modules/product-studio/services/studio.js')
+const { startAutoRender, runAutoRenderPipeline } = await import('../src/modules/product-studio/services/studio-autorender.js')
 const { now } = await import('../src/core/http/response.js')
 
 // seed: migration + configs (dummy) + campaign/creative + project/drama/episode/storyboards
@@ -277,6 +277,6 @@ test('drama merge เดิมไม่ถูกเปลี่ยน (mergeEpis
   const src = readFileSync(new URL('../src/core/production/ffmpeg-merge.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(src, /captions|subtitle/i)
   // เส้นทาง merge ของ drama ปกติ (routes/merge.ts) ยังเรียก mergeEpisodeVideos ตรง ๆ ไม่ผ่าน studio
-  const mergeRoute = readFileSync(new URL('../src/routes/merge.ts', import.meta.url), 'utf8')
+  const mergeRoute = readFileSync(new URL('../src/modules/drama/routes/merge.ts', import.meta.url), 'utf8')
   assert.doesNotMatch(mergeRoute, /studio|caption/i)
 })

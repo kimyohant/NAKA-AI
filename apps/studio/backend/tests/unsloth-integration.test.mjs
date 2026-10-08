@@ -8,7 +8,7 @@ const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 
 test('episode generation-tasks ส่ง queue_position ที่ episode workbench อ่าน (t.queue_position)', () => {
-  const route = read('src/routes/episodes.ts')
+  const route = read('src/modules/drama/routes/episodes.ts')
   const block = route.slice(route.indexOf("app.get('/:id/generation-tasks'"))
   assert.match(block, /queuePosition: videoQueuePosition\(t\)/)
   // toSnakeCase แปลง queuePosition → queue_position
@@ -23,5 +23,7 @@ test('boot: studio_render ถูกยกเว้นจาก failStaleRunningT
   assert.ok(index.indexOf('failStaleRunningTasks()') < index.indexOf("recoverModules('resume')"))
   // auto-render (product-studio) resumes before seller videos, which wait on it (src/modules.ts order)
   const modules = read('src/modules.ts')
-  assert.ok(modules.indexOf('resume: resumeStaleAutoRenders') < modules.indexOf('resume: resumeSellerVideos'))
+  assert.match(modules, /studioModules: StudioModule\[\] = \[[^\]]*productStudio, sellerModule/)
+  assert.match(read('src/modules/product-studio/index.ts'), /resume: resumeStaleAutoRenders/)
+  assert.match(read('src/modules/seller/index.ts'), /resume: resumeSellerVideos/)
 })

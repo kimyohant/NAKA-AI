@@ -7,7 +7,7 @@ const read = (path) => readFileSync(new URL(path, root), 'utf8')
 const exists = (path) => existsSync(new URL(path, root))
 
 test('backend no longer exposes the grid image API or split service', () => {
-  const index = read('src/index.ts') + read('src/modules.ts')
+  const index = ['src/index.ts', 'src/modules.ts', ...['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live'].map(m => `src/modules/${m}/index.ts`)].map(read).join('\n')
 
   assert.doesNotMatch(index, /routes\/grid/)
   assert.doesNotMatch(index, /api\.route\('\/grid'/)

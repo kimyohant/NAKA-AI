@@ -20,8 +20,8 @@ import { ingestProductUrl } from '../src/core/product/product-ingest.js'
 import {
   createCampaign, startResearch, startStrategy, startCreatives,
   getCampaignDetail, produceCreative,
-} from '../src/services/marketer.js'
-import { startExtraction, getExtractionStatus } from '../src/services/extraction.js'
+} from '../src/modules/marketer/services/marketer.js'
+import { startExtraction, getExtractionStatus } from '../src/modules/drama/services/extraction.js'
 import { mastra } from '../src/core/mastra/index.js'
 import { buildAgentRequestContext } from '../src/core/agents/context.js'
 import { buildDramaCreativeContext } from '../src/core/production/drama-context.js'

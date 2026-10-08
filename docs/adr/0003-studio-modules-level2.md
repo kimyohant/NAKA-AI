@@ -211,12 +211,8 @@ apps/studio-web/
 | **1** ✅ | `src/modules.ts`: แต่ละเมนูประกาศ routes + failStale/resume, `index.ts` วนลูปโหลด (commit `78efbbd4`) — dependency-cruiser ย้ายไป PR 9 เพราะ path ยังไม่ใช่ core/modules | 13 | ต่ำ | 0.5 วัน |
 | **2** ✅ | **core** — ย้าย 73 ไฟล์ (utils, db, auth, ai, adapters, tasks, generation, production, product, agents, mastra, system, core routes) ด้วย `git mv` + สคริปต์แก้ import; `drama-context`, `style-gallery` อยู่ core เพราะ core ใช้ | 73 | สูง | ✅ |
 | **3** ✅ | `registerAgentTools()` ใน core + tools ของ marketer/product-studio ย้ายไป `modules/<menu>/agent-tools.ts` (ลงทะเบียนตอน import; Agent resolve tools ต่อ request) · `getActiveVideoProviderInfo` → `core/generation/video-provider.ts`, `waitForMergeCompletion` → `core/production/ffmpeg-merge.ts` · core → menu imports = 0 · tools ของ drama (script/extract/storyboard) อยู่ core ต่อเพราะทำงานกับตาราง production กลาง | 12 | กลาง | ✅ |
-| **4** | **live** | 4 | ต่ำ | 0.5 วัน |
-| **5** | **drama** | 11 | กลาง | 1 วัน |
-| **6** | **marketer** | 8 | กลาง | 1 วัน |
-| **7** | **product-studio** | 7 | กลาง | 1 วัน |
-| **8** | **seller** + **viral-clone** | 5 | ต่ำ | 1 วัน |
-| **9** | เปิด dependency-cruiser โหมด error ใน CI | 1 | ต่ำ | 0.5 วัน |
+| **4–8** ✅ | ย้ายทั้ง 6 เมนูเข้า `modules/<menu>/{routes,services}` + `index.ts` ต่อเมนู (StudioModule + public API), import ข้ามเมนูผ่าน index เท่านั้น — ทำใน commit เดียวเพราะไฟล์ที่ import กันทับซ้อนกันข้ามเมนู | 30 | กลาง | ✅ |
+| **9** ✅ | ใช้ `tests/module-boundaries.test.mjs` (ไม่ต้องเพิ่ม dependency) แทน dependency-cruiser — ตรวจ core→menu, ผ่าน index เท่านั้น, ทิศที่อนุญาต, ทุกเมนูลงทะเบียน; อยู่ใน Studio CI แล้ว | 1 | ต่ำ | ✅ |
 | **10** | Frontend: สร้าง layers + ย้าย (ทีละ layer ได้เหมือนกัน) | ~60 | กลาง | 3–4 วัน |
 | **11** | แยก locales ตามเมนู (สคริปต์) | 2→14 | ต่ำ | 0.5 วัน |
 | **12** | อัปเดต CLAUDE.md, openwiki, README ให้ตรงโครงใหม่ | — | ต่ำ | 0.5 วัน |

@@ -10,7 +10,7 @@ import {
   buildMatrix,
   CLONE_MATRIX_CAP,
   type CloneBeat,
-} from '../src/services/clone.js'
+} from '../src/modules/viral-clone/services/clone.js'
 
 const goodBeat = { id: 'b1', role: 'hook', line: 'หน้าสิวหายใน 3 วัน?', visual: 'product', visualHint: null, durationSec: 3.5 }
 const goodBlueprint = {

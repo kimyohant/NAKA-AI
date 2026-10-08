@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm'
 import { db, schema } from '../../core/db/index.js'
 import { getStudioProjectId } from '../../core/agents/context.js'
 import { registerAgentTools } from '../../core/agents/index.js'
-import { buildShotPrompts, writeStudioShot } from '../../services/studio-shots.js'
+import { buildShotPrompts, writeStudioShot } from './services/studio-shots.js'
 
 const saveStudioShots = createTool({
   id: 'save_studio_shots',

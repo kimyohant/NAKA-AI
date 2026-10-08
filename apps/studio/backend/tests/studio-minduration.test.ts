@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { scaleBeats, getStudioTemplate } from '../src/services/studio-templates.js'
+import { scaleBeats, getStudioTemplate } from '../src/modules/product-studio/services/studio-templates.js'
 
 const H3_MIN = 124 / 24 // ≈ 5.1667s
 

@@ -16,7 +16,7 @@ process.env.STORAGE_PATH = path.join(dir, 'static')
 const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 const { db, schema } = await import('../src/core/db/index.js')
 const { now } = await import('../src/core/http/response.js')
-const seller = await import('../src/services/seller.js')
+const seller = await import('../src/modules/seller/services/seller.js')
 const { mastra } = await import('../src/core/mastra/index.js')
 {
   const { default: Database } = await import('better-sqlite3')
@@ -28,7 +28,7 @@ const { mastra } = await import('../src/core/mastra/index.js')
 
 const replies: string[] = []
 const { eq } = await import('drizzle-orm')
-const studio = await import('../src/services/studio.js')
+const studio = await import('../src/modules/product-studio/services/studio.js')
 const waitFor = async (fn: () => Promise<boolean>, ms = 3000) => {
   const end = Date.now() + ms
   while (Date.now() < end) { if (await fn()) return; await new Promise(r => setTimeout(r, 20)) }

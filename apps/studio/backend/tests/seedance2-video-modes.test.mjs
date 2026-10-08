@@ -51,7 +51,7 @@ test('video generation service resolves reference media and persists new fields'
 })
 
 test('video resolution is fixed per episode, editable, and locked into video tasks', () => {
-  const episodes = read('src/routes/episodes.ts')
+  const episodes = read('src/modules/drama/routes/episodes.ts')
   const tasks = read('src/core/routes/tasks.ts')
   const service = read('src/core/generation/generation.ts')
 

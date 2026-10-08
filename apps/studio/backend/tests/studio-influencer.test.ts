@@ -8,7 +8,7 @@ import { initSqliteSchema } from '../src/core/db/sqlite-schema.js'
 import {
   INFLUENCER_NICHES, INFLUENCER_REVIEW_SCENES,
   composeInfluencerPortraitPrompt, composeInfluencerReviewPrompt,
-} from '../src/services/studio-influencer.js'
+} from '../src/modules/product-studio/services/studio-influencer.js'
 
 test('influencer constants: 5 review scenes, 10 niches, all unique', () => {
   assert.deepEqual([...INFLUENCER_REVIEW_SCENES], ['unboxing', 'holding', 'using', 'closeup', 'lifestyle'])

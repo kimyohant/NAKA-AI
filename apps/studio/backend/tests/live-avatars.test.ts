@@ -24,8 +24,8 @@ const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
   initSqliteSchema(sqlite)
   sqlite.close()
 }
-const live = await import('../src/services/ai-live.js')
-const avatars = await import('../src/services/live-avatars.js')
+const live = await import('../src/modules/live/services/ai-live.js')
+const avatars = await import('../src/modules/live/services/live-avatars.js')
 
 // uploads that Studio would have stored
 await sharp({ create: { width: 64, height: 96, channels: 3, background: '#88aaff' } }).png().toFile(path.join(dir, 'static', 'uploads', 'me.png'))

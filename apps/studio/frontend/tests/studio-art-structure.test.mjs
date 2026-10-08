@@ -11,7 +11,7 @@ const root = new URL('..', import.meta.url)
 const read = (p) => readFileSync(new URL(p, root), 'utf8')
 const publicFile = (url) => new URL(`app/public${url}`, root)
 
-const templatesSrc = read('../backend/src/services/studio-templates.ts')
+const templatesSrc = read('../backend/src/modules/product-studio/services/studio-templates.ts')
 const skillsSrc = read('../backend/src/core/agents/skill-library.ts')
 const templateIds = [...templatesSrc.matchAll(/^\s+id: '([a-z_]+)', category:/gm)].map(m => m[1])
 const skillIds = [...skillsSrc.matchAll(/^\s+skill\('[a-z_]+', '[a-z]+', '([a-z/-]+)', '([a-z0-9-]+)'/gm)].map(m => `${m[1]}/${m[2]}`)
