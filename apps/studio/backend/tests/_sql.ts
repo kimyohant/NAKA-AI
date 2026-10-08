@@ -15,9 +15,14 @@ const castFor = (v: unknown) =>
 
 const toPg = (sql: string, params: unknown[]) => {
   let n = 0
+  // a '…' literal (with '' escapes) is kept as is; only a bare ? is a placeholder
   return sql
     .replace(/datetime\('now'\)/g, "to_char(now() at time zone 'utc', 'YYYY-MM-DD HH24:MI:SS')")
-    .replace(/\?/g, () => { const i = n++; return `$${i + 1}${castFor(params[i])}` })
+    .replace(/'(?:[^']|'')*'|\?/g, m => {
+      if (m !== '?') return m
+      const i = n++
+      return `$${i + 1}${castFor(params[i])}`
+    })
 }
 
 async function columns(table: string): Promise<string[]> {
