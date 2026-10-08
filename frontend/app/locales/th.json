@@ -43,7 +43,8 @@
       "marketer": "นักการตลาด AI",
       "viralClone": "สตูดิโอโคลนไวรัล",
       "live": "AI Live",
-      "seller": "AI นักขาย"
+      "seller": "AI นักขาย",
+      "social": "Social"
     },
     "banner": {
       "missing": "ยังไม่ได้ตั้งค่าโมเดล{types} ฟีเจอร์ AI จึงยังใช้งานไม่ได้",
@@ -2854,6 +2855,36 @@
       "placeholder": "AI กำลังทำวิดีโอ…",
       "attached": "วิดีโอเสร็จแล้ว แนบเข้าโพสต์ให้แล้ว",
       "badge": "กำลังทำวิดีโอ"
+    }
+  },
+  "social": {
+    "eyebrow": "Social",
+    "title": "กล่องข้อความโซเชียล",
+    "subtitle": "คอมเมนต์จากทุกเพจ รวมในบอร์ดเดียว",
+    "accounts": "บัญชี",
+    "brand": "โปรไฟล์แบรนด์",
+    "account": "บัญชี",
+    "allAccounts": "ทุกบัญชี",
+    "fallbackOnly": "เฉพาะที่ไม่มีใน FAQ",
+    "loadFailed": "โหลดคอมเมนต์ไม่สำเร็จ",
+    "retry": "ลองใหม่",
+    "noAccountYet": "ยังไม่มีบัญชี",
+    "noAccountHint": "เชื่อมเพจ Facebook ที่หน้าบัญชีเพื่อเริ่มอ่านคอมเมนต์",
+    "goAccounts": "ไปหน้าบัญชี",
+    "noCommentsYet": "ยังไม่มีคอมเมนต์",
+    "noCommentsHint": "คอมเมนต์ใหม่จากโพสต์ที่ติดตามจะปรากฏที่นี่ภายในไม่กี่นาที",
+    "fallbackBadge": "ไม่มีใน FAQ",
+    "unknownAuthor": "ผู้ชม",
+    "justNow": "เมื่อสักครู่",
+    "minutesAgo": "{n} นาทีที่แล้ว",
+    "hoursAgo": "{n} ชม. ที่แล้ว",
+    "daysAgo": "{n} วันที่แล้ว",
+    "column": {
+      "needsHuman": "รอคนตอบ",
+      "draft": "ร่าง",
+      "queued": "รอส่ง",
+      "replied": "ตอบแล้ว",
+      "skipped": "ข้าม"
     }
   }
 }

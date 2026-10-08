@@ -624,6 +624,32 @@ export const cloneAPI = {
   hypitStatus: () => api.get<{ available: boolean; reason: string | null }>('/clone/hypit/status'),
 }
 
+// ===== Social Auto Reply — inbox board (ticket 02: list only) =====
+export interface SocialAccount {
+  id: number; platform: string; name: string | null
+  status: string; watching: boolean; lastPolledAt: string | null
+}
+export interface SocialBoardComment {
+  id: number; accountId: number; platform: string | null
+  postId: number | null; postText: string | null
+  platformCommentId: string; text: string | null; authorName: string | null
+  commentedAt: string | null; status: string
+  verdict: string | null; reason: string | null; fallback: boolean
+  statusNote: string | null; replyText: string | null
+  replySource: string | null; repliedAt: string | null
+}
+
+export const socialAPI = {
+  accounts: () => api.get<{ items: SocialAccount[] }>('/social/accounts'),
+  comments: (params?: { account_id?: number; fallback_only?: boolean }) => {
+    const query = new URLSearchParams()
+    if (params?.account_id) query.set('account_id', String(params.account_id))
+    if (params?.fallback_only) query.set('fallback_only', '1')
+    const qs = query.toString()
+    return api.get<{ items: SocialBoardComment[] }>(`/social/comments${qs ? `?${qs}` : ''}`)
+  },
+}
+
 // ---------- AI Live (backend /api/v1/live → naka-live-agent on the GPU box; docs/ai-live/PLAN.md) ----------
 export interface LiveConfig {
   agentUrl: string

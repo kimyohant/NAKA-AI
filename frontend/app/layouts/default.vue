@@ -40,6 +40,10 @@
           <Radio :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.live') }}</span>
         </NuxtLink>
+        <NuxtLink to="/social" class="side-link" :class="{ active: isSocialRoute }" :title="t('layout.nav.social')" @click="navOpen = false">
+          <MessagesSquare :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.social') }}</span>
+        </NuxtLink>
       </nav>
 
       <div class="side-divider"></div>
@@ -94,7 +98,7 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, LayoutGrid, Copy, Radio, Store } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, LayoutGrid, Copy, Radio, Store, MessagesSquare } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI } from '~/composables/useApi'
 import brandLogo from '~/assets/brand-logo.svg'
@@ -110,6 +114,7 @@ const isProductStudioRoute = computed(() => route.path === '/studio' || route.pa
 const isSellerRoute = computed(() => route.path === '/seller' || route.path.startsWith('/seller/'))
 const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
 const isLiveRoute = computed(() => route.path === '/live')
+const isSocialRoute = computed(() => route.path === '/social' || route.path.startsWith('/social/'))
 const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))
 
 const settingsItems = computed(() => [
