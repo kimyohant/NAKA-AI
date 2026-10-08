@@ -1,8 +1,8 @@
 ---
 id: 4
-status: open
+status: closed
 labels: [ready-for-agent]
-assignee: null
+assignee: opencode
 blocked_by: [3]
 ---
 
@@ -32,14 +32,25 @@ Tests replace the LLM by swapping the Mastra agent getter, as the AI Live test d
 
 ## Acceptance criteria
 
-- [ ] Tests with a fake LLM show each Verdict leads to the right state: `reply` to `draft`, `skip` to `skipped`, `human` and `unsure` to `needs_human`.
-- [ ] A test shows a `needs_human` Comment has no Reply text stored.
-- [ ] A test shows `fallback: true` is stored and the board route returns it.
-- [ ] A test shows praise is Skipped when "reply to praise" is off, and gets a Draft when it is on.
-- [ ] Unit tests cover the Reply rules: 300 characters, the adapter's `maxReplyChars`, one emoji, no URL, no @handle, no hashtag.
-- [ ] A test shows a Reply that breaks a rule is retried in the next round and is never stored cut.
-- [ ] A test shows three failed rounds give `needs_human` with "could not judge", and no Reply is stored.
-- [ ] A test shows at most 50 Comments are judged per Social Account per round, newest first, and the rest stay `new`.
-- [ ] A test shows the text sent to the agent has the Post text cut to 1000 characters, the Comment text cut to 500, and no viewer name.
-- [ ] A test shows a Comment that already has a Verdict is not judged again.
-- [ ] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+- [x] Tests with a fake LLM show each Verdict leads to the right state: `reply` to `draft`, `skip` to `skipped`, `human` and `unsure` to `needs_human`.
+- [x] A test shows a `needs_human` Comment has no Reply text stored.
+- [x] A test shows `fallback: true` is stored and the board route returns it.
+- [x] A test shows praise is Skipped when "reply to praise" is off, and gets a Draft when it is on.
+- [x] Unit tests cover the Reply rules: 300 characters, the adapter's `maxReplyChars`, one emoji, no URL, no @handle, no hashtag.
+- [x] A test shows a Reply that breaks a rule is retried in the next round and is never stored cut.
+- [x] A test shows three failed rounds give `needs_human` with "could not judge", and no Reply is stored.
+- [x] A test shows at most 50 Comments are judged per Social Account per round, newest first, and the rest stay `new`.
+- [x] A test shows the text sent to the agent has the Post text cut to 1000 characters, the Comment text cut to 500, and no viewer name.
+- [x] A test shows a Comment that already has a Verdict is not judged again.
+- [x] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+
+## Notes
+
+2026-10-08: implemented + tested, all criteria met.
+- `backend/src/services/social/responder.ts` (new): `social_responder` call, payload builder (post 1000 / comment 500 cuts, no viewer name, earlier reply only under our reply, `replyToPraise`, `mode`), JSON parse, `checkReplyRules` (300 chars + adapter `maxReplyChars`, 1 emoji, no URL/@handle/hashtag; break = LLM failure, never cut), `judgeNewComments` (new + verdict-NULL only, newest-first, 50/account/round, one at a time; failure stays `new` with `judgeAttempts+1`, 3 fails to `needs_human` "could not judge"), `requestDraftReply` (`mode: "draft"`, for ticket 05).
+- `backend/src/agents/index.ts`: `social_responder` default prompt (comment-as-data, unsure-by-default, human categories, fallback rules, praise switch, draft mode) + no-tools registration.
+- `backend/src/services/social/poller.ts`: LLM judging step after plain rules in each round.
+- `backend/tests/social-verdict.test.ts` (new, 14 tests, fake LLM via `mastra.getAgent` swap): all acceptance criteria above + earlier-reply and end-to-end poll round.
+- `backend/package.json`: `test:social` now includes `social-verdict.test.ts`.
+- Gates: `typecheck` clean; `test:social` 46/46 pass; full backend suite 236/237 (only known base failure "unsloth image test probe..."; the other known failure "server masks..." passed this run).
+- Deviation: fresh `draft` rows store `replySource: null` (source becomes `approved`/`manual`/`auto` only when a person acts or auto mode sends — tickets 05/06).

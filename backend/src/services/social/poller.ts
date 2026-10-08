@@ -1,8 +1,8 @@
 /**
  * Social poller — one timer started at backend boot, one round every 5 minutes,
  * built like the generation queue sweep: setInterval, unref'd, running guard.
- * The first round runs right after boot. In this ticket a round does only the
- * reading step: for each connected + watching account, list posts inside
+ * The first round runs right after boot. In this ticket a round does the
+ * reading step plus the judging step: for each connected + watching account, list posts inside
  * watch_days, page each post's comments until an already-stored comment id,
  * and store new comments with state `new`.
  */
@@ -10,6 +10,7 @@ import { and, eq } from 'drizzle-orm'
 import { db, schema } from '../../db/index.js'
 import { now } from '../../utils/response.js'
 import { SKIP_ALREADY_REPLIED, SKIP_OWN, collectPlainRuleContext, judgePlainRule } from './filter.js'
+import { judgeNewComments } from './responder.js'
 import { getSocialAdapter } from './registry.js'
 import type { SocialAccountAuth, SocialComment } from './types.js'
 
@@ -177,6 +178,9 @@ async function pollAccount(
   }
 
   judgeFreshComments(account.id, fresh)
+
+  // Ticket 04: LLM judging step — remaining `new` comments get one verdict each.
+  await judgeNewComments(account.id)
 
   db.update(schema.socialAccounts)
     .set({ lastPolledAt: now(), updatedAt: now() })
