@@ -179,21 +179,11 @@ export async function upsertCreativeResult(creativeId: number, body: any) {
     }
   }
   const ts = now()
-  const [existing] = await db.select().from(schema.creativeResults)
-    .where(eq(schema.creativeResults.creativeId, creativeId))
-  if (existing) {
-    await db.update(schema.creativeResults).set({ ...values, updatedAt: ts })
-      .where(eq(schema.creativeResults.creativeId, creativeId))
-  } else {
-    await db.insert(schema.creativeResults).values({
-      creativeId,
-      ...values,
-      createdAt: ts,
-      updatedAt: ts,
-    })
-  }
-  const [row] = await db.select().from(schema.creativeResults)
-    .where(eq(schema.creativeResults.creativeId, creativeId))
+  // one statement: two saves of the same creative at once cannot both insert (UNIQUE creative_id)
+  const [row] = await db.insert(schema.creativeResults)
+    .values({ creativeId, ...values, createdAt: ts, updatedAt: ts })
+    .onConflictDoUpdate({ target: schema.creativeResults.creativeId, set: { ...values, updatedAt: ts } })
+    .returning()
   return toResultJson(row)
 }
 

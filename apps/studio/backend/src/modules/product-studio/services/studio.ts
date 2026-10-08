@@ -722,6 +722,7 @@ export async function updateShot(projectId: number, shotId: number, body: any) {
       .where(eq(schema.studioShots.storyboardId, shotId))
   } else {
     await db.insert(schema.studioShots).values({ storyboardId: shotId, projectId, role, dialogue, onScreenText })
+      .onConflictDoUpdate({ target: schema.studioShots.storyboardId, set: { dialogue, onScreenText } })
   }
   const [sb] = await db.select().from(schema.storyboards).where(eq(schema.storyboards.id, shotId))
   const [updatedShot] = await db.select().from(schema.studioShots).where(eq(schema.studioShots.storyboardId, shotId))

@@ -49,7 +49,7 @@ test('campaign + studio tables exist in the PostgreSQL schema with their constra
   assert.deepEqual(JSON.parse(row.platforms), ['tiktok'])
   // UNIQUE(campaign_id, kind) 生效
   await assert.rejects(sqlite.prepare(`INSERT INTO campaign_docs (campaign_id, kind, content, status, version, created_at, updated_at)
-    VALUES (?, 'market_research', '# dup', 'draft', 1, ?, ?)`).run(campaignId, ts, ts), (err: any) => err.code === '23505')
+    VALUES (?, 'market_research', '# dup', 'draft', 1, ?, ?)`).run(campaignId, ts, ts), (err: any) => (err.code ?? err.cause?.code) === '23505')
 })
 
 test('isBlockedAddress blocks private/loopback/link-local ranges', () => {

@@ -178,3 +178,30 @@ test('skill video: script ready without shots → auto-render refuses → job fa
   const manual = await seller.updatePost(post!.id, { videoUrl: '/static/uploads/mine.mp4' })
   assert.equal(manual!.videoUrl, '/static/uploads/mine.mp4')
 })
+
+test('skill video: two clicks at once start one Studio project; a failed start leaves the post as it was', async () => {
+  const post = await seller.createPost({ productName: 'พัดลมพกพา', channels: ['tiktok'] })
+  const before = (await studio.listProjects()).length
+  closeGate()
+  try {
+    const results = await Promise.allSettled([
+      seller.makeVideo(post!.id, { templateId: 'unboxing' }),
+      seller.makeVideo(post!.id, { templateId: 'unboxing' }),
+    ])
+    assert.equal(results.filter(r => r.status === 'fulfilled').length, 1)
+    const refused = results.find(r => r.status === 'rejected') as PromiseRejectedResult
+    assert.equal(refused.reason.errorCode, 'E_SELLER_VIDEO_BUSY')
+    assert.equal((await studio.listProjects()).length, before + 1, 'each click created its own Studio project')
+  } finally {
+    // also on failure: a running video driver would keep the test process alive
+    await seller.stopVideo(post!.id)
+    openGate()
+  }
+
+  // the claim is released when the start fails (presenter missing): not busy, previous project link kept
+  const linked = (await seller.getPost(post!.id))!.studioProjectId
+  await assert.rejects(() => seller.makeVideo(post!.id, { templateId: 'ugc_review' }), (e: any) => e.errorCode === 'E_AVATAR_REQUIRED')
+  const after = (await seller.getPost(post!.id))!
+  assert.equal(after.studioProjectId, linked)
+  assert.equal(after.videoJob!.running, false)
+})

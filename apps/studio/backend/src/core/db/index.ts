@@ -81,3 +81,10 @@ export function insertedId(rows: Array<{ id: number }>): number {
   if (id === undefined || id === null) throw new Error('insert returned no id')
   return Number(id)
 }
+
+/** SQLSTATE of a failed query ('23505' = unique_violation). Drizzle wraps the driver's error in `cause`. */
+export function pgErrorCode(err: unknown): string | undefined {
+  const e = err as { code?: unknown; cause?: { code?: unknown } } | null | undefined
+  const code = typeof e?.code === 'string' && /^[0-9A-Z]{5}$/.test(e.code) ? e.code : e?.cause?.code
+  return typeof code === 'string' ? code : undefined
+}
