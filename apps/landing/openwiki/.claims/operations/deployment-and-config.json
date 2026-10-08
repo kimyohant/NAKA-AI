@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:d23ae217b16f3964b8a2c974581fa16e3059547efb3eb042886e98236b918ab9",
+  "claims": [
+    {
+      "id": "claim_25b58c76300848c8bd8b3c891d210fce",
+      "statement": "Production wrangler config has custom-domain routes for naka-ai.com and www, workers_dev false, and leaves the R2 MEDIA binding unbound; the dev config drops the routes, enables workers_dev and binds R2 MEDIA.",
+      "evidence": [
+        {
+          "resource": "repo://wrangler.dev.jsonc",
+          "version": "repo-file-v1:sha256:80c03ebb7d75e10923e0e24bc282d104901ca15533ef3be1cdbf4681405636b2"
+        },
+        {
+          "resource": "repo://wrangler.jsonc#L16-L27",
+          "version": "repo-lines-v1:sha256:db0d82bcb4caf9d5ac2de652712b74893ccd0908e3a85f951f39cba53fa2004c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlY2RjZWJhYzZmODQ0MWZkYTk0MDNlODU1NTI2YmEwYTY5YzAxNmMyZWQxOGFmOTMzMWQ4YTc1MzYxZGVmMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ODdkYTkwYzQ1NTRlM2MwZTVjOTY5ZTdjNzI4NDhhYzg5YmFhMDkyNTg2ZmE5YTE0OWIyZWRhZTAzM2EyMWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5MzdmOThkZGY5YjlkY2ZjMzUzNThkYjU3NjZhYzk1MzhmNWRhMjVhYmJjMGU5NjNhZmMzMzkzNjIxYzJiNjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzYWZkZjZkYzY5N2RjNzYyNjMwYTg1ZmM0MzVmNTZhZWU3OTg4NWJkMDI4ZTY5MzQxMjc2NGU4NTEyMzJiYjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a6cd3afa26ba46ec892825b278acaec6",
+      "statement": "CI runs typecheck and tests on Node 24 for every push and pull request.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml",
+          "version": "repo-file-v1:sha256:7b5795ca68ad52c8173c10b89b0d6a1b60f6e9ba471e1036854777ce76b873d4"
+        }
+      ]
+    },
+    {
+      "id": "claim_ac1f140017f54cb39c7f435ce6e621ee",
+      "statement": "The production deploy is a manual workflow restricted to main that runs typecheck, tests, remote D1 migrations and then wrangler deploy, with no DB dump.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/deploy.yml",
+          "version": "repo-file-v1:sha256:465cee0f6c1eb7726840dfa23bddf735cff13f34503612916e78c4162574ad24"
+        }
+      ]
+    },
+    {
+      "id": "claim_02d8caeba20547c2a819ca97ef28e927",
+      "statement": "Local setup copies .dev.vars.example, generates SESSION_SECRET via npm run auth:setup, applies migrations locally and runs wrangler dev on port 8788.",
+      "evidence": [
+        {
+          "resource": "repo://.dev.vars.example",
+          "version": "repo-file-v1:sha256:dc3e3ae2b2339b841d1dafb9fb6ea046a3cf5d4e0a93e53952a2c414de059564"
+        },
+        {
+          "resource": "repo://package.json#L5-L16",
+          "version": "repo-lines-v1:sha256:c39c6bac3a925b86ed374e987ea7018b7f6eb407d316df55934294de7f566db0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4NDA2OTg0YmRlZmNhMzRkZDZiYzkwMDI3ZjFkMTFhYmNiMTcwMzRjNTI1YzlhNWNlZmExZDg0ZmNjZDgxZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0YTJiMWY2MzhjZGIyNzZkNWY4NWY5YzFiOTA2MzI5NjQ3OGMzNzJmNmI4YWMwNDcxNGIzZjQyZjI0YjQxZWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlNGI5YWJlYTNkMTg2NjdlYzIyNDc5NTA5OGI4M2U2OGUxNTZjODJkM2UwMDkwYzQ4MDY1ZmQxMDFiMzQyNmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZlOTAwMDlkNDQzNzJjZTQyNGNjNWU4MDMwODZjMzVhZWM5MTBmMmNjYTU1ODg1YTQ1MmViM2Y4YWM3N2NkYTIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}

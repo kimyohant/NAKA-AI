@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:5a8d8c584c486deb288953ee732582b8a7b0ebadcf4f2a3427cd658cf9d8f113",
+  "claims": [
+    {
+      "id": "claim_fa53db03c04d4520b482ff12901407c3",
+      "statement": "Static files in public/ are served via the ASSETS binding with no build step, and only /api/* and /webhook/* run the Worker first.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L143-L143",
+          "version": "repo-lines-v1:sha256:76e15d683dc57d00337bfce5e2cc91f1530b5079a16964c70d4773e2f7f5bee6:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzZlMTVkNjgzZGM1N2QwMDMzN2JmY2U1ZTJjYzkxZjE1MzBiNTA3OWExNjk2NGM3MGQ0NzczZTJmN2Y1YmVlNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzZlMTVkNjgzZGM1N2QwMDMzN2JmY2U1ZTJjYzkxZjE1MzBiNTA3OWExNjk2NGM3MGQ0NzczZTJmN2Y1YmVlNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZThjYjU5ZjNlYmI4ODMzYTgxZjgyODIwOTJiZjQ0Y2YyMmQ1NWFhYzIxNWQzMWYyMzY1NDhjZjljMTE4ZTI5MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWM3ZDcwMGRiZTdiMTE3ZmQwNzVmOWQ4YTBmOTRlZWM4ZjcwNzczNzM5ZWE1YTA0YWJkYTg3YTNhYzk1NzM4ZCJ9"
+        },
+        {
+          "resource": "repo://wrangler.jsonc#L7-L11",
+          "version": "repo-lines-v1:sha256:31e7766e096b762f1c6bedafbc34cda8f7e29fb80b27518e9fb8aedd287e5783:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzNhYjZhMTYxYjE4YzBlYTkxM2I5NGI5ZWE0NjBkNDYwN2E0MWQzYzA2YjRjZmZmNDhjODc2OGExOTk5OGRkYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjBjOTQ5ODU1MjZjMWM1N2VmMDBjMDBkM2Y0ZGM5MDYxNTY3N2EwYTM2YThiNzk1ZGZmOWFmZmQ1MGZlOWY1OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzc1NGZjZWVjOTNhODYyMzhlNDc1YTc2ZjM5OTM0YjU0YTVhZTJkNDcyMWNhNDA1Nzc5Yjc0ZGZiMmQyNTZlMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjUzNzY4NTNhZjczMzQ0YjM5ZGVlODg2MWNjZWRkYjI2NzMzMWZiZTA4ODIxODJiYjA5Mzg3ZDhmMjdkMWJhZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a3f495ec7b13415fa101240f6e523041",
+      "statement": "The Worker serves /world/index.wasm by fetching the gzipped asset and responding as application/wasm with gzip Content-Encoding and an immutable one-year cache.",
+      "evidence": [
+        {
+          "resource": "repo://src/index.ts#L109-L119",
+          "version": "repo-lines-v1:sha256:b530487190c449f5d5b6690622757323d8941187a91f3f20caa7b093c4c622eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyMDIxNDIzZmExNzRhNDliZDFiMmMyNTI1YjM1OThiNzIzZTM3OTA4MDhiZDA5YTJiNGEzZjQ4MDhjNzZhMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MTlhNmRjYzA0ZTIxM2EzYzdhNzdhNDU2YjAxZTc2ZDFlZjc4Y2QwMGJiZWMxZDhmODE0NThmZTkzZWRjNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4YjZjN2I3OGVhODI5ZTgwOTZmNDdjZWVkOTRmOWZmYWRkOWFlYzcxMTE4OTA5M2ZiMTljOTRhMzBjNmJjZTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjYjY1YjQ4YjI2ZmIxZGUwMzJhOTA1NDlhZTA1ZmI2N2Y3OGY4NmU1YzAyODY1OWU1MWRkNTkwOWI4ODUzMjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_590ef55d103f4bbea4e85eb53c1481e2",
+      "statement": "public/app/app.js guards the dashboard with GET /api/auth/me: signed-out users are redirected to login, and transient failures show a retry error instead of bouncing to login.",
+      "evidence": [
+        {
+          "resource": "repo://public/app/app.js#L1-L10",
+          "version": "repo-lines-v1:sha256:0b454c504317a8598d963e07cdd7b6adb1b4c952f4299e89120dfb67f331dbea:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkZjJiODY3MjhlMWM2OWQ5NTI1MTgyMzU4ZmFmODk3OWRhNDZiMzVjNTAyOGMwYjlmYWU1ZWY0NjFjYmQ4YTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwOTllNmYzMzM2MjA2ZDQ5Nzk3NTcwMGJmNzhkOTE3ODRhYWExYmE4ZWM1YjE2ZDAxYTEyMTE1ZTcyMWIwMWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4OWU0OWU3MzdiMjllMTgxNDMwNjNhZTg3ZmRlNWNkZDEzZWNiODM3MzQyYmM2ZDY2OWVmMGI5Njc0NzU4NmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_926445b43233435db33fdaaf71aa6bdf",
+      "statement": "The design brief requires Thai-first copy and forbids inventing customer proof, prices or integrations.",
+      "evidence": [
+        {
+          "resource": "repo://.ui-craft/brief.md#L1-L12",
+          "version": "repo-lines-v1:sha256:05ca13bd78089ce7bc088b1b8e16d6746e8bc2157ecdecad2ef90e1e4206376a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzN2RjZmI5YTU0ZDAwM2JmOWJkNGJhNjM3MTU5NWRlODY2ODEwOWYzODNhOGZjZmZjMzNiOWU1YzFjNWNmZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjYTU3MzhhZDM4MmZhNDAyNjk4Zjg5ZDY4NDExYmRkZjJkMTQ0YTkxZGNhZDc2ZjdkYTBhMDcwZjQ5NjU4YWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhZDRiOTdiOTk1MmJmODQwMDgyYWFhMDE1ZWYzZmUzOGVmYTU1MDI5MmE0M2U4MDA5OWU2YWE4MDc5NTQxM2MifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T08:08:50.062Z"
+  }
+}

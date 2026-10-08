@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#eef2f8">
+  <title>ใบเสร็จรับเงิน — naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app/receipts/receipts.css">
+  <script src="/app/receipts/receipts.js" defer></script>
+</head>
+<body>
+  <a class="skip-link screen-only" href="#main">ข้ามไปที่ใบเสร็จ</a>
+  <header class="toolbar screen-only">
+    <nav aria-label="เมนูใบเสร็จ"><a href="/app/billing/">กลับไปหน้าแพ็กเกจ</a></nav>
+    <button id="print" type="button" disabled>พิมพ์ / บันทึกเป็น PDF</button>
+  </header>
+  <main id="main" aria-busy="true">
+    <p id="loading" class="state screen-only" role="status">กำลังโหลดใบเสร็จ…</p>
+    <section id="error" class="state screen-only" hidden>
+      <h1 id="error-title">โหลดใบเสร็จไม่สำเร็จ</h1>
+      <p id="error-message" role="alert"></p>
+      <button id="retry" type="button">ลองอีกครั้ง</button>
+    </section>
+    <noscript><p class="state screen-only">กรุณาเปิด JavaScript เพื่อดูใบเสร็จรับเงิน</p></noscript>
+    <article id="receipt" class="receipt" aria-labelledby="receipt-title" hidden>
+      <header class="receipt-heading">
+        <h1 id="receipt-title"></h1>
+        <p class="receipt-number">เลขที่ <strong id="number"></strong></p>
+      </header>
+      <section class="seller" aria-label="ข้อมูลผู้ขาย">
+        <h2 id="seller-name"></h2>
+        <p id="seller-address" class="preserve-lines"></p>
+        <p id="seller-tax-row" hidden>เลขประจำตัวผู้เสียภาษี <span id="seller-tax"></span></p>
+      </section>
+      <div class="receipt-details">
+        <section aria-labelledby="buyer-title">
+          <h2 id="buyer-title" class="label">ผู้ชำระเงิน</h2>
+          <p id="buyer-name"></p>
+          <p id="buyer-phone-row" hidden>โทร. <span id="buyer-phone"></span></p>
+          <p id="buyer-email-row" hidden><span id="buyer-email"></span></p>
+        </section>
+        <dl class="dates">
+          <div><dt>วันที่ออกใบเสร็จ</dt><dd id="issued-date"></dd></div>
+          <div><dt>วันที่ชำระเงิน</dt><dd id="paid-date"></dd></div>
+        </dl>
+      </div>
+      <table class="items">
+        <caption class="sr-only">รายการชำระเงิน</caption>
+        <thead><tr><th scope="col">รายการ</th><th scope="col" class="money">จำนวนเงิน (บาท)</th></tr></thead>
+        <tbody><tr><td><strong id="plan-name"></strong><span id="period" class="period"></span></td><td id="line-amount" class="money"></td></tr></tbody>
+      </table>
+      <dl class="totals">
+        <div id="subtotal-row" hidden><dt>ราคาก่อน VAT</dt><dd id="subtotal" class="money"></dd></div>
+        <div id="vat-row" hidden><dt>VAT 7%</dt><dd id="vat" class="money"></dd></div>
+        <div class="grand-total"><dt>ยอดชำระสุทธิ</dt><dd class="money"><strong id="total"></strong> บาท</dd></div>
+      </dl>
+      <p id="vat-note" class="vat-note" hidden>ราคารวม VAT 7% แล้ว</p>
+      <p id="amount-words" class="amount-words"></p>
+    </article>
+    <p id="print-help" class="print-help screen-only" hidden>เลือกกระดาษ A4 และปิดหัวกระดาษกับท้ายกระดาษในหน้าต่างพิมพ์ เพื่อบันทึกเฉพาะใบเสร็จ</p>
+  </main>
+</body>
+</html>

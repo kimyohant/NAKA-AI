@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f7f8fb">
+  <title>ตั้งค่าระบบ — หลังร้าน naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/glass-nav.css">
+  <link rel="stylesheet" href="/admin/system/system.css">
+  <script src="/glass-nav.js" defer></script>
+  <script src="/admin/system/system.js" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
+  <header class="admin-nav glass-nav">
+    <div class="shell nav-row">
+      <a class="brand" href="/admin/" aria-label="หลังร้าน naka-ai"><img src="/logo.svg?v=4" alt="" width="34" height="34"><span>naka<span>-ai</span><b>.</b></span><small class="brand-tag" aria-hidden="true">CONTROL ROOM</small></a>
+      <nav class="nav-links" aria-label="หน้าหลังร้าน"><a href="/admin/customers/">จัดการลูกค้า</a><a href="/admin/system/" aria-current="page"><i class="fx-led" aria-hidden="true"></i>ตั้งค่าระบบ</a><a href="/" target="_blank" rel="noopener">ดูหน้าเว็บ ↗</a></nav>
+      <button id="logout" class="btn btn-ghost btn-sm" type="button" hidden>ออกจากระบบ</button>
+    </div>
+  </header>
+  <main id="main" class="shell">
+    <section id="login" class="card login" aria-labelledby="login-title" hidden>
+      <p class="kicker">ADMIN · SYSTEM</p>
+      <h1 id="login-title">เข้าสู่หน้าตั้งค่าระบบ</h1>
+      <p class="muted">เข้าด้วยบัญชี Google ของผู้ดูแลระบบ (อีเมลที่อยู่ใน ADMIN_EMAILS) · ต้องเข้าใหม่ทุก 12 ชั่วโมง</p>
+      <a class="btn btn-primary google" href="/api/auth/google/start?next=%2Fadmin%2Fsystem%2F">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#fff" d="M21.35 11.1H12v2.98h5.35c-.23 1.4-1.66 4.1-5.35 4.1-3.22 0-5.85-2.67-5.85-5.96S8.78 6.26 12 6.26c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.68 3.7 14.55 2.8 12 2.8 6.92 2.8 2.8 6.92 2.8 12s4.12 9.2 9.2 9.2c5.31 0 8.83-3.73 8.83-8.99 0-.6-.07-1.06-.15-1.51z"/></svg>
+        เข้าสู่ระบบด้วย Google
+      </a>
+      <p id="login-status" role="status" aria-live="polite"></p>
+      <details class="break-glass">
+        <summary>เข้าด้วยโทเคนฉุกเฉิน</summary>
+        <p class="muted">ใช้เมื่อเข้าด้วย Google ไม่ได้เท่านั้น โทเคนเก็บเฉพาะแท็บนี้</p>
+        <form id="login-form">
+          <label for="token">ADMIN_TOKEN</label>
+          <input id="token" type="password" autocomplete="off" required>
+          <button class="btn btn-ghost btn-sm" type="submit">เข้าด้วยโทเคน</button>
+        </form>
+      </details>
+    </section>
+
+    <div id="app" hidden>
+      <div class="page-heading">
+        <p class="kicker">CONTROL ROOM</p>
+        <h1>ตั้งค่าระบบ naka-ai</h1>
+        <p class="lead">เปิด/ปิดฟีเจอร์ ใส่ API key และแก้แพ็กเกจได้จากที่นี่ มีผลภายในไม่กี่วินาทีโดยไม่ต้อง deploy</p>
+        <span id="who" class="who" hidden></span>
+      </div>
+
+      <section id="key-warning" class="card notice" hidden aria-labelledby="key-warning-title">
+        <h2 id="key-warning-title">ยังไม่ได้ตั้งกุญแจเข้ารหัส (SETTINGS_KEY)</h2>
+        <p>ค่าทั่วไปและสวิตช์ฟีเจอร์บันทึกได้แล้ว แต่ API key ต้องมีกุญแจนี้ก่อน รันคำสั่งนี้ในโฟลเดอร์โปรเจกต์ครั้งเดียว แล้วโหลดหน้านี้ใหม่:</p>
+        <pre class="command">node -e "console.log(require('crypto').randomBytes(32).toString('base64'))" | npx wrangler secret put SETTINGS_KEY</pre>
+        <p class="muted">เก็บกุญแจนี้ไว้ ถ้าเปลี่ยนหรือลบ API key ที่บันทึกไว้จะอ่านไม่ได้และต้องใส่ใหม่</p>
+      </section>
+
+      <nav class="tabs" role="tablist" aria-label="หมวดการตั้งค่า">
+        <button role="tab" id="tab-features" aria-controls="panel-features" aria-selected="true">ฟีเจอร์</button>
+        <button role="tab" id="tab-connections" aria-controls="panel-connections" aria-selected="false" tabindex="-1">API และการเชื่อมต่อ</button>
+        <button role="tab" id="tab-general" aria-controls="panel-general" aria-selected="false" tabindex="-1">ค่าทั่วไป</button>
+        <button role="tab" id="tab-plans" aria-controls="panel-plans" aria-selected="false" tabindex="-1">แพ็กเกจและราคา</button>
+        <button role="tab" id="tab-trending" aria-controls="panel-trending" aria-selected="false" tabindex="-1">คลิปมาแรง</button>
+        <button role="tab" id="tab-audit" aria-controls="panel-audit" aria-selected="false" tabindex="-1">ประวัติการแก้</button>
+      </nav>
+      <p id="page-status" role="status" aria-live="polite"></p>
+
+      <section id="panel-features" role="tabpanel" aria-labelledby="tab-features">
+        <div id="features" class="settings"></div>
+      </section>
+      <section id="panel-connections" role="tabpanel" aria-labelledby="tab-connections" hidden>
+        <div class="card import">
+          <div><p class="panel-line" aria-hidden="true">MIGRATE · CLOUDFLARE → D1</p><h2>ย้ายค่าจาก Cloudflare</h2><p class="muted">คัดลอกค่าที่ตั้งไว้ด้วย wrangler (vars/secrets) เข้ามาเก็บในระบบนี้ ค่าที่ตั้งจากหน้านี้แล้วจะไม่ถูกทับ</p></div>
+          <button id="import" class="btn btn-primary btn-sm" type="button">ย้ายค่าเข้าระบบ</button>
+        </div>
+        <p id="import-status" role="status" aria-live="polite"></p>
+        <div id="connections" class="settings"></div>
+        <section class="card" aria-labelledby="locked-title">
+          <h2 id="locked-title">ค่าที่แก้ได้เฉพาะใน Cloudflare</h2>
+          <p class="muted">กุญแจหลักของระบบ แก้ด้วย <code>npx wrangler secret put</code> หรือ wrangler.jsonc เพื่อไม่ให้หน้าเว็บถือกุญแจของตัวเอง</p>
+          <ul id="locked" class="locked"></ul>
+        </section>
+      </section>
+      <section id="panel-general" role="tabpanel" aria-labelledby="tab-general" hidden>
+        <div id="general" class="settings"></div>
+      </section>
+      <section id="panel-plans" role="tabpanel" aria-labelledby="tab-plans" hidden>
+        <p class="muted">ราคาใหม่มีผลกับการซื้อครั้งถัดไป ลูกค้าที่จ่ายแล้วได้ตามที่จ่าย · หยุดขาย = ซ่อนจากหน้าราคาและหน้าชำระเงิน แต่ลูกค้าเดิมยังใช้ต่อได้ · รายปีคิด 10 เดือน</p>
+        <div id="plans"></div>
+        <form id="new-plan" class="card">
+          <h2>เพิ่มแพ็กเกจ</h2>
+          <div class="plan-grid">
+            <div><label for="np-id">รหัส (ภาษาอังกฤษ)</label><input id="np-id" required pattern="[a-z][a-z0-9_\-]{1,30}" placeholder="เช่น team"></div>
+            <div><label for="np-name">ชื่อ</label><input id="np-name" required maxlength="40"></div>
+            <div><label for="np-price">ราคา/เดือน (บาท)</label><input id="np-price" type="number" min="10" max="100000" required></div>
+            <div><label for="np-credits">เครดิต/เดือน</label><input id="np-credits" type="number" min="0" max="100000" required></div>
+            <div><label for="np-jobs">งานพร้อมกัน</label><input id="np-jobs" type="number" min="1" max="20" value="1" required></div>
+          </div>
+          <label class="check"><input id="np-sale" type="checkbox" checked> เปิดขายทันที</label>
+          <button class="btn btn-primary btn-sm" type="submit">เพิ่มแพ็กเกจ</button>
+          <p id="new-plan-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+      <section id="panel-trending" role="tabpanel" aria-labelledby="tab-trending" hidden>
+        <p class="muted">คลิปที่ลูกค้าเห็นในหน้านักการตลาด AI (สตูดิโอ 05) · มาได้ 3 ทาง: เพิ่มเองทีละคลิป, นำเข้าไฟล์ export จาก FastMoss / Kalodata, หรือดึงจาก API อัตโนมัติทุกชั่วโมง (ตั้งในแท็บ API และการเชื่อมต่อ)</p>
+        <div class="trend-tools">
+          <form id="trend-add" class="card">
+            <p class="panel-line" aria-hidden="true">CURATED · เพิ่มเอง</p>
+            <h2>เพิ่มคลิป</h2>
+            <label for="ta-url">ลิงก์คลิป TikTok / Facebook / Instagram / YouTube</label><input id="ta-url" type="url" required placeholder="https://www.tiktok.com/@ร้าน/video/…">
+            <div class="plan-grid">
+              <div><label for="ta-category">หมวด</label><select id="ta-category"></select></div>
+              <div><label for="ta-views">ยอดวิว</label><input id="ta-views" placeholder="เช่น 1.2M"></div>
+              <div><label for="ta-revenue">ยอดขายประมาณ (บาท)</label><input id="ta-revenue" placeholder="เช่น 160K หรือเว้นว่าง"></div>
+              <div><label for="ta-product">สินค้าในคลิป</label><input id="ta-product" maxlength="200"></div>
+            </div>
+            <p class="muted">ชื่อคลิปและภาพปกของ TikTok ดึงให้อัตโนมัติ</p>
+            <button class="btn btn-primary btn-sm" type="submit">เพิ่มคลิป</button>
+            <p id="ta-status" role="status" aria-live="polite"></p>
+          </form>
+          <form id="trend-import" class="card">
+            <p class="panel-line" aria-hidden="true">IMPORT · FASTMOSS / KALODATA</p>
+            <h2>นำเข้าไฟล์</h2>
+            <label for="ti-file">ไฟล์ CSV หรือ JSON (ไม่เกิน 1,000 แถว)</label><input id="ti-file" type="file" accept=".csv,.json,text/csv,application/json" required>
+            <div class="plan-grid">
+              <div><label for="ti-currency">ยอดขายในไฟล์เป็น</label><select id="ti-currency"><option value="THB">บาท</option><option value="USD">ดอลลาร์</option></select></div>
+              <div><label for="ti-rate">อัตรา 1 USD = ? บาท</label><input id="ti-rate" type="number" min="1" max="1000" step="0.01" placeholder="เช่น 36"></div>
+            </div>
+            <p class="muted">อ่านคอลัมน์ชื่อทั่วไปให้อัตโนมัติ เช่น video url, views / play count, revenue / GMV, likes, category, title</p>
+            <button class="btn btn-primary btn-sm" type="submit">นำเข้า</button>
+            <p id="ti-status" role="status" aria-live="polite"></p>
+            <hr>
+            <p class="panel-line" aria-hidden="true">API · ทุกชั่วโมง</p>
+            <button class="btn btn-ghost btn-sm" type="button" id="trend-sync">ดึงจาก API ตอนนี้</button>
+            <p id="ts-status" class="muted" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+        <p id="trend-summary" class="muted"></p>
+        <div class="table-wrap"><table class="trend-table"><thead><tr><th>คลิป</th><th>หมวด</th><th class="num">วิว</th><th class="num">ยอดขาย (บาท)</th><th>ที่มา</th><th>แสดง</th><th></th></tr></thead><tbody id="trend-rows"></tbody></table></div>
+      </section>
+      <section id="panel-audit" role="tabpanel" aria-labelledby="tab-audit" hidden>
+        <div class="card history"><ul id="audit"></ul></div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

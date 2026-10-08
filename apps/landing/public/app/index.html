@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f7f8fb">
+  <title>พื้นที่ของร้าน — naka-ai</title>
+  <meta name="description" content="แดชบอร์ด naka-ai: เครดิตคงเหลือและจุดเริ่มงาน 4 แบบของร้าน คลิปขาย ละครสั้น AI ไลฟ์ และบอตตอบลูกค้า">
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/glass-nav.css">
+  <link rel="stylesheet" href="/account-menu.css">
+  <link rel="stylesheet" href="/member.css">
+  <link rel="stylesheet" href="/app/app.css">
+  <link rel="stylesheet" href="/app/onboarding.css">
+  <link rel="stylesheet" href="/app/works.css">
+  <script src="/account-menu.js" defer></script>
+  <script src="/app/app.js" defer></script>
+  <script src="/app/onboarding.js" defer></script>
+  <script src="/app/works.js" defer></script>
+</head>
+<body class="member-ui">
+  <a class="skip-link" href="#main">ข้ามไปที่เนื้อหา</a>
+  <header class="app-topbar glass-nav">
+    <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" width="36" height="36" alt=""><span>naka<span class="brand-accent">-ai</span><b>.</b></span></a>
+    <span class="header-divider" aria-hidden="true"></span>
+    <span class="topbar-label">พื้นที่ของร้าน</span>
+    <nav class="topbar-nav" aria-label="เมนูหลัก">
+      <a href="/app/" aria-current="page">พื้นที่ของร้าน</a>
+      <a href="/app/inbox/">กล่องข้อความ</a>
+      <a href="/app/billing/">แพ็กเกจ</a>
+      <a class="nav-studio" href="#" data-studio-link hidden>Naka Studio ↗</a>
+    </nav>
+    <div data-account-menu></div>
+  </header>
+
+  <main id="main" class="shell">
+    <p id="app-loading" class="app-loading" role="status">กำลังโหลดข้อมูลบัญชี…</p>
+
+    <div id="app-error" class="app-error" hidden>
+      <p>โหลดข้อมูลบัญชีไม่สำเร็จ เพราะเชื่อมต่อเซิร์ฟเวอร์ไม่ได้ชั่วขณะ ยังไม่ได้ออกจากระบบนะคะ</p>
+      <button class="signout-button" id="retry-button" type="button">ลองอีกครั้ง</button>
+    </div>
+
+    <div id="app-content" hidden>
+      <div id="onboarding-card" class="onboarding-card" hidden></div>
+      <p class="mode-note"><span class="mode-dot" aria-hidden="true"></span><span id="mode-text">โหมดทดลอง · ข้อมูลตัวอย่าง</span></p>
+      <p id="studio-notice" class="studio-notice" role="status" hidden></p>
+
+      <section class="greeting" aria-labelledby="greeting-title">
+        <div>
+          <h1 id="greeting-title">สวัสดี<span id="greeting-name"></span></h1>
+          <p>เลือกงานที่อยากเริ่มด้านล่าง หรือกลับไปต่องานเดิมได้ที่สตูดิโอ</p>
+        </div>
+        <img class="greeting-mascot" src="/assets/naka-plush-sales.png" width="120" height="120" alt="มาสคอตนาคาทักทาย">
+      </section>
+
+      <div class="dashboard-grid">
+        <section class="credits-card" aria-labelledby="credits-title">
+          <p class="panel-label" id="credits-title">เครดิตคงเหลือ</p>
+          <p class="credits-number"><span id="credits-value">0</span><small> เครดิต</small></p>
+          <p class="credits-help">เครดิตใช้สำหรับสร้างคลิปและภาพ · ซื้อหรือต่ออายุแพ็กเกจได้ที่ <a href="/app/billing/">หน้าแพ็กเกจ</a> · สอบถาม <a href="tel:+66892788587">0892788587</a></p>
+          <button class="signout-button" id="signout-button" type="button">ออกจากระบบ</button>
+          <p id="signout-status" class="signout-status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="quick-start" aria-labelledby="quick-title">
+          <p class="panel-label" id="quick-title">เริ่มงานของร้าน</p>
+          <div class="workflow-cards">
+            <a class="workflow-card" href="/create/?workflow=sales"><span class="card-index">01</span><strong>คลิปขายสินค้า</strong><small>รูปสินค้า 1 รูป กลายเป็นคลิปแนวตั้งพร้อมเสียงพากย์</small><span class="card-go">เริ่มทำคลิป <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/create/?workflow=drama"><span class="card-index">02</span><strong>ละครสั้น AI</strong><small>พล็อต ตัวละคร และเสียงพากย์ เป็นวิดีโอสั้นของร้าน</small><span class="card-go">เริ่มทำละคร <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/create/?workflow=live"><span class="card-index">03</span><strong>AI Live</strong><small>อวตาร AI ช่วยแนะนำสินค้าและคุยกับคนดูระหว่างไลฟ์</small><span class="card-go">เริ่มไลฟ์ <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/app/inbox/"><span class="card-index">04</span><strong>ตอบลูกค้าอัตโนมัติ</strong><small>ตอบคอมเมนต์และแชตด้วยข้อมูลและน้ำเสียงของร้าน</small><span class="card-go">เปิดกล่องข้อความ <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card studio-card" href="#" data-studio-link hidden><span class="card-index">STUDIO</span><strong>Naka Studio</strong><small>สตูดิโอเต็มรูปแบบ: ละครหลายตอน นักการตลาด AI และโคลนคลิปไวรัล ล็อกอินด้วยบัญชีนี้ได้เลย</small><span class="card-go">เปิด Naka Studio <span aria-hidden="true">↗</span></span></a>
+          </div>
+        </section>
+      </div>
+
+      <section class="works-section" aria-labelledby="works-title">
+        <div class="works-heading">
+          <div><p class="panel-label">งานที่เคยสร้าง</p><h2 id="works-title">ผลงานของฉัน</h2></div>
+          <button class="works-button" id="works-refresh" type="button">รีเฟรช</button>
+        </div>
+        <p class="works-message" id="works-message" role="status" aria-live="polite">กำลังโหลดผลงาน…</p>
+        <ul class="works-list" id="works-list" aria-label="รายการผลงาน"></ul>
+        <button class="works-button works-more" id="works-more" type="button" hidden>ดูเพิ่ม</button>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

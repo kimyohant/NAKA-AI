@@ -1,0 +1,35 @@
+/* /app/billing/ — builds on /app/app.css and /app/inbox/inbox.css */
+/* The display rules below would otherwise override the hidden attribute. */
+.receipts[hidden] { display: none; }
+.current { margin-bottom: 22px; padding: 20px 22px; border: 1px solid var(--m-line); border-radius: 20px; background: var(--m-surface); box-shadow: var(--m-shadow-sm); }
+.current-name { margin: 6px 0 4px; font-family: var(--m-display); font-size: 26px; font-weight: 700; letter-spacing: -.03em; color: var(--m-ink); }
+.current-meta { margin: 0; color: var(--m-ink-2); font-size: 14px; }
+
+.billing-toggle { display: inline-flex; gap: 4px; margin-bottom: 14px; padding: 4px; border: 1px solid var(--m-line); border-radius: 999px; background: var(--m-surface-2); }
+.billing-toggle button { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border: 0; border-radius: 999px; background: none; color: var(--m-ink-2); font-weight: 700; font-size: 14px; }
+.billing-toggle button[aria-pressed="true"] { background: #fff; color: var(--m-brand-ink); box-shadow: var(--m-shadow-sm); }
+.billing-toggle button span { padding: 1px 8px; border-radius: 999px; background: var(--m-ok-bg); color: var(--m-ok); font-size: 11px; }
+
+.plan-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
+.plan-option { display: grid; gap: 6px; padding: 18px; border: 1px solid var(--m-line); border-radius: 18px; background: var(--m-surface); color: inherit; text-align: left; box-shadow: var(--m-shadow-sm); transition: border-color .18s ease, box-shadow .18s ease; }
+.plan-option:hover { border-color: #b9cbf2; }
+.plan-option[aria-checked="true"] { border: 2px solid var(--m-brand); background: #f6f9ff; padding: 17px; box-shadow: 0 10px 26px rgba(36, 89, 214, .16); }
+.plan-option b { font-size: 18px; color: var(--m-ink); }
+.plan-price { font-family: var(--m-display); font-size: 22px; font-weight: 700; color: var(--m-brand-ink); }
+.plan-option small { color: var(--m-ink-2); font-size: 12.5px; line-height: 1.5; }
+
+.pay { display: grid; gap: 12px; padding: 22px; border: 1px solid var(--m-line); border-radius: 20px; background: var(--m-surface); box-shadow: var(--m-shadow-sm); }
+.pay h2 { margin: 0; font-size: 20px; color: var(--m-ink); }
+.pay-summary { margin: 0; font-size: 15px; color: var(--m-ink-2); }
+.pay-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+.pay-buttons button:disabled { opacity: .5; cursor: not-allowed; }
+
+.receipts { display: grid; gap: 10px; margin-top: 22px; padding: 22px; border: 1px solid var(--m-line); border-radius: 20px; background: var(--m-surface); box-shadow: var(--m-shadow-sm); }
+.receipts h2 { margin: 0; font-size: 20px; color: var(--m-ink); }
+.receipt-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.receipt-list li { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.receipt-list a { color: var(--m-brand); font-weight: 700; font-variant-numeric: tabular-nums; }
+.receipt-list span { color: var(--m-ink-2); font-size: 14px; }
+
+@media (max-width: 900px) { .plan-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .plan-list { grid-template-columns: 1fr; } }

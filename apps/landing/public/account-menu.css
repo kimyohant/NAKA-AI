@@ -1,0 +1,124 @@
+/* Account menu rendered by account-menu.js into [data-account-menu] elements.
+   Styled for the dark glass navigation (navy #091736 theme shared with
+   glass-nav.css). The signed-in state also hides the marketing CTA on the
+   home header so the nav shows one account entry, not two competing pills. */
+
+.acct { position: relative; display: inline-flex; }
+
+/* Logged out: pill matching the home .nav-cta */
+.acct-login {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 8px 18px;
+  border: 1px solid #ffffff66;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background .18s ease, border-color .18s ease;
+}
+.acct-login:hover { background: #ffffff18; border-color: #fff; }
+
+/* Trigger: avatar + name + chevron */
+.acct-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 5px 12px 5px 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #eaf3ff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+.acct-trigger:hover,
+.acct-trigger[aria-expanded="true"] { background: #ffffff14; border-color: #ffffff38; }
+
+.acct-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(150deg, #2b6ae3, #163e8f);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.acct-name { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct-chevron { font-size: 10px; color: #b9cdec; }
+
+/* Dropdown */
+.acct-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  min-width: 230px;
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  background: rgba(10, 24, 52, .92);
+  border: 1px solid #ffffff26;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(2, 10, 26, .45);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+.acct-menu[hidden] { display: none; }
+
+.acct-menu-name { display: block; padding: 8px 10px 2px; color: #fff; font-weight: 700; font-size: 14px; }
+.acct-menu-contact { display: block; padding: 0 10px 6px; color: #9fb4d6; font-size: 12px; overflow-wrap: anywhere; }
+.acct-menu-credits {
+  display: block;
+  margin: 2px 4px 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #ffffff10;
+  color: #a9e2fb;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.acct-item {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #e6eefc;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  width: 100%;
+}
+.acct-item:hover { background: #ffffff14; color: #fff; }
+.acct-item:focus-visible { outline: 3px solid #6bc5ec; outline-offset: 2px; }
+
+/* Inline sign-out failure message inside the menu (role="status"). */
+.acct-menu-error { padding: 6px 10px 4px; color: #ffb4a6; font-size: 12px; line-height: 1.6; }
+.acct-menu-error[hidden] { display: none; }
+
+/* When signed in, the home header CTA duplicates the account entry. */
+body.acct-signed-in .site-header .nav-cta { display: none; }
+
+@media (max-width: 560px) {
+  .acct-name { display: none; }
+  .acct-trigger { padding: 5px; }
+  .acct-menu { min-width: 210px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acct-login, .acct-trigger { transition: none; }
+}

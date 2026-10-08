@@ -1,0 +1,92 @@
+/* Member area (login, /app/*) — the light "naka-ai" look of the landing page (public/landing.css).
+   Pages opt in with <body class="member-ui"> and load this file after glass-nav.css and account-menu.css,
+   before their own stylesheet, which then only uses the tokens below. */
+
+:root {
+  --m-bg: #f7f8fb;
+  --m-surface: #ffffff;
+  --m-surface-2: #f2f5fb;
+  --m-blue-soft: #edf3ff;
+  --m-ink: #0d1b33;
+  --m-ink-2: #4a5872;
+  --m-ink-3: #7b879c;
+  --m-line: #e3e8f1;
+  --m-line-strong: #c9d5ea;
+  --m-brand: #2459d6;
+  --m-brand-ink: #173f9e;
+  --m-cyan: #14b3d6;
+  --m-grad: linear-gradient(115deg, #2459d6 0%, #3d6cf0 45%, #14b3d6 100%);
+  --m-ok: #12805a;
+  --m-ok-bg: #e5f7ef;
+  --m-warn: #8a5a00;
+  --m-warn-bg: #fff4d6;
+  --m-danger: #c2362b;
+  --m-danger-bg: #fdecea;
+  --m-shadow-sm: 0 1px 2px rgba(13, 27, 51, .06), 0 4px 14px rgba(13, 27, 51, .05);
+  --m-shadow-lg: 0 2px 4px rgba(13, 27, 51, .05), 0 24px 60px rgba(20, 45, 110, .14);
+  --m-shadow-btn: 0 8px 22px rgba(36, 89, 214, .32);
+  --m-radius: 20px;
+  --m-font: "Anuphan", system-ui, sans-serif;
+  --m-display: "IBM Plex Sans Thai", "Anuphan", system-ui, sans-serif;
+  color-scheme: light;
+}
+
+body.member-ui {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--m-font);
+  color: var(--m-ink);
+  background:
+    radial-gradient(900px 420px at 85% -120px, rgba(61, 108, 240, .14), transparent 70%),
+    radial-gradient(700px 360px at -10% 0, rgba(20, 179, 214, .08), transparent 70%),
+    var(--m-bg);
+}
+.member-ui a:focus-visible, .member-ui button:focus-visible, .member-ui input:focus-visible,
+.member-ui textarea:focus-visible, .member-ui select:focus-visible { outline: 3px solid rgba(36, 89, 214, .45); outline-offset: 3px; }
+.member-ui .skip-link { background: var(--m-ink); color: #fff; }
+
+/* ---- header: white frost like the landing nav ---- */
+.member-ui .glass-nav {
+  --glass-rgb: 255, 255, 255;
+  --glass-line: 13, 27, 51;
+  --glass-shadow: 0 8px 24px rgba(13, 27, 51, .08);
+}
+.member-ui .brand { color: var(--m-ink); }
+.member-ui .brand b { color: var(--m-brand); }
+
+/* ---- account menu (account-menu.js) on light headers ---- */
+.member-ui .acct-login { border-color: var(--m-line); background: #fff; color: var(--m-ink); }
+.member-ui .acct-login:hover { background: var(--m-bg); border-color: var(--m-line-strong); }
+.member-ui .acct-trigger { color: var(--m-ink); }
+.member-ui .acct-trigger:hover, .member-ui .acct-trigger[aria-expanded="true"] { background: rgba(13, 27, 51, .05); border-color: var(--m-line); }
+.member-ui .acct-avatar, .landing-nav .acct-avatar { background: var(--m-grad); }
+.member-ui .acct-chevron { color: var(--m-ink-3); }
+.member-ui .acct-menu, .landing-nav .acct-menu {
+  background: rgba(255, 255, 255, .97);
+  border-color: var(--m-line);
+  box-shadow: var(--m-shadow-lg);
+}
+.member-ui .acct-menu-name, .landing-nav .acct-menu-name { color: var(--m-ink); }
+.member-ui .acct-menu-contact, .landing-nav .acct-menu-contact { color: var(--m-ink-3); }
+.member-ui .acct-menu-credits, .landing-nav .acct-menu-credits { background: var(--m-blue-soft); color: var(--m-brand-ink); }
+.member-ui .acct-item, .landing-nav .acct-item { color: var(--m-ink-2); }
+.member-ui .acct-item:hover, .landing-nav .acct-item:hover { background: var(--m-surface-2); color: var(--m-ink); }
+.member-ui .acct-item:focus-visible, .landing-nav .acct-item:focus-visible { outline-color: rgba(36, 89, 214, .45); }
+.member-ui .acct-menu-error, .landing-nav .acct-menu-error { color: var(--m-danger); }
+
+/* ---- shared building blocks ---- */
+.m-card { background: var(--m-surface); border: 1px solid var(--m-line); border-radius: var(--m-radius); box-shadow: var(--m-shadow-sm); }
+.m-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px;
+  border: 1px solid transparent; border-radius: 999px; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; text-decoration: none;
+  transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease;
+}
+.m-btn-primary { color: #fff; background: var(--m-grad); box-shadow: var(--m-shadow-btn); }
+.m-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(36, 89, 214, .4); }
+.m-btn-ghost { color: var(--m-brand-ink); background: #fff; border-color: var(--m-line); }
+.m-btn-ghost:hover { border-color: var(--m-line-strong); background: var(--m-bg); }
+.m-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .m-btn, .m-btn:hover { transition: none; transform: none; }
+}
