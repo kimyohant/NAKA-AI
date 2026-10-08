@@ -1,30 +1,31 @@
-// The episode page's single video-status watcher (menus/drama/utils/videoWatch.js): a fake server and fake
-// timers stand in for the page, so each tick is driven by hand and every request is counted.
+// The pages' single generation-status watcher (menus/drama/utils/taskWatch.js), used for videos and images:
+// a fake server and fake timers stand in for the page, so each tick is driven by hand and every request is
+// counted.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { createVideoWatch } from '../menus/drama/utils/videoWatch.js'
+import { createTaskWatch } from '../menus/drama/utils/taskWatch.js'
 
 function page({ maxMs } = {}) {
   const server = new Map() // task id → { id, storyboard, status, error_msg }
   const videos = new Set() // storyboards that have a video
   const state = { pending: [], calls: { tasks: 0, shots: 0 }, finished: [], expired: [], clock: 0, timer: null }
-  const watch = createVideoWatch({
+  const watch = createTaskWatch({
     maxMs,
     now: () => state.clock,
     timers: {
       setInterval: fn => (state.timer = fn, 1),
       clearInterval: () => { state.timer = null },
     },
-    pendingIds: () => state.pending,
+    pendingKeys: () => state.pending,
     // like the page's loadGenTasks: one request, rebuilds "generating" from the server
     loadTasks: async () => {
       state.calls.tasks++
       state.pending = [...server.values()].filter(t => ['queued', 'processing'].includes(t.status)).map(t => t.storyboard)
       return [...server.values()]
     },
-    reloadShots: async () => { state.calls.shots++ },
-    hasVideo: id => videos.has(id),
+    reload: async () => { state.calls.shots++ },
+    isDone: id => videos.has(id),
     onExpired: id => state.expired.push(id),
     onFinished: (id, task) => state.finished.push([id, task.status]),
   })
@@ -107,12 +108,43 @@ test('gives up after maxMs like the old loop did, and a slow tick is never doubl
   assert.equal(q.state.calls.tasks, 1)
 })
 
+test('images: keys of any shape, and a regenerated image is followed by its task, not by the old picture', async () => {
+  const p = page()
+  p.videos.add('character:3') // the character already has a picture: regenerating it
+  p.submit(7, 'character:3')
+  await p.watch.tick()
+  assert.deepEqual(p.state.finished, [], 'still making the new picture')
+  p.finish(7, 'failed', 'provider down')
+  await p.watch.tick()
+  assert.deepEqual(p.state.finished, [['character:3', 'failed']], 'a failed image is reported, not left spinning')
+  assert.equal(p.watch.has('character:3'), false)
+  assert.equal(p.watch.running, false)
+})
+
+const read = path => readFileSync(new URL(path, import.meta.url), 'utf8')
+
 test('the episode page uses the watcher: no per-shot loop, no whole-page reload while waiting', () => {
-  const page = readFileSync(new URL('../menus/drama/views/episode.vue', import.meta.url), 'utf8')
+  const page = read('../menus/drama/views/episode.vue')
   assert.doesNotMatch(page, /pollVideoGeneration/)
   assert.match(page, /videoWatch\.track\(generation\?\.id, sb\.id\)/)
   assert.match(page, /onBeforeUnmount\(\(\) => \{[^}]*videoWatch\.stop\(\)/)
   assert.match(page, /if \(pending\.size\) videoWatch\.start\(\)/)
   const batch = page.slice(page.indexOf('function confirmBatchVideos'), page.indexOf('function pruneStaleModel'))
   assert.doesNotMatch(batch, /watchAsyncResult/)
+})
+
+test('character / scene / prop images: one watcher per page, no loop per image', () => {
+  const episode = read('../menus/drama/views/episode.vue')
+  assert.doesNotMatch(episode, /watchAsyncResult/, 'the per-image loop that reloaded the whole page every 2.5 s')
+  assert.match(episode, /const imageWatch = createTaskWatch\(/)
+  assert.match(episode, /imageWatch\.track\(res\?\.image_generation_id, imageKey\(kind, id\)\)/)
+  assert.match(episode, /resumeImageTasks\(genTasks\.value\)/, 'images still being made are followed after a reload')
+  assert.match(episode, /onBeforeUnmount\(\(\) => \{[^}]*imageWatch\.stop\(\)/)
+  for (const file of ['detail', 'board']) {
+    const view = read(`../menus/drama/views/${file}.vue`)
+    assert.doesNotMatch(view, /pollMaterial|sleep\(2500\)/, `${file}.vue: no loop per image`)
+    assert.match(view, /loadTasks: \(\) => taskAPI\.list\(\{ type: 'image', drama_id: dramaId \}\)/)
+    assert.match(view, /materialWatch\.track\(res\?\.image_generation_id, key\)/)
+    assert.match(view, /onBeforeUnmount\(\(\) => materialWatch\.stop\(\)\)/)
+  }
 })

@@ -103,7 +103,8 @@ import { toast } from 'vue-sonner'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, Loader2, Sparkles, X } from 'lucide-vue-next'
-import { dramaAPI, episodeAPI, characterAPI, sceneAPI, propAPI } from '~/composables/useApi'
+import { dramaAPI, episodeAPI, characterAPI, sceneAPI, propAPI, taskAPI } from '~/composables/useApi'
+import { createTaskWatch } from '../utils/taskWatch.js'
 
 // 全屏 studio 布局（与项目工作区一致）
 definePageMeta({ layout: 'studio' })
@@ -181,34 +182,44 @@ async function generateMaterial(m) {
   if (pending.value.has(key)) return
   pending.value = new Set(pending.value).add(key)
   try {
-    if (m.kindKey === 'character') await characterAPI.generateImage(m.id, epId)
-    else if (m.kindKey === 'scene') await sceneAPI.generateImage(m.id, epId)
-    else await propAPI.generateImage(m.id, epId)
+    const api = m.kindKey === 'character' ? characterAPI : m.kindKey === 'scene' ? sceneAPI : propAPI
+    const res = await api.generateImage(m.id, epId)
     toast.success(t('board.generatingStarted', { name: m.name }))
-    pollMaterial(m)
+    startedMaterials.set(key, m)
+    materialWatch.track(res?.image_generation_id, key)
   } catch (e) {
-    pending.value = new Set([...pending.value].filter(k => k !== key))
+    dropPending(key)
     toastError(e)
   }
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
-async function pollMaterial(m) {
-  const key = pendingKey(m)
-  for (let i = 0; i < 40; i++) {
-    await sleep(2500)
-    const [d] = await Promise.all([dramaAPI.get(dramaId)])
-    drama.value = d
-    const list = m.kindKey === 'character' ? d?.characters : m.kindKey === 'scene' ? d?.scenes : d?.props
-    const rec = list?.find(x => x.id === m.id)
-    if (rec && matImage(rec)) {
-      pending.value = new Set([...pending.value].filter(k => k !== key))
-      return
-    }
-  }
+// Images are made in the background: one watcher follows every image started here by its task id. One
+// task-list request (this project's image tasks) every 3 s for all of them, and the project reloads only when
+// one finished — instead of a loop per image that reloaded the project every 2.5 s. A regenerated image is
+// not "done" just because the old one is still there, and a failed one says so (../utils/taskWatch.js).
+const startedMaterials = new Map() // key → the material, for the messages
+function dropPending(key) {
+  startedMaterials.delete(key)
   pending.value = new Set([...pending.value].filter(k => k !== key))
-  toast.info(t('board.genTimeout', { name: m.name }))
 }
+const materialWatch = createTaskWatch({
+  intervalMs: 3000,
+  maxMs: 15 * 60 * 1000,
+  pendingKeys: () => [...pending.value],
+  loadTasks: () => taskAPI.list({ type: 'image', drama_id: dramaId }),
+  reload: () => dramaAPI.get(dramaId).then(d => { drama.value = d }),
+  isDone: key => !!materials.value.find(x => pendingKey(x) === key && matImage(x)),
+  onExpired: key => {
+    const m = startedMaterials.get(key)
+    dropPending(key)
+    if (m) toast.info(t('board.genTimeout', { name: m.name }))
+  },
+  onFinished: (key, task) => {
+    dropPending(key)
+    if (task.status !== 'completed') toastError(task.error_msg || task.errorMsg, { fallback: 'episode.image.genFailed' })
+  },
+})
+onBeforeUnmount(() => materialWatch.stop())
 
 async function load() {
   try {

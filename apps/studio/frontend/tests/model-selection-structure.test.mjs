@@ -54,8 +54,10 @@ test('selected models are sent with rewrite, image and video generation requests
   assert.match(useApi, /text_model: textModel \|\| undefined/)
   assert.match(useApi, /text_config_id: textConfigId \|\| undefined/)
   assert.match(useApi, /config_id: configId \|\| undefined/)
-  assert.match(page, /characterAPI\.generateImage\(id, epId\.value, bareModelName\(imageModel\.value\) \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
-  assert.match(page, /sceneAPI\.generateImage\(id, epId\.value, bareModelName\(imageModel\.value\) \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
+  // one path for character / scene / prop images (genAssetImage) and for the scene / prop batches
+  assert.match(page, /genAssetImage\('character', id, characterAPI,/)
+  assert.match(page, /genAssetImage\('scene', id, sceneAPI,/)
+  assert.match(page, /api\.generateImage\(id, epId\.value, bareModelName\(imageModel\.value\) \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
   assert.match(page, /characterAPI\.batchImages\(ids, epId\.value, bareModelName\(imageModel\.value\) \|\| undefined, ownerConfigId\(imageModelOptions\.value, imageModel\.value\), chatModelOverride\(\), chatConfigId\(\)\)/)
   // 视频生成透传模型与配置
   assert.match(page, /model: bareModelName\(videoModel\.value\) \|\| undefined/)

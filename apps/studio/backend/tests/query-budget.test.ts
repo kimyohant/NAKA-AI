@@ -15,6 +15,7 @@ const { default: episodes } = await import('../src/modules/drama/routes/episodes
 const { default: dramas } = await import('../src/modules/drama/routes/dramas.js')
 const { default: characters } = await import('../src/modules/drama/routes/characters.js')
 const { default: storyboards } = await import('../src/modules/drama/routes/storyboards.js')
+const { default: tasks } = await import('../src/core/routes/tasks.js')
 const { runAsOwner } = await import('../src/core/auth/owner-context.js')
 const { sourceSnapshotForShot } = await import('../src/core/production/source-freshness.js')
 
@@ -79,6 +80,7 @@ app.route('/episodes', episodes)
 app.route('/dramas', dramas)
 app.route('/characters', characters)
 app.route('/storyboards', storyboards)
+app.route('/tasks', tasks)
 
 /** Call as the member 'me' and report what it cost. */
 async function measure(path: string) {
@@ -102,6 +104,9 @@ const BUDGETS: Array<[string, number, number]> = [
   ['/episodes/1/generation-tasks', 10, 160],
   ['/characters/looks?drama_id=1', 2, 20],
   ['/storyboards/1/readiness', 10, 20],
+  // the project page / board poll this while images are made: filtered in SQL, not after reading every task
+  ['/tasks?type=video&drama_id=1', 1, 40],
+  ['/tasks?type=image&drama_id=1', 1, 0],
 ]
 
 test('the episode workbench endpoints run a fixed number of statements and read only this member\'s rows', async () => {
@@ -147,11 +152,12 @@ test('the answers stay the same', async () => {
   assert.ok(snapshot)
 })
 
-test('the hot filter columns are indexed (migrations/pg/0002_hot_indexes.sql)', async () => {
+test('the hot filter columns are indexed (migrations/pg/0002_hot_indexes.sql, 0003_task_drama_index.sql)', async () => {
   const rows = await rawQuery(`SELECT indexname FROM pg_indexes WHERE schemaname = current_schema()`)
   const names = new Set(rows.map(r => String(r.indexname)))
   for (const name of ['idx_storyboards_episode', 'idx_episodes_drama', 'idx_characters_drama', 'idx_scenes_drama', 'idx_props_drama',
-    'idx_video_merges_episode', 'idx_sys_task_config_status', 'idx_sys_task_live', 'idx_pipeline_tasks_status', 'idx_clone_variants_status']) {
+    'idx_video_merges_episode', 'idx_sys_task_config_status', 'idx_sys_task_live', 'idx_pipeline_tasks_status', 'idx_clone_variants_status',
+    'idx_sys_task_drama']) {
     assert.ok(names.has(name), `missing index ${name}`)
   }
 })

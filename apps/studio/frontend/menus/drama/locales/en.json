@@ -427,7 +427,9 @@
       "batchGeneratingProp": "Batch prop images generating",
       "allCharsDone": "All character images generated",
       "allScenesDone": "All scene images generated",
-      "allPropsDone": "All prop images generated"
+      "allPropsDone": "All prop images generated",
+      "genFailed": "Image generation failed",
+      "genTimeout": "Image generation timed out — try refreshing"
     },
     "extract": {
       "done": "{type} extraction complete",

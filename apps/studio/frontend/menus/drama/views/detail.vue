@@ -739,7 +739,8 @@ import { toast } from 'vue-sonner'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, Plus, MoreHorizontal, FileText, Clapperboard, Sparkles, LayoutDashboard, Loader2 } from 'lucide-vue-next'
-import { api, dramaAPI, episodeAPI, characterAPI, sceneAPI, propAPI, uploadAPI, stylePresetAPI } from '~/composables/useApi'
+import { api, dramaAPI, episodeAPI, characterAPI, sceneAPI, propAPI, uploadAPI, stylePresetAPI, taskAPI } from '~/composables/useApi'
+import { createTaskWatch } from '../utils/taskWatch.js'
 import { GENRE_TAGS, BACKGROUND_TAGS, TROPE_TAGS } from '~/composables/useCreativeTags'
 import BaseSelect from '~/components/BaseSelect.vue'
 
@@ -1213,7 +1214,33 @@ const assetGroups = computed(() => {
 function pendingKey(m) { return `${m.kindKey}:${m.id}` }
 function isPending(m) { return pendingMaterials.value.has(pendingKey(m)) }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
+// Images are made in the background: one watcher follows every image started here by its task id. One
+// task-list request (this project's image tasks) every 3 s for all of them, and the project reloads only when
+// one finished — instead of a loop per image that reloaded the project every 2.5 s. A regenerated image is
+// not "done" just because the old one is still there, and a failed one says so (../utils/taskWatch.js).
+const startedMaterials = new Map() // key → the material, for the messages
+function dropPending(key) {
+  startedMaterials.delete(key)
+  pendingMaterials.value = new Set([...pendingMaterials.value].filter(k => k !== key))
+}
+const materialWatch = createTaskWatch({
+  intervalMs: 3000,
+  maxMs: 15 * 60 * 1000,
+  pendingKeys: () => [...pendingMaterials.value],
+  loadTasks: () => taskAPI.list({ type: 'image', drama_id: dramaId }),
+  reload: () => load(),
+  isDone: key => !!materials.value.find(x => pendingKey(x) === key && matImage(x)),
+  onExpired: key => {
+    const m = startedMaterials.get(key)
+    dropPending(key)
+    if (m) toast.info(t('detail.mat.genTimeout', { kind: m.kind, name: m.name }))
+  },
+  onFinished: (key, task) => {
+    dropPending(key)
+    if (task.status !== 'completed') toastError(task.error_msg || task.errorMsg, { fallback: 'episode.image.genFailed' })
+  },
+})
+onBeforeUnmount(() => materialWatch.stop())
 
 async function generateMaterial(m) {
   const epId = drama.value?.episodes?.[0]?.id
@@ -1222,33 +1249,15 @@ async function generateMaterial(m) {
   if (pendingMaterials.value.has(key)) return
   pendingMaterials.value = new Set(pendingMaterials.value).add(key)
   try {
-    if (m.kindKey === 'character') await characterAPI.generateImage(m.id, epId)
-    else if (m.kindKey === 'scene') await sceneAPI.generateImage(m.id, epId)
-    else await propAPI.generateImage(m.id, epId)
+    const api = m.kindKey === 'character' ? characterAPI : m.kindKey === 'scene' ? sceneAPI : propAPI
+    const res = await api.generateImage(m.id, epId)
     toast.success(t('detail.mat.generating', { kind: m.kind, name: m.name }))
-    pollMaterial(m)
+    startedMaterials.set(key, m)
+    materialWatch.track(res?.image_generation_id, key)
   } catch (e) {
-    pendingMaterials.value = new Set([...pendingMaterials.value].filter(k => k !== key))
+    dropPending(key)
     toastError(e)
   }
-}
-
-// 生图为异步任务：轮询重新加载 drama，直到该素材 imageUrl 出现
-async function pollMaterial(m) {
-  const key = pendingKey(m)
-  for (let i = 0; i < 40; i++) {
-    await sleep(2500)
-    await load()
-    const d = drama.value
-    const list = m.kindKey === 'character' ? d?.characters : m.kindKey === 'scene' ? d?.scenes : d?.props
-    const rec = list?.find(x => x.id === m.id)
-    if (rec && matImage(rec)) {
-      pendingMaterials.value = new Set([...pendingMaterials.value].filter(k => k !== key))
-      return
-    }
-  }
-  pendingMaterials.value = new Set([...pendingMaterials.value].filter(k => k !== key))
-  toast.info(t('detail.mat.genTimeout', { kind: m.kind, name: m.name }))
 }
 
 function switchToAssets() {

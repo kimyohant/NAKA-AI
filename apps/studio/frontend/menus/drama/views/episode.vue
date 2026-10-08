@@ -378,7 +378,7 @@ import { startTour, autoTour } from '~/composables/useTour'
 import { useAgent } from '~/composables/useAgent'
 import { toastError, MODERATION_RE } from '~/composables/useToast'
 import { analyzeVideoShot } from '../utils/videoPreflight'
-import { createVideoWatch } from '../utils/videoWatch.js'
+import { createTaskWatch } from '../utils/taskWatch.js'
 import LocaleSwitcher from '~/components/LocaleSwitcher.vue'
 import { EPISODE_WORKBENCH } from '../utils/episodeWorkbench.js'
 
@@ -901,6 +901,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleImageViewerKeydown)
   stopGenTasksPolling()
   videoWatch.stop()
+  imageWatch.stop()
 })
 
 function isPendingSceneImage(id) {
@@ -1293,6 +1294,7 @@ async function loadGenTasksNow() {
     unknownVideoIds.value = [...unknown]
     failedVideoMessages.value = failed
     if (pending.size) videoWatch.start()
+    resumeImageTasks(genTasks.value)
     if (selectedSb.value?.id) await loadSelectedShotReadiness()
   } catch { /* 静默失败,不打断其他刷新 */ }
 }
@@ -1441,7 +1443,7 @@ function genTaskDuration(row) {
 watch([taskDrawer, genTaskActiveCount], ([open, active]) => {
   stopGenTasksPolling()
   if (open && active > 0) {
-    genTasksTimer = setInterval(() => { if (!videoWatch.running) loadGenTasks() }, 4000)
+    genTasksTimer = setInterval(() => { if (!videoWatch.running && !imageWatch.running) loadGenTasks() }, 4000)
   }
 })
 
@@ -2012,138 +2014,70 @@ async function genVideoPrompt(sb) {
   }
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function watchAsyncResult(check, attempts = 24, delay = 2500) {
-  void (async () => {
-    for (let i = 0; i < attempts; i++) {
-      await sleep(delay)
-      await refresh()
-      if (check()) return
-    }
-  })()
-}
-
-async function genCharImg(id) {
+async function genAssetImage(kind, id, api, generatingKey) {
+  const list = assetLists[kind].value
   try {
-    if (!isPendingCharImage(id)) pendingCharImageIds.value.push(id)
-    const char = chars.value.find(c => c.id === id)
-    if (char && !(char.final_prompt || char.finalPrompt)) {
+    markImagePending(kind, [id])
+    const item = list.find(x => x.id === id)
+    if (item && !(item.final_prompt || item.finalPrompt)) {
       toast.info(t('episode.asset.generatingPrompt'))
       try {
-        await ensureAssetPrompt('character', id)
+        await ensureAssetPrompt(kind, id)
       } catch {} // 提示词生成失败不阻断：后端生图前会再兜底生成或回退本地拼接
     }
-    await characterAPI.generateImage(id, epId.value, bareModelName(imageModel.value) || undefined, ownerConfigId(imageModelOptions.value, imageModel.value), chatModelOverride(), chatConfigId())
-    toast.success(t('episode.image.generatingChar'))
-    await refresh()
-    watchAsyncResult(() => {
-      const char = chars.value.find(c => c.id === id)
-      const done = !!(char?.image_url || char?.imageUrl)
-      if (done) pendingCharImageIds.value = pendingCharImageIds.value.filter(item => item !== id)
-      return done
-    })
+    const res = await api.generateImage(id, epId.value, bareModelName(imageModel.value) || undefined, ownerConfigId(imageModelOptions.value, imageModel.value), chatModelOverride(), chatConfigId())
+    toast.success(t(generatingKey))
+    imageWatch.track(res?.image_generation_id, imageKey(kind, id))
+    await loadGenTasks()
   } catch (e) {
-    pendingCharImageIds.value = pendingCharImageIds.value.filter(item => item !== id)
+    dropPendingImage(kind, [id])
     toastError(e)
   }
+}
+function genCharImg(id) { return genAssetImage('character', id, characterAPI, 'episode.image.generatingChar') }
+function genSceneImg(id) { return genAssetImage('scene', id, sceneAPI, 'episode.image.generatingScene') }
+function genPropImg(id) { return genAssetImage('prop', id, propAPI, 'episode.image.generatingProp') }
+function isPendingPropImage(id) {
+  return pendingPropImageIds.value.includes(id)
 }
 function batchCharImages() {
   const ids = visualChars.value.filter(c => !(c.image_url || c.imageUrl)).map(c => c.id)
   if (!ids.length) { toast.info(t('episode.image.allCharsDone')); return }
-  pendingCharImageIds.value = [...new Set([...pendingCharImageIds.value, ...ids])]
-  characterAPI.batchImages(ids, epId.value, bareModelName(imageModel.value) || undefined, ownerConfigId(imageModelOptions.value, imageModel.value), chatModelOverride(), chatConfigId()).then(async () => {
+  markImagePending('character', ids)
+  characterAPI.batchImages(ids, epId.value, bareModelName(imageModel.value) || undefined, ownerConfigId(imageModelOptions.value, imageModel.value), chatModelOverride(), chatConfigId()).then(async res => {
     toast.success(t('episode.image.batchGeneratingChar'))
-    await refresh()
-    watchAsyncResult(() => ids.every(id => {
-      const char = chars.value.find(c => c.id === id)
-      const done = !!(char?.image_url || char?.imageUrl)
-      if (done) pendingCharImageIds.value = pendingCharImageIds.value.filter(item => item !== id)
-      return done
-    }), 36)
+    // the batch answers with task ids only: the task list says which character each one is for
+    const taskIds = new Set(res?.ids || [])
+    await loadGenTasks()
+    const started = []
+    for (const task of genTasks.value) {
+      const target = imageTaskTarget(task)
+      if (!taskIds.has(task.id) || target?.[0] !== 'character') continue
+      imageWatch.track(task.id, imageKey('character', target[1]))
+      started.push(target[1])
+    }
+    dropPendingImage('character', ids.filter(id => !started.includes(id))) // skipped by the server
   }).catch(e => {
-    pendingCharImageIds.value = pendingCharImageIds.value.filter(item => !ids.includes(item))
+    dropPendingImage('character', ids)
     toastError(e)
   })
 }
-async function genSceneImg(id) {
-  try {
-    if (!isPendingSceneImage(id)) pendingSceneImageIds.value.push(id)
-    const scene = scenes.value.find(s => s.id === id)
-    if (scene && !(scene.final_prompt || scene.finalPrompt)) {
-      toast.info(t('episode.asset.generatingPrompt'))
-      try {
-        await ensureAssetPrompt('scene', id)
-      } catch {} // 提示词生成失败不阻断：后端生图前会再兜底生成或回退本地拼接
-    }
-    await sceneAPI.generateImage(id, epId.value, bareModelName(imageModel.value) || undefined, ownerConfigId(imageModelOptions.value, imageModel.value), chatModelOverride(), chatConfigId())
-    toast.success(t('episode.image.generatingScene'))
-    await refresh()
-    watchAsyncResult(() => {
-      const scene = scenes.value.find(s => s.id === id)
-      const done = !!(scene?.image_url || scene?.imageUrl)
-      if (done) pendingSceneImageIds.value = pendingSceneImageIds.value.filter(item => item !== id)
-      return done
-    })
-  } catch (e) {
-    pendingSceneImageIds.value = pendingSceneImageIds.value.filter(item => item !== id)
-    toastError(e)
+function batchAssetImages(kind, items, api, doneKey, startedKey) {
+  const ids = items.filter(x => !(x.image_url || x.imageUrl)).map(x => x.id)
+  if (!ids.length) { toast.info(t(doneKey)); return }
+  markImagePending(kind, ids)
+  for (const id of ids) {
+    api.generateImage(id, epId.value, bareModelName(imageModel.value) || undefined, ownerConfigId(imageModelOptions.value, imageModel.value), chatModelOverride(), chatConfigId())
+      .then(res => imageWatch.track(res?.image_generation_id, imageKey(kind, id)))
+      .catch(e => { dropPendingImage(kind, [id]); toastError(e) })
   }
-}
-function isPendingPropImage(id) {
-  return pendingPropImageIds.value.includes(id)
-}
-async function genPropImg(id) {
-  try {
-    if (!isPendingPropImage(id)) pendingPropImageIds.value.push(id)
-    const prop = propItems.value.find(p => p.id === id)
-    if (prop && !(prop.final_prompt || prop.finalPrompt)) {
-      toast.info(t('episode.asset.generatingPrompt'))
-      try {
-        await ensureAssetPrompt('prop', id)
-      } catch {} // 提示词生成失败不阻断：后端生图前会再兜底生成或回退本地拼接
-    }
-    await propAPI.generateImage(id, epId.value, bareModelName(imageModel.value) || undefined, ownerConfigId(imageModelOptions.value, imageModel.value), chatModelOverride(), chatConfigId())
-    toast.success(t('episode.image.generatingProp'))
-    await refresh()
-    watchAsyncResult(() => {
-      const prop = propItems.value.find(p => p.id === id)
-      const done = !!(prop?.image_url || prop?.imageUrl)
-      if (done) pendingPropImageIds.value = pendingPropImageIds.value.filter(item => item !== id)
-      return done
-    })
-  } catch (e) {
-    pendingPropImageIds.value = pendingPropImageIds.value.filter(item => item !== id)
-    toastError(e)
-  }
+  toast.success(t(startedKey))
 }
 function batchSceneImages() {
-  const ids = scenes.value.filter(s => !(s.image_url || s.imageUrl)).map(s => s.id)
-  if (!ids.length) { toast.info(t('episode.image.allScenesDone')); return }
-  pendingSceneImageIds.value = [...new Set([...pendingSceneImageIds.value, ...ids])]
-  ids.forEach(id => { sceneAPI.generateImage(id, epId.value, bareModelName(imageModel.value) || undefined, ownerConfigId(imageModelOptions.value, imageModel.value), chatModelOverride(), chatConfigId()).then(() => refresh()).catch(e => toastError(e)) })
-  toast.success(t('episode.image.batchGeneratingScene'))
-  watchAsyncResult(() => ids.every(id => {
-    const scene = scenes.value.find(s => s.id === id)
-    const done = !!(scene?.image_url || scene?.imageUrl)
-    if (done) pendingSceneImageIds.value = pendingSceneImageIds.value.filter(item => item !== id)
-    return done
-  }), 36)
+  batchAssetImages('scene', scenes.value, sceneAPI, 'episode.image.allScenesDone', 'episode.image.batchGeneratingScene')
 }
 function batchPropImages() {
-  const ids = propItems.value.filter(p => !(p.image_url || p.imageUrl)).map(p => p.id)
-  if (!ids.length) { toast.info(t('episode.image.allPropsDone')); return }
-  pendingPropImageIds.value = [...new Set([...pendingPropImageIds.value, ...ids])]
-  ids.forEach(id => { propAPI.generateImage(id, epId.value, bareModelName(imageModel.value) || undefined, ownerConfigId(imageModelOptions.value, imageModel.value), chatModelOverride(), chatConfigId()).then(() => refresh()).catch(e => toastError(e)) })
-  toast.success(t('episode.image.batchGeneratingProp'))
-  watchAsyncResult(() => ids.every(id => {
-    const prop = propItems.value.find(p => p.id === id)
-    const done = !!(prop?.image_url || prop?.imageUrl)
-    if (done) pendingPropImageIds.value = pendingPropImageIds.value.filter(item => item !== id)
-    return done
-  }), 36)
+  batchAssetImages('prop', propItems.value, propAPI, 'episode.image.allPropsDone', 'episode.image.batchGeneratingProp')
 }
 function getVideoUrl(s) { return s?.video_url || s?.videoUrl || s?.composed_video_url || s?.composedVideoUrl || null }
 function hasVid(s) { return !!getVideoUrl(s) }
@@ -2462,17 +2396,17 @@ async function genVid(sb, opts = {}) {
     toastError(e, { fallback: 'episode.vid.genFailed' })
   }
 }
-// ===== video status: one watcher for the whole page (../utils/videoWatch.js) =====
+// ===== video status: one watcher for the whole page (../utils/taskWatch.js) =====
 // One task-list request every 4 s for every shot being generated; the shots reload only when a video
 // finished. Stops when the page closes; loadGenTasks restarts it for shots still generating on reopen.
 function dropPendingVideo(storyboardId) {
   pendingVideoIds.value = pendingVideoIds.value.filter(item => item !== storyboardId)
 }
-const videoWatch = createVideoWatch({
-  pendingIds: () => pendingVideoIds.value,
+const videoWatch = createTaskWatch({
+  pendingKeys: () => pendingVideoIds.value,
   loadTasks: async () => { await loadGenTasks(); return genTasks.value },
-  reloadShots: () => reloadStoryboards(),
-  hasVideo: id => !!getVideoUrl(sbs.value.find(s => s.id === id)),
+  reload: () => reloadStoryboards(),
+  isDone: id => !!getVideoUrl(sbs.value.find(s => s.id === id)),
   onExpired: dropPendingVideo,
   onFinished: (storyboardId, task) => {
     dropPendingVideo(storyboardId)
@@ -2487,6 +2421,77 @@ const videoWatch = createVideoWatch({
       if (!unknownVideoIds.value.includes(storyboardId)) unknownVideoIds.value.push(storyboardId)
       toast.warning(t('episode.tasks.unknown'))
     }
+  },
+})
+
+// ===== character / scene / prop images: one watcher for the whole page (../utils/taskWatch.js) =====
+// Every image used to start its own loop that reloaded the whole page (≈10 requests) every 2.5 s. Now one
+// task-list request every 3 s covers every image being made, and only characters, scenes and props reload
+// when one finished. Images are followed by their task id, so a regenerated image is not "done" just
+// because the old one is still there, and a failed one says so and frees its button. Keys: 'character:12'.
+const pendingImageIds = { character: pendingCharImageIds, scene: pendingSceneImageIds, prop: pendingPropImageIds }
+const imageKey = (kind, id) => `${kind}:${id}`
+function imageKeyParts(key) {
+  const [kind, id] = key.split(':')
+  return [kind, Number(id)]
+}
+function markImagePending(kind, ids) {
+  pendingImageIds[kind].value = [...new Set([...pendingImageIds[kind].value, ...ids])]
+}
+function dropPendingImage(kind, ids) {
+  pendingImageIds[kind].value = pendingImageIds[kind].value.filter(id => !ids.includes(id))
+}
+/** the asset a sys_task makes an image for: [kind, id], or null (shot frames, other menus) */
+function imageTaskTarget(task) {
+  if (task.type !== 'image' || task.storyboard_id) return null
+  if (task.character_id) return ['character', task.character_id]
+  if (task.scene_id) return ['scene', task.scene_id]
+  if (task.prop_id) return ['prop', task.prop_id]
+  return null
+}
+/** images still being made after the page (re)opened: show them as generating and follow them.
+ *  Only each asset's latest task counts (the list is newest first), so an old stuck task cannot hold a button. */
+function resumeImageTasks(tasks) {
+  const seen = new Set()
+  for (const task of tasks) {
+    const target = imageTaskTarget(task)
+    if (!target || seen.has(imageKey(...target))) continue
+    seen.add(imageKey(...target))
+    if (!['queued', 'submitting', 'processing'].includes(task.status) || imageWatch.has(imageKey(...target))) continue
+    markImagePending(target[0], [target[1]])
+    imageWatch.track(task.id, imageKey(...target))
+  }
+}
+async function reloadAssets(episodeId = epId.value) {
+  if (!episodeId) return
+  const [c, sc, pr] = await Promise.allSettled([
+    episodeAPI.characters(episodeId), episodeAPI.scenes(episodeId), episodeAPI.props(episodeId),
+  ])
+  if (c.status === 'fulfilled') chars.value = c.value
+  if (sc.status === 'fulfilled') scenes.value = sc.value
+  if (pr.status === 'fulfilled') propItems.value = pr.value
+}
+const assetLists = { character: chars, scene: scenes, prop: propItems }
+const imageWatch = createTaskWatch({
+  intervalMs: 3000,
+  maxMs: 15 * 60 * 1000,
+  pendingKeys: () => Object.entries(pendingImageIds).flatMap(([kind, ids]) => ids.value.map(id => imageKey(kind, id))),
+  loadTasks: async () => { await loadGenTasks(); return genTasks.value },
+  reload: () => reloadAssets(),
+  isDone: key => {
+    const [kind, id] = imageKeyParts(key)
+    const item = assetLists[kind].value.find(x => x.id === id)
+    return !!(item?.image_url || item?.imageUrl)
+  },
+  onExpired: key => {
+    const [kind, id] = imageKeyParts(key)
+    dropPendingImage(kind, [id])
+    toast.info(t('episode.image.genTimeout'))
+  },
+  onFinished: (key, task) => {
+    const [kind, id] = imageKeyParts(key)
+    dropPendingImage(kind, [id])
+    if (task.status !== 'completed') toastError(task.error_msg || task.errorMsg, { fallback: 'episode.image.genFailed' })
   },
 })
 async function doMerge(ids) {

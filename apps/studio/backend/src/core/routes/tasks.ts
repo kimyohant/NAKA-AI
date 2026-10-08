@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { ownedBy } from '../auth/owner-context.js'
 import { db, schema } from '../db/index.js'
 import { success, created, badRequest } from '../http/response.js'
@@ -124,17 +124,18 @@ app.post('/:id/recover', async (c) => {
   return success(c, { status: result })
 })
 
-// GET /tasks — 按 type / storyboard_id / drama_id 过滤
+// GET /tasks — 按 type / storyboard_id / drama_id 过滤 (in SQL: pages poll this while images are made)
 app.get('/', async (c) => {
   const type = c.req.query('type')
   const storyboardId = c.req.query('storyboard_id')
   const dramaId = c.req.query('drama_id')
 
-  let rows = await db.select().from(schema.sysTask).where(ownedBy(schema.sysTask.ownerUserId))
-
-  if (type) rows = rows.filter(r => r.type === type)
-  if (storyboardId) rows = rows.filter(r => r.storyboardId === Number(storyboardId))
-  if (dramaId) rows = rows.filter(r => r.dramaId === Number(dramaId))
+  const rows = await db.select().from(schema.sysTask).where(and(
+    ownedBy(schema.sysTask.ownerUserId),
+    type ? eq(schema.sysTask.type, type) : undefined,
+    storyboardId ? eq(schema.sysTask.storyboardId, Number(storyboardId)) : undefined,
+    dramaId ? eq(schema.sysTask.dramaId, Number(dramaId)) : undefined,
+  )).orderBy(schema.sysTask.id)
 
   return success(c, rows)
 })
