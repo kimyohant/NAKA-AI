@@ -41,6 +41,7 @@ import { resumeStaleAutoRenders } from './services/studio-autorender.js'
 import { resumeSellerVideos } from './services/seller.js'
 import { recoverGenerationTasks } from './services/generation.js'
 import { startSocialPoller } from './services/social/poller.js'
+import './services/social/facebook.js' // registers the `facebook` adapter
 import { DATA_ROOT } from './utils/paths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
