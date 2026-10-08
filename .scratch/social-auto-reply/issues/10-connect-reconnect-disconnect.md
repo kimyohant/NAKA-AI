@@ -53,3 +53,7 @@ Tests use the fake adapter for the OAuth methods. No test calls Facebook.
 - [ ] The Social pages show the "server only" empty state when Connect is not possible and no Social Account exists.
 - [ ] The README lists the two new env vars.
 - [ ] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+
+## Notes
+
+- 2026-10-08: Left open — blocked by ticket 09 (Facebook adapter, itself blocked by human ticket 01), which this ticket's Connect/Reconnect flow builds on. Starts once ticket 09 is merged. No code changes.
