@@ -31,7 +31,7 @@ test('routes/clone.ts ครบ endpoint ตามสัญญา (รวม DEL
   assert.match(routes, /accepted\(c, project\)/)
   assert.match(routes, /accepted\(c, result\)/)
   // mount path
-  const index = read('src/index.ts')
+  const index = read('src/index.ts') + read('src/modules.ts')
   assert.match(index, /import clone from '\.\/routes\/clone\.js'/)
   assert.match(index, /api\.route\('\/clone', clone\)/)
 })
@@ -43,7 +43,7 @@ test('clone service: kind + boot-resume + error codes + สัญญา field', 
   assert.match(pipeline, /'clone_analyze' \| 'clone_render'/)
   assert.match(pipeline, /RESUMABLE_PIPELINE_KINDS: PipelineTaskKind\[\] = \['studio_render', 'clone_render'\]/)
   // boot wiring
-  const index = read('src/index.ts')
+  const index = read('src/index.ts') + read('src/modules.ts')
   assert.match(index, /failStaleCloneAnalyzes/)
   assert.match(index, /resumeStaleCloneRenders/)
   // error codes ใหม่ตาม PLAN + ที่ Agent A เพิ่ม

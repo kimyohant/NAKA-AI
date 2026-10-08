@@ -14,7 +14,7 @@ test('studio phase2 routes ครบ + mount', () => {
   assert.match(route, /app\.post\('\/projects\/:id\/merge'/)
   // 202 สำหรับ auto-render
   assert.match(route, /202/)
-  const index = read('src/index.ts')
+  const index = read('src/index.ts') + read('src/modules.ts')
   assert.match(index, /resumeStaleAutoRenders/)
 })
 

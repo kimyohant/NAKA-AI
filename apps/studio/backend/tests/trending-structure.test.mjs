@@ -11,7 +11,7 @@ test('trending route: GET / + validate error + mount (docs/ai-marketer/TRENDING.
   assert.match(route, /listTrendVideos/)
   assert.match(route, /E_INVALID_FIELD|err\?\.errorCode/) // service โยน AppError → route แปลง 400 + errorCode
 
-  const index = read('src/index.ts')
+  const index = read('src/index.ts') + read('src/modules.ts')
   assert.match(index, /import trending from '\.\/routes\/trending\.js'/)
   assert.match(index, /api\.route\('\/trending-videos', trending\)/)
 })

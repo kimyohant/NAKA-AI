@@ -8,28 +8,14 @@ import { timingSafeEqual } from 'node:crypto'
 import { fileURLToPath } from 'url'
 import { existsSync } from 'node:fs'
 
-import dramas from './routes/dramas.js'
-import episodes from './routes/episodes.js'
-import storyboards from './routes/storyboards.js'
-import scenes from './routes/scenes.js'
-import characters from './routes/characters.js'
 import tasks from './routes/tasks.js'
 import upload from './routes/upload.js'
 import aiConfigs, { aiProviders } from './routes/aiConfigs.js'
 import stylePresets from './routes/stylePresets.js'
 import prompts from './routes/prompts.js'
 import agent from './routes/agent.js'
-import merge from './routes/merge.js'
 import skills from './routes/skills.js'
-import props from './routes/props.js'
 import settings from './routes/settings.js'
-import campaigns from './routes/campaigns.js'
-import trending from './routes/trending.js'
-import gallery from './routes/gallery.js'
-import studio from './routes/studio.js'
-import clone from './routes/clone.js'
-import live from './routes/live.js'
-import seller from './routes/seller.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
@@ -37,12 +23,8 @@ import { adminGuard, assertAdminTokenConfig, guardOn, isAdminRequest } from './m
 import nakaSso, { requireSession, ssoConfig, ssoEnabled } from './auth/naka-sso.js'
 import { ownership } from './auth/ownership.js'
 import { failStaleRunningTasks } from './services/pipeline-tasks.js'
-import { failStaleCampaigns } from './services/marketer.js'
-import { failStaleStudioProjects } from './services/studio.js'
-import { failStaleCloneAnalyzes, resumeStaleCloneRenders } from './services/clone.js'
-import { resumeStaleAutoRenders } from './services/studio-autorender.js'
-import { resumeSellerVideos } from './services/seller.js'
 import { recoverGenerationTasks } from './services/generation.js'
+import { studioModules, recoverModules } from './modules.js'
 import { DATA_ROOT } from './utils/paths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -116,11 +98,7 @@ const api = new Hono()
 // back-office login check: 401 E_ADMIN_REQUIRED unless the token is valid (guard off → always ok)
 api.get('/admin/session', c => c.json({ code: 200, data: { admin: true, guard: guardOn(), sso: ssoEnabled() }, message: 'success' }))
 api.route('/auth/naka', nakaSso)
-api.route('/dramas', dramas)
-api.route('/episodes', episodes)
-api.route('/storyboards', storyboards)
-api.route('/scenes', scenes)
-api.route('/characters', characters)
+// shared (core) routes — used by every menu
 api.route('/tasks', tasks)
 api.route('/upload', upload)
 api.route('/ai-configs', aiConfigs)
@@ -128,19 +106,12 @@ api.route('/ai-providers', aiProviders)
 api.route('/style-presets', stylePresets)
 api.route('/prompts', prompts)
 api.route('/agent', agent)
-api.route('/merge', merge)
 api.route('/skills', skills)
-api.route('/props', props)
 api.route('/storage', storage)
 api.route('/settings', settings)
-api.route('/campaigns', campaigns)
-api.route('/trending-videos', trending)
-api.route('/gallery', gallery)
-api.route('/studio', studio)
-api.route('/clone', clone)
-api.route('/live', live)
-api.route('/seller', seller)
 api.route('/server-update', serverUpdate)
+// product menus (drama, marketer, product-studio, seller, viral-clone, live) — src/modules.ts
+for (const m of studioModules) m.mount(api)
 
 app.route('/api/v1', api)
 
@@ -190,52 +161,10 @@ try {
   console.error('清理中断 pipeline 任务失败:', err?.message)
 }
 
-// 同理：AI Marketer 活动 *ing 状态（researching/strategizing/writing）重启后不可能还在跑
-try {
-  const n = await failStaleCampaigns()
-  if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 campaign 任务`)
-} catch (err: any) {
-  console.error('清理中断 campaign 任务失败:', err?.message)
-}
-
-// 同理：Product Studio scripting ค้างหลัง restart
-try {
-  const n = await failStaleStudioProjects()
-  if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 studio 任务`)
-} catch (err: any) {
-  console.error('清理中断 studio 任务失败:', err?.message)
-}
-
-// Viral Clone: analyzing ค้างที่ pipeline row หายแล้ว → error (failStaleRunningTasks เคลียร์ row ก่อนหน้านี้แล้ว)
-try {
-  const n = await failStaleCloneAnalyzes()
-  if (n > 0) console.log(`🔁 已清理 ${n} 个中断的 clone 分析任务`)
-} catch (err: any) {
-  console.error('清理中断 clone analyze 失败:', err?.message)
-}
-
-// Phase 2: auto-render pipeline ค้างหลัง restart — วิ่งต่อจาก stage เดิม (recover งาน provider แล้ว)
-try {
-  const n = await resumeStaleAutoRenders()
-  if (n > 0) console.log(`🔁 resumed ${n} studio auto-render pipelines`)
-} catch (err: any) {
-  console.error('resume studio auto-render failed:', err?.message)
-}
-
-// AI นักขาย: โพสต์ที่รอวิดีโอจากคลังสกิล — วน driver ต่อ (หลัง auto-render resume แล้ว)
-try {
-  const n = await resumeSellerVideos()
-  if (n > 0) console.log(`🔁 resumed ${n} seller video jobs`)
-} catch (err: any) {
-  console.error('resume seller videos failed:', err?.message)
-}
-
-// Viral Clone: render batch ค้างหลัง restart — driver วนเก็บ variant queued ต่อ (sys_task recover แล้ว)
-try {
-  const n = await resumeStaleCloneRenders()
-  if (n > 0) console.log(`🔁 resumed ${n} clone render pipelines`)
-} catch (err: any) {
-  console.error('resume clone render failed:', err?.message)
-}
+// Each menu's startup recovery (src/modules.ts): every failStale first (marketer campaigns,
+// product-studio scripting, viral-clone analyzes stuck in *ing states), then every resume in
+// module order (product-studio auto-render → seller videos → viral-clone renders).
+await recoverModules('failStale')
+await recoverModules('resume')
 
 serve({ fetch: app.fetch, port, hostname })

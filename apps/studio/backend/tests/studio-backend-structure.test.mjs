@@ -36,7 +36,7 @@ test('studio routes ครบตามตาราง PLAN ข้อ 4 และ
   // 202 สำหรับ script async
   assert.match(route, /202/)
 
-  const index = read('src/index.ts')
+  const index = read('src/index.ts') + read('src/modules.ts')
   assert.match(index, /api\.route\('\/studio', studio\)/)
   assert.match(index, /failStaleStudioProjects/)
 })

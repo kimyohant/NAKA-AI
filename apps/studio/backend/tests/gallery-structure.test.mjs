@@ -12,7 +12,7 @@ test('gallery route: GET / + PUT/DELETE result + mount (docs/ai-marketer/GALLERY
   assert.match(route, /app\.delete\('\/creatives\/:cid\/result'/)
   assert.match(route, /E_INVALID_FIELD|err\?\.errorCode/)
 
-  const index = read('src/index.ts')
+  const index = read('src/index.ts') + read('src/modules.ts')
   assert.match(index, /import gallery from '\.\/routes\/gallery\.js'/)
   assert.match(index, /api\.route\('\/gallery', gallery\)/)
 })

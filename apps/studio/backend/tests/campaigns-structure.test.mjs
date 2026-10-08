@@ -31,8 +31,8 @@ test('campaigns route implements the full API contract', () => {
   assert.match(route, /E_INGEST_FAILED/)
   assert.match(route, /mode 只支持 replace \/ append/)
   // 挂载
-  assert.match(read('src/index.ts'), /api\.route\('\/campaigns', campaigns\)/)
-  assert.match(read('src/index.ts'), /failStaleCampaigns/)
+  assert.match(read('src/index.ts') + read('src/modules.ts'), /api\.route\('\/campaigns', campaigns\)/)
+  assert.match(read('src/index.ts') + read('src/modules.ts'), /failStaleCampaigns/)
 })
 
 test('product-ingest enforces SSRF guards via safe-fetch', () => {
