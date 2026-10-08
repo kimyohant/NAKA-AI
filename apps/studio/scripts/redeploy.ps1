@@ -1,8 +1,10 @@
 ﻿# NAKA Drama Studio — local single-service redeploy (Windows)
 #   powershell -ExecutionPolicy Bypass -File scripts\redeploy.ps1 [-SkipInstall] [-SkipBuild]
-# 1) SQLite snapshot  2) frontend generate → frontend/dist, admin generate  3) restart backend on PORT (default 5679), detached
+# 1) frontend generate → frontend/dist, admin generate  2) restart backend on PORT (default 5679), detached
 #
-# Data: data\ in this repo (SQLite + generated files); backend secrets (ADMIN_TOKEN, NAKA_SSO_*) in backend\.env
+# Data: data\ in this repo (generated files); backend secrets (ADMIN_TOKEN, NAKA_SSO_*) and the database in backend\.env:
+# DATABASE_URL=postgres://studio_app:…@127.0.0.1:5432/naka (root docker-compose postgres; back it up with pg_dump),
+# unset → PGlite in data\pglite
 param(
   [switch]$SkipInstall,
   [switch]$SkipBuild,
@@ -14,7 +16,6 @@ $backend = Join-Path $root 'backend'
 $admin = Join-Path $root 'admin'
 $frontend = Join-Path $root 'frontend'
 $data = Join-Path $root 'data'
-$db = Join-Path $data 'naka.sqlite3'
 $workspace = Join-Path $data 'workspace'
 $log = Join-Path $root 'backend.log'
 
@@ -36,17 +37,6 @@ if (-not $SkipBuild) {
   Step 'admin generate (/admin back-office)'
   Push-Location $admin
   npm run generate; if ($LASTEXITCODE) { throw 'admin generate failed' }
-  Pop-Location
-}
-
-if (Test-Path $db) {
-  Step 'SQLite snapshot'
-  $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-  $backupDir = Join-Path $root 'data\backups'
-  New-Item -ItemType Directory -Force $backupDir | Out-Null
-  Push-Location $backend
-  npm run db:snapshot -- backup $db (Join-Path $backupDir "naka-before-redeploy-$stamp.sqlite3")
-  if ($LASTEXITCODE) { throw 'db snapshot failed' }
   Pop-Location
 }
 
@@ -72,7 +62,6 @@ if (-not $SkipBuild) {
 Step "start backend (detached) → $log"
 $env:PORT = "$Port"
 $env:NAKA_DATA_DIR = $data
-$env:SQLITE_PATH = $db
 # a data\workspace copy exists only if the two-repo version of this script ran once — keep using it
 if (Test-Path (Join-Path $workspace '.template-version')) { $env:WORKSPACE_PATH = $workspace }
 $env:FRONTEND_DIST = Join-Path $frontend 'dist'
