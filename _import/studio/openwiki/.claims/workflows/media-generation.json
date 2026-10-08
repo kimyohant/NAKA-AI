@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:a70f3c477ce1a1703c168c3aeb37cfadfe01049b1e7f50cff03417c1ca71a0ef",
+  "claims": [
+    {
+      "id": "claim_59f1976973af4b45887e1218acfa9e51",
+      "statement": "createTask runs in one DB transaction that resolves the owning drama, estimates cost, enforces the project budget, snapshots shot sources for video, and inserts a queued sys_task before the worker starts.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/generation.ts#L196-L254",
+          "version": "repo-lines-v1:sha256:4d3294f9850ca6f89a281cee5807693b655609d9259b232f430695f18c962a76:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZGYxMGZjYzFlZWQyMTgxZWU2MWY0YTEzYWZiZWU1NDE2MDQ5Zjg1YzVkM2VhZDk2YmU5YzllYTkzYTFjMDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2NGE2ZGQ1ODUxM2EyOGIyNDgzMTk5ZmMzODI0OTA3MTY0NmEzNjRjYjIyODllYmQyN2MzN2MxOWNiYmZmNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZkNThjY2QxNWE4MTE0MzBmMWUzNmVhMDg5YThlYzJmNzEyZTZkNzI5YWJhYzg1YWM4ZjJjY2Y2OTZhZTk4NzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_edd8d7bdddf344ed9c274a9fa355d820",
+      "statement": "Submission retries when the adapter reports the provider is busy, waiting 15 seconds up to 40 times instead of failing the task.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/generation.ts#L440-L475",
+          "version": "repo-lines-v1:sha256:7b8928ad1f213a69e8f82750087e3b6cd144b1cbec07a0fa01b8d178e0e58673:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1YTFhODY5OWYxMTNkNDgxNGY4N2M5NWQxYTdhNjQxNGFiOTMzMjEzM2RlZmJlMmNjMGM3ZWRiZWEwZjI4MDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljZDQ0OGU0YzYwODkzYmUyZDhmZGQwZTQ4ODY3OGUwODU5Y2I3YmM5ZDA2OGQzOGJhOTM3MmI4YjliZTA2Y2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2MWNlZTc5YzFjNDhhOWZmZDk1YjZjMDkwYzhhYjVlNjk4ZmJhODczMWI0NGJmMTBmNzA0Mzk3NDFhODc5NGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjYTY0MDllN2UxZjk4ZjJjN2NkNjhiMzBhMWFlYzgwYjJkYTU1YWZjZjYwZjA5ZDI2MDcwOTdlNjc2MWJkNmYifQ"
+        },
+        {
+          "resource": "repo://backend/src/services/generation.ts#L65-L69",
+          "version": "repo-lines-v1:sha256:dd001d7e8dc1a9a85f52951d6545c5af4a25c25f4a0a30f2bc89d4eca549dc45:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDhhOWI4Yjk0NTY3MjBkMzUxNWVkNWYxODFlNzQxNDBiMTZhNmVhNmI3ZjRmMDAwNWVkZmVjOTdkZWM4NjYwZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODgwNmYyZWQ4YjBmMmU1OWZjOWYzZDk5OWIwOGZlODNkMTNlYjA2ZDFmZjUwZjM0NGMwMTEwYzNjOGM3MjhhYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjM2M2IzYWMyMDAxZjM0ZDAwOTNjYWJjNDhjYzgyY2E4Y2RjMjAzNjUyOGEyZmM0YzY2NDcwYjYzOTdlNzRhOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTcwYTY1NjhmMDQ1YmFhYTI3NGRlMjc0YmEzNTAxMzUwMGZiMDIzM2ZjNmFkNjIwYzQ5NWM0NWNhYmU4MThiMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7d09525037ba4ce69f8d8a67ce8cc7c7",
+      "statement": "Polling cadence is 5 seconds up to 120 attempts for images and 10 seconds up to 300 attempts for videos.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/generation.ts#L69-L72",
+          "version": "repo-lines-v1:sha256:ad20a40beb447482c995f31ba6167c0cc8851815805f05a1f2edd8dfe5c93dac:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODgwNmYyZWQ4YjBmMmU1OWZjOWYzZDk5OWIwOGZlODNkMTNlYjA2ZDFmZjUwZjM0NGMwMTEwYzNjOGM3MjhhYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTIyZmFhNTM1YmQyZWEzZDUyZTc0MWVkNDU0NDM1YjdmZTQ5ZTgzNTg2ZTk0M2Q5OGQ4MmJiZmIyNGQxZjVjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2IyMzlmNjBjYzY0MjBmODBiODc4NmMyMmZiZjAwMTE2MjI3NjYzM2YwZTM4NDE4MDRmMTNjMzI4N2MxZmM3OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODBhZGRmMzM2MDYyYjkxZDJjMjE3NDA1ZGM2NGEwZjE3ODZmMzA4YzBmOGZmZmYzYWUxOWUyMzI5YTJmYzQ5MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7b2088658408472fb501e1a7c6a44a92",
+      "statement": "Adapters are registered by lowercase provider name in separate image and video maps, and an unknown provider throws.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/adapters/registry.ts",
+          "version": "repo-file-v1:sha256:bbd8af359b64ef2c22f9ba4f90e330b2145b2b17957e6efbab0f02568fd1a2fb"
+        }
+      ]
+    },
+    {
+      "id": "claim_63829bf8aa874b8d8065ea5a4f194cee",
+      "statement": "Providers declaring maxConcurrent get a per-config queue: excess video tasks stay queued, the oldest starts when a slot frees, and tasks waiting past queue_timeout_minutes (default 240) fail with E_VIDEO_QUEUE_TIMEOUT.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/generation.ts#L30-L63",
+          "version": "repo-lines-v1:sha256:cdce049623b494c2d73d37a3124e80172111514702c9792cee95b062ed483299:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzMzAyMTE4NmVlN2MzYmVlZWMyZDRhZDc5N2VmMjZlODc1OWFmMDJiYWI5MDI5YTVlZTNiYjU1NDliMTY3NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkNTUyNmY2YTJlMzA5N2E0M2M3YjQxMjNiY2FiYmVjNTkzNjgxNDA0ODgxNjE3Y2IxOTMyY2QxNGVhYzI4YjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkMTQ2NDljM2Q3Zjk5OTNlNzA3NGIyNDAwY2FhNzQ2YTc2M2MxYmNiZjAxYTc4ZTYwMzQ5Njk5NWI5MmFlMjQifQ"
+        },
+        {
+          "resource": "repo://backend/src/services/generation.ts#L318-L360",
+          "version": "repo-lines-v1:sha256:dc5dac04c74e3b381623e2ebbc6ec9d1ee5dc7ad5607c0cdedc4e5c90c086c7a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA3ZTFjMzBhMDJiMWZmNjc5YWFhMDk0NTA1M2FmMGQyMGI3MDA5Zjg3ZDYwZmM3MGY1ZWQzMmViZTg1MjllNGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkZGQ2MGYwMTcyN2NiNGViZGYwNjdiNmM3NDk1NTM2N2VkOTY1NzJkNDQ5NWZkMThhZGNlYTIyZjNiOGQ1ZjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY1NjQxNWU2OGJlMWRmNmU5ZTdjMGRkMmExNDJkMzRlYzVmMjBhMTRhZjRlYzM3M2M2NWRiMDg3OGVmN2ViMTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxZjZjNGQyZDZjMDZjZDQ1ODYxZjc2MTllYWE3YjE1Y2Y0MTIyYmEwMGZiYjIwYTMyNWU2ZmQ3MGU4Y2Q2YzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee0f155dce594c769d7c1f1e5e6fbb20",
+      "statement": "At startup, tasks in queued, submitting or processing resume polling if they have a provider task id and a recoverable config, are re-queued if only queued, and otherwise are marked unknown to avoid double charging.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/generation.ts#L282-L312",
+          "version": "repo-lines-v1:sha256:9790607663179cb60bde58d0370d6ad6d1ce231519ca22a652c4b125aec6e2a6:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmNDJhMmIyZGI2Yjk2ODE1NDQyMDc5NjE5MGEyMjkyNmZhNTBiYWUzNzU5ZWNkN2MxZDUxYjhjMDRlYzU1ZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiNGJjY2EwZDFiNTRjYThmYTg2MDI1NzhiMTU1ZjFlMmQ2NDc1YmIyNDBjZjAwNGNmN2MyMDViMTM2MGFmYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFmYjhhZTYzYmUxMTQ4ZmU3ZDAzNWUxMGNiNGY1MWY1OTE1OTljZDljNjkxZjdiNGMzOWRiODBkNjIwNGI0M2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f60ae9cecd84907bc3239b3127e1983",
+      "statement": "A drama budget requires a priced AI config and rejects task creation before any provider call when estimated totals would exceed it.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/generation-cost.ts",
+          "version": "repo-file-v1:sha256:3c38fc7b80234b9a5a66096cabd21036dc1a8e77eb73fe4a1a5fb722a17f9829"
+        },
+        {
+          "resource": "repo://backend/src/services/generation.ts#L224-L235",
+          "version": "repo-lines-v1:sha256:db932053e1328a557d29f3740e5d9b34b032a7c4bfd01b0c843389d6d5696d0e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxYzVmNWM0ZDY2NDBhMTFlMmQyOTY1MzI0NDY0M2JiMDg4YTQwMDM3NzBmY2Y1Mjc4OGQ1MWIzOTk3ZmQ0YTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA3ZGVlYmZmMDFmMWRmOGIwNzgxZmUzMmVjMjcxODg4OGYyNGY4Y2UxZDYyNTg0YzkxMjhkMjdmOWU4ZTE0ZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2NDZlMWY2ZjI3MDBlZTQ3MTRlZTFkNDI2MTViZTUxMTcxMWQxMDE3YjBjZDA4NDViYmE0NGU5NjkwN2IxNDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjMTNlNTU0YWFjNjU5MTc4NjE3ZjJhNTAwZGI1ZGJmMmY4NDc1MmU4MDQwYjNjYzEyMWI0ZjQ5MmMxM2UxNzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a6eb83beef9046d7b7cfe6e530f7473f",
+      "statement": "Video source snapshots hash script, style, shot, scene, character, prop and reference data, and videoSourceStatus reports current, stale with changed sections, or untracked.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/services/source-freshness.ts",
+          "version": "repo-file-v1:sha256:ce4d9640f80cbbd0ee57ad8faa02f5cc96925598c497449ed0f2b60fd1ba5845"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

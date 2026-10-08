@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:1f0db9b42fa5c1104511a736080457995eae82c33331f056b4725f9317779cb0",
+  "claims": [
+    {
+      "id": "claim_012af28369284e3fb41b527af8e6c234",
+      "statement": "Dynamic-id routes are registered manually in the pages:extend hook from files under app/views, and /marketer/gallery is registered before /marketer/:id because matching is first-wins.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/nuxt.config.ts#L12-L58",
+          "version": "repo-lines-v1:sha256:c7af40b7e0b40565097589889a0132c5bedff831a87db787cecebbfa735d7401:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmZWYyYTJkMTZhM2U0Yjc2NjUzYzM5NDJlOWQyNDdkMWZmZmMzZjJhYTkxNzAyZGNkMWUyMGMyNmJmMzg1YjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwYzk0OTg1NTI2YzFjNTdlZjAwYzAwZDNmNGRjOTA2MTU2NzdhMGEzNmE4Yjc5NWRmZjlhZmZkNTBmZTlmNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmOWMyNzExY2U0YzIxZWI1ZTNiMzY2MTkwNTAyYzAzNjViODRmOWI3MmVhYmQ4M2U4YTBiZGUyYjY3MmVhOGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1NGM2ZDFkMWVlNjY5M2IxN2MxOWEwYWRkZjA2Mzk1N2E2OGVkZGM0MjYwOTEwOTA3ZDI4MDk5Y2JlYTE1NzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b7b6e9762f5341cbb12065ce5d4911c8",
+      "statement": "The app is an SPA (ssr false) whose dev server proxies /api and /static to the backend on port 5679.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/nuxt.config.ts#L1-L84",
+          "version": "repo-lines-v1:sha256:c0907e1b68c4d544fb7aaf6c95aa2d9f4a810732bf5ee06b5fb821b0b3d29275:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0YjQ5YjY2MmQ5ZDQ1OTljNzU0NTkzMjkyMWQzYTI2N2RhMzhjZDZiN2YyZDJjMTgzZjZiMTI3Y2RhMzRjMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwYThmNjBmZTNjNTBiMGNmNTM0NzIyMTEzZmU5MGQ3MzQxNDM4N2NlOTJlNTk3OGM4MmNiZDgwMWNjMDUwMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9bd6a140955246eabd493cd1fe3089ca",
+      "statement": "useApi is the single fetch layer: it uses the relative /api/v1 base, unwraps the {code,data,message} envelope, and throws errors carrying errorCode and status.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/app/composables/useApi.ts#L1-L37",
+          "version": "repo-lines-v1:sha256:869c45accd9b15c4bad28f33abe70fb1fdc16a24708ade380ff5adc8289600a1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwOTgzZmZhZDg3ZDQ3ODAxZWVmNDk3N2RlYjMyOTQxNWY2ZmY2MGMwNjA2Nzc0M2Q4YjliY2E1ODUwZTU0M2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU4NDRkYWM3N2FmODY0N2VhYjQ4ZGE4MzRjOGMwNmI3ZjM1ZDMwNTNkMTZlZThkNjg2NDJmMjMwN2NiZjViYTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_30095255bb74481085284a85b3d813db",
+      "statement": "toastError translates a backend errorCode to localized text through errors.codes.<code> before falling back to the message.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/app/composables/useToast.ts#L44-L48",
+          "version": "repo-lines-v1:sha256:cdce83c1efab7e386578c8f7f61ba72d9c5dbc21db1c5d27f7371f95ada2dd17:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmUzZGE4ODQ3Y2Q0YTljNDc3NDFlOGRjZTdmMGQyZmY0NzczNmY1MjBjMjE1NDJiZDA4YTE3MzVjYjA4OWMyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzEzNDUxODAxMDViMGM2NmE3N2RhZDUxYmIzNzkwMWEzNzMyYzk2NTRiYTRkZTM5ODFmODFlMTgxNzUyNDhiZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDg1MjM3M2EyNzQyY2Y1MzQ1NDIzNWRlMzBlMWZjZWQ4OGJiZGZiNjk1YjY1MGQ3ZThkODk0ZmE4ZmM3NjNhOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjg4NGU1MWEwNjhjMzNmY2JlNTc5MjkyZmQ3MzAwZTYxYjI5YjZmZDViZDFkNTZmNjZiOTUzNjExMTkwOWFiNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_99e2d65cee01457f8d18d050b4108d14",
+      "statement": "UI language and AI content language share one switch that saves content_language to the backend, changes the vue-i18n locale and reloads the page.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/app/composables/useUnifiedLanguage.ts#L1-L9",
+          "version": "repo-lines-v1:sha256:94efe0d97878db84c06ecdc41ec62ded06aec7147c0953515d28ac09c3837af4:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDVkNWFiYWNhMjI2ODBhZTk1MzM2NzAwZGY3NjYzNjE5N2E3Y2I2YzAwNGY0Y2Q3OWFjMWIxZmQyZjBhYzRhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTI4OWM0NTdlNDc5YzRjMmNmMWQxNWMyNDcyNTUyNjkxMjAwNTM4ODA0MWMwMzE4YTM5ZTU0ZTRjMjk5ZDVhOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmFkNDRiZmQzNmI2OGM2Y2MzNWUyM2JmMDlmNWM1NjdmZmQ0MmJkZTZhZjlhZjQ5OGQ1NjdkOTIwMmI0ZTczMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_46f353c8b4ba4fed9ca95eb0cc8b128e",
+      "statement": "The desktop bridge returns window.nakaDesktop or null, so desktop-only features are hidden in browser and server deployments.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/app/composables/useDesktopBridge.ts#L1-L30",
+          "version": "repo-lines-v1:sha256:3146dc81bc0054cdb3169ec42107a17938f027d8b7909771c44f6d54ef494de4:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

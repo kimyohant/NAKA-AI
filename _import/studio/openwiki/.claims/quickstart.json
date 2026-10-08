@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:39e5ee601cec67cd9c407eabc2e5559a86236e97cc177b24c4a42dcda66c71d4",
+  "claims": [
+    {
+      "id": "claim_81d6a1c0c044473ba341715a2337094f",
+      "statement": "The repo has backend (Hono, Drizzle, Mastra), frontend (Nuxt 3 SPA), and desktop (Electron) packages, with the root package.json forwarding dev and dist scripts to them.",
+      "evidence": [
+        {
+          "resource": "repo://desktop/package.json#L1-L16",
+          "version": "repo-lines-v1:sha256:11015a49180279ed39c3be6d55c0abdd08de390eed3f48aef63ab4492726be78:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjMzM0ZGRlYmNjMGMyMDFkOTc4ODI4MTgwYTdjNGJjMzUzMjIyNDNmZjg4NjE2ZDhiODczYzExMWFjOTdkMTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2MTVhZTYzZDExMWE0YjYwY2JmMTNkZGE0YjdlYTMxNmI4NDBlZTI2NmQxN2NkYzZiNjg4Y2VkNWVmNGI0ZDEifQ"
+        },
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:9564a9c14e69edfc66cf23107a533d92839262ffd6d4c9cb4d8682dbca9a8519"
+        }
+      ]
+    },
+    {
+      "id": "claim_b8481782e34e404ba7a1daf8768b073f",
+      "statement": "Backend has no test script; its package.json provides dev, start, build, typecheck, backfill-artwork and db:snapshot scripts.",
+      "evidence": [
+        {
+          "resource": "repo://backend/package.json#L1-L13",
+          "version": "repo-lines-v1:sha256:f26503db19fe0389a023a4ba9cf983f2fa2fcb06c124d4bc50f2ed1d48e648ea:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwYzk0OTg1NTI2YzFjNTdlZjAwYzAwZDNmNGRjOTA2MTU2NzdhMGEzNmE4Yjc5NWRmZjlhZmZkNTBmZTlmNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkZGNlZGI2N2ZiYjM5Y2U5YmU0OTE1Y2RmZjlkNjM1NzRkNzg3OTU2MmQ2ODMyMzQ4M2JiOWMwN2U2NzE1MGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_668e84d7d8ff4e6f8499d0552e3d7124",
+      "statement": "Desktop dev bundles backend and main process then launches Electron, and dist builds the mac package after prepare-resources, while dist:win builds the Windows package.",
+      "evidence": [
+        {
+          "resource": "repo://desktop/package.json#L9-L17",
+          "version": "repo-lines-v1:sha256:f09ae87e68c08b1b71ff40efcc0fcfd7805460f2acdd2360dcdbe8bc6ad138ed:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTg0MDY5ODRiZGVmY2EzNGRkNmJjOTAwMjdmMWQxMWFiY2IxNzAzNGM1MjVjOWE1Y2VmYTFkODRmY2NkODFkMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDA1NWU2ZDhkMTcxMjRhNDM2MjU0OWJhYmNhMDk3OGRmNjMwMmNkZDg2Y2E5NzdiN2ZmNGM2MDUxMDUwZmQ2MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODdlZDRlMjVkZWQyZWQ4Nzk1ZTMzZWM5NTUxOTk5NDFhY2I5MjZlMTZjNDQxMzIwMjIyNGEzOGZlMWFhNjA2MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDIwMThkOGFiZDJkOTdiY2IxNTNhYTdkYzdjZWIyZTMxMDA4ZGYzNmE2M2JkM2Q4YzRiYTY0MzgyMGE0YjE2MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f09879a4695a41b59d8735db3a3a2dd2",
+      "statement": "The server reads data and database locations from NAKA_DATA_DIR, STORAGE_PATH and SQLITE_PATH with a default database file named naka.sqlite3, and requires NAKA_AUTH_PASSWORD for non-loopback hosts.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/db/index.ts#L16-L18",
+          "version": "repo-lines-v1:sha256:aa0595da46bc839e75a2f0879ee0ae945b23246924c55e3cf1af38e6a5a88cd1:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWE5ZDk2ZjRlZWMwNmE5MmYyYzA3NWEyOTQxN2FmNzVlYzljMGY5NTg5MGQyZmYyMThmOWRjNTE2NDdlMDZiYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGJmYTc3NjA4ZDliMmVlZDI4OTljOWYwMGZjZDlkNjQ1MmNmYzVhZTZhN2NlMzNiODcyYjllZmFlMjdiM2Q2NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODY1MzY4MTllMmI4ZWQ2ZGU4ZjVlOTEzYjZhY2Q1OTk3MzBlNDViNGIxZDI1OWMyNDZmODYyZjZjOTQ3MGI3NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmY3YTEyNGE5ZWQxMmE3NjA3MTJmNWJkNjdkZmMyNmM2OTFmZGZkZmNkOGZhYjgzY2RkNTAxZmNiNjZmOGY0YyJ9"
+        },
+        {
+          "resource": "repo://backend/src/index.ts#L51-L56",
+          "version": "repo-lines-v1:sha256:872d5f53a7f8182fc925cc88bea89c51b4d52f752cf1011c3060aaa95c793ed1:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGJkZWZmNmUyNGE0OGZmMDU0OTU4MWY5NDA2OGIzY2UzYTM1Mzg3M2EwNGEyMWM5Y2UyYWRlMDc0MzFjMWRhOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2NlZjM4MTZlYmRjODhkYWI2YzU5YmZlN2IzYWQ5Y2E5NDU2NjU4NTBlM2QyNDEwMzk3ODNkOWUxNTg0NTcxYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTc3OTZmNDhkNzVhNjkyYmMxNDcyNTc1NmY3ZmU3MmUwNTFiNDYwZTYxMjI1YzM0MTc2N2UwZTBiNTZkOTdhMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2Y0NDQwZjQxZTM5NTZlOGQzYmMyMGJlZjQxYzgyOTg0YmRlYjc0Njc2NjQ3MTFmYjk2ZjBlNzNiMTRhMjQ0YyJ9"
+        },
+        {
+          "resource": "repo://backend/src/utils/paths.ts#L16-L22",
+          "version": "repo-lines-v1:sha256:c901ef3f017ad04e69c60477e0ff37694c243e9084ad4ec71e427a7b08c6582a:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTg4MmIxODY3MjI3MTA2Y2VlNDQ5OTNlNjlkY2M3NjRkNzBhOTM2Nzk3ZmQ1YTVmNWIyZWY5ODkyMWQzZThkZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzIwYjA2OTlhNTAzZWQ1MTVmY2VmZDE4ZjA4MzI0MDcyNWM5NTgwNWQyMTFiYjIzNmI2ZTMzMmFjNWE4MzdiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjI1YWI1OTNlMWVlMjExZDExYjVjM2RlNTI5Y2ViNThjNGQ1YzRhZTkzOGM0YjM1ZWFhNjVlNGM3MzIyZGE1MCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

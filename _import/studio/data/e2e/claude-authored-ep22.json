@@ -1,0 +1,79 @@
+{
+  "_note": "Authored by Claude (standing in for the Gemini text agents during the E2E test) from script-ep22.txt. Same fields/APIs the agents write.",
+  "characters": {
+    "น้ำ": {
+      "role": "นางเอก",
+      "final_prompt": "3D CG character turnaround sheet, same character shown in front view, three-quarter view, side view and back view, full body, standing neutral pose. A 22-year-old Thai woman barista, slim, small oval face, big round kind eyes, warm friendly smile, natural black bob hair cut at shoulder length, white clean button shirt under a green barista apron, black trousers, white sneakers. Consistent proportions and outfit in every view, plain light grey studio background, soft even lighting, high detail, no text, no watermark"
+    },
+    "ภาคิน": {
+      "role": "พระเอก",
+      "final_prompt": "3D CG character turnaround sheet, same character shown in front view, three-quarter view, side view and back view, full body, standing neutral pose. A 26-year-old Thai man, tall and slim, sharp handsome face that looks tired and disappointed, gentle eyes, short neatly styled black hair slightly wet, dark navy business suit soaked by rain, white shirt, loosened dark tie, black leather shoes. Consistent proportions and outfit in every view, plain light grey studio background, soft even lighting, high detail, no text, no watermark"
+    }
+  },
+  "scenes": [
+    {
+      "key": "cafe",
+      "location": "ร้านกาแฟริมถนนสุขุมวิท",
+      "time": "กลางคืน ฝนตกหนัก",
+      "prompt": "ร้านกาแฟเล็ก ๆ อบอุ่น เคาน์เตอร์ไม้ เครื่องชงกาแฟสแตนเลส ผนังกระจกบานใหญ่มองเห็นถนนสุขุมวิทที่ฝนเทกระหน่ำ",
+      "lighting": "ไฟส้มอุ่นในร้าน ตัดกับแสงไฟถนนสีฟ้าเย็นที่สะท้อนบนกระจกเปียกฝน",
+      "final_prompt": "3D CG environment concept, fixed wide eye-level view, no people. Interior of a small cozy coffee shop at night: foreground wooden service counter with a stainless espresso machine and a few cups; midground empty wooden tables and chairs; background a large glass storefront window with heavy rain streaming down, blurred neon and street lights of a Bangkok street outside. Warm amber interior light contrasting with cool blue light from outside, reflections on wet glass, cinematic, high detail, no text"
+    },
+    {
+      "key": "busstop",
+      "location": "ป้ายรถเมล์หน้าร้าน",
+      "time": "กลางคืน ฝนตกหนัก",
+      "prompt": "ป้ายรถเมล์ริมถนนห่างจากร้านกาแฟไม่กี่เมตร หลังคาเล็ก ฝนตกหนัก พื้นถนนเปียกสะท้อนไฟ",
+      "lighting": "ไฟถนนสีส้มจากเสาไฟ ไฟหน้ารถที่เบลอ แสงสะท้อนบนพื้นเปียก",
+      "final_prompt": "3D CG environment concept, fixed wide eye-level view, no people. A small bus stop shelter on a Bangkok street at night in heavy rain: foreground wet sidewalk with puddles reflecting light; midground the bus stop with a metal bench, small roof and a route sign; background the glowing coffee shop a few meters away and blurred car headlights. Orange streetlight, cool rainy atmosphere, visible rain streaks, cinematic, high detail, no text"
+    }
+  ],
+  "props": [
+    {
+      "key": "wallet",
+      "name": "กระเป๋าสตางค์หนังสีน้ำตาล",
+      "type": "ของใช้",
+      "description": "กระเป๋าสตางค์หนังแท้สีน้ำตาลแบบพับ มีรอยใช้งาน ที่ภาคินลืมไว้บนเคาน์เตอร์",
+      "final_prompt": "Product shot on a pure white background: a folded brown genuine leather men's wallet, slightly worn edges, visible stitching, three-quarter angle, soft studio lighting, sharp focus, no text"
+    },
+    {
+      "key": "umbrella",
+      "name": "ร่มคันเล็ก",
+      "type": "ของใช้",
+      "description": "ร่มพับคันเล็กสีเหลืองของน้ำ ที่เธอยื่นให้ภาคิน",
+      "final_prompt": "Product shot on a pure white background: a small compact folding umbrella in bright mustard yellow, open, clean canopy, black handle, three-quarter angle, soft studio lighting, sharp focus, no text"
+    }
+  ],
+  "storyboards": [
+    {
+      "number": 1,
+      "title": "ลืมกระเป๋าสตางค์",
+      "scene": "cafe",
+      "characters": ["น้ำ", "ภาคิน"],
+      "props": ["wallet"],
+      "duration": 8,
+      "description": "【镜头1】ภาคินในชุดสูทเปียกฝนรีบเดินจากเคาน์เตอร์ออกประตูไปโดยไม่หันกลับ กระเป๋าสตางค์หนังสีน้ำตาลวางทิ้งไว้บนเคาน์เตอร์\n【镜头2】น้ำที่กำลังเช็ดเคาน์เตอร์เหลือบเห็นกระเป๋าสตางค์ คว้าขึ้นมา มองไปทางประตูด้วยความเป็นห่วง",
+      "video_prompt": "@ร้านกาแฟริมถนนสุขุมวิท at night, heavy rain on the big glass window. @ภาคิน in a wet dark suit hurries from the counter to the door and leaves without looking back; @กระเป๋าสตางค์หนังสีน้ำตาล stays on the wooden counter.\n@น้ำ in her green apron wiping the counter notices the wallet, picks it up and looks toward the door with concern.\nClose-up on her hand gripping the wallet, then she grabs a small umbrella and rushes to the door. Warm amber light, cinematic, gentle camera push-in."
+    },
+    {
+      "number": 2,
+      "title": "คุณคะ! ลืมของค่ะ",
+      "scene": "busstop",
+      "characters": ["น้ำ", "ภาคิน"],
+      "props": ["wallet"],
+      "duration": 10,
+      "description": "【镜头1】น้ำวิ่งฝ่าฝนไปที่ป้ายรถเมล์ ตะโกนเรียก น้ำพูดว่า:「คุณคะ! คุณลืมของค่ะ!」\n【镜头2】ภาคินหันกลับมาอย่างประหลาดใจ รับกระเป๋าสตางค์ ยิ้มเล็กน้อย ภาคินพูดว่า:「ขอบคุณครับ ผมเพิ่งสัมภาษณ์งานไม่ผ่าน แต่คืนนี้คุณทำให้ผมยิ้มได้」",
+      "video_prompt": "@ป้ายรถเมล์หน้าร้าน at night in heavy rain. @น้ำ runs through the rain toward the bus stop holding the wallet and calls out in Thai: \"คุณคะ! คุณลืมของค่ะ!\"\n@ภาคิน standing under the small bus stop roof turns around, surprised, and takes @กระเป๋าสตางค์หนังสีน้ำตาล from her hand.\nMedium close-up, he smiles softly and says in Thai: \"ขอบคุณครับ ผมเพิ่งสัมภาษณ์งานไม่ผ่าน แต่คืนนี้คุณทำให้ผมยิ้มได้\". Orange streetlight, rain streaks, handheld feel."
+    },
+    {
+      "number": 3,
+      "title": "ร่มคันเดียว",
+      "scene": "busstop",
+      "characters": ["น้ำ", "ภาคิน"],
+      "props": ["umbrella"],
+      "duration": 8,
+      "description": "【镜头1】น้ำยื่นร่มคันเล็กให้ภาคิน แล้ววิ่งกลับเข้าร้านทั้งที่ตัวเปียก\n【镜头2】ภาคินถือร่มยืนมองตามหลังเธอ รอยยิ้มอบอุ่นบนใบหน้า",
+      "video_prompt": "@ป้ายรถเมล์หน้าร้าน at night in the rain. @น้ำ, soaked, presses the small yellow @ร่มคันเล็ก into @ภาคิน's hands, smiles shyly and turns to run back toward the glowing coffee shop.\n@ภาคิน holds the open yellow umbrella and watches her go, a warm smile spreading across his tired face.\nSlow push-in on his face, rain glittering in the streetlight, romantic and hopeful mood."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "startedAt": "2026-09-28T15:37:16.144Z",
+  "textModel": "gemini-3.1-flash-lite",
+  "budget": 120,
+  "steps": [
+    {
+      "name": "0. Preflight",
+      "status": "pass",
+      "seconds": 1,
+      "result": {
+        "health": "ok",
+        "wanCredits": 303,
+        "contentLanguage": "th",
+        "textConfig": "#8 gemini",
+        "textModelOverride": "gemini-3.1-flash-lite"
+      }
+    },
+    {
+      "name": "5. Extract characters / scenes / props",
+      "status": "fail",
+      "seconds": 72,
+      "error": "extraction incomplete: 0 chars / 0 scenes; status {\"characters\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.526Z\",\"finished_at\":\"2026-09-28T15:38:10.372Z\",\"error\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\"},\"scenes\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.591Z\",\"finished_at\":\"2026-09-28T15:38:26.568Z\",\"error\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\"},\"props\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.641Z\",\"finished_at\":\"2026-09-28T15:38:10.327Z\",\"error\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 15, model: gemini-3.1-flash-lite\\nPlease retry in 50.426800133s.\"}}"
+    }
+  ],
+  "ids": {
+    "drama": 5,
+    "episode": 22,
+    "resumed": true
+  },
+  "findings": [],
+  "aborted": "extraction incomplete: 0 chars / 0 scenes; status {\"characters\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.526Z\",\"finished_at\":\"2026-09-28T15:38:10.372Z\",\"error\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\"},\"scenes\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.591Z\",\"finished_at\":\"2026-09-28T15:38:26.568Z\",\"error\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\"},\"props\":{\"status\":\"error\",\"started_at\":\"2026-09-28T15:31:22.641Z\",\"finished_at\":\"2026-09-28T15:38:10.327Z\",\"error\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 15, model: gemini-3.1-flash-lite\\nPlease retry in 50.426800133s.\"}}",
+  "finishedAt": "2026-09-28T15:38:29.222Z",
+  "wanCreditsUsed": 0
+}

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:3461a35c90ee28adf7dac598859cdd795fa610e6d397f3cdf9db707f43199bf8",
+  "claims": [
+    {
+      "id": "claim_74363d6e2e264198ba8030bc3c414017",
+      "statement": "The main process forks the bundled backend as a utilityProcess with env injecting PORT, NAKA_DATA_DIR, SQLITE_PATH, WORKSPACE_PATH and FRONTEND_DIST (plus ffmpeg and font paths when packaged), waits for /api/v1/health, then loads the window from the same loopback origin.",
+      "evidence": [
+        {
+          "resource": "repo://desktop/src/main.ts#L148-L192",
+          "version": "repo-lines-v1:sha256:5c3c615f380350ca9d4cec4f4a24e63b9fffcf55d4912556527d72a3f2e796b4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmMzdlMzg0NDVlMGI0MTM0MTg1MWI0NGNmZjlmNGFlNjAxZWYzNWVlODc1MzRiMTkyMzk2ZDk2MGFhYTU2YjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxMWY4Yzg2YjM2ODBiNjdmNDM2ZTk0ZjAwMGQwZTIwNDdhMTgzYTFmM2M0YTc1ZDg0MjAyNGMzMjE2NzcxZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU1YWU3YTg1MWNiNDcyYjM1NGFkYjQxYzA1M2U3ZGY0MmUwNzU3MGEzYWU4NDIxZjU1ZTQwNDc4MWM0YzJhMjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkNWEyOTVmNTQ2NWZiZThkYzMyYWMxNGM1NDQ4NGRhYjIyZDI3NzU2NzVmYjFjODI1ZDVlZWRkZGRmMDRiMjMifQ"
+        },
+        {
+          "resource": "repo://desktop/src/main.ts#L250-L283",
+          "version": "repo-lines-v1:sha256:570d3dafc3917dd73daee8fd289d091e689862ff45ad4b71da7fbbe7dac60a49:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyMzQ4MGE2NjU1N2JiMGQwNDVjN2FmYmUzOTg0MDAyYzkwNmZjNjFhMmU1ZGRhZjNjYzE2ZDViZDliM2I1ZjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0Y2U5YmZjNTllYmYyZDg4YjA0YWU1ODZhOTM4MTUyNGRkNjJjODhiNGE3ZWY5MjNlZTM3NGVkZTIwY2FjMWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzNGUwOTJhNzY3YzFlNDc1OGQ2ZGE2NzgzNjJjYjE2NGQ0OWYzNjExNjM3OThmNGVkODZhZDdhZDI3ZWE2MTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxZDI4MjA5MDE5NjdmZTJjYWUyODgzMzBhNzdhNjIyY2YwZGUwYzg1Mzg0MTcxMWVhYWY2M2MyZjVhOGM4M2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_19cde23027ec4d27b625403b3ee2cff1",
+      "statement": "userData is separated between packaged (NAKA-AI) and dev (NAKA-AI-Dev) builds, and a single-instance lock prevents two instances contending for the SQLite write lock.",
+      "evidence": [
+        {
+          "resource": "repo://desktop/src/main.ts#L39-L66",
+          "version": "repo-lines-v1:sha256:fc65340101b085fbf5cf6febe3d9e8ff010f99080403994c7adb6d479a0db664:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwZjZhMTViZTM1NWMyZDNkOGEyZmQ0ZWJmNDkyMjcwNTVjOGMwYjA5MDJhNGY2ODY4MzAzODJkOGQwZTdjMDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1NzI4OTQ2MzJkN2JkYWY3YWM2OGFlZGQ1ZGEyOGNlMjVmZGQ4YzNmNWNiZWM5YTMzY2E1M2U4ODEyYmEyZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZlN2U2OTczNzgzMjk3MWYwOGM4NWI3NmQxY2ViZDFmZGRhMzQ2NTNmMWNmODdiMjk0MWRhNzNmN2Q2NzRmMjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFjYjgzN2IzMDU3MGY0NWZlMTdmMDVlNzViYzJkOGVjMTQ3OTNmODU4NjM3ZTY4NzI5ZjhiYWMzMzlmOThiMzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_863e284620254107b5dcafb02c42d54b",
+      "statement": "Workspace template sync is copy-once with a version marker and never overwrites existing user files, except that prompts/ is force-overwritten on a template version change.",
+      "evidence": [
+        {
+          "resource": "repo://desktop/src/main.ts#L119-L133",
+          "version": "repo-lines-v1:sha256:a187a0ab821b62bc7d14583b51132258401026ef0a8e5bf8967b277bab4d7c8e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhNTYyYWMxZGE3ZTE2ODVjOTk5OGIwM2JjODgzOTAxMDg1YzFjMDcwZTJjZjNiYWI5OWU4ZmRlMGFjY2FlZjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhYzRkYmQyZTQ4Y2E0NjZjMTEzMjYwODVmYjZjYjEyOTdhMTU1MDExMjJiNjBjODI0MDdhZDc1YTg5ZDkwNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlZTA1ZGJhZmE2OWZlZWE4ZTEwZjEzMjc4NzIzYTRmNTg0MGIyZDZkM2Y4YjIzNzgyMWUxM2Q2MWNlZGFjMGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0YzAyMjlhZGRkMGIwNzVjZjZhNDc2YjA4ZjFkMmI4N2JhN2M3NmU3ZDBkYjA3OTljNjU4ZTQ1MDllNDVmMTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_31b4ed5df5ca4157b8adae0c97cea18c",
+      "statement": "A corrupt or unusable storage-config.json falls back to the default userData/data directory without blocking startup or rewriting the bad file.",
+      "evidence": [
+        {
+          "resource": "repo://desktop/src/main.ts#L88-L108",
+          "version": "repo-lines-v1:sha256:3e9f74bc63df337de39343f32488b06c72f56664ab29692097c3cafb917849bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkZDI4MWVkZjZkZTIyZmZmNGFiZTdjYjQ0MGQ3MGVjZjMzMzZjZjdiZWRiZGE1MGZjYjg2NjI3YzBjZWVmYWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjZmQ2NjcyY2ZlMDI5OTlmMmE2NDMyMDZlNTcwNzM5MzNlZTliOTE2MTI3Mzk0N2I5ODE3NTZhNzZmNDQ4NDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkMzRjNzBkM2RhZGI5ZWNlYTk5NTdkZTg4Mzc0YWE4OWQ4ZjNhNGQ3OWJlZGUzMWY5MmNhNTI0YmI5OTkxZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiNjczODU3OTkxZTdiOTBlMjRhZGNlZWZhNDBjMmNiMTZjMmRmNmU1M2JmNmU3ZTk3OTY0NzYxMWZiNWRmMDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ef2911bbb8834c9f9c418bf8cdb1753a",
+      "statement": "Storage migration follows validate, stop backend, move, write config, restart, and never deletes the old directory before copy verification, rolling back to the old directory on failure.",
+      "evidence": [
+        {
+          "resource": "repo://desktop/src/migrate.ts#L1-L10",
+          "version": "repo-lines-v1:sha256:648394422bad935b295de4ce3b1488a294a403b3248c0d2ad97a2bbdab7e95aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxZDY3NGVmZGQxODRmMzJjODE4MmJlZmNkMDc1YTJhMTUxN2Y2Y2I1MGQ0NGJjMzRlZjI0M2Q1YWQ3MDNkZjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ1ZWNhNWNjNzM5MTdjZjExODdmN2U1MjFiNDIzNTg2M2RhODQ3MjA1ZWYyYjUyOTRjODhiOTEwNGYzNzMyZTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ffb74c055cc44971bae043dd8e5d3213",
+      "statement": "The updater verifies SHA-256 of downloaded artifacts, swaps the macOS .app keeping a .old backup, silently runs the Windows installer, and is disabled in unpackaged builds.",
+      "evidence": [
+        {
+          "resource": "repo://desktop/src/updater.ts#L1-L12",
+          "version": "repo-lines-v1:sha256:c56799dd5612df1ffd3903140f1f0267933258827891469bedfa40b22238ad5c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxZDY3NGVmZGQxODRmMzJjODE4MmJlZmNkMDc1YTJhMTUxN2Y2Y2I1MGQ0NGJjMzRlZjI0M2Q1YWQ3MDNkZjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ1ZWNhNWNjNzM5MTdjZjExODdmN2U1MjFiNDIzNTg2M2RhODQ3MjA1ZWYyYjUyOTRjODhiOTEwNGYzNzMyZTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_620f48dfd4ec446ba89092990dd7cc5c",
+      "statement": "The backend is bundled by esbuild into one ESM file with sharp, better-sqlite3, ffmpeg-static and ffprobe-static kept external, and resources are assembled by prepare-resources.mjs, which requires a generated frontend index.html.",
+      "evidence": [
+        {
+          "resource": "repo://desktop/scripts/build-backend.mjs#L1-L40",
+          "version": "repo-lines-v1:sha256:0f10b3d7cc57b5af74a5ea8ef0c83d7ba43788eb20143b1d2453ed11eec847e9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwYThmNjBmZTNjNTBiMGNmNTM0NzIyMTEzZmU5MGQ3MzQxNDM4N2NlOTJlNTk3OGM4MmNiZDgwMWNjMDUwMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://desktop/scripts/prepare-resources.mjs#L1-L33",
+          "version": "repo-lines-v1:sha256:a3d2c461eb5bbcf05793e47db584213f754d552d49cc361100afe1ecd332978a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxZWQxYmVkMTZmNTFjYmM2MTY2ODIxOWJhNTQzYjc0Y2IwOTU2NTc2ZDNjNGU4MTUyYWM1ZWFhZDU4ZTgyODgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxN2ZjM2EyMjAwNmRkMGMxZjYxNWZiMjFkNWFjMjkyOTUwN2ViOWJmYWUwNGMzOWJjMDcyYzFjOTQ2NTA0NDEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

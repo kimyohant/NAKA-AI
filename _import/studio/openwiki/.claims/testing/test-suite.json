@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:9d175c8d451849e5ad556ca52dda30781e6d0e065e30531cc26b7de6c97fdaad",
+  "claims": [
+    {
+      "id": "claim_1019b65556934d4a9ffd1570d75ba0bd",
+      "statement": "backend/package.json defines no test script (only dev, start, build, typecheck, backfill-artwork and db:snapshot), so tests are run directly with node:test and tsx.",
+      "evidence": [
+        {
+          "resource": "repo://backend/package.json#L1-L13",
+          "version": "repo-lines-v1:sha256:f26503db19fe0389a023a4ba9cf983f2fa2fcb06c124d4bc50f2ed1d48e648ea:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZWFlN2U2YTRkM2M3MWJjYzk2MzI4YzUxOWZiYTI5NDFlZTQ4Njk2OGE2ZDYzMjJmYjA4Y2ViNDRlM2VmZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwYzk0OTg1NTI2YzFjNTdlZjAwYzAwZDNmNGRjOTA2MTU2NzdhMGEzNmE4Yjc5NWRmZjlhZmZkNTBmZTlmNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkZGNlZGI2N2ZiYjM5Y2U5YmU0OTE1Y2RmZjlkNjM1NzRkNzg3OTU2MmQ2ODMyMzQ4M2JiOWMwN2U2NzE1MGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b50f0dc1fc5d4e67b3328678bc9f0fca",
+      "statement": "Database-dependent scenario tests run in a child process via tsx with SQLITE_PATH set to a fresh temp directory, then assert exit code 0 and a sentinel output line.",
+      "evidence": [
+        {
+          "resource": "repo://backend/tests/production-guards.test.ts",
+          "version": "repo-file-v1:sha256:714bbc3391ee1b689fae3addd46c7676ae80a0f652b7b24435c83605b610ba22"
+        },
+        {
+          "resource": "repo://backend/tests/unsloth-queue.test.ts",
+          "version": "repo-file-v1:sha256:39b1a17f67cd6d374e90ba69a4f2f47146c82cd9cd4d4cda236bca260bdd1fcc"
+        }
+      ]
+    },
+    {
+      "id": "claim_edc6c8fecb0c4b1db96c419555a4732c",
+      "statement": "The sqlite migration test asserts migrations 1-19 are recorded once after repeated initSqliteSchema calls, and that backupSqlite snapshots restore data and refuse an existing destination.",
+      "evidence": [
+        {
+          "resource": "repo://backend/tests/sqlite-migration-backup.test.ts",
+          "version": "repo-file-v1:sha256:6c98664966c4c7c529da7fcab5aa18d7130f19eb615673d4072be10a87d850e5"
+        }
+      ]
+    },
+    {
+      "id": "claim_b2d486ebd6fe41d2b64b5886d9bd2535",
+      "statement": "The production guards scenario verifies that unanchored video preflight is rejected without creating a task, over-budget generation fails before any provider call, source freshness turns stale after a prompt edit, and export health flags missing or incomplete clips.",
+      "evidence": [
+        {
+          "resource": "repo://backend/tests/production-guards-scenario.ts",
+          "version": "repo-file-v1:sha256:53c0df0aa1682f328f45af8dff77b2db0f973c4e1fac3ac1679c3d13c1fe5497"
+        }
+      ]
+    },
+    {
+      "id": "claim_40002721981d4d6387f3e6fa744a6a5f",
+      "statement": "Structure tests read source files as text and assert with regexes that routes or code fragments exist, so they pin source shape rather than runtime behavior.",
+      "evidence": [
+        {
+          "resource": "repo://backend/tests/studio-backend-structure.test.mjs#L1-L15",
+          "version": "repo-lines-v1:sha256:d0128e1fb67e92c280a26345cf67be9b6fdc05c51440732972cab165e27589fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2NzkzOTc0MDA3YjhkZjY4N2EzYzA3ZjY3MDgxYzQyOGFkMDEzYWZlZGU0NTA4MWEzNWNkNTZhYjMxNzBkM2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyYzBiNzhlYmQ3NzZiZmZhMTFiMTIxNDdjYjExOWNmZDhhYmJkZTI5OWJhOWM5MzUwZjMyZjBmYWNhODlkMjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIyNzBjOWMzOGRkN2JkYjg5Yzk2YmY5YjMyZWU4MThhMWEyNjEwYWZmMzYyOTEyNDVjYWExNjgwMzNiNmNlNWIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

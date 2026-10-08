@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:0d318fc8a77fc9831d20df9145f960ca6f730c2cf40516b867a8d6228d8e8215",
+  "claims": [
+    {
+      "id": "claim_823a4282590741f78f8cf7b5df985395",
+      "statement": "Each agent type gets one statically registered Mastra Agent whose instructions and model are resolved dynamically per request.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/agents/index.ts#L697-L738",
+          "version": "repo-lines-v1:sha256:8a68f75a7b07956ef70f1238bf1ba4747ac1d60006648af4a68df7e9727219ee:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiZTcwNWNmZDdmODc4M2E5NTQ1OGM1ZTNmOWNhNGY1NjAxNDQyNDUxY2Q5YjdlNzM2NTAwY2Q4ZGRjMGM5ZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliMzllMDIyZTBkODU0MTIwMDAzZDc5MGMyOGI3NTk2MmVkZDMwMzc1NmQ1MTMzM2RmNzQ1Y2ZiODZlYTExY2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmOWFmNjgzMzliZGJjMWI0NmE0NGJhNDVmN2E0ZjdiMjgxM2QwYmE4MjUzM2NjMTViZmQxZjIyOTIyYTdiOTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_422dbe39c9c24df897a61c69237edeec",
+      "statement": "Instructions are assembled from the prompt file (or in-code default), full skill text, an optional pacing directive, and an output-language directive; zh adds no directive.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/agents/index.ts#L697-L713",
+          "version": "repo-lines-v1:sha256:eefcebff85d78ed87802c531ea9fd5e7e4ebf1b4fcf5d865e5bf68fa2a2143b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiZTcwNWNmZDdmODc4M2E5NTQ1OGM1ZTNmOWNhNGY1NjAxNDQyNDUxY2Q5YjdlNzM2NTAwY2Q4ZGRjMGM5ZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxZTE4YjNkZDdkMTZiZjg2MWQ2YTFmOGFiOTljZjYxMWU0NjYxYzVjOTg5NzUwODQ3Y2U3ZDcxNTE4ZmJiYzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmOWFmNjgzMzliZGJjMWI0NmE0NGJhNDVmN2E0ZjdiMjgxM2QwYmE4MjUzM2NjMTViZmQxZjIyOTIyYTdiOTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmNjljMmE0NDNhMDI3ZjRlMTcwNTE2Zjc3MTI1YWMxNWIyMTYyMWZjY2RiZjM4ODllMGM0MjU1ZGE4NzQ5OWQifQ"
+        },
+        {
+          "resource": "repo://backend/src/agents/language.ts#L1-L61",
+          "version": "repo-lines-v1:sha256:a244b98927a3962ecec31e14e83d0b46674ee521cb093512f51a64c5789a356f:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_047355ea33c840a785d83b493086146a",
+      "statement": "Model name precedence is request modelOverride, then prompt-file model, then the text config's model; the text config comes from textConfigId or the active config.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/agents/index.ts#L599-L603",
+          "version": "repo-lines-v1:sha256:cca376f2bf9dfe70a32787b83a4dc645e38ed2c890f6ba0aacc5638cb9e781c9:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzI4ZWEwOGUyZTI5ZDgwOTdkYTNlZWE0NDM1NDU2ZWY4Njk4ZTEyNjdhZmE0NjM1NGMxYTA1ODUyYzNjN2ZjMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjhiZWFiYmJkNWFmMTRiYjhhNmQzYjc3NTQ4MjAyZGFiYmFkNDUxNWVmNzg2ZjZlN2E5MjQ2Y2ZhNDJjY2RiNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDQ3ZjIyMDNkZTNhY2E2NWE2NWE2MWZiNTcyZWY5NGQxMDljNDc5ZmI0NDMyNmQxOGFlYTM0ZTZiOGI1MzliNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmY3ODU5NjUyNWFhOGExM2I4YTg3MmJlMjAwNmNlOWQwM2EzODQzZTUyY2E0NDQzM2Y1ZjkxODE3OTcxNDQyZCJ9"
+        },
+        {
+          "resource": "repo://backend/src/agents/index.ts#L715-L723",
+          "version": "repo-lines-v1:sha256:57394256e00abec17a8eb69cb1c6db77525d95a6c9c54ed6ef358c392b5dc684:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQxODI1MzQ2OTEyMTJkMzZiNjY3NTRjODY5OTllMmRjODM0NWRjMTZhMzZmNGM2Mjk5YmRkZTc4Yzc5ZjE0MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTJiZmRiMjY2NmU5ZDJlZTdhMTg5MGY0ZWYzZGFlOTRmODI2NTRlZGY4MjlmZDM0ZjYyYWIwZjFjMGM1NGU2MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTdlODRiOTk0OTQ3ZGRjYjkzYWM1M2MwMjEwYjRjNTM5ODg0YzViYTNlOWE3YzFiMzIzNjFiZjM1NmRjN2I5ZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4978902e1f994148afaf675b4f6020cf",
+      "statement": "The provider fetch is wrapped with thinking-off, temperature and max-tokens patches, then an outermost retry layer that backs off on 429/5xx and falls back across Gemini models.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/agents/index.ts#L541-L576",
+          "version": "repo-lines-v1:sha256:760aeb7a518dfb708f62431e9e4a6f31e1fc18d2e7a643a883f1a9ce9ea836f5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3YTc1NzNmZDg2MGYzZTY1ZTNlN2M3Y2IzOTk4YTI1NzAxY2JjOGZkNmMwYTE2MjRjMWRkN2Q1OGYxMjViYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMmZhYTUzNWJkMmVhM2Q1MmU3NDFlZDQ1NDQzNWI3ZmU0OWU4MzU4NmU5NDNkOThkODJiYmZiMjRkMWY1YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiZjlhMDJhZDUzZThiZTRkMGQwOTFkNmNiZjRiMGY1YjAzMThkMThkZDhkYmUyODZmMWI4ODI1NDk4Mzc5MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5ZjZiOGMyNjAyMWJkMzFiMTE3NGJjMzkyOGZkMDQ1Mjk3MjQxZGNhNDU0OGQzMmE5NDIyYTBlYTYyODA5YmIifQ"
+        },
+        {
+          "resource": "repo://backend/src/agents/index.ts#L617-L625",
+          "version": "repo-lines-v1:sha256:abf986b6825edd2adf7150294037189c66b817eee441444d2ed43460cc39deda:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzkzYzM5NDBjMmY1NTQyYWQwMTQ0OTY5MTdmMzUyMjkzN2VhY2Q1ZjhlNzAyMWEyMzJlNGQ3YjBlNzk1MjkxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWZhMmEwZWI0ZmU3M2JmNGJkMGQ2Yzc4ODhiNTcxNWQzMGUxMjllMzI3YjRkMGRmODdlMGJhNjY2MmFjYzI2OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzg1MDA0NjIwZWVlY2Y4MjliZDhkNGQ3MTY1YTBhMDFhM2RkNGEyMTNhYTkyM2UwNzRmY2VkZGQ3MmFmNjlhZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a105d2e3c24143dbba12ed8033e1d2dd",
+      "statement": "Per-agent Workspaces are jailed to backend/workspace (or WORKSPACE_PATH) and skills are matched by directory prefix so new skills load without restart.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/agents/skills.ts#L18-L70",
+          "version": "repo-lines-v1:sha256:e6a909ac85971be406f3fd347697db0d5c1f483a6e176abde4daf2cb478a2945:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5ZWUwMWJmN2I1NDU2MjA2Mjk5MmE2ODY5YTQzMjJlM2U3ZDdkNTBmNTUyYjJiYjdhZTcyYzc1YzdmN2MyYWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxZmY2YzFmOGUzNjgxMzlkODYxY2YwMWQzNmViNTNkYTRjMzhlY2ZkMDFlMzQ3ZjQ2YjE3ZTE1NDg1ODg1M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhMTFhZGM2M2JhN2NjZjQ0ZmI1YWJkZWZmY2E2NDhlZjg4NmQ0M2IwYzJmZjI2ZDFhNTMyYzU4Y2RkMmZhNDEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}

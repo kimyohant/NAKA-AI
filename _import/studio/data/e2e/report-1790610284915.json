@@ -1,0 +1,52 @@
+{
+  "startedAt": "2026-09-28T15:44:44.909Z",
+  "textModel": "gemini-3.1-flash-lite",
+  "budget": 120,
+  "steps": [
+    {
+      "name": "0. Preflight",
+      "status": "pass",
+      "seconds": 1,
+      "result": {
+        "health": "ok",
+        "wanCredits": 302,
+        "contentLanguage": "th",
+        "textConfig": "#8 gemini",
+        "textModelOverride": "gemini-3.1-flash-lite"
+      }
+    },
+    {
+      "name": "5. Extract characters / scenes / props",
+      "status": "pass",
+      "seconds": 0,
+      "result": {
+        "reused": true,
+        "characters": [
+          "น้ำ",
+          "ภาคิน"
+        ],
+        "scenes": [
+          "ร้านกาแฟริมถนนสุขุมวิท",
+          "ป้ายรถเมล์หน้าร้าน"
+        ]
+      }
+    },
+    {
+      "name": "6. Generate asset images (Wan, with agent final prompts)",
+      "status": "fail",
+      "seconds": 51,
+      "error": "scenes ร้านกาแฟริมถนนสุขุมวิท task #9 failed: Wan 提交失败：blocked Hmm, feeling uninspired. Please wait a moment or modify your prompt and retry."
+    }
+  ],
+  "ids": {
+    "drama": 5,
+    "episode": 22,
+    "resumed": true
+  },
+  "findings": [
+    "step 6: 1/6 assets already had images (reused)"
+  ],
+  "aborted": "scenes ร้านกาแฟริมถนนสุขุมวิท task #9 failed: Wan 提交失败：blocked Hmm, feeling uninspired. Please wait a moment or modify your prompt and retry.",
+  "finishedAt": "2026-09-28T15:45:36.956Z",
+  "wanCreditsUsed": 2
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4a0dd45cc1b977184b907fce26b9359bf4f30cc74d865107d25dc7da00e69ea6",
+  "claims": [
+    {
+      "id": "claim_1d55e49b09ee430d896d06212dca163c",
+      "statement": "Startup throws if NAKA_HOST is non-loopback and NAKA_AUTH_PASSWORD is empty; with a password set, all routes except /api/v1/health and OPTIONS require Basic auth compared in constant time.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/index.ts#L51-L86",
+          "version": "repo-lines-v1:sha256:fe16f50c07eb7d1de84a62fcc9db60e327943168ff8aa0442c716efb24dabbb3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiZGVmZjZlMjRhNDhmZjA1NDk1ODFmOTQwNjhiM2NlM2EzNTM4NzNhMDRhMjFjOWNlMmFkZTA3NDMxYzFkYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYTVkMjFlZTYzNjcyYTA3ZTVjYjY3MjVlNmVkNGEyMmI2NTFiMWFkZTIxZGI1Y2MwZGEzNTIwODUyYzI2OTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3Nzk2ZjQ4ZDc1YTY5MmJjMTQ3MjU3NTZmN2ZlNzJlMDUxYjQ2MGU2MTIyNWMzNDE3NjdlMGUwYjU2ZDk3YTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0ZGY4M2JlNTE4YmJjNDBiOGQ2YWRjMjEyYzZjM2YyZmU3NDEzYjFjNWMxNDFmZWNhZTVhMDRjODRkN2VkOTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d7838bcfaadb4ad7a46d7dd0219c0a5f",
+      "statement": "Before listening, the server runs independent try/catch-wrapped recovery sweeps that fail or resume work interrupted by a restart (generation tasks, pipeline tasks, campaigns, studio, clone, seller).",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/index.ts#L120-L205",
+          "version": "repo-lines-v1:sha256:a8a1d2254b87a23566fc3d8e723244183516b2c7c099e29c6b3bf50c4de6bc49:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkOThhNGRhYmRjYWU1OTBkMDE2ODQzZDJiY2EwM2VhZWMyZDNjZjQ2ZmFkZDRjYjQ2YTgzMTZkNTY1ZDM2Y2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkODUxYmM2NzQ3NjNhNmFiMDAxMzc2MjY5ZDYzOWJiYmZjMWY0YjczMjFiMGY0MjMyMGJlNmJhNjc1ZTUwYWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlNmY3NzM2MjhlMDAyYjcyMzY5OGVjOTUxNmYzYjE2MGJkZGE4Y2U2NTZkOWRmOTg2ZDM5NDQyZTM0YzAwZGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_96b9fef088e54c86938c5f95524ed803",
+      "statement": "DATA_ROOT resolves from NAKA_DATA_DIR, else the parent of STORAGE_PATH, else repo data/; STORAGE_ROOT defaults to DATA_ROOT/static.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/utils/paths.ts#L16-L22",
+          "version": "repo-lines-v1:sha256:c901ef3f017ad04e69c60477e0ff37694c243e9084ad4ec71e427a7b08c6582a:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTg4MmIxODY3MjI3MTA2Y2VlNDQ5OTNlNjlkY2M3NjRkNzBhOTM2Nzk3ZmQ1YTVmNWIyZWY5ODkyMWQzZThkZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzIwYjA2OTlhNTAzZWQ1MTVmY2VmZDE4ZjA4MzI0MDcyNWM5NTgwNWQyMTFiYjIzNmI2ZTMzMmFjNWE4MzdiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjI1YWI1OTNlMWVlMjExZDExYjVjM2RlNTI5Y2ViNThjNGQ1YzRhZTkzOGM0YjM1ZWFhNjVlNGM3MzIyZGE1MCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_43e98cfad6d542a09416dc9e50a6df80",
+      "statement": "AppError carries a stable errorCode that is relayed to the client via badRequest for localized messages.",
+      "evidence": [
+        {
+          "resource": "repo://backend/src/utils/response.ts#L11-L31",
+          "version": "repo-lines-v1:sha256:07bc1bfacea4678b76bd7f4aa1e78c10f101ce0e8a024324aac108d2dc0eb151:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZDVhYmFjYTIyNjgwYWU5NTMzNjcwMGRmNzY2MzYxOTdhN2NiNmMwMDRmNGNkNzlhYzFiMWZkMmYwYWM0YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyYTJkMjg5NTkzZjIyYzViMGU3YzE1MjhiYjhlMmMwYTMwOWMwZDg0NDAzNmRhMDFjOTg2NzZhZDUzZTM2NjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0ZGIxYzU0MWEyMzg4ZWU1MWJjM2I4YWMzMDEwODJhYjM0MWQ1OTBkNGM4ODNiNGQyNmRmNGY1OWI0NWFlZmQifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-07T09:20:00.933Z"
+  }
+}
