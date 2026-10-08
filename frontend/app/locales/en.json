@@ -2921,6 +2921,18 @@
       "saveFailed": "Save failed",
       "loadFailed": "Could not load the brand profile.",
       "retry": "Retry"
-    }
+    },
+    "approve": "Approve & send",
+    "edit": "Edit",
+    "send": "Send",
+    "reject": "Reject",
+    "helpDraft": "Help me draft",
+    "doNotReply": "Do not reply",
+    "bringBack": "Bring back",
+    "sendAgain": "Send again",
+    "cancel": "Cancel",
+    "replyPlaceholder": "Write a reply...",
+    "actionFailed": "Action failed.",
+    "drafting": "Drafting..."
   }
 }

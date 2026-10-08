@@ -9,6 +9,7 @@
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '../../db/index.js'
 import { now } from '../../utils/response.js'
+import { reclaimStuckSending } from './actions.js'
 import { SKIP_ALREADY_REPLIED, SKIP_OWN, collectPlainRuleContext, judgePlainRule } from './filter.js'
 import { judgeNewComments } from './responder.js'
 import { getSocialAdapter } from './registry.js'
@@ -194,6 +195,8 @@ export async function runSocialPollRound(): Promise<SocialPollResult> {
   if (pollRunning) return { skipped: true, accounts: 0, newComments: 0 }
   pollRunning = true
   try {
+    // First step: stuck `sending` rows are never retried — to `needs_human`.
+    reclaimStuckSending()
     const accounts = db.select().from(schema.socialAccounts).all()
     let newComments = 0
     let handled = 0

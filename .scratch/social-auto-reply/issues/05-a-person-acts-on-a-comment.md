@@ -1,8 +1,8 @@
 ---
 id: 5
-status: open
+status: closed
 labels: [ready-for-agent]
-assignee: null
+assignee: opencode
 blocked_by: [4]
 ---
 
@@ -49,15 +49,32 @@ How a Draft is edited inside a card (inline or dialog) is your choice. The UI st
 
 ## Acceptance criteria
 
-- [ ] A test with the fake adapter shows approve publishes the stored text once, and the Comment becomes `replied` with `reply_source` `approved` and the Platform reply id.
-- [ ] A test shows an edited Draft and a hand-written Reply are published with `reply_source` `manual`.
-- [ ] A test shows two sends of the same Comment at the same time give exactly one Reply at the fake adapter.
-- [ ] A test shows a `sending` row older than 5 minutes becomes `needs_human` with "send not confirmed, check on the Platform", and no Reply is sent for it.
-- [ ] Tests show reject, "do not reply", and bring back make the transitions and notes listed above.
-- [ ] A test shows a brought-back Comment is not judged again by the next Polling round.
-- [ ] Tests show each of the five error kinds gives the result in the table.
-- [ ] A test shows send is refused for a Social Account that is not `connected`.
-- [ ] A test shows "help me draft" returns a text, changes no row, and sends nothing.
-- [ ] A test shows an action on a Comment in the wrong state is refused (for example approve on a `replied` Comment).
-- [ ] The board shows the actions for each state, and a card moves to its new column after an action.
-- [ ] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+- [x] A test with the fake adapter shows approve publishes the stored text once, and the Comment becomes `replied` with `reply_source` `approved` and the Platform reply id.
+- [x] A test shows an edited Draft and a hand-written Reply are published with `reply_source` `manual`.
+- [x] A test shows two sends of the same Comment at the same time give exactly one Reply at the fake adapter.
+- [x] A test shows a `sending` row older than 5 minutes becomes `needs_human` with "send not confirmed, check on the Platform", and no Reply is sent for it.
+- [x] Tests show reject, "do not reply", and bring back make the transitions and notes listed above.
+- [x] A test shows a brought-back Comment is not judged again by the next Polling round.
+- [x] Tests show each of the five error kinds gives the result in the table.
+- [x] A test shows send is refused for a Social Account that is not `connected`.
+- [x] A test shows "help me draft" returns a text, changes no row, and sends nothing.
+- [x] A test shows an action on a Comment in the wrong state is refused (for example approve on a `replied` Comment).
+- [x] The board shows the actions for each state, and a card moves to its new column after an action.
+- [x] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+
+## Notes (2026-10-08)
+
+Done. New `backend/src/services/social/actions.ts` (`sendCommentAsPerson`,
+`claimForSend`, `rejectDraft`, `closeComment`, `bringBackComment`,
+`reclaimStuckSending`, `helpMeDraft`) + routes
+`POST /comments/:id/{approve,send,reject,close,bring-back,help-draft}`;
+poller reclaims stuck `sending` as its first step. Send failures store
+`send failed: <msg>` so the card shows send-again / do-not-reply, except
+`not_found` (skipped, "deleted on the Platform") and `rejected`
+(needs_human with the Platform message); `auth_expired` goes to draft and
+the account becomes reconnect_needed. Board cards: draft inline
+approve/edit/reject, needs_human editor + help-me-draft + do-not-reply,
+skipped bring-back. Gates: typecheck clean, `test:social` 58/58
+(new `social-actions.test.ts` 12/12), frontend 173/173, full backend suite
+clean except the known base failure "unsloth image test probe" (verified it
+fails on the base commit too).

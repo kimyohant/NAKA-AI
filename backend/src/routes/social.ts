@@ -9,6 +9,13 @@ import type { Context } from 'hono'
 import { and, desc, eq, ne } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 import { badRequest, now, success } from '../utils/response.js'
+import {
+  bringBackComment,
+  closeComment,
+  helpMeDraft,
+  rejectDraft,
+  sendCommentAsPerson,
+} from '../services/social/actions.js'
 
 const app = new Hono()
 
@@ -158,6 +165,54 @@ app.put('/accounts/:id/brand', c => run(c, async () => {
  * fallback flag, status note, and reply fields.
  * Query: ?account_id=<id>&fallback_only=1
  */
+type BoardCommentRow = typeof schema.socialComments.$inferSelect
+
+function publicComment(
+  r: BoardCommentRow,
+  postText: Map<number, string | null>,
+  platforms: Map<number, string>,
+) {
+  return {
+    id: r.id,
+    accountId: r.accountId,
+    platform: platforms.get(r.accountId) ?? null,
+    postId: r.postId,
+    postText: r.postId != null ? (postText.get(r.postId) ?? null) : null,
+    platformCommentId: r.platformCommentId,
+    text: r.text,
+    authorName: r.authorName,
+    commentedAt: r.commentedAt,
+    status: r.status,
+    verdict: r.verdict,
+    reason: r.reason,
+    fallback: !!r.fallback,
+    statusNote: r.statusNote,
+    replyText: r.replyText,
+    replySource: r.replySource,
+    repliedAt: r.repliedAt,
+  }
+}
+
+function boardCommentMaps(rows: BoardCommentRow[]) {
+  const postIds = [...new Set(rows.map(r => r.postId).filter((v): v is number => v != null))]
+  const postText = new Map<number, string | null>()
+  for (const pid of postIds) {
+    const [p] = db.select({ id: schema.socialPosts.id, text: schema.socialPosts.text })
+      .from(schema.socialPosts).where(eq(schema.socialPosts.id, pid)).all()
+    if (p) postText.set(p.id, p.text)
+  }
+  const platforms = new Map(
+    db.select({ id: schema.socialAccounts.id, platform: schema.socialAccounts.platform })
+      .from(schema.socialAccounts).all().map(a => [a.id, a.platform] as const),
+  )
+  return { postText, platforms }
+}
+
+function publicBoardComment(r: BoardCommentRow) {
+  const { postText, platforms } = boardCommentMaps([r])
+  return publicComment(r, postText, platforms)
+}
+
 app.get('/comments', c => run(c, () => {
   const accountId = c.req.query('account_id')
   const fallbackOnly = c.req.query('fallback_only')
@@ -174,38 +229,42 @@ app.get('/comments', c => run(c, () => {
     .where(conds.length ? and(...conds) : undefined)
     .orderBy(desc(schema.socialComments.commentedAt))
     .all()
-  const postIds = [...new Set(rows.map(r => r.postId).filter((v): v is number => v != null))]
-  const postText = new Map<number, string | null>()
-  for (const pid of postIds) {
-    const [p] = db.select({ id: schema.socialPosts.id, text: schema.socialPosts.text })
-      .from(schema.socialPosts).where(eq(schema.socialPosts.id, pid)).all()
-    if (p) postText.set(p.id, p.text)
-  }
-  const accounts = new Map(
-    db.select({ id: schema.socialAccounts.id, platform: schema.socialAccounts.platform })
-      .from(schema.socialAccounts).all().map(a => [a.id, a.platform] as const),
-  )
+  const { postText, platforms } = boardCommentMaps(rows)
   return {
-    items: rows.map(r => ({
-      id: r.id,
-      accountId: r.accountId,
-      platform: accounts.get(r.accountId) ?? null,
-      postId: r.postId,
-      postText: r.postId != null ? (postText.get(r.postId) ?? null) : null,
-      platformCommentId: r.platformCommentId,
-      text: r.text,
-      authorName: r.authorName,
-      commentedAt: r.commentedAt,
-      status: r.status,
-      verdict: r.verdict,
-      reason: r.reason,
-      fallback: !!r.fallback,
-      statusNote: r.statusNote,
-      replyText: r.replyText,
-      replySource: r.replySource,
-      repliedAt: r.repliedAt,
-    })),
+    items: rows.map(r => publicComment(r, postText, platforms)),
   }
 }))
+
+function parseCommentId(c: Context): number {
+  const id = Number(c.req.param('id'))
+  if (!Number.isInteger(id)) throw new Error('Invalid comment id')
+  return id
+}
+
+/** Approve a Draft: send the stored LLM text unchanged (`approved`). */
+app.post('/comments/:id/approve', c => run(c, async () => publicBoardComment(
+  await sendCommentAsPerson(parseCommentId(c)),
+)))
+
+/** Send written or edited text (`manual`); without text, the stored text. From `draft` or `needs_human`. */
+app.post('/comments/:id/send', c => run(c, async () => {
+  const body = await c.req.json().catch(() => ({})) as { text?: unknown }
+  if (body.text !== undefined && typeof body.text !== 'string') throw new Error('Invalid text')
+  return publicBoardComment(await sendCommentAsPerson(parseCommentId(c), body.text))
+}))
+
+/** Reject a Draft to `skipped` ("rejected by user"). */
+app.post('/comments/:id/reject', c => run(c, () => publicBoardComment(rejectDraft(parseCommentId(c)))))
+
+/** "Do not reply": close a Needs human (or Draft) Comment to `skipped` ("closed by user"). */
+app.post('/comments/:id/close', c => run(c, () => publicBoardComment(closeComment(parseCommentId(c)))))
+
+/** Bring back a Skipped Comment to `needs_human` (not judged again). */
+app.post('/comments/:id/bring-back', c => run(c, () => publicBoardComment(bringBackComment(parseCommentId(c)))))
+
+/** "Help me draft": return LLM text for the editor; saves and publishes nothing. */
+app.post('/comments/:id/help-draft', c => run(c, async () => ({
+  text: await helpMeDraft(parseCommentId(c)),
+})))
 
 export default app
