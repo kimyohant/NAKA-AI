@@ -22,10 +22,15 @@ export class FakeSocialAdapter implements SocialPlatformAdapter {
   posts: SocialPost[] = []
   commentsByPost = new Map<string, SocialComment[]>()
   /** kinds to throw on the next calls, in order */
-  failQueue: SocialPlatformErrorKind[] = []
+  failQueue: Array<{ kind: SocialPlatformErrorKind; retryAfterSec?: number }> = []
+  /** per-post comment failures, in order (checked before the shared queue) */
+  commentFailures = new Map<string, Array<{ kind: SocialPlatformErrorKind; retryAfterSec?: number }>>()
   sentReplies: Array<{ account: SocialAccountAuth; comment: SocialComment; text: string }> = []
   listPostsCalls = 0
   listCommentsCalls = 0
+  refreshTokenCalls = 0
+  /** when true, the next refreshToken call fails */
+  failRefresh = false
   /** small page size so tests exercise paging */
   pageSize = 2
 
@@ -45,13 +50,34 @@ export class FakeSocialAdapter implements SocialPlatformAdapter {
     this.seedComments(postId, [comment, ...(this.commentsByPost.get(postId) ?? [])])
   }
 
-  failNext(kind: SocialPlatformErrorKind): void {
-    this.failQueue.push(kind)
+  failNext(kind: SocialPlatformErrorKind, retryAfterSec?: number): void {
+    this.failQueue.push({ kind, retryAfterSec })
   }
 
-  private maybeFail(): void {
-    const kind = this.failQueue.shift()
-    if (kind) throw new SocialPlatformError(kind, `fake ${kind}`)
+  /** Fail the next `listComments` calls for one post only. */
+  failCommentsFor(postId: string, kind: SocialPlatformErrorKind, retryAfterSec?: number): void {
+    const q = this.commentFailures.get(postId) ?? []
+    q.push({ kind, retryAfterSec })
+    this.commentFailures.set(postId, q)
+  }
+
+  private maybeFail(postId?: string): void {
+    if (postId) {
+      const q = this.commentFailures.get(postId)
+      const next = q?.shift()
+      if (next) {
+        throw new SocialPlatformError(next.kind, `fake ${next.kind}`, {
+          retryAfterSec: next.retryAfterSec,
+          rawMessage: `fake ${next.kind}`,
+        })
+      }
+    }
+    const item = this.failQueue.shift()
+    if (item) {
+      throw new SocialPlatformError(item.kind, `fake ${item.kind}`, {
+        retryAfterSec: item.retryAfterSec,
+      })
+    }
   }
 
   private page<T>(items: T[], cursor?: string): Page<T> {
@@ -68,7 +94,7 @@ export class FakeSocialAdapter implements SocialPlatformAdapter {
   }
 
   async listComments(_account: SocialAccountAuth, postId: string, cursor?: string): Promise<Page<SocialComment>> {
-    this.maybeFail()
+    this.maybeFail(postId)
     this.listCommentsCalls++
     return this.page(this.commentsByPost.get(postId) ?? [], cursor)
   }
@@ -88,6 +114,11 @@ export class FakeSocialAdapter implements SocialPlatformAdapter {
   }
 
   async refreshToken(_account: SocialAccountAuth): Promise<SocialTokens> {
+    this.refreshTokenCalls++
+    if (this.failRefresh) {
+      this.failRefresh = false
+      throw new SocialPlatformError('auth_expired', 'fake refresh failed')
+    }
     return { accessToken: 'fake-refreshed' }
   }
 }

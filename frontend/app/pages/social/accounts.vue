@@ -58,7 +58,7 @@
         <div class="sc-card-foot">
           <NuxtLink :to="`/social/brand?account_id=${a.id}`" class="btn btn-sm">{{ t('social.accountsPage.toBrand') }}</NuxtLink>
           <span class="sc-meta">{{ checkedText(a) }}</span>
-          <span v-if="a.pausedUntil" class="sc-meta">{{ t('social.accountsPage.pausedUntil', { t: shortTime(a.pausedUntil) }) }}</span>
+          <span v-if="isPaused(a)" class="sc-meta">{{ t('social.accountsPage.pausedUntil', { t: shortTime(a.pausedUntil) }) }}</span>
         </div>
         <p v-if="saveError[a.id]" class="sc-error">{{ t('social.accountsPage.saveFailed') }} <span class="mono">{{ saveError[a.id] }}</span></p>
       </section>
@@ -92,6 +92,13 @@ function shortTime(iso: string | null | undefined): string {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+/** show "paused until" only while the pause is still in effect */
+function isPaused(a: SocialAccount): boolean {
+  if (!a.pausedUntil) return false
+  const t = Date.parse(a.pausedUntil)
+  return Number.isFinite(t) && t > Date.now()
 }
 
 async function reload() {

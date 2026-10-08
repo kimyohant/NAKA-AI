@@ -15,7 +15,13 @@ import { db, schema } from '../../db/index.js'
 import { now } from '../../utils/response.js'
 import { getSocialAdapter } from './registry.js'
 import { requestDraftReply } from './responder.js'
-import { SocialPlatformError, type SocialAccountAuth, type SocialComment } from './types.js'
+import {
+  ensureFreshToken,
+  markReconnectNeeded,
+  pauseAccount,
+  toAuth,
+} from './limits.js'
+import { SocialPlatformError, type SocialComment } from './types.js'
 
 export const SEND_STUCK_MS = 5 * 60 * 1000
 export const STUCK_NOTE = 'send not confirmed, check on the Platform'
@@ -47,14 +53,6 @@ function getAccountRow(id: number): AccountRow {
     .where(eq(schema.socialAccounts.id, id)).all()
   if (!row) throw new Error('Social account not found')
   return row
-}
-
-function toAuth(account: AccountRow): SocialAccountAuth {
-  return {
-    platformAccountId: account.platformAccountId,
-    accessToken: account.accessToken ?? '',
-    refreshToken: account.refreshToken ?? undefined,
-  }
 }
 
 function toAdapterComment(row: CommentRow): SocialComment {
@@ -108,6 +106,10 @@ function handlePersonSendFailure(commentId: number, accountId: number, from: str
       .where(eq(schema.socialComments.id, commentId)).run()
     return
   }
+  if (kind === 'rate_limited') {
+    // A `rate_limited` send pauses the account (ticket 08); the card stays to retry.
+    pauseAccount(accountId, err instanceof SocialPlatformError ? err.retryAfterSec : undefined)
+  }
   // rate_limited and unknown: back to the state it came from, error shown.
   db.update(schema.socialComments).set({ status: from, statusNote: sendFailedNote(message), updatedAt: ts })
     .where(eq(schema.socialComments.id, commentId)).run()
@@ -149,7 +151,9 @@ export async function sendCommentAsPerson(commentId: number, text?: string): Pro
 
   claimForSend(commentId, [from])
   try {
-    const { replyId } = await adapter.reply(toAuth(account), toAdapterComment(current), finalText)
+    const fresh = await ensureFreshToken(account, adapter)
+    if (!fresh.ok) throw new SocialPlatformError('auth_expired', 'token refresh failed')
+    const { replyId } = await adapter.reply(fresh.auth, toAdapterComment(current), finalText)
     const ts = now()
     db.update(schema.socialComments).set({
       status: 'replied',
@@ -280,33 +284,33 @@ export function expireQueuedComments(accountId: number, nowMs: number = Date.now
   return stale.length
 }
 
-/** Send-failure table for a `queued` auto send (ticket 06, spec error table). */
-function handleQueuedSendFailure(commentId: number, accountId: number, err: unknown): void {
+/** Send-failure table for a `queued` auto send (ticket 06, spec error table). Returns the kind. */
+function handleQueuedSendFailure(commentId: number, accountId: number, err: unknown): string {
   const ts = now()
   const kind = err instanceof SocialPlatformError ? err.kind : 'unknown'
   const message = err instanceof Error ? err.message : 'send failed'
   if (kind === 'not_found') {
     db.update(schema.socialComments).set({ status: 'skipped', statusNote: DELETED_NOTE, updatedAt: ts })
       .where(eq(schema.socialComments.id, commentId)).run()
-    return
+    return kind
   }
   if (kind === 'auth_expired') {
     db.update(schema.socialComments).set({ status: 'draft', statusNote: sendFailedNote(message), updatedAt: ts })
       .where(eq(schema.socialComments.id, commentId)).run()
-    db.update(schema.socialAccounts).set({ status: 'reconnect_needed', updatedAt: ts })
-      .where(eq(schema.socialAccounts.id, accountId)).run()
-    return
+    markReconnectNeeded(accountId)
+    return kind
   }
   if (kind === 'rejected') {
     db.update(schema.socialComments).set({ status: 'needs_human', statusNote: message, updatedAt: ts })
       .where(eq(schema.socialComments.id, commentId)).run()
-    return
+    return kind
   }
   if (kind === 'rate_limited') {
-    // No pause here (ticket 08) — back to `queued` for the next round.
+    // Back to `queued` for the next round, and the account is paused (ticket 08).
+    pauseAccount(accountId, err instanceof SocialPlatformError ? err.retryAfterSec : undefined)
     db.update(schema.socialComments).set({ status: 'queued', updatedAt: ts })
       .where(eq(schema.socialComments.id, commentId)).run()
-    return
+    return kind
   }
   // unknown: back to `queued`, up to 3 rounds, then `needs_human`.
   const [current] = db.select({ sendAttempts: schema.socialComments.sendAttempts })
@@ -323,6 +327,7 @@ function handleQueuedSendFailure(commentId: number, accountId: number, err: unkn
       sendAttempts: attempts, updatedAt: ts,
     }).where(eq(schema.socialComments.id, commentId)).run()
   }
+  return kind
 }
 
 /**
@@ -334,19 +339,24 @@ function handleQueuedSendFailure(commentId: number, accountId: number, err: unkn
 export async function sendQueuedReplies(
   accountId: number,
   opts: { waitBetweenSends?: () => Promise<void> } = {},
-): Promise<{ sent: number }> {
+): Promise<{ sent: number; rateLimited: boolean }> {
   const wait = opts.waitBetweenSends ?? (() => sleep(AUTO_SEND_GAP_MS))
   const [account] = db.select().from(schema.socialAccounts)
     .where(eq(schema.socialAccounts.id, accountId)).all()
-  if (!account) return { sent: 0 }
-  const adapter = getSocialAdapter(account.platform)
+  if (!account) return { sent: 0, rateLimited: false }
   const rows = db.select().from(schema.socialComments).where(
     and(
       eq(schema.socialComments.accountId, accountId),
       eq(schema.socialComments.status, 'queued'),
     ),
   ).orderBy(schema.socialComments.commentedAt).limit(MAX_AUTO_SEND_PER_ROUND).all()
+  if (!rows.length) return { sent: 0, rateLimited: false }
+  const adapter = getSocialAdapter(account.platform)
+  const fresh = await ensureFreshToken(account, adapter)
+  if (!fresh.ok) return { sent: 0, rateLimited: false }
+  const auth = fresh.auth
   let sent = 0
+  let rateLimited = false
   let attempted = 0
   for (const row of rows) {
     if (!row.replyText?.trim()) continue
@@ -359,7 +369,7 @@ export async function sendQueuedReplies(
       continue // a person claimed it first — their send wins
     }
     try {
-      const { replyId } = await adapter.reply(toAuth(account), toAdapterComment(claimed), claimed.replyText!)
+      const { replyId } = await adapter.reply(auth, toAdapterComment(claimed), claimed.replyText!)
       const ts = now()
       db.update(schema.socialComments).set({
         status: 'replied',
@@ -371,8 +381,13 @@ export async function sendQueuedReplies(
       }).where(eq(schema.socialComments.id, row.id)).run()
       sent++
     } catch (err) {
-      handleQueuedSendFailure(row.id, account.id, err)
+      const kind = handleQueuedSendFailure(row.id, account.id, err)
+      if (kind === 'rate_limited') {
+        rateLimited = true
+        break // the platform said slow down — no more sends this round
+      }
+      if (kind === 'auth_expired') break // the account is dead until reconnect
     }
   }
-  return { sent }
+  return { sent, rateLimited }
 }
