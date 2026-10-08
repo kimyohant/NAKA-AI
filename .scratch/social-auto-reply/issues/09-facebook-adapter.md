@@ -1,7 +1,7 @@
 ---
 id: 9
 status: open
-labels: [ready-for-human]
+labels: [ready-for-agent]
 assignee: null
 blocked_by: [1, 2]
 ---
@@ -49,3 +49,4 @@ Tests run against a local HTTP stub, the same way as the AI Live test. Never aga
 
 - 2026-10-08: Left open — blocked by ticket 01 (`ready-for-human`: live Facebook API check), which has no Notes result yet. This ticket's ordering path depends on the ticket 01 answer ("newest first" vs "keep the cursor"), so implementation cannot start until a human completes ticket 01. No code changes.
 - 2026-10-08 opencode-delegation: not done, blocked by human ticket 01 (Facebook live check); relabeled ready-for-human
+- 2026-10-08: Unblocked — ticket 01 is closed with its Notes result ("newest first" path: `order=reverse_chronological&filter=stream`; `isOwn` compares with the `GET /me` id). Relabeled ready-for-agent.

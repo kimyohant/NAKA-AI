@@ -1,7 +1,7 @@
 ---
 id: 10
 status: open
-labels: [ready-for-human]
+labels: [ready-for-agent]
 assignee: null
 blocked_by: [7, 9]
 ---
@@ -58,3 +58,4 @@ Tests use the fake adapter for the OAuth methods. No test calls Facebook.
 
 - 2026-10-08: Left open — blocked by ticket 09 (Facebook adapter, itself blocked by human ticket 01), which this ticket's Connect/Reconnect flow builds on. Starts once ticket 09 is merged. No code changes.
 - 2026-10-08 opencode-delegation: not done, blocked by human ticket 01 (Facebook live check); relabeled ready-for-human
+- 2026-10-08: Human ticket 01 is closed, so ticket 09 is unblocked. Relabeled ready-for-agent; still starts after ticket 09 (`blocked_by`).
