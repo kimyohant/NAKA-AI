@@ -9,8 +9,9 @@
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '../../db/index.js'
 import { now } from '../../utils/response.js'
+import { SKIP_ALREADY_REPLIED, SKIP_OWN, collectPlainRuleContext, judgePlainRule } from './filter.js'
 import { getSocialAdapter } from './registry.js'
-import type { SocialAccountAuth } from './types.js'
+import type { SocialAccountAuth, SocialComment } from './types.js'
 
 export const SOCIAL_POLL_INTERVAL_MS = 5 * 60 * 1000
 const MAX_READ_CALLS_PER_ACCOUNT = 30
@@ -38,6 +39,57 @@ function paused(account: typeof schema.socialAccounts.$inferSelect): boolean {
   return Date.parse(account.pausedUntil) > Date.now()
 }
 
+/**
+ * Judging step — plain rules only (ticket 03, no LLM call).
+ * `new` rows matching a rule become `skipped` with the rule name.
+ * An own comment read back whose parent is a stored row in
+ * `new`/`draft`/`queued`/`needs_human` marks that row `skipped`
+ * ("answered outside our app"). `replied` rows never change, and our own
+ * published reply (stored `replyPlatformId`) never counts for its own row.
+ */
+function judgeFreshComments(accountId: number, fresh: SocialComment[]): void {
+  const rows = db.select().from(schema.socialComments)
+    .where(eq(schema.socialComments.accountId, accountId)).all()
+  if (!rows.length) return
+
+  const extraOwnIds = new Set<string>()
+  for (const r of rows) {
+    if (r.statusNote === SKIP_OWN && r.platformCommentId) extraOwnIds.add(r.platformCommentId)
+    if (r.replyPlatformId) extraOwnIds.add(r.replyPlatformId)
+  }
+  const ctx = collectPlainRuleContext(fresh, extraOwnIds)
+  const freshById = new Map(fresh.map(c => [c.id, c] as const))
+
+  const ts = now()
+  const markSkipped = (row: typeof rows[number], note: string) => {
+    db.update(schema.socialComments)
+      .set({ status: 'skipped', statusNote: note, updatedAt: ts })
+      .where(eq(schema.socialComments.id, row.id)).run()
+  }
+
+  for (const row of rows) {
+    if (row.status !== 'new') continue
+    const note = judgePlainRule({
+      id: row.platformCommentId,
+      text: row.text,
+      isOwn: freshById.get(row.platformCommentId)?.isOwn ?? false,
+      parentId: row.parentPlatformCommentId ?? freshById.get(row.platformCommentId)?.parentId,
+    }, ctx)
+    if (note) markSkipped(row, note)
+  }
+
+  const byPlatformId = new Map(rows.map(r => [r.platformCommentId, r] as const))
+  for (const c of fresh) {
+    if (!c.isOwn || !c.parentId) continue
+    const target = byPlatformId.get(c.parentId)
+    if (!target || target.status === 'replied' || target.status === 'skipped') continue
+    if (target.status !== 'new' && target.status !== 'draft'
+      && target.status !== 'queued' && target.status !== 'needs_human') continue
+    if (target.replyPlatformId && target.replyPlatformId === c.id) continue
+    markSkipped(target, SKIP_ALREADY_REPLIED)
+  }
+}
+
 async function pollAccount(
   account: typeof schema.socialAccounts.$inferSelect,
 ): Promise<number> {
@@ -46,6 +98,8 @@ async function pollAccount(
   const since = new Date(Date.now() - (account.watchDays ?? 7) * 86400_000)
   let readCalls = 0
   let stored = 0
+  /** every comment the Platform returned this round, including already-known ones */
+  const fresh: SocialComment[] = []
 
   const known = new Set(
     db.select({ platformCommentId: schema.socialComments.platformCommentId })
@@ -93,6 +147,7 @@ async function pollAccount(
       if (readCalls >= MAX_READ_CALLS_PER_ACCOUNT) break
       const page = await adapter.listComments(auth, post.id, commentCursor)
       readCalls++
+      fresh.push(...page.items)
       let stop = false
       for (const c of page.items) {
         if (known.has(c.id)) {
@@ -120,6 +175,8 @@ async function pollAccount(
       commentCursor = page.nextCursor
     }
   }
+
+  judgeFreshComments(account.id, fresh)
 
   db.update(schema.socialAccounts)
     .set({ lastPolledAt: now(), updatedAt: now() })
