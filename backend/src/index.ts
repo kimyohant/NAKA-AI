@@ -6,6 +6,7 @@ import { cors } from 'hono/cors'
 import path from 'path'
 import { timingSafeEqual } from 'node:crypto'
 import { fileURLToPath } from 'url'
+import { existsSync } from 'node:fs'
 
 import dramas from './routes/dramas.js'
 import episodes from './routes/episodes.js'
@@ -33,6 +34,9 @@ import social from './routes/social.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
+import { adminGuard, assertAdminTokenConfig, guardOn, isAdminRequest } from './middleware/admin.js'
+import nakaSso, { requireSession, ssoConfig, ssoEnabled } from './auth/naka-sso.js'
+import { ownership } from './auth/ownership.js'
 import { failStaleRunningTasks } from './services/pipeline-tasks.js'
 import { failStaleCampaigns } from './services/marketer.js'
 import { failStaleStudioProjects } from './services/studio.js'
@@ -52,9 +56,16 @@ const hostname = process.env.NAKA_HOST || '127.0.0.1'
 const authUser = process.env.NAKA_AUTH_USER || 'admin'
 const authPassword = process.env.NAKA_AUTH_PASSWORD || ''
 const isLoopback = ['127.0.0.1', 'localhost', '::1'].includes(hostname)
-if (!isLoopback && !authPassword) {
-  throw new Error('NAKA_AUTH_PASSWORD is required when NAKA_HOST is not loopback')
+ssoConfig() // throws on a half/invalid NAKA_SSO_URL / NAKA_SSO_SECRET instead of silently running open
+if (!isLoopback && !authPassword && !ssoEnabled()) {
+  throw new Error('NAKA_AUTH_PASSWORD (or naka-ai SSO: NAKA_SSO_URL + NAKA_SSO_SECRET) is required when NAKA_HOST is not loopback')
 }
+assertAdminTokenConfig()
+if (!isLoopback && !guardOn()) {
+  console.warn('⚠️ ADMIN_TOKEN is not set — the settings API (AI keys, models, prompts) is open to every signed-in user')
+}
+// back-office app (admin/) hosted on another origin: comma-separated origins
+const adminOrigins = (process.env.ADMIN_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean)
 
 function matchesCredential(actual: string, expected: string): boolean {
   const a = Buffer.from(actual)
@@ -64,7 +75,9 @@ function matchesCredential(actual: string, expected: string): boolean {
 
 // Middleware
 app.use('*', async (c, next) => {
-  if (!authPassword || c.req.path === '/api/v1/health' || c.req.method === 'OPTIONS') return next()
+  // members sign in through naka-ai SSO instead of the shared Basic Auth (requireSession below)
+  if (!authPassword || ssoEnabled() || c.req.path === '/api/v1/health' || c.req.method === 'OPTIONS') return next()
+  if (isAdminRequest(c)) return next() // admin token is a stronger credential than the shared Basic Auth
   const header = c.req.header('Authorization') || ''
   let username = ''
   let password = ''
@@ -83,7 +96,8 @@ app.use('*', async (c, next) => {
   return next()
 })
 app.use('*', cors({
-  origin: ['http://localhost:3013', 'http://localhost:5679'],
+  origin: ['http://localhost:3013', 'http://localhost:5679', 'http://localhost:3014', ...adminOrigins],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Admin-Token'],
   credentials: true,
 }))
 app.use('*', requestLogger)
@@ -97,7 +111,14 @@ app.get('/api/v1/health', (c) => c.json({
 }))
 
 // API routes
+// members (naka-ai SSO) → each member's own data (auth/ownership.ts) → system-settings API for admins only (middleware/admin.ts)
+app.use('/api/v1/*', requireSession(() => ['http://localhost:3013', 'http://localhost:3014', ...adminOrigins], isAdminRequest))
+app.use('/api/v1/*', ownership)
+app.use('/api/v1/*', adminGuard)
 const api = new Hono()
+// back-office login check: 401 E_ADMIN_REQUIRED unless the token is valid (guard off → always ok)
+api.get('/admin/session', c => c.json({ code: 200, data: { admin: true, guard: guardOn(), sso: ssoEnabled() }, message: 'success' }))
+api.route('/auth/naka', nakaSso)
 api.route('/dramas', dramas)
 api.route('/episodes', episodes)
 api.route('/storyboards', storyboards)
@@ -135,8 +156,23 @@ app.use('/static/*', async (c, next) => {
 })
 app.use('/static/*', serveStatic({ root: DATA_ROOT }))
 
-// Serve frontend (production build) — 桌面版由主进程注入 FRONTEND_DIST（resources/frontend）
-const distPath = process.env.FRONTEND_DIST || path.join(projectRoot, 'frontend', 'dist')
+// Back-office build (admin/ in this repo, built with base /admin/) at /admin —
+// ADMIN_DIST overrides; default admin/.output/public when it has been built
+const defaultAdminDist = path.join(projectRoot, 'admin', '.output', 'public')
+const adminDist = process.env.ADMIN_DIST || (existsSync(defaultAdminDist) ? defaultAdminDist : '')
+if (adminDist) {
+  const toAdminFile = (p: string) => p.replace(/^\/admin/, '') || '/'
+  app.get('/admin', c => c.redirect('/admin/'))
+  app.use('/admin/*', serveStatic({ root: adminDist, rewriteRequestPath: toAdminFile }))
+  app.get('/admin/*', serveStatic({ root: adminDist, path: 'index.html' }))
+}
+
+// Serve the user-facing frontend (`npm run generate`) — FRONTEND_DIST overrides
+// (desktop: main process injects resources/frontend; Docker: /app/frontend-dist).
+// Default: frontend/dist (published by scripts/redeploy.ps1), else frontend/.output/public.
+const publishedDist = path.join(projectRoot, 'frontend', 'dist')
+const distPath = process.env.FRONTEND_DIST
+  || (existsSync(publishedDist) ? publishedDist : path.join(projectRoot, 'frontend', '.output', 'public'))
 app.use('*', serveStatic({ root: distPath }))
 app.get('*', serveStatic({ root: distPath, path: 'index.html' }))
 

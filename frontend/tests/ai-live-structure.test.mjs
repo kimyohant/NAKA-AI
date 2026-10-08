@@ -64,8 +64,8 @@ test('page: preview over WHEP, confirm before going live, secrets are password f
   assert.match(page, /onBeforeUnmount\([\s\S]*?closePreview\(\)/)
 })
 
-test('sidebar links to /live; every t() key on the page exists in th and en', () => {
-  assert.match(layout, /<NuxtLink to="\/live"/)
+test('live page exists; every t() key on the page exists in th and en', () => {
+  // เมนูหลักเหลือ AI นักขายเมนูเดียว — หน้านี้เข้าทาง URL ได้ (ดู ai-seller-structure.test.mjs)
   assert.equal(typeof th.layout.nav.live, 'string')
   const keys = [...new Set([...page.matchAll(/t\('([a-zA-Z0-9_.]+)'/g)].map(m => m[1]))]
   assert.ok(keys.length > 50)

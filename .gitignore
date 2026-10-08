@@ -62,3 +62,10 @@ desktop/resources/
 data/imports/
 *.log.err
 frontend/dist.old/
+
+# writable workspace copy used by scripts/redeploy.ps1 (online-edited skills)
+data/workspace/
+data/workspace-backup/
+
+# Hypit render engine source (installed separately, see study/README.md)
+study/hypit/

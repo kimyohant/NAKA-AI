@@ -11,7 +11,6 @@ const surfaces = [
   read('../app/pages/index.vue'),
   read('../app/views/drama/detail.vue'),
   read('../app/views/drama/episode.vue'),
-  read('../app/pages/settings.vue'),
 ].join('\n')
 
 // rebrand หลังชุด Apple-light: ChatFire 火焰橙 + IBM Plex Sans Thai (ดู commit 82877d0)

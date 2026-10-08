@@ -864,6 +864,38 @@ const MIGRATIONS: Array<{ version: number; columns: Array<{ table: string; colum
     { table: 'seller_posts', column: 'video_auto', ddl: 'ALTER TABLE seller_posts ADD COLUMN video_auto INTEGER NOT NULL DEFAULT 0' },
     { table: 'seller_posts', column: 'video_error', ddl: 'ALTER TABLE seller_posts ADD COLUMN video_error TEXT' },
   ] },
+  // v20 (unified system): members who signed in through naka-ai.com SSO (id = naka-ai user id; 'local' = single-user mode)
+  { version: 20, columns: [], statements: [
+    `CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      display_name TEXT NOT NULL DEFAULT '',
+      email TEXT,
+      is_admin INTEGER NOT NULL DEFAULT 0,
+      last_login_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+  ] },  // v21 (unified system, step 2): per-member data — each top-level row belongs to a member; children inherit
+  // through their parent. Existing rows become 'local' (single-user mode / visible to admins).
+  { version: 21, columns: [
+    { table: 'dramas', column: 'owner_user_id', ddl: "ALTER TABLE dramas ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'local'" },
+    { table: 'campaigns', column: 'owner_user_id', ddl: "ALTER TABLE campaigns ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'local'" },
+    { table: 'studio_projects', column: 'owner_user_id', ddl: "ALTER TABLE studio_projects ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'local'" },
+    { table: 'studio_avatars', column: 'owner_user_id', ddl: "ALTER TABLE studio_avatars ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'local'" },
+    { table: 'studio_influencers', column: 'owner_user_id', ddl: "ALTER TABLE studio_influencers ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'local'" },
+    { table: 'clone_projects', column: 'owner_user_id', ddl: "ALTER TABLE clone_projects ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'local'" },
+    { table: 'seller_posts', column: 'owner_user_id', ddl: "ALTER TABLE seller_posts ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'local'" },
+    { table: 'sys_task', column: 'owner_user_id', ddl: "ALTER TABLE sys_task ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'local'" },
+  ], statements: [
+    'CREATE INDEX IF NOT EXISTS idx_dramas_owner ON dramas(owner_user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_campaigns_owner ON campaigns(owner_user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_studio_projects_owner ON studio_projects(owner_user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_studio_avatars_owner ON studio_avatars(owner_user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_studio_influencers_owner ON studio_influencers(owner_user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_clone_projects_owner ON clone_projects(owner_user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_seller_posts_owner ON seller_posts(owner_user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_sys_task_owner ON sys_task(owner_user_id)',
+  ] },
 ]
 
 export function initSqliteSchema(sqlite: Database.Database) {

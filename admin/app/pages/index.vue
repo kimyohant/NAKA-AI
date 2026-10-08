@@ -1,7 +1,7 @@
 <template>
   <div class="settings-page">
     <div class="settings-layout">
-      <!-- 分区导航已移到全局左侧栏（/settings?tab=...），此处保留结构但不显示 -->
+      <!-- 分区导航在左侧栏（/?tab=...），此处保留结构但不显示 -->
       <aside v-show="false" class="settings-nav">
         <div class="nav-group">
           <div class="nav-group-label">{{ t('settings.groupBase') }}</div>
@@ -182,7 +182,7 @@
             <div v-if="filteredStylePresets.length" class="sg-grid">
               <article v-for="p in filteredStylePresets" :key="p.id" class="sg-card" :class="{ off: !p.is_active }">
                 <div class="sg-thumb">
-                  <img v-if="p.preview_path" :src="p.preview_path" alt="" loading="lazy" />
+                  <img v-if="p.preview_path" :src="mediaUrl(p.preview_path)" alt="" loading="lazy" />
                   <!-- no generated preview yet: show the bundled example (public/studio-art/styles), else the palette icon -->
                   <img
                     v-else-if="styleExample(p.value) && !libraryArtFailed[`style:${p.value}`]"
@@ -819,14 +819,14 @@
 </template>
 
 <script setup>
-import { Plus, Pencil, Trash2, FileText, ChevronDown, Check, Loader2, Bot, Cpu, Sparkles, Palette, ExternalLink, Star, HardDrive, Database, RefreshCw, Download, Languages, SunMoon, X } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, FileText, ChevronDown, Check, Loader2, Bot, Cpu, Sparkles, Palette, ExternalLink, Star, HardDrive, Database, RefreshCw, Download, Languages, SunMoon, X, Search, ImagePlus } from 'lucide-vue-next'
 import BaseSelect from '~/components/BaseSelect.vue'
 import { toast } from 'vue-sonner'
 import { UNSLOTH_PROVIDER, UNSLOTH_VIDEO_DEFAULTS, isLocalOrPrivateBaseUrl } from '~/utils/unslothFlow'
 import { coverArt, skillArt, styleExample } from '~/utils/studioArt'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
-import { aiConfigAPI, promptAPI, skillsAPI, storageAPI, stylePresetAPI, settingsAPI, serverUpdateAPI } from '~/composables/useApi'
+import { aiConfigAPI, promptAPI, skillsAPI, storageAPI, stylePresetAPI, settingsAPI, serverUpdateAPI, taskAPI, uploadAPI, mediaUrl } from '~/composables/useApi'
 import { useDesktopBridge } from '~/composables/useDesktopBridge'
 import { useMigrateState } from '~/composables/useMigrateState'
 import { useTheme } from '~/composables/useTheme'
@@ -837,7 +837,7 @@ import { confirmUnifiedLanguage } from '~/composables/useUnifiedLanguage'
 const { t } = useI18n()
 
 const showBrandImage = ref(true)
-// 支持 /settings?tab=styles 直达（侧栏菜单入口）
+// 支持 /?tab=styles 直达（侧栏菜单入口）
 const SETTINGS_TABS = ['general', 'ai', 'styles', 'storage', 'about', 'agents']
 const settingsRoute = useRoute()
 const tabFromQuery = () => (SETTINGS_TABS.includes(String(settingsRoute.query.tab)) ? String(settingsRoute.query.tab) : 'ai')
@@ -1558,7 +1558,7 @@ onMounted(() => { loadCfgs(); loadAgents(); loadAllSkills(); loadAgentPrompt(sel
 
 // ===== 应用内引导（设置页）：快捷配置 + 手动模板两步 =====
 const SETTINGS_TOUR = [
-  { element: '.side-link[href="/settings?tab=ai"]', titleKey: 'tour.settings.nav.title', descKey: 'tour.settings.nav.desc', popoverSide: 'right' },
+  { element: '.side-link[data-tab="ai"]', titleKey: 'tour.settings.nav.title', descKey: 'tour.settings.nav.desc', popoverSide: 'right' },
 ]
 onMounted(() => setTimeout(() => autoTour('settings', SETTINGS_TOUR, t), 800))
 function replaySettingsTour() { startTour('settings', SETTINGS_TOUR, t) }

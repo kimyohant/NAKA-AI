@@ -1,5 +1,6 @@
 /**
  * esbuild 打包后端 — backend/src → desktop/build/backend.mjs（单文件 ESM）
+ * 需先在 backend/ 执行 npm ci（路径见 scripts/backend-dir.mjs）
  *
  * - format esm：backend 顶层 await initDb() 要求 ESM
  * - external 四件套：sharp / better-sqlite3（原生模块，electron-builder 按
@@ -11,11 +12,12 @@
 import { build } from 'esbuild'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { requireBackendDir } from './backend-dir.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 await build({
-  entryPoints: [path.resolve(__dirname, '../../backend/src/index.ts')],
+  entryPoints: [path.join(requireBackendDir(), 'src', 'index.ts')],
   outfile: path.resolve(__dirname, '../build/backend.mjs'),
   bundle: true,
   format: 'esm',

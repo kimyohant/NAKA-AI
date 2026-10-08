@@ -2,12 +2,14 @@
   "name": "naka-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "火宝短剧 — AI 短剧制作工具（桌面版编排入口）",
+  "description": "NAKA-AI — AI short drama / product-video tool (backend + admin + frontend + desktop)",
   "scripts": {
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:desktop": "cd desktop && npm run dev",
     "build:frontend": "cd frontend && npm run generate",
-    "dist": "cd desktop && npm run dist"
+    "dist": "cd desktop && npm run dist",
+    "dev:admin": "cd admin && npm run dev",
+    "build:admin": "cd admin && npm run generate"
   }
 }

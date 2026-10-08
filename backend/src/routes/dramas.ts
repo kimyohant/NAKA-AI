@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { and, eq, isNull, like, desc } from 'drizzle-orm'
+import { ownedBy } from '../auth/owner-context.js'
 import { db, getInsertId, schema } from '../db/index.js'
 import { success, badRequest, notFound, created, now } from '../utils/response.js'
 import { toSnakeCase, toSnakeCaseArray } from '../utils/transform.js'
@@ -27,7 +28,7 @@ app.get('/', async (c) => {
   const keyword = c.req.query('keyword')
 
   const allRows = await db.select().from(schema.dramas)
-    .where(isNull(schema.dramas.deletedAt))
+    .where(and(isNull(schema.dramas.deletedAt), ownedBy(schema.dramas.ownerUserId)))
     .orderBy(desc(schema.dramas.updatedAt))
   let filtered = allRows
 
@@ -91,7 +92,7 @@ app.post('/', async (c) => {
 
 // GET /dramas/stats — must be before /:id
 app.get('/stats', async (c) => {
-  const all = await db.select().from(schema.dramas).where(isNull(schema.dramas.deletedAt))
+  const all = await db.select().from(schema.dramas).where(and(isNull(schema.dramas.deletedAt), ownedBy(schema.dramas.ownerUserId)))
   const byStatus = Object.entries(
     all.reduce((acc, d) => {
       acc[d.status || 'draft'] = (acc[d.status || 'draft'] || 0) + 1

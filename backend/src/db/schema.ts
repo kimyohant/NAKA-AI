@@ -4,9 +4,14 @@
  * boolean→integer boolean mode、时间戳仍为 text 存 ISO 字符串，表/列名不变。
  */
 import { sqliteTable, text, integer, real, primaryKey } from 'drizzle-orm/sqlite-core'
+import { currentOwnerId } from '../auth/owner-context.js'
+
+// v21: owning member (naka-ai SSO user id; 'local' = single-user / legacy rows). Stamped from the request scope on insert.
+const ownerUserId = () => text('owner_user_id').notNull().$defaultFn(currentOwnerId)
 
 export const dramas = sqliteTable('dramas', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  ownerUserId: ownerUserId(),
   title: text('title').notNull(),
   description: text('description'),
   genre: text('genre'),
@@ -252,6 +257,7 @@ export const stylePresets = sqliteTable('style_presets', {
 // 统一生成任务表：图片/视频生成共用，type 区分，生成参数存 params(JSON)
 export const sysTask = sqliteTable('sys_task', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  ownerUserId: ownerUserId(),
   type: text('type').notNull(), // image | video
   storyboardId: integer('storyboard_id'),
   dramaId: integer('drama_id'),
@@ -352,6 +358,7 @@ export const appSettings = sqliteTable('app_settings', {
 // AI Marketer（迁移 version 6）— 数组字段存 JSON TEXT，对外由 services/marketer.ts 统一转 camelCase 结构
 export const campaigns = sqliteTable('campaigns', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  ownerUserId: ownerUserId(),
   title: text('title').notNull(),
   productUrl: text('product_url'),
   productName: text('product_name').notNull().default(''),
@@ -462,6 +469,7 @@ export const campaignVisuals = sqliteTable('campaign_visuals', {
 // v10 (Product Studio): โปรเจกต์วิดีโอรีวิวสินค้า — 1 โปรเจกต์ = 1 drama + episode (metadata.studioProjectId)
 export const studioProjects = sqliteTable('studio_projects', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  ownerUserId: ownerUserId(),
   title: text('title').notNull(),
   productName: text('product_name').notNull().default(''),
   productUrl: text('product_url'),
@@ -507,6 +515,7 @@ export const studioShots = sqliteTable('studio_shots', {
 // v10: คลัง avatar ของผู้ใช้ (imageUrl อ่านจาก sys_task ผ่าน image_task_id เมื่อ AI สร้าง)
 export const studioAvatars = sqliteTable('studio_avatars', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  ownerUserId: ownerUserId(),
   name: text('name').notNull(),
   description: text('description').notNull().default(''),
   locale: text('locale'),
@@ -535,6 +544,7 @@ export const studioImages = sqliteTable('studio_images', {
 // v12: Viral Clone Studio (docs/viral-clone/PLAN.md ข้อ 3) — โคลน "โครง" คลิปไวรัล → ตัวแปรโฆษณา
 export const cloneProjects = sqliteTable('clone_projects', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  ownerUserId: ownerUserId(),
   name: text('name').notNull(),
   status: text('status').notNull().default('draft'),
   referencePath: text('reference_path'),
@@ -568,6 +578,7 @@ export const cloneVariants = sqliteTable('clone_variants', {
 // v14 (AI Influencer): คลังพรีเซนเตอร์ AI — persona/appearance ใช้ประกอบสคริปต์และ generate รูป
 export const studioInfluencers = sqliteTable('studio_influencers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  ownerUserId: ownerUserId(),
   name: text('name').notNull(),
   niche: text('niche'),
   persona: text('persona').notNull().default(''),
@@ -668,6 +679,7 @@ export const socialComments = sqliteTable('social_comments', {
 })
 export const sellerPosts = sqliteTable('seller_posts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  ownerUserId: ownerUserId(),
   title: text('title').notNull().default(''),
   productName: text('product_name').notNull().default(''),
   productUrl: text('product_url'),
@@ -692,4 +704,15 @@ export const sellerPosts = sqliteTable('seller_posts', {
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   deletedAt: text('deleted_at'),
+})
+
+// v20: members signed in through naka-ai.com SSO ('local' in single-user mode)
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  displayName: text('display_name').notNull().default(''),
+  email: text('email'),
+  isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+  lastLoginAt: text('last_login_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
 })

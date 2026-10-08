@@ -29,19 +29,3 @@ test('useApi exposes style preset endpoints', () => {
   assert.match(useApi, /\?all=1/)
 })
 
-test('settings page manages style presets in a base tab', () => {
-  const settings = read('app/pages/settings.vue')
-
-  assert.match(settings, /Palette/)
-  assert.match(settings, /stylePresetAPI/)
-  assert.match(settings, /\{ id: 'styles', label: t\('settings\.tabs\.styles'\), icon: Palette \}/)
-  assert.match(settings, /startAddStyle/)
-  assert.match(settings, /startEditStyle/)
-  assert.match(settings, /toggleStyle/)
-  assert.match(settings, /confirmDelStyle/)
-  assert.match(settings, /styleToDelete/)
-  assert.match(settings, /<ConfirmDialog/)
-  assert.match(settings, /loadStylePresets/)
-  // 风格 key 编辑时不可修改
-  assert.match(settings, /:disabled="!!styleEditId"/)
-})

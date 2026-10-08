@@ -3,7 +3,7 @@
     <!-- 顶栏（参考 Topview Drama Studio 项目工作区）：返回 + 项目名 + 分区 Tab + 准备进度 -->
     <header class="ws-top">
       <div class="ws-top-left">
-        <button class="back-btn" :title="t('common.back')" :aria-label="t('common.back')" @click="navigateTo('/')">
+        <button class="back-btn" :title="t('common.back')" :aria-label="t('common.back')" @click="navigateTo('/drama')">
           <ArrowLeft :size="17" :stroke-width="2" />
         </button>
         <h1 class="ws-title truncate" :title="drama.title">{{ drama.title }}</h1>

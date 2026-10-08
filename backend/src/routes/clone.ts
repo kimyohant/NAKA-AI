@@ -39,6 +39,13 @@ app.get('/hypit/status', (c) => {
   return success(c, { available: status.available, reason: status.reason })
 })
 
+// GET /clone/overview — หน้าแรก: สถิติรวม + ตัวแปรต่อโปรเจกต์ + คลิปล่าสุด + สถานะ Hypit
+app.get('/overview', async (c) => {
+  const overview = await clone.getCloneOverview()
+  const hypit = getHypitStatus()
+  return success(c, { ...overview, hypit: { available: hypit.available, reason: hypit.reason } })
+})
+
 // GET /clone/projects — รายการ (ใหม่→เก่า)
 app.get('/projects', async (c) => {
   return success(c, await clone.listCloneProjects())

@@ -56,12 +56,4 @@ test('captions: merge ฝั่ง Studio เรียก burn หลัง conc
   const merge = read('src/services/ffmpeg-merge.ts')
   assert.doesNotMatch(merge, /captions|subtitle/i)
 })
-
-test('desktop: bundle fonts + ฉีด CAPTION_FONT_DIR', () => {
-  const builder = read('../desktop/electron-builder.yml')
-  assert.match(builder, /resources\/fonts, to: fonts/)
-  const main = read('../desktop/src/main.ts')
-  assert.match(main, /CAPTION_FONT_DIR = path\.join\(resources, 'fonts'\)/)
-  const prepare = read('../desktop/scripts/prepare-resources.mjs')
-  assert.match(prepare, /backend', 'assets', 'fonts'/)
-})
+// desktop packaging (fonts bundled into the Electron app) is tested in desktop/tests

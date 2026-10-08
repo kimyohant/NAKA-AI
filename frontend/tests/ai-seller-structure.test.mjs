@@ -28,6 +28,22 @@ test('sellerAPI calls exactly the backend seller routes', () => {
   assert.deepEqual(calls, served)
 })
 
+test('main menu: every module except the Skills Library; AI Seller is the app home', () => {
+  const mainNav = layout.slice(layout.indexOf('<nav class="side-nav">'), layout.indexOf('</nav>'))
+  const links = [...mainNav.matchAll(/to="([^"]+)"/g)].map(m => m[1])
+  // คลังสกิล (/studio) ไม่อยู่ในเมนู — รวมอยู่ใน AI นักขายแล้ว; /social มาจาก feat/social-auto-reply
+  assert.deepEqual(links, ['/drama', '/marketer', '/seller', '/viral-clone', '/live', '/social'])
+  assert.match(layout, /go\('\/seller'\)/)
+  // / → /seller; หน้าแรกเดิม (สตูดิโอละคร) ย้ายไป /drama
+  assert.match(nuxtConfig, /pages\.push\(\{ path: '\/', redirect: '\/seller' \}\)/)
+  assert.match(nuxtConfig, /dramaHome\.path = '\/drama'/)
+  // หน้าแรกของ AI นักขายแนวคลังสกิล: hero + ค้นหา + ชิปหมวด + การ์ดสกิล
+  const home = read('app/pages/seller.vue')
+  for (const need of ['sh-hero', 'v-model="query"', 'sh-chip', '<StudioSkillCard', '@use="useSkill(tpl)"', 'studioAPI.templates()']) {
+    assert.ok(home.includes(need), `seller home missing ${need}`)
+  }
+})
+
 test('menu, route and workspace wiring', () => {
   assert.match(layout, /to="\/seller"/)
   assert.match(layout, /layout\.nav\.seller/)

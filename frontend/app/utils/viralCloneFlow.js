@@ -61,3 +61,12 @@ export function isValidBlueprint(bp) {
 export function cloneBeatDefaults(id) {
   return { id, role: 'demo', line: '', visual: 'product', visualHint: null, durationSec: 3 }
 }
+
+// เทมเพลตเริ่มต้นบนหน้าแรก (รูปแบบเดียวกับตัวอย่างของ Hypit: UGC · พอดแคสต์ · สัมภาษณ์ข้างถนน · จัดอันดับ)
+// ข้อความอยู่ใน i18n viralClone.templates.<key>.*; beats ใช้วาดไทม์ไลน์ย่อเท่านั้น
+export const CLONE_TEMPLATES = [
+  { key: 'ugcReview', beats: [['hook', 3], ['demo', 5], ['proof', 4], ['offer', 3], ['cta', 2]] },
+  { key: 'podcast', beats: [['hook', 4], ['proof', 6], ['demo', 5], ['cta', 3]] },
+  { key: 'streetInterview', beats: [['hook', 3], ['demo', 4], ['proof', 4], ['offer', 4], ['cta', 3]] },
+  { key: 'ranking', beats: [['hook', 3], ['demo', 3], ['demo', 3], ['proof', 4], ['cta', 2]] },
+]

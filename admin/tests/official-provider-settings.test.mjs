@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-const settingsPage = readFileSync(new URL('../app/pages/settings.vue', import.meta.url), 'utf8')
+const settingsPage = readFileSync(new URL('../app/pages/index.vue', import.meta.url), 'utf8')
 const useApi = readFileSync(new URL('../app/composables/useApi.ts', import.meta.url), 'utf8')
 
 function providerPresetBlock(serviceType) {

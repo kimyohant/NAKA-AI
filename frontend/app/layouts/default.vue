@@ -3,7 +3,7 @@
     <!-- 左侧导航栏（参考 Topview Drama Studio 布局；剧集工作台使用独立的 studio 布局） -->
     <aside class="sidebar" :class="{ open: navOpen }" :aria-label="t('layout.nav.home')">
       <div class="side-top">
-        <button class="brand" :title="t('app.title')" @click="go('/')">
+        <button class="brand" :title="t('app.title')" @click="go('/seller')">
           <span class="brand-mark">
             <img v-if="showBrandImage" :src="brandLogo" :alt="t('app.title')" class="brand-logo" @error="showBrandImage = false" />
             <span v-else class="brand-fallback">H</span>
@@ -15,18 +15,15 @@
         </button>
       </div>
 
+      <!-- เมนูหลัก (คลังสกิลไม่อยู่ในเมนู — รวมอยู่ใน AI นักขายแล้ว; /studio ยังเข้าทาง URL ได้) -->
       <nav class="side-nav">
-        <NuxtLink to="/" class="side-link" :class="{ active: isStudioRoute }" :title="t('layout.nav.home')" @click="navOpen = false">
+        <NuxtLink to="/drama" class="side-link" :class="{ active: isDramaRoute }" :title="t('layout.nav.home')" @click="navOpen = false">
           <Clapperboard :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.home') }}</span>
         </NuxtLink>
         <NuxtLink to="/marketer" class="side-link" :class="{ active: isMarketerRoute }" :title="t('layout.nav.marketer')" @click="navOpen = false">
           <Megaphone :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.marketer') }}</span>
-        </NuxtLink>
-        <NuxtLink to="/studio" class="side-link" :class="{ active: isProductStudioRoute }" :title="t('layout.nav.studio')" @click="navOpen = false">
-          <LayoutGrid :size="17" :stroke-width="1.8" />
-          <span class="side-label">{{ t('layout.nav.studio') }}</span>
         </NuxtLink>
         <NuxtLink to="/seller" class="side-link" :class="{ active: isSellerRoute }" :title="t('layout.nav.seller')" @click="navOpen = false">
           <Store :size="17" :stroke-width="1.8" />
@@ -46,26 +43,19 @@
         </NuxtLink>
       </nav>
 
-      <div class="side-divider"></div>
-
-      <nav class="side-nav">
-        <p class="side-group side-label">{{ t('layout.nav.setup') }}</p>
-        <NuxtLink
-          v-for="item in settingsItems"
-          :key="item.tab"
-          :to="`/settings?tab=${item.tab}`"
-          class="side-link"
-          :class="{ active: route.path === '/settings' && currentSettingsTab === item.tab }"
-          :title="item.label"
-          @click="navOpen = false"
-        >
-          <component :is="item.icon" :size="17" :stroke-width="1.8" />
-          <span class="side-label">{{ item.label }}</span>
-          <span v-if="item.tab === 'ai' && missingConfigLabels.length" class="side-dot" aria-hidden="true"></span>
-        </NuxtLink>
-      </nav>
 
       <div class="side-bottom">
+        <!-- สมาชิก naka-ai (SSO) — ซ่อนในโหมดผู้ใช้คนเดียว -->
+        <div v-if="session?.sso" class="side-user">
+          <span class="side-avatar" aria-hidden="true">{{ (session.user.name || '?').slice(0, 1).toUpperCase() }}</span>
+          <div class="side-user-copy side-label">
+            <span class="side-user-name truncate">{{ session.user.name }}</span>
+            <a v-if="session.accountUrl" :href="session.accountUrl" class="side-user-link">{{ t('layout.account.manage') }}</a>
+          </div>
+          <button type="button" class="side-user-out" :title="t('layout.account.signOut')" :aria-label="t('layout.account.signOut')" @click="signOut">
+            <LogOut :size="15" :stroke-width="1.9" />
+          </button>
+        </div>
         <div class="side-tools">
           <ThemeToggle />
           <LocaleSwitcher />
@@ -87,7 +77,7 @@
       <div v-if="missingConfigLabels.length" class="config-banner">
         <TriangleAlert :size="14" :stroke-width="1.8" />
         <span>{{ t('layout.banner.missing', { types: missingConfigLabels.join(t('common.listJoin')) }) }}</span>
-        <NuxtLink to="/settings?tab=ai" class="config-banner-link">{{ t('layout.banner.goSettings') }}</NuxtLink>
+        <a :href="adminUrl" target="_blank" rel="noopener" class="config-banner-link">{{ t('layout.banner.goSettings') }}</a>
       </div>
 
       <main class="content">
@@ -98,9 +88,10 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Cpu, Palette, Bot, HardDrive, SlidersHorizontal, Info, Menu, X, Megaphone, LayoutGrid, Copy, Radio, Store, MessagesSquare } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Menu, X, Megaphone, Copy, Radio, Store, LogOut, MessagesSquare } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
-import { aiConfigAPI } from '~/composables/useApi'
+import { aiConfigAPI, authAPI } from '~/composables/useApi'
+import { useAdminUrl } from '~/composables/useAdminUrl'
 import brandLogo from '~/assets/brand-logo.svg'
 
 const { t, locale } = useI18n()
@@ -108,23 +99,27 @@ const route = useRoute()
 const showBrandImage = ref(true)
 const navOpen = ref(false)
 
-const isStudioRoute = computed(() => route.path === '/' || route.path.startsWith('/drama/'))
+const isDramaRoute = computed(() => route.path === '/drama' || route.path.startsWith('/drama/'))
 const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.startsWith('/marketer/'))
-const isProductStudioRoute = computed(() => route.path === '/studio' || route.path.startsWith('/studio/'))
 const isSellerRoute = computed(() => route.path === '/seller' || route.path.startsWith('/seller/'))
 const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
 const isLiveRoute = computed(() => route.path === '/live')
 const isSocialRoute = computed(() => route.path === '/social' || route.path.startsWith('/social/'))
-const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))
 
-const settingsItems = computed(() => [
-  { tab: 'ai', label: t('settings.tabs.ai'), icon: Cpu },
-  { tab: 'styles', label: t('settings.tabs.styles'), icon: Palette },
-  { tab: 'agents', label: t('settings.tabs.agents'), icon: Bot },
-  { tab: 'general', label: t('settings.tabs.general'), icon: SlidersHorizontal },
-  { tab: 'storage', label: t('settings.tabs.storage'), icon: HardDrive },
-  { tab: 'about', label: t('settings.tabs.about'), icon: Info },
-])
+// ตั้งค่าระบบย้ายไปแอปผู้ดูแล (admin/)
+const adminUrl = useAdminUrl()
+
+// สมาชิก naka-ai ที่ล็อกอินผ่าน SSO (null = ยังโหลด / โหมดผู้ใช้คนเดียวจะได้ sso:false)
+const session = ref(null)
+onMounted(async () => {
+  try { session.value = await authAPI.me() } catch { /* 401 → useApi พาไปล็อกอินเอง */ }
+})
+async function signOut() {
+  try {
+    const r = await authAPI.logout()
+    window.location.href = r.accountUrl || '/'
+  } catch { window.location.reload() }
+}
 
 function go(path) {
   navOpen.value = false
@@ -227,7 +222,25 @@ watch(locale, checkAiConfigs)
 .side-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); margin-left: auto; }
 .side-divider { height: 1px; background: var(--border); margin: 14px 8px; }
 
-.side-bottom { margin-top: auto; padding-top: 16px; }
+.side-bottom { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.side-user {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border-radius: 12px; border: 1px solid var(--border); min-width: 0;
+}
+.side-avatar {
+  width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-gradient); color: #fff; font: 700 13px var(--font-display);
+}
+.side-user-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.side-user-name { font-size: 13px; font-weight: 600; color: var(--text-0); }
+.side-user-link { font-size: 11px; color: var(--accent-text); text-decoration: none; }
+.side-user-link:hover { text-decoration: underline; }
+.side-user-out {
+  width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 8px; background: transparent; color: var(--text-2); cursor: pointer;
+}
+.side-user-out:hover { background: var(--bg-hover); color: var(--text-0); }
 .side-tools {
   display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
   padding: 6px; border-radius: 12px;

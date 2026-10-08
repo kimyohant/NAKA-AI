@@ -19,6 +19,8 @@ asarUnpack:
 extraResources:
   - { from: resources/frontend, to: frontend }
   - { from: resources/workspace-template, to: workspace-template }
+  # back-office (system settings) — backend serves it at /admin via ADMIN_DIST
+  - { from: resources/admin, to: admin }
   # ${os} 宏：darwin → bin-darwin/（无扩展名二进制），win32 → bin-win32/（.exe），
   # 各自只带本平台的 ffmpeg/ffprobe
   - { from: "resources/bin-${os}", to: bin }
