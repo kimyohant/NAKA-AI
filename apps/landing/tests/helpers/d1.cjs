@@ -1,5 +1,5 @@
 // Test database: PostgreSQL (PGlite, in-process — no Docker) with the production schema
-// (migrations/pg/0001_baseline.sql), reached through the same D1 adapter the app uses (src/db/pg-d1.ts).
+// (every migrations/pg/*.sql, in order), reached through the same D1 adapter the app uses (src/db/pg-d1.ts).
 //
 //   const { sqlite, db } = migratedDb();
 //   db      → D1Database (async), what the app code gets as env.DB
