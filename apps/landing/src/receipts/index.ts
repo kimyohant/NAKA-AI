@@ -82,7 +82,7 @@ async function issue(env: Env, paymentId: string): Promise<{ receipt: ReceiptRef
   // payment is a no-op and consumes no sequence. Never UPDATE a previously issued snapshot.
   const inserted = await env.DB.prepare(`INSERT INTO receipts
     (id, payment_id, user_id, year, seq, number, issued_at, snapshot)
-    SELECT ?1, p.id, p.user_id, ?2, n.seq, printf('RC%04d-%06d', ?2, n.seq), ?3, ?4
+    SELECT ?1, p.id, p.user_id, ?2, n.seq, 'RC' || lpad(?2::text, 4, '0') || '-' || lpad(n.seq::text, 6, '0'), ?3, ?4
     FROM (SELECT COALESCE(MAX(seq), 0) + 1 AS seq FROM receipts WHERE year = ?2) n
     JOIN payments p ON p.id = ?5
     WHERE p.status = 'successful' AND p.paid_at = ?6 AND p.amount_satang = ?7 AND p.user_id = ?8

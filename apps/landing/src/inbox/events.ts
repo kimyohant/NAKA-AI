@@ -79,9 +79,9 @@ async function storeEvent(env: Env, event: Event): Promise<string | null> {
       SELECT ?,id,?,?, ?,?,?, ?,?,?,? FROM inbox_threads WHERE social_account_id=? AND kind=? AND external_thread_id=?`)
       .bind(id, account.user_id, direction, key, event.body, state, now(), event.time, event.target, event.own ? event.time || now() : null,
         account.id, event.kind, event.thread),
-    env.DB.prepare(`UPDATE inbox_threads SET last_message_at=MAX(last_message_at,?),revision=revision+1,
+    env.DB.prepare(`UPDATE inbox_threads SET last_message_at=GREATEST(last_message_at,?),revision=revision+1,
       last_inbound_id=CASE WHEN ?='in' AND ?>=last_customer_at THEN ? ELSE last_inbound_id END,
-      last_customer_at=CASE WHEN ?='in' THEN MAX(last_customer_at,?) ELSE last_customer_at END
+      last_customer_at=CASE WHEN ?='in' THEN GREATEST(last_customer_at,?) ELSE last_customer_at END
       WHERE id=(SELECT thread_id FROM inbox_messages WHERE id=?)`).bind(event.time || now(), direction, event.time, id, direction, event.time, id),
   ]);
   return null;
@@ -105,8 +105,8 @@ export async function processReceipts(env: Env, maxReceipts = 5): Promise<number
           WHERE id=? AND lease_id=? RETURNING id`).bind(cursor + 1, skipped ? 1 : 0, skipped, row.id, lease).first();
         if (!updated) break;
       }
-      await env.DB.prepare(`UPDATE inbox_webhook_receipts SET status=?,body=CASE WHEN ? THEN '' ELSE body END,
-        lease_id=NULL,lease_until=NULL,error=CASE WHEN ? THEN 'unsupported_event' ELSE error END WHERE id=? AND lease_id=?`)
+      await env.DB.prepare(`UPDATE inbox_webhook_receipts SET status=?,body=CASE WHEN ?=1 THEN '' ELSE body END,
+        lease_id=NULL,lease_until=NULL,error=CASE WHEN ?=1 THEN 'unsupported_event' ELSE error END WHERE id=? AND lease_id=?`)
         .bind(end === events.length ? 'done' : 'pending', end === events.length ? 1 : 0, events.length === 0 ? 1 : 0, row.id, lease).run();
       processed++;
     } catch {

@@ -178,23 +178,14 @@ test('matching Google and LINE names or emails remain separate identities', asyn
   assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS n FROM users').get().n, 2);
 });
 
-test('migration preserves phone and Google identities, uniqueness, indexes and foreign keys', () => {
-  const { sqlite } = migratedDb('0001_auth.sql');
-  try {
-    sqlite.exec('PRAGMA foreign_keys = ON');
-    sqlite.exec("INSERT INTO users (id,display_name,created_at) VALUES ('u1','ร้าน',1),('u2','ร้าน',2)");
-    sqlite.exec("INSERT INTO auth_identities (id,user_id,provider,provider_uid,email,verified_at) VALUES ('p','u1','phone','+66812345678',NULL,1),('g','u2','google','google-sub','same@example.test',2)");
-    sqlite.exec(readFileSync(path.join(root, 'migrations/0011_line_login.sql'), 'utf8'));
-    const rows = sqlite.prepare('SELECT id,user_id,provider,provider_uid,email,verified_at FROM auth_identities ORDER BY id').all().map(row => ({ ...row }));
-    assert.deepEqual(rows, [
-      { id: 'g', user_id: 'u2', provider: 'google', provider_uid: 'google-sub', email: 'same@example.test', verified_at: 2 },
-      { id: 'p', user_id: 'u1', provider: 'phone', provider_uid: '+66812345678', email: null, verified_at: 1 },
-    ]);
-    assert.throws(() => sqlite.exec("INSERT INTO auth_identities VALUES ('duplicate','u2','phone','+66812345678',NULL,3)"), /UNIQUE/);
-    sqlite.exec("INSERT INTO auth_identities VALUES ('line','u1','line','Uline-user-1',NULL,3)");
-    assert.ok(sqlite.prepare("PRAGMA index_list('auth_identities')").all().some(row => row.name === 'idx_auth_identities_user'));
-    assert.equal(sqlite.prepare('PRAGMA foreign_key_check').all().length, 0);
-  } finally { sqlite.close(); }
+test('identities: one row per provider account, LINE allowed, indexed by user, tied to an existing user', () => {
+  const { sqlite } = migratedDb();
+  sqlite.exec("INSERT INTO users (id,display_name,created_at) VALUES ('u1','ร้าน',1),('u2','ร้าน',2)");
+  sqlite.exec("INSERT INTO auth_identities (id,user_id,provider,provider_uid,email,verified_at) VALUES ('p','u1','phone','+66812345678',NULL,1),('g','u2','google','google-sub','same@example.test',2)");
+  assert.throws(() => sqlite.exec("INSERT INTO auth_identities VALUES ('duplicate','u2','phone','+66812345678',NULL,3)"), /unique/);
+  sqlite.exec("INSERT INTO auth_identities VALUES ('line','u1','line','Uline-user-1',NULL,3)");
+  assert.throws(() => sqlite.exec("INSERT INTO auth_identities VALUES ('orphan','nobody','line','Uline-user-2',NULL,3)"), /foreign key/);
+  assert.ok(sqlite.prepare("SELECT 1 FROM pg_indexes WHERE schemaname = current_schema() AND indexname = 'idx_auth_identities_user'").get());
 });
 
 test('login page shows LINE only when config explicitly enables it and explains LINE callback errors', async () => {

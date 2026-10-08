@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { test, after, mock } = require('node:test');
-const { DatabaseSync } = require('node:sqlite');
+const { migratedDb } = require('../../../tests/helpers/d1.cjs');
 const { readFileSync, mkdirSync, writeFileSync, rmSync } = require('node:fs');
 const path = require('node:path');
 const { buildSync } = require('esbuild');
@@ -18,37 +18,12 @@ const inbox = require(path.join(output, 'inbox.cjs'));
 const migrations = ['0001_auth.sql', '0002_credits_jobs.sql', '0006_jobs_limit.sql', '0003_social.sql', '0005_inbox.sql']
   .map(file => readFileSync(path.join(root, 'migrations', file), 'utf8'));
 
-// D1 over node:sqlite. Statements with RETURNING report rows and changes, as D1 does.
+// The production SQL on PostgreSQL (PGlite) through the app's D1 adapter — tests/helpers/d1.cjs.
+// `sql` is the synchronous test handle (prepare(…).get/all/run, exec); HTTP alone is mocked.
 class D1 {
-  constructor() {
-    this.sql = new DatabaseSync(':memory:');
-    this.sql.exec('PRAGMA foreign_keys = ON');
-    for (const sql of migrations) this.sql.exec(sql);
-  }
-  prepare(query) {
-    const db = this.sql;
-    let values = [];
-    const exec = () => {
-      if (/\bRETURNING\b|^\s*(SELECT|PRAGMA)/i.test(query)) {
-        const results = db.prepare(query).all(...values).map(row => ({ ...row }));
-        return { success: true, results, meta: { changes: /^\s*(SELECT|PRAGMA)/i.test(query) ? 0 : results.length } };
-      }
-      const r = db.prepare(query).run(...values);
-      return { success: true, results: [], meta: { changes: Number(r.changes) } };
-    };
-    return {
-      bind(...bound) { values = bound; return this; },
-      async first() { const row = exec().results[0]; return row ? { ...row } : null; },
-      async all() { return exec(); },
-      async run() { return exec(); },
-      execute: exec,
-    };
-  }
-  async batch(statements) {
-    this.sql.exec('BEGIN');
-    try { const result = statements.map(s => s.execute()); this.sql.exec('COMMIT'); return result; }
-    catch (error) { this.sql.exec('ROLLBACK'); throw error; }
-  }
+  constructor() { const { sqlite, db } = migratedDb(); this.sql = sqlite; this.db = db; }
+  prepare(query) { return this.db.prepare(query); }
+  batch(statements) { return this.db.batch(statements); }
 }
 
 let time = 1800000000000;
@@ -80,7 +55,7 @@ async function setup(t) {
   time = 1800000000000;
   const DB = new D1();
   t.after(() => DB.sql.close());
-  DB.sql.exec(`INSERT INTO plans (id, name, monthly_credits, max_parallel_jobs, price_thb) VALUES ('business', 'ธุรกิจ', 160, 4, 1290);
+  DB.sql.exec(`INSERT INTO plans (id, name, monthly_credits, max_parallel_jobs, price_thb) VALUES ('business', 'ธุรกิจ', 160, 4, 1290) ON CONFLICT (id) DO NOTHING;
     INSERT INTO users (id, created_at) VALUES ('user-a', 0), ('user-b', 0);
     INSERT INTO subscriptions (user_id, plan_id) VALUES ('user-a', 'business');`);
   const env = { DB, APP_ORIGIN: 'https://naka.test', META_APP_ID: '12345', META_APP_SECRET: SECRET,

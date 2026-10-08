@@ -183,14 +183,15 @@ async function createPlan(request: Request, env: Env, who: string): Promise<Resp
   }
   if (input.id === 'free') throw new SystemError(409, 'มีแพ็กเกจนี้แล้ว');
   const plan = planFields(input, null, input.id);
-  const [inserted] = await env.DB.batch([
-    env.DB.prepare(`INSERT INTO plans (id, name, monthly_credits, max_parallel_jobs, price_thb, on_sale)
-      SELECT ?1, ?2, ?3, ?4, ?5, ?6 WHERE NOT EXISTS (SELECT 1 FROM plans WHERE id = ?1)`)
-      .bind(input.id, plan.name, plan.monthly_credits, plan.max_parallel_jobs, plan.price_thb, plan.on_sale),
-    env.DB.prepare(`INSERT INTO system_audit (id, area, target, action, detail, note, actor, created_at)
-      SELECT ?, 'plan', ?, 'create', ?, ?, ?, ? WHERE changes() > 0`)
-      .bind(crypto.randomUUID(), input.id, JSON.stringify({ after: plan }), note(input), who, now()),
-  ]);
+  // One statement: the audit row exists exactly when the plan row was created.
+  const inserted = await env.DB.prepare(`WITH created AS (
+      INSERT INTO plans (id, name, monthly_credits, max_parallel_jobs, price_thb, on_sale)
+      SELECT ?1, ?2, ?3, ?4, ?5, ?6 WHERE NOT EXISTS (SELECT 1 FROM plans WHERE id = ?1) RETURNING id)
+    INSERT INTO system_audit (id, area, target, action, detail, note, actor, created_at)
+      SELECT ?7, 'plan', ?1, 'create', ?8, ?9, ?10, ?11 FROM created`)
+    .bind(input.id, plan.name, plan.monthly_credits, plan.max_parallel_jobs, plan.price_thb, plan.on_sale,
+      crypto.randomUUID(), JSON.stringify({ after: plan }), note(input), who, now())
+    .run();
   if (!inserted.meta.changes) throw new SystemError(409, 'มีแพ็กเกจรหัสนี้แล้ว');
   return plansResponse(env);
 }
@@ -202,15 +203,16 @@ async function updatePlan(request: Request, env: Env, id: string, who: string): 
   const plan = planFields(input, current, id);
   const { id: _, ...before } = current;
   // Compare-and-set on every field: two admins editing at once cannot silently overwrite each other.
-  const [updated] = await env.DB.batch([
-    env.DB.prepare(`UPDATE plans SET name = ?, monthly_credits = ?, max_parallel_jobs = ?, price_thb = ?, on_sale = ?
-      WHERE id = ? AND name = ? AND monthly_credits = ? AND max_parallel_jobs = ? AND price_thb = ? AND on_sale = ?`)
-      .bind(plan.name, plan.monthly_credits, plan.max_parallel_jobs, plan.price_thb, plan.on_sale,
-        id, current.name, current.monthly_credits, current.max_parallel_jobs, current.price_thb, current.on_sale),
-    env.DB.prepare(`INSERT INTO system_audit (id, area, target, action, detail, note, actor, created_at)
-      SELECT ?, 'plan', ?, 'update', ?, ?, ?, ? WHERE changes() > 0`)
-      .bind(crypto.randomUUID(), id, JSON.stringify({ before, after: plan }), note(input), who, now()),
-  ]);
+  const updated = await env.DB.prepare(`WITH changed AS (
+      UPDATE plans SET name = ?1, monthly_credits = ?2, max_parallel_jobs = ?3, price_thb = ?4, on_sale = ?5
+      WHERE id = ?6 AND name = ?7 AND monthly_credits = ?8 AND max_parallel_jobs = ?9 AND price_thb = ?10 AND on_sale = ?11
+      RETURNING id)
+    INSERT INTO system_audit (id, area, target, action, detail, note, actor, created_at)
+      SELECT ?12, 'plan', ?6, 'update', ?13, ?14, ?15, ?16 FROM changed`)
+    .bind(plan.name, plan.monthly_credits, plan.max_parallel_jobs, plan.price_thb, plan.on_sale,
+      id, current.name, current.monthly_credits, current.max_parallel_jobs, current.price_thb, current.on_sale,
+      crypto.randomUUID(), JSON.stringify({ before, after: plan }), note(input), who, now())
+    .run();
   if (!updated.meta.changes) throw new SystemError(409, 'แพ็กเกจนี้เพิ่งถูกแก้ กรุณาโหลดหน้าใหม่');
   return plansResponse(env);
 }

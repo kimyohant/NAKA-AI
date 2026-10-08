@@ -163,7 +163,7 @@ export async function loginWithPassword(request: Request, env: Env): Promise<Res
 /** Whether a signed-in customer can use the self-service password form.
  * Older auth deployments can still serve /me before migration 0012 is applied. */
 export async function hasPassword(env: Env, userId: string): Promise<boolean | undefined> {
-  const table = await env.DB.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'auth_passwords'").first();
+  const table = await env.DB.prepare("SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'auth_passwords'").first();
   if (!table) return undefined;
   return !!await env.DB.prepare('SELECT 1 FROM auth_passwords WHERE user_id = ?').bind(userId).first();
 }
@@ -250,7 +250,7 @@ export async function forgotPassword(request: Request, env: Env, ctx?: Execution
       AND (SELECT COUNT(*) FROM auth_password_resets WHERE ip_key = ?2 AND created_at > ?7) < 10`)
       .bind(keys.email, keys.ip, account?.user_id ?? null, account ? digest : null, t + RESET_EXPIRES, t, t - RESET_WINDOW),
     env.DB.prepare(`UPDATE auth_password_resets SET used_at = ?1 WHERE user_id = ?2 AND used_at IS NULL
-      AND token_hash IS NOT ?3 AND EXISTS (SELECT 1 FROM auth_password_resets WHERE token_hash = ?3)`)
+      AND token_hash IS DISTINCT FROM ?3 AND EXISTS (SELECT 1 FROM auth_password_resets WHERE token_hash = ?3)`)
       .bind(t, account?.user_id ?? '', digest),
   ]);
   if (admitted.meta.changes !== 1) throw new AuthError(429, RESET_LIMIT, RESET_WINDOW);

@@ -137,7 +137,8 @@ test('disable atomically removes only this customer sessions; reactivation permi
 });
 
 test('audit failure rolls back every mutation, including session revocation', async () => {
-  sqlite.exec("INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES ('session1', 'u1', 1, 9999999999); CREATE TRIGGER audit_fail BEFORE INSERT ON admin_audit BEGIN SELECT RAISE(ABORT, 'private database error'); END;");
+  sqlite.exec("INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES ('session1', 'u1', 1, 9999999999)");
+  sqlite.failTrigger('audit_fail', 'admin_audit', 'INSERT', 'private database error');
   for (const response of [await grant(), await pack(), await call('/u1/status', { status: 'disabled', note: 'เหตุผล' })]) {
     assert.equal(response.status, 500); assert.doesNotMatch(await response.text(), /private/);
   }
@@ -146,9 +147,10 @@ test('audit failure rolls back every mutation, including session revocation', as
 });
 
 test('mutation failure rolls back the audit and all earlier effects', async () => {
-  sqlite.exec("CREATE TRIGGER subscription_fail BEFORE INSERT ON subscriptions BEGIN SELECT RAISE(ABORT, 'test'); END;");
+  sqlite.failTrigger('subscription_fail', 'subscriptions', 'INSERT', 'test');
   assert.equal((await pack()).status, 500); assert.equal(balance(), 0); assert.equal(audit().length, 0);
-  sqlite.exec("INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES ('s1', 'u1', 1, 9999999999); CREATE TRIGGER sessions_fail BEFORE DELETE ON sessions BEGIN SELECT RAISE(ABORT, 'test'); END;");
+  sqlite.exec("INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES ('s1', 'u1', 1, 9999999999)");
+  sqlite.failTrigger('sessions_fail', 'sessions', 'DELETE', 'test');
   assert.equal((await call('/u1/status', { status: 'disabled', note: 'เหตุผล' })).status, 500);
   assert.equal((await getUser(db, 'u1')).id, 'u1'); assert.equal(audit().length, 0);
 });

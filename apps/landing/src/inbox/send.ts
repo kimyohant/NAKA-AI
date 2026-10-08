@@ -53,7 +53,7 @@ export async function sendReply(env: Env, messageId: string, userId: string, app
       env.DB.prepare(`INSERT OR IGNORE INTO inbox_messages
         (id,thread_id,user_id,direction,external_id,body,status,sent_at,created_at,message_at,reply_target,send_phase)
         VALUES (?,?,?,'out',?,?,'sent',?,?,?,?,'sent')`).bind(crypto.randomUUID(), thread.id, userId, key, reply.trim(), now(), now(), now(), message.reply_target),
-      env.DB.prepare('UPDATE inbox_threads SET last_message_at=MAX(last_message_at,?) WHERE id=? AND user_id=?').bind(now(), thread.id, userId),
+      env.DB.prepare('UPDATE inbox_threads SET last_message_at=GREATEST(last_message_at,?) WHERE id=? AND user_id=?').bind(now(), thread.id, userId),
     ]);
     return { status: 'sent' };
   } catch {

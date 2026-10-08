@@ -21,10 +21,12 @@
   "type": "commonjs",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
+    "postgres": "^3.4.9",
     "stripe": "^22.6.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260924.1",
+    "@electric-sql/pglite": "^0.3.16",
     "typescript": "^7.0.2",
     "wrangler": "^4.137.0"
   },

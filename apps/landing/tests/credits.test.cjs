@@ -58,13 +58,13 @@ test("the plan's parallel-job limit counts queued and running jobs", async () =>
   assert.deepEqual(await jobs.enqueueJob(db, { userId: "u1", kind: "video", input: {}, costCredits: 5 }), { ok: false, reason: "too_many_jobs" });
   assert.equal(await credits.getBalance(db, "u1"), 95, "a refused job holds nothing");
 
-  sqlite.exec("INSERT INTO plans (id, name, max_parallel_jobs) VALUES ('pro', 'Pro', 3)");
+  sqlite.exec("INSERT INTO plans (id, name, max_parallel_jobs) VALUES ('pro', 'Pro', 3) ON CONFLICT (id) DO UPDATE SET max_parallel_jobs = excluded.max_parallel_jobs");
   sqlite.exec("INSERT INTO subscriptions (user_id, plan_id) VALUES ('u1', 'pro')");
   assert.equal((await jobs.enqueueJob(db, { userId: "u1", kind: "video", input: {}, costCredits: 5 })).ok, true);
 });
 
 test("the queue runs higher priority first, then oldest first", async () => {
-  sqlite.exec("INSERT INTO plans (id, name, max_parallel_jobs) VALUES ('pro', 'Pro', 10)");
+  sqlite.exec("INSERT INTO plans (id, name, max_parallel_jobs) VALUES ('pro', 'Pro', 10) ON CONFLICT (id) DO UPDATE SET max_parallel_jobs = excluded.max_parallel_jobs");
   for (const u of ["a", "b", "c"]) {
     sqlite.prepare("INSERT INTO subscriptions (user_id, plan_id) VALUES (?, 'pro')").run(u);
     await credits.grantCredits(db, u, 10, "grant");
@@ -108,7 +108,7 @@ test("a job that runs out of attempts fails and is refunded exactly once", async
 });
 
 test("runQueue completes jobs, fails permanent errors at once, and never charges for them", async () => {
-  sqlite.exec("INSERT INTO plans (id, name, max_parallel_jobs) VALUES ('pro', 'Pro', 10)");
+  sqlite.exec("INSERT INTO plans (id, name, max_parallel_jobs) VALUES ('pro', 'Pro', 10) ON CONFLICT (id) DO UPDATE SET max_parallel_jobs = excluded.max_parallel_jobs");
   sqlite.exec("INSERT INTO subscriptions (user_id, plan_id) VALUES ('u1', 'pro')");
   await credits.grantCredits(db, "u1", 20, "grant");
   const good = await jobs.enqueueJob(db, { userId: "u1", kind: "tts", input: { text: "สวัสดี" }, costCredits: 2 });
@@ -157,7 +157,7 @@ test("admin credit routes need the admin token and grant to a user", async () =>
 });
 
 test("runQueue runs jobs in parallel up to the concurrency limit and never runs one twice", async () => {
-  sqlite.exec("INSERT INTO plans (id, name, max_parallel_jobs) VALUES ('pro', 'Pro', 20)");
+  sqlite.exec("INSERT INTO plans (id, name, max_parallel_jobs) VALUES ('pro', 'Pro', 20) ON CONFLICT (id) DO UPDATE SET max_parallel_jobs = excluded.max_parallel_jobs");
   sqlite.exec("INSERT INTO subscriptions (user_id, plan_id) VALUES ('u1', 'pro')");
   await credits.grantCredits(db, "u1", 20, "grant");
   for (let i = 0; i < 7; i++) await jobs.enqueueJob(db, { userId: "u1", kind: "k", input: { i }, costCredits: 1 });

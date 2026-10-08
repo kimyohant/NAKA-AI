@@ -151,15 +151,11 @@ test('config advertises password sign-in and hides unconfigured methods', async 
   assert.deepEqual(config, { turnstileSiteKey: null, lineLogin: false, googleLogin: false, phoneLogin: false, passwordLogin: true, passwordReset: false });
 });
 
-test('migration 0012 keeps identities and the admin audit history in order', () => {
-  const { sqlite } = migratedDb(...MIGRATIONS.filter(name => name < '0012'));
-  sqlite.exec('PRAGMA foreign_keys = ON');
+test('password identities are allowed and the admin audit history keeps insertion order', () => {
+  const { sqlite } = migratedDb();
   sqlite.prepare("INSERT INTO users (id, display_name, created_at) VALUES ('u1', 'x', 0)").run();
-  sqlite.prepare("INSERT INTO auth_identities (id, user_id, provider, provider_uid, email, verified_at) VALUES ('i1','u1','phone','+66812345678',NULL,0)").run();
-  for (const id of ['a', 'b', 'c']) sqlite.prepare("INSERT INTO admin_audit (id, user_id, action, detail, note, created_at) VALUES (?, 'u1', 'credits', '{}', 'n', 5)").run(id);
-  sqlite.exec(readFileSync(path.join(root, 'migrations', '0012_password_login.sql'), 'utf8'));
-  assert.equal(sqlite.prepare('SELECT provider_uid FROM auth_identities').get().provider_uid, '+66812345678');
-  assert.deepEqual(sqlite.prepare('SELECT id FROM admin_audit ORDER BY rowid').all().map((r) => r.id), ['a', 'b', 'c']);
-  assert.equal(sqlite.prepare('PRAGMA foreign_key_check').all().length, 0);
-  sqlite.close();
+  sqlite.prepare("INSERT INTO auth_identities (id, user_id, provider, provider_uid, email, verified_at) VALUES ('i1','u1','password','x@example.test','x@example.test',0)").run();
+  for (const id of ['c', 'a', 'b']) sqlite.prepare("INSERT INTO admin_audit (id, user_id, action, detail, note, created_at) VALUES (?, 'u1', 'credits', '{}', 'n', 5)").run(id);
+  assert.deepEqual(sqlite.prepare('SELECT id FROM admin_audit ORDER BY rowid').all().map((r) => r.id), ['c', 'a', 'b']);
 });
+

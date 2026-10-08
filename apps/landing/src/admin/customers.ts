@@ -115,48 +115,49 @@ async function change(request: Request, env: Env, userId: string, action: Action
   }
   const id = crypto.randomUUID();
   const t = Math.floor(Date.now() / 1000);
-  const before = `json_object('status', status, 'credits', credits, 'planId', plan_id,
+  // jsonb: `before || jsonb_build_object(…)` overwrites the changed keys, like SQLite's json_set did.
+  const before = `jsonb_build_object('status', status, 'credits', credits, 'planId', plan_id,
     'subscriptionStatus', sub_status, 'expiresAt', expires_at, 'nextCreditAt', next_credit_at,
     'period', billing_period, 'sessions', sessions)`;
   let after: string;
-  if (action === 'credits') after = `json_set(${before}, '$.credits', credits + json_extract(?3, '$.amount'))`;
-  else if (action === 'status') after = `json_set(${before}, '$.status', json_extract(?3, '$.status'),
-    '$.sessions', CASE WHEN json_extract(?3, '$.status') = 'disabled' THEN 0 ELSE sessions END)`;
-  else after = `json_set(${before}, '$.planId', p.id, '$.subscriptionStatus', 'active', '$.period', 'monthly',
-    '$.expiresAt', CASE WHEN extending THEN expires_at ELSE ?5 END + json_extract(?3, '$.months') * ${MONTH},
-    '$.nextCreditAt', CASE WHEN extending AND next_credit_at IS NOT NULL THEN next_credit_at ELSE ?5 + ${MONTH} END,
-    '$.credits', CASE WHEN extending THEN credits ELSE MAX(credits, p.monthly_credits) END)`;
+  if (action === 'credits') after = `${before} || jsonb_build_object('credits', credits + (?3::jsonb->>'amount')::bigint)`;
+  else if (action === 'status') after = `${before} || jsonb_build_object('status', ?3::jsonb->>'status',
+    'sessions', CASE WHEN ?3::jsonb->>'status' = 'disabled' THEN 0 ELSE sessions END)`;
+  else after = `${before} || jsonb_build_object('planId', p.id, 'subscriptionStatus', 'active', 'period', 'monthly',
+    'expiresAt', CASE WHEN extending = 1 THEN expires_at ELSE ?5 END + (?3::jsonb->>'months')::bigint * ${MONTH},
+    'nextCreditAt', CASE WHEN extending = 1 AND next_credit_at IS NOT NULL THEN next_credit_at ELSE ?5 + ${MONTH} END,
+    'credits', CASE WHEN extending = 1 THEN credits ELSE GREATEST(credits, p.monthly_credits) END)`;
   const stateSql = `SELECT u.status, s.plan_id, s.status AS sub_status, s.expires_at, s.next_credit_at, s.billing_period,
     (SELECT COALESCE(SUM(delta), 0) FROM credit_ledger WHERE user_id = u.id) AS credits,
     (SELECT COUNT(*) FROM sessions WHERE user_id = u.id) AS sessions,
-    CASE WHEN s.plan_id = json_extract(?3, '$.planId') AND s.status = 'active' AND s.expires_at > ?5 THEN 1 ELSE 0 END AS extending
+    CASE WHEN s.plan_id = ?3::jsonb->>'planId' AND s.status = 'active' AND s.expires_at > ?5 THEN 1 ELSE 0 END AS extending
     FROM users u LEFT JOIN subscriptions s ON s.user_id = u.id WHERE u.id = ?2`;
   const statements = [env.DB.prepare(`WITH state AS (${stateSql})
     INSERT INTO admin_audit (id, user_id, action, detail, note, actor, created_at)
-    SELECT ?1, ?2, ?6, json_object('input', json(?3), 'before', ${before}, 'after', ${after}), ?4, ?7, ?5
-    FROM state ${action === 'package' ? "JOIN plans p ON p.id = json_extract(?3, '$.planId') AND p.id <> 'free' AND p.price_thb > 0" : ''}`)
+    SELECT ?1, ?2, ?6, jsonb_build_object('input', ?3::jsonb, 'before', ${before}, 'after', ${after})::text, ?4, ?7, ?5
+    FROM state ${action === 'package' ? "JOIN plans p ON p.id = ?3::jsonb->>'planId' AND p.id <> 'free' AND p.price_thb > 0" : ''}`)
     .bind(id, userId, JSON.stringify(input), note, t, action, who)];
 
   if (action === 'credits' || action === 'package') {
     // Same grant ledger semantics as grantCredits(..., 'grant', note), but its standalone
     // .run() cannot join an audit transaction. Keep this INSERT in the one atomic batch.
     statements.push(env.DB.prepare(`INSERT INTO credit_ledger (user_id, delta, reason, note)
-      SELECT user_id, json_extract(detail, '$.after.credits') - json_extract(detail, '$.before.credits'), 'grant', note
-      FROM admin_audit WHERE id = ? AND json_extract(detail, '$.after.credits') > json_extract(detail, '$.before.credits')`).bind(id));
+      SELECT user_id, (detail::jsonb->'after'->>'credits')::bigint - (detail::jsonb->'before'->>'credits')::bigint, 'grant', note
+      FROM admin_audit WHERE id = ? AND (detail::jsonb->'after'->>'credits')::bigint > (detail::jsonb->'before'->>'credits')::bigint`).bind(id));
   }
   if (action === 'package') statements.push(env.DB.prepare(`INSERT INTO subscriptions
     (user_id, plan_id, status, billing_period, expires_at, next_credit_at, provider_ref, updated_at)
-    SELECT user_id, json_extract(detail, '$.after.planId'), 'active', 'monthly',
-      json_extract(detail, '$.after.expiresAt'), json_extract(detail, '$.after.nextCreditAt'), 'admin:' || id, datetime('now')
+    SELECT user_id, detail::jsonb->'after'->>'planId', 'active', 'monthly',
+      (detail::jsonb->'after'->>'expiresAt')::bigint, (detail::jsonb->'after'->>'nextCreditAt')::bigint, 'admin:' || id, datetime('now')
     FROM admin_audit WHERE id = ?
     ON CONFLICT(user_id) DO UPDATE SET plan_id = excluded.plan_id, status = excluded.status,
       billing_period = excluded.billing_period, expires_at = excluded.expires_at, next_credit_at = excluded.next_credit_at,
       provider_ref = excluded.provider_ref, updated_at = excluded.updated_at`).bind(id));
   if (action === 'status') {
-    statements.push(env.DB.prepare(`UPDATE users SET status = (SELECT json_extract(detail, '$.after.status') FROM admin_audit WHERE id = ?1)
+    statements.push(env.DB.prepare(`UPDATE users SET status = (SELECT detail::jsonb->'after'->>'status' FROM admin_audit WHERE id = ?1)
       WHERE id = ?2 AND EXISTS (SELECT 1 FROM admin_audit WHERE id = ?1)`).bind(id, userId));
     statements.push(env.DB.prepare(`DELETE FROM sessions WHERE user_id = ?2 AND EXISTS
-      (SELECT 1 FROM admin_audit WHERE id = ?1 AND json_extract(detail, '$.after.status') = 'disabled')`).bind(id, userId));
+      (SELECT 1 FROM admin_audit WHERE id = ?1 AND detail::jsonb->'after'->>'status' = 'disabled')`).bind(id, userId));
   }
   const [audit] = await env.DB.batch(statements);
   if (audit.meta.changes !== 1) throw new AdminError(409, 'ข้อมูลลูกค้าหรือแพ็กเกจเปลี่ยนแล้ว กรุณาโหลดใหม่');

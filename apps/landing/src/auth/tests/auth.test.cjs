@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { test, after, mock } = require('node:test');
-const { DatabaseSync } = require('node:sqlite');
+const { migratedDb } = require('../../../tests/helpers/d1.cjs');
 const { execFileSync } = require('node:child_process');
 const { readFileSync, rmSync } = require('node:fs');
 const path = require('node:path');
@@ -17,25 +17,12 @@ const { sha256 } = require(path.join(buildDir, 'auth/common.js'));
 const migration = readFileSync(path.join(root, 'migrations/0001_auth.sql'), 'utf8');
 const creditMigration = readFileSync(path.join(root, 'migrations/0002_credits_jobs.sql'), 'utf8');
 
-// Execute the production SQL against SQLite, with D1's atomic batch semantics.
-// HTTP alone is mocked; limits and one-time claims use the real SQL predicates.
+// The production SQL on PostgreSQL (PGlite) through the app's D1 adapter — tests/helpers/d1.cjs.
+// `sql` is the synchronous test handle (prepare(…).get/all/run, exec); HTTP alone is mocked.
 class D1 {
-  constructor() { this.sql = new DatabaseSync(':memory:'); this.sql.exec('PRAGMA foreign_keys = ON'); this.sql.exec(migration); this.sql.exec(creditMigration); }
-  prepare(query) {
-    const db = this.sql;
-    let bindings = [];
-    return {
-      bind(...values) { bindings = values; return this; },
-      async first() { const row = db.prepare(query).get(...bindings); return row ? { ...row } : null; },
-      async run() { const result = db.prepare(query).run(...bindings); return { success: true, meta: { changes: result.changes } }; },
-      execute() { return { success: true, results: db.prepare(query).all(...bindings) }; },
-    };
-  }
-  async batch(statements) {
-    this.sql.exec('BEGIN');
-    try { const results = statements.map(statement => statement.execute()); this.sql.exec('COMMIT'); return results; }
-    catch (error) { this.sql.exec('ROLLBACK'); throw error; }
-  }
+  constructor() { const { sqlite, db } = migratedDb(); this.sql = sqlite; this.db = db; }
+  prepare(query) { return this.db.prepare(query); }
+  batch(statements) { return this.db.batch(statements); }
 }
 
 let time = 1800000000000;
@@ -89,10 +76,8 @@ function setup(t, overrides = {}) {
 function sessionCookie(response) { return response.headers.getSetCookie().find(v => v.startsWith('naka_session=')).split(';')[0]; }
 const scalar = (db, sql) => Object.values(db.prepare(sql).get())[0];
 
-test('migration is repeatable, enables identity uniqueness, and has foreign keys', t => {
+test('sessions need an existing user (foreign key)', t => {
   const f = setup(t);
-  f.db.exec(migration);
-  assert.equal(f.db.prepare('PRAGMA foreign_key_check').all().length, 0);
   assert.throws(() => f.db.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?)').run('hash', 'missing-user', 10, 0));
 });
 
@@ -297,7 +282,8 @@ test('login issues secure hashed session; me reads user; logout revokes it', asy
   const token = cookie.split('=')[1];
   assert.equal(scalar(f.db, 'SELECT id FROM sessions'), await sha256(token));
   const headers = { Cookie: cookie };
-  assert.deepEqual(await (await f.call('me', undefined, { headers })).json(), { user, credits: 0 });
+  // the full schema has auth_passwords, so /me also says whether a password is set (a phone-only member has none)
+  assert.deepEqual(await (await f.call('me', undefined, { headers })).json(), { user, credits: 0, hasPassword: false });
   assert.deepEqual(await requireUser(f.req('me', undefined, { headers }), f.env), user);
   const logout = await f.call('logout', {}, { headers });
   assert.equal(logout.status, 204);

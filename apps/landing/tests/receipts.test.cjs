@@ -128,11 +128,11 @@ test('missing/disabled buyers cannot issue or starve eligible backfill payments'
 
 test('an aborted insert does not leave a gap and a later backfill can retry', async () => {
   payment('bad'); payment('good');
-  sqlite.exec("CREATE TRIGGER reject_bad BEFORE INSERT ON receipts WHEN NEW.payment_id = 'bad' BEGIN SELECT RAISE(ABORT, 'test failure'); END;");
+  sqlite.failTrigger('reject_bad', 'receipts', 'INSERT', 'test failure', "NEW.payment_id = 'bad'");
   await assert.rejects(issueReceipt(env, 'bad'), /test failure/);
   assert.equal(await backfillReceipts(env), 1, 'one failed payment does not abort all the others');
   assert.equal(rows()[0].number, 'RC2026-000001');
-  sqlite.exec('DROP TRIGGER reject_bad');
+  sqlite.exec('DROP TRIGGER reject_bad ON receipts');
   assert.equal(await backfillReceipts(env), 1);
   assert.equal(rows()[1].number, 'RC2026-000002');
 });
@@ -142,8 +142,8 @@ test('schema enforces one receipt per payment and one sequence per year', async 
   payment('p2');
   const r = rows()[0];
   const insert = sqlite.prepare('INSERT INTO receipts (id, payment_id, user_id, year, seq, number, issued_at, snapshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-  assert.throws(() => insert.run('r2', 'p1', 'u1', r.year, 2, 'RC2026-000002', r.issued_at, r.snapshot), /UNIQUE/);
-  assert.throws(() => insert.run('r2', 'p2', 'u1', r.year, 1, 'different', r.issued_at, r.snapshot), /UNIQUE/);
+  assert.throws(() => insert.run('r2', 'p1', 'u1', r.year, 2, 'RC2026-000002', r.issued_at, r.snapshot), /unique constraint/);
+  assert.throws(() => insert.run('r2', 'p2', 'u1', r.year, 1, 'different', r.issued_at, r.snapshot), /unique constraint/);
   assert.equal(rows()[0].id, receipt.id);
 });
 

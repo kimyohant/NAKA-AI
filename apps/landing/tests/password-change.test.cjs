@@ -185,8 +185,7 @@ test('a failed replacement-session insert rolls back the hash and session deleti
   const cookie = cookieOf(await f.register());
   const user = await signedIn(f, cookie);
   const before = f.sqlite.prepare('SELECT hash FROM auth_passwords WHERE user_id = ?').get(user.id).hash;
-  f.sqlite.exec(`CREATE TRIGGER fail_new_session BEFORE INSERT ON sessions
-    WHEN NEW.user_id = '${user.id}' BEGIN SELECT RAISE(ABORT, 'test insert failure'); END`);
+  f.sqlite.failTrigger('fail_new_session', 'sessions', 'INSERT', 'test insert failure', `NEW.user_id = '${user.id}'`);
   const response = await f.change(cookie);
   assert.equal(response.status, 500);
   assert.equal(response.headers.get('Set-Cookie'), null);
