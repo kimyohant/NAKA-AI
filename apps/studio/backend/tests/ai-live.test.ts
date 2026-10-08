@@ -47,10 +47,10 @@ const replies = new Map<string, string[]>()
 const realGetAgent = mastra.getAgent.bind(mastra)
 ;(mastra as any).getAgent = (type: string) =>
   replies.has(type) ? { generate: async () => ({ text: replies.get(type)!.shift() ?? '' }) } : realGetAgent(type)
-db.insert(schema.aiServiceConfigs).values({
+await db.insert(schema.aiServiceConfigs).values({
   serviceType: 'text', provider: 'openai', name: 'test', baseUrl: 'http://127.0.0.1:1', apiKey: 'k', model: JSON.stringify(['m']),
   isActive: true, priority: 1, createdAt: now(), updatedAt: now(),
-} as any).run()
+} as any)
 
 test('not configured → status offline, actions refuse with E_LIVE_NOT_CONFIGURED', async () => {
   const s = await live.liveStatus()
