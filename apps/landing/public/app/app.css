@@ -117,3 +117,13 @@ img { max-width: 100%; display: block; }
   .greeting { flex-direction: column-reverse; }
   .greeting-mascot { align-self: flex-end; }
 }
+
+/* monthly quotas (docs/entitlements.md) */
+.quota-panel { margin: 0 0 16px; }
+.quota-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+.quota-list li { display: flex; justify-content: space-between; gap: 12px; color: var(--m-ink-2); }
+.quota-list strong { color: var(--m-ink); font-variant-numeric: tabular-nums; }
+.quota-list .quota-full strong { color: #b42318; }
+/* a menu entry the plan does not include: still visible, leads to the plans page */
+.feature-locked { opacity: .55; }
+.workflow-card.feature-locked .card-go::after { content: " · อัปเกรดแพ็กเกจ"; }

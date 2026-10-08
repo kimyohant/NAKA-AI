@@ -130,6 +130,8 @@
           user: data.user,
           credits: typeof data.credits === "number" ? data.credits : 0,
           studioUrl: data.studio && typeof data.studio.url === "string" ? data.studio.url : null,
+          // what this member's plan includes (docs/entitlements.md); null = unknown, lock nothing
+          features: Array.isArray(data.features) ? data.features : null,
           source: "server",
         };
       }
@@ -356,6 +358,19 @@
     document.querySelectorAll("[data-studio-link]").forEach(function (link) {
       if (studioUrl) link.href = studioUrl;
       link.hidden = !studioUrl;
+    });
+    // [data-feature="landing.inbox"]: an entry the member's plan does not include points to the plans page
+    // instead (the server refuses the feature anyway — this only saves a dead end)
+    var features = signedIn && state.features;
+    document.querySelectorAll("[data-feature]").forEach(function (link) {
+      if (!features) return;
+      var feature = features.find(function (f) { return f.key === link.dataset.feature; });
+      var locked = !feature || !feature.enabled;
+      if (link.dataset.featureHref === undefined) link.dataset.featureHref = link.getAttribute("href") || "";
+      link.classList.toggle("feature-locked", locked);
+      link.setAttribute("href", locked ? "/app/billing/" : link.dataset.featureHref);
+      if (locked) link.setAttribute("title", "แพ็กเกจของคุณยังไม่รวมเมนูนี้ — ดูแพ็กเกจ");
+      else link.removeAttribute("title");
     });
   }
 
