@@ -34,7 +34,9 @@ test('main menu: every module except the Skills Library; AI Seller is the app ho
   const links = [...mainNav.matchAll(/to="([^"]+)"/g)].map(m => m[1])
   // คลังสกิล (/studio) ไม่อยู่ในเมนู — รวมอยู่ใน AI นักขายแล้ว
   assert.deepEqual(links, ['/drama', '/marketer', '/seller', '/viral-clone', '/live'])
-  assert.match(layout, /go\('\/seller'\)/)
+  // the brand goes to the first menu the member's plan includes — AI Seller first (docs/entitlements.md)
+  assert.match(layout, /go\(homePath\)/)
+  assert.match(layout, /MENU_HOME = \[\['studio\.seller', '\/seller'\]/)
   // / → /seller; หน้าแรกเดิม (สตูดิโอละคร) ย้ายไป /drama
   assert.match(nuxtConfig, /pages\.push\(\{ path: '\/', redirect: '\/seller' \}\)/)
   assert.match(nuxtConfig, /dramaHome\.path = '\/drama'/)

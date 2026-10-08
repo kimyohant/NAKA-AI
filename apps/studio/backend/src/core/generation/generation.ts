@@ -13,6 +13,8 @@ import type { AIConfig, ImageGenerationRecord, VideoCapabilities, VideoGeneratio
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess, logTaskWarn, redactUrl } from '../tasks/task-logger.js'
 import { taskMediaSlot } from '../production/storyboard-readiness.js'
 import { estimateCostThb } from './generation-cost.js'
+import { releaseFeatureUse, useVideoQuota } from '../auth/entitlements.js'
+import { currentOwnerId } from '../auth/owner-context.js'
 import { sourceSnapshotForShot } from '../production/source-freshness.js'
 
 type TaskType = 'image' | 'video'
@@ -158,6 +160,22 @@ export async function generateImage(params: GenerateImageParams): Promise<number
   return id
 }
 
+/** Whose quota a new video counts against: the project's owner, the same member createTask stamps on the task. */
+async function generationOwner(params: { storyboardId?: number; dramaId?: number }): Promise<string> {
+  let dramaId = params.dramaId
+  if (params.storyboardId) {
+    const [shot] = await db.select({ dramaId: schema.episodes.dramaId }).from(schema.storyboards)
+      .innerJoin(schema.episodes, eq(schema.episodes.id, schema.storyboards.episodeId))
+      .where(eq(schema.storyboards.id, params.storyboardId))
+    dramaId = shot?.dramaId || dramaId
+  }
+  if (dramaId) {
+    const [drama] = await db.select({ owner: schema.dramas.ownerUserId }).from(schema.dramas).where(eq(schema.dramas.id, dramaId))
+    if (drama?.owner) return drama.owner
+  }
+  return currentOwnerId()
+}
+
 export async function generateVideo(params: GenerateVideoParams): Promise<number> {
   // 指定配置（集锁定）可能已停用/删除/厂商收敛，失效时回退到当前启用配置
   const config = params.configId
@@ -165,30 +183,38 @@ export async function generateVideo(params: GenerateVideoParams): Promise<number
     : await getActiveConfig('video')
   if (!config) throw new AppError('未配置视频模型，请先到「设置」页添加并启用 AI 服务', 'E_NO_VIDEO_MODEL')
 
-  const id = await createTask('video', config, {
-    storyboardId: params.storyboardId,
-    dramaId: params.dramaId,
-    prompt: params.prompt,
-    model: params.model || config.model,
-  }, {
-    referenceMode: params.referenceMode || 'reference',
-    imageUrl: params.imageUrl,
-    firstFrameUrl: params.firstFrameUrl,
-    lastFrameUrl: params.lastFrameUrl,
-    referenceImageUrls: params.referenceImageUrls,
-    referenceVideoUrls: params.referenceVideoUrls,
-    referenceAudioUrls: params.referenceAudioUrls,
-    referenceFileUrl: params.referenceFileUrl,
-    referenceLinkUrl: params.referenceLinkUrl,
-    generateAudio: params.generateAudio === false ? 0 : 1,
-    duration: params.duration,
-    aspectRatio: params.aspectRatio,
-    // 统一存为项目内部格式，各适配器再转换为官方大小写与枚举。
-    resolution: normalizeStoredVideoResolution(params.resolution),
-    seed: params.seed,
-    promptExtend: params.promptExtend,
-    watermark: params.watermark,
-  })
+  // the owner's monthly AI videos (docs/entitlements.md): counted first, given back if the task is not created
+  const quota = await useVideoQuota(await generationOwner(params))
+  let id: number
+  try {
+    id = await createTask('video', config, {
+      storyboardId: params.storyboardId,
+      dramaId: params.dramaId,
+      prompt: params.prompt,
+      model: params.model || config.model,
+    }, {
+      referenceMode: params.referenceMode || 'reference',
+      imageUrl: params.imageUrl,
+      firstFrameUrl: params.firstFrameUrl,
+      lastFrameUrl: params.lastFrameUrl,
+      referenceImageUrls: params.referenceImageUrls,
+      referenceVideoUrls: params.referenceVideoUrls,
+      referenceAudioUrls: params.referenceAudioUrls,
+      referenceFileUrl: params.referenceFileUrl,
+      referenceLinkUrl: params.referenceLinkUrl,
+      generateAudio: params.generateAudio === false ? 0 : 1,
+      duration: params.duration,
+      aspectRatio: params.aspectRatio,
+      // 统一存为项目内部格式，各适配器再转换为官方大小写与枚举。
+      resolution: normalizeStoredVideoResolution(params.resolution),
+      seed: params.seed,
+      promptExtend: params.promptExtend,
+      watermark: params.watermark,
+    })
+  } catch (err) {
+    await releaseFeatureUse(quota).catch(() => {})
+    throw err
+  }
 
   logTaskStart('VideoTask', 'enqueue', {
     id,
