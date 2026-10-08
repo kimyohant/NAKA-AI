@@ -1,8 +1,8 @@
 ---
 id: 7
-status: open
+status: closed
 labels: [ready-for-agent]
-assignee: null
+assignee: opencode
 blocked_by: [2]
 ---
 
@@ -35,13 +35,47 @@ Follow the existing app style: default layout, existing design tokens and classe
 
 ## Acceptance criteria
 
-- [ ] A route test shows that no social route response contains an access token or a refresh token, for a Social Account that has both stored.
-- [ ] A test shows the settings update saves Reply Mode, Watching, watch days, and reply to praise, and refuses values that are not valid.
-- [ ] A test shows the Brand Profile saves and reads back the five fields.
-- [ ] A test shows each Brand Profile limit is enforced by the backend.
-- [ ] A test shows a new Social Account defaults to Draft mode, watch days 7, reply to praise on, and default language Thai.
-- [ ] The Accounts page shows a card per Social Account with the four settings, and saves a change.
-- [ ] Turning on Auto mode shows the note about what it will and will not send.
-- [ ] The Brand Profile page shows the five fields with their limits, for the picked Social Account.
-- [ ] The links in the inbox header open the two pages.
-- [ ] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+- [x] A route test shows that no social route response contains an access token or a refresh token, for a Social Account that has both stored.
+- [x] A test shows the settings update saves Reply Mode, Watching, watch days, and reply to praise, and refuses values that are not valid.
+- [x] A test shows the Brand Profile saves and reads back the five fields.
+- [x] A test shows each Brand Profile limit is enforced by the backend.
+- [x] A test shows a new Social Account defaults to Draft mode, watch days 7, reply to praise on, and default language Thai.
+- [x] The Accounts page shows a card per Social Account with the four settings, and saves a change.
+- [x] Turning on Auto mode shows the note about what it will and will not send.
+- [x] The Brand Profile page shows the five fields with their limits, for the picked Social Account.
+- [x] The links in the inbox header open the two pages.
+- [x] `npm run typecheck` and `npm run test:social` pass in `backend/`.
+
+## Notes
+
+### 2026-10-08
+
+Done. Accounts + Brand Profile behind the `/social` header links.
+
+Changed files:
+- Backend: `src/routes/social.ts` (expanded `GET /accounts` to the full
+  public shape, excluded `disconnected` rows, added
+  `PATCH /accounts/:id/settings` with validation and
+  `GET|PUT /accounts/:id/brand` with the 500/200/3000/500 limits; named
+  columns only so tokens can never leak), `package.json` (`test:social`
+  gains the new file), `.github/workflows/ci.yml` (same).
+- Tests: `tests/social-accounts.test.ts` (7 tests: token-leak sweep over
+  `/accounts`, `/accounts/:id/brand`, `/comments`; settings save +
+  invalid refusal; brand save/read; limits at/limit+1; defaults;
+  disconnected hidden).
+- Frontend: `app/pages/social/accounts.vue` (cards with status, four
+  settings saved on change, auto-mode note, checked/paused meta, empty
+  state, link to brand), `app/pages/social/brand.vue` (picker, five
+  fields with counters, th/en language), `socialAPI` settings/brand
+  methods, `accountsPage` + `brandPage` locale keys (th/en),
+  `tests/social-accounts.test.mjs` (6 tests).
+
+Gates: `npm run typecheck` clean; `npm run test:social` 32/32 pass
+(poll + board + filter + accounts); full backend suite 212/213 (only the
+known base failure "unsloth image test probe reports models without
+generating anything"); frontend `node --test tests/*.test.mjs` 166/166.
+
+Deviations: brand `default_language` accepts `th`/`en` (400 otherwise);
+`watch_days` valid range 1-30; settings/brand bodies accept camelCase
+aliases next to the snake_case keys. Merged `feat/social-auto-reply`
+(ticket 03) keeping both test files in `test:social` and CI.
