@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { featureRefusal, releaseFeature, useFeature } from "./entitlements";
 import { enqueueJob, getJobForUser, PermanentJobError, type Job, type JobHandler } from "./jobs";
 import type { Env } from "./types";
 
@@ -259,7 +260,7 @@ export function makeAffiliateHandler(
  * GET  /api/affiliate/reviews/:jobId → status, place in queue, and the result when done
  * Returns null for other paths. userId comes from the auth layer.
  */
-export async function handleAffiliateApi(request: Request, env: Pick<Env, "DB">, url: URL, userId: string): Promise<Response | null> {
+export async function handleAffiliateApi(request: Request, env: Env, url: URL, userId: string): Promise<Response | null> {
   const parts = url.pathname.replace(/^\/api\/affiliate\/reviews\/?/, "");
   if (!url.pathname.startsWith("/api/affiliate/reviews")) return null;
 
@@ -275,8 +276,12 @@ export async function handleAffiliateApi(request: Request, env: Pick<Env, "DB">,
     } catch (error) {
       return json({ error: error instanceof InputError ? error.message : "อ่านข้อมูลไม่สำเร็จ กรุณาลองอีกครั้ง" }, 400);
     }
+    // the plan's monthly clips (docs/entitlements.md): counted first, given back if the job cannot start
+    const use = await useFeature(env, userId, "landing.clips");
+    if (!use.ok) return featureRefusal(use, "คลิปรีวิวสินค้า");
     const result = await enqueueJob(env.DB, { userId, kind: AFFILIATE_JOB_KIND, input, costCredits: REVIEW_COST_CREDITS });
     if (!result.ok) {
+      await releaseFeature(env, userId, "landing.clips", 1, use.period);
       return result.reason === "insufficient_credits"
         ? json({ error: "เครดิตไม่พอ กรุณาเติมเครดิตก่อนสร้างคลิป" }, 402)
         : json({ error: "มีงานที่กำลังทำอยู่ครบตามแพ็กเกจแล้ว รอให้เสร็จก่อนนะ" }, 429);

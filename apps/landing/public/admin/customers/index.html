@@ -30,7 +30,7 @@
       <p id="login-status" role="status" aria-live="polite"></p>
     </section>
     <div id="app" hidden>
-      <div class="page-heading"><h1>จัดการลูกค้า</h1><p class="muted">ค้นลูกค้า ตรวจประวัติ และจัดการเครดิตหรือแพ็กเกจ</p></div>
+      <div class="page-heading"><h1>จัดการลูกค้า</h1><p class="muted">ค้นลูกค้า ตรวจประวัติ และจัดการเครดิต แพ็กเกจ หรือฟีเจอร์</p></div>
       <section class="card" aria-labelledby="search-title">
         <form id="search-form" class="search-form">
           <div><label id="search-title" for="query">ค้นด้วยเบอร์โทร อีเมล ชื่อ หรือรหัสลูกค้า</label><input id="query" type="search" maxlength="200" placeholder="เช่น 0812345678 หรือชื่อร้าน"></div>
@@ -48,6 +48,11 @@
           <div class="detail-heading"><h2 id="customer-title" tabindex="-1"></h2><span id="customer-status" class="badge"></span></div>
           <dl id="customer-summary" class="summary"></dl>
           <h3>แพ็กเกจปัจจุบัน</h3><dl id="subscription-summary" class="summary"></dl>
+          <h3>ฟีเจอร์ที่ใช้ได้</h3>
+          <p class="muted">ตามแพ็กเกจ เว้นแต่ตั้งรายคนไว้ · โควตานับรายเดือน (เวลาไทย) · ฟีเจอร์ที่ปิดทั้งระบบใน "ตั้งค่าระบบ" ใช้ไม่ได้ทุกคน</p>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="ฟีเจอร์ของลูกค้า">
+            <table class="customers"><thead><tr><th scope="col">ฟีเจอร์</th><th scope="col">ใช้ได้</th><th scope="col">มาจาก</th><th scope="col" class="num">ใช้เดือนนี้ / โควตา</th></tr></thead><tbody id="features"></tbody></table>
+          </div>
         </div>
         <div class="actions">
           <form id="credits-form" class="card"><fieldset>
@@ -70,6 +75,16 @@
             <label for="status">สถานะที่ต้องการ</label><select id="status"><option value="disabled">ระงับบัญชี</option><option value="active">เปิดใช้งาน</option></select>
             <label for="status-note">เหตุผลในการเปลี่ยน</label><textarea id="status-note" maxlength="200" required></textarea>
             <button type="submit">ตรวจรายการสถานะ</button>
+          </fieldset></form>
+          <form id="feature-form" class="card"><fieldset>
+            <legend>เปิด/ปิดฟีเจอร์รายคน</legend>
+            <p class="muted">ทับค่าของแพ็กเกจสำหรับลูกค้าคนนี้ เลือก "ตามแพ็กเกจ" เพื่อยกเลิกการตั้งรายคน</p>
+            <label for="feature">ฟีเจอร์</label><select id="feature" required></select>
+            <label for="feature-mode">ตั้งเป็น</label><select id="feature-mode"><option value="on">เปิดให้ใช้</option><option value="off">ปิด</option><option value="plan">ตามแพ็กเกจ</option></select>
+            <label for="feature-limit">โควตาต่อเดือน (ว่าง = ตามแพ็กเกจ)</label><input id="feature-limit" type="number" min="0" max="100000" step="1">
+            <label for="feature-days">ใช้ได้กี่วัน (ว่าง = ไม่มีวันหมดอายุ)</label><input id="feature-days" type="number" min="1" max="365" step="1">
+            <label for="feature-note">เหตุผล</label><textarea id="feature-note" maxlength="200" required></textarea>
+            <button type="submit">ตรวจรายการฟีเจอร์</button>
           </fieldset></form>
           <form id="password-form" class="card"><fieldset>
             <legend>ลืมรหัสผ่าน</legend>

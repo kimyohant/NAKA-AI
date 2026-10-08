@@ -163,6 +163,43 @@
     return { wrap: wrap, input: input };
   }
 
+  var featureCatalog = [];
+  /** Which features the plan includes, each with a monthly limit when it has a quota (docs/entitlements.md). */
+  function planFeatures(plan) {
+    var box = el('details', null, 'plan-features'), rows = [];
+    box.append(el('summary', 'ฟีเจอร์ในแพ็กเกจ (' + Object.keys(plan.features || {}).length + '/' + featureCatalog.length + ')'));
+    box.append(el('p', 'ติ๊ก = ลูกค้าแพ็กเกจนี้ใช้ได้ · โควตาว่าง = ไม่จำกัด · นับรายเดือน', 'muted'));
+    featureCatalog.forEach(function (f) {
+      var row = el('div', null, 'feature-row'), check = el('label', null, 'check'), box2 = el('input');
+      box2.type = 'checkbox'; box2.checked = Object.prototype.hasOwnProperty.call(plan.features || {}, f.key);
+      check.append(box2, document.createTextNode(' ' + f.label));
+      row.append(check);
+      var limit = null;
+      if (f.quotaUnit) {
+        var id = 'q-' + plan.id + '-' + f.key.replace('.', '-'), lab = el('label', 'โควตา (' + f.quotaUnit + '/เดือน)'); lab.htmlFor = id;
+        limit = el('input'); limit.type = 'number'; limit.id = id; limit.min = 0; limit.max = 100000; limit.placeholder = 'ไม่จำกัด';
+        var current = (plan.features || {})[f.key]; if (current != null) limit.value = current;
+        // Enter here must not submit the price form this block sits in
+        limit.addEventListener('keydown', function (event) { if (event.key === 'Enter') event.preventDefault(); });
+        row.append(lab, limit);
+      }
+      rows.push({ key: f.key, check: box2, limit: limit });
+      box.append(row);
+    });
+    var save = el('button', 'บันทึกฟีเจอร์', 'btn btn-sm'); save.type = 'button';
+    var status = el('p'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+    save.addEventListener('click', async function () {
+      var features = {};
+      rows.forEach(function (r) { if (r.check.checked) features[r.key] = { limit: r.limit && r.limit.value.trim() !== '' ? Number(r.limit.value) : null }; });
+      if (!confirm('บันทึกฟีเจอร์ของแพ็กเกจ ' + plan.name + '? ลูกค้าแพ็กเกจนี้ ' + plan.subscribers + ' คนจะเห็นผลทันที (ยกเว้นคนที่ตั้งรายคนไว้)')) return;
+      save.disabled = true; message(status, 'กำลังบันทึก…');
+      try { renderPlans(await api('/plans/' + plan.id + '/features', 'PUT', { features: features })); flash('บันทึกฟีเจอร์ของ ' + plan.name + ' แล้ว'); }
+      catch (error) { if (!quiet(error)) message(status, error.message, true); save.disabled = false; }
+    });
+    box.append(save, status);
+    return box;
+  }
+
   function planCard(plan) {
     var free = plan.id === 'free';
     var form = el('form', null, 'card plan-card' + (plan.onSale || free ? '' : ' off'));
@@ -184,7 +221,7 @@
     saleBox.disabled = free;
     var button = el('button', 'บันทึกแพ็กเกจ', 'btn btn-primary btn-sm'); button.type = 'submit';
     var status = el('p'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
-    form.append(head, priceLine, grid, sale, button, status);
+    form.append(head, priceLine, grid, sale, button, status, planFeatures(plan));
     form.addEventListener('submit', async function (event) {
       event.preventDefault();
       var data = { name: name.value.trim(), monthlyCredits: Number(credits.input.value), parallelJobs: Number(jobs.input.value) };
@@ -196,7 +233,7 @@
     });
     return form;
   }
-  function renderPlans(data) { $('plans').replaceChildren.apply($('plans'), data.plans.map(planCard)); }
+  function renderPlans(data) { featureCatalog = data.features || []; $('plans').replaceChildren.apply($('plans'), data.plans.map(planCard)); }
 
   $('new-plan').addEventListener('submit', async function (event) {
     event.preventDefault();
@@ -214,6 +251,14 @@
 
   function describe(row) {
     var d = row.detail || {};
+    if (row.area === 'plan' && d.features) {
+      var name = function (k) { var f = featureCatalog.find(function (x) { return x.key === k; }); return f ? f.label : k; };
+      var lim = function (v) { return v == null ? 'ไม่จำกัด' : v; };
+      var b = d.features.before || {}, a = d.features.after || {}, changes = [];
+      Object.keys(a).forEach(function (k) { if (!(k in b)) changes.push('+ ' + name(k)); else if (b[k] !== a[k]) changes.push(name(k) + ' ' + lim(b[k]) + ' → ' + lim(a[k])); });
+      Object.keys(b).forEach(function (k) { if (!(k in a)) changes.push('− ' + name(k)); });
+      return 'ฟีเจอร์: ' + (changes.join(' · ') || 'ไม่มีการเปลี่ยนแปลง');
+    }
     if (row.area === 'plan') {
       if (!d.before) return 'ราคา ' + d.after.price_thb + ' บาท · ' + d.after.monthly_credits + ' เครดิต';
       return Object.keys(PLAN_FIELDS).filter(function (k) { return d.before[k] !== d.after[k]; })

@@ -8,10 +8,21 @@
     pending: 'รอชำระ', successful: 'สำเร็จ', failed: 'ไม่สำเร็จ', revoked: 'ยกเลิกการเชื่อมต่อ', error: 'ขัดข้อง',
     monthly: 'รายเดือน', yearly: 'รายปี', card: 'บัตร', promptpay: 'พร้อมเพย์',
     grant: 'เติมเครดิต', purchase: 'ซื้อเครดิต', job_hold: 'ใช้เครดิต', job_refund: 'คืนเครดิต', studio_hold: 'ใช้เครดิต (สตูดิโอ)', studio_refund: 'คืนเครดิต (สตูดิโอ)',
-    credits: 'เติมเครดิต', package: 'จัดการแพ็กเกจ', status: 'เปลี่ยนสถานะ', password: 'ตั้งรหัสผ่านใหม่', stripe_checkout: 'Stripe', free: 'ฟรี',
+    credits: 'เติมเครดิต', package: 'จัดการแพ็กเกจ', status: 'เปลี่ยนสถานะ', password: 'ตั้งรหัสผ่านใหม่', feature: 'ตั้งฟีเจอร์รายคน', stripe_checkout: 'Stripe', free: 'ฟรี',
     starter: 'เริ่มต้น', pro: 'โปร', business: 'ธุรกิจ', max: 'สูงสุด',
     facebook: 'Facebook', instagram: 'Instagram' };
   function label(value) { return labels[value] || value || '—'; }
+  var sources = { plan: 'แพ็กเกจ', override: 'ตั้งรายคน', none: 'ไม่อยู่ในแพ็กเกจ', system: 'ปิดทั้งระบบ' };
+  var catalog = [];
+  function featureName(key) { var def = catalog.find(function (f) { return f.key === key; }); return def ? def.label : key; }
+  function quotaText(row) {
+    if (!row.quotaUnit) return '—';
+    return num(row.used) + ' / ' + (row.monthlyLimit == null ? 'ไม่จำกัด' : num(row.monthlyLimit)) + ' ' + row.quotaUnit;
+  }
+  function overrideText(o) {
+    if (!o) return 'ตามแพ็กเกจ';
+    return (o.enabled ? 'เปิด' : 'ปิด') + (o.monthlyLimit != null ? ' · โควตา ' + num(o.monthlyLimit) : '') + (o.expiresAt ? ' · ถึง ' + date(o.expiresAt) : '');
+  }
   function num(value) { return Number(value || 0).toLocaleString('th-TH'); }
   function date(value) {
     if (value == null) return '—';
@@ -94,6 +105,18 @@
     $('plan').replaceChildren(); plans.forEach(function (plan) { var option = el('option', plan.name + ' · ' + num(plan.monthlyCredits) + ' เครดิต/เดือน'); option.value = plan.id; $('plan').append(option); });
     if (plans.some(function (p) { return p.id === customer.planId; })) $('plan').value = customer.planId;
     $('package-review').disabled = !plans.length;
+    catalog = data.featureCatalog || [];
+    var overrides = {}; (data.overrides || []).forEach(function (o) { overrides[o.featureKey] = o; });
+    $('features').replaceChildren();
+    (data.features || []).forEach(function (f) {
+      var tr = el('tr'), name = el('td', f.label), o = overrides[f.key];
+      if (o) name.append(el('small', 'ตั้งรายคน: ' + overrideText(o) + ' · ' + o.note));
+      tr.append(name, el('td', f.enabled ? 'ใช้ได้' : 'ไม่ได้'), el('td', sources[f.source] || f.source), el('td', quotaText(f), 'num'));
+      $('features').append(tr);
+    });
+    var picked = $('feature').value;
+    $('feature').replaceChildren(); catalog.forEach(function (f) { var option = el('option', f.label + (f.quotaUnit ? ' (มีโควตา)' : '')); option.value = f.key; $('feature').append(option); });
+    if (picked && catalog.some(function (f) { return f.key === picked; })) $('feature').value = picked;
     $('status').value = customer.status === 'disabled' ? 'active' : 'disabled';
     history('ledger', data.ledger, function (item, row) {
       item.append(el('strong', (row.delta > 0 ? '+' : '') + num(row.delta) + ' เครดิต · ' + label(row.reason)),
@@ -109,6 +132,10 @@
     history('audit', data.audit, function (item, row) {
       item.append(el('strong', label(row.action) + ' · ' + date(row.createdAt)), el('p', row.note, 'preserve-lines'));
       if (row.actor) item.append(el('p', 'โดย ' + row.actor, 'muted'));
+      if (row.action === 'feature') {
+        item.append(el('p', featureName(row.detail.feature) + ': ' + overrideText(row.detail.before) + ' → ' + overrideText(row.detail.after)), el('p', 'รหัสบันทึก ' + row.id, 'muted'));
+        return;
+      }
       var input = row.detail.input;
       item.append(el('p', row.action === 'credits' ? 'เติม ' + num(input.amount) + ' เครดิต' : row.action === 'package' ? 'แพ็กเกจ ' + label(input.planId) + ' · ' + num(input.months) + ' เดือน' : 'สถานะ ' + label(input.status)));
       var disclosure = el('details'), table = el('table'), head = el('tr');
@@ -152,19 +179,30 @@
       var plan = plans.find(function (p) { return p.id === data.planId; });
       title = 'เปิด/ต่อแพ็กเกจ ' + (plan ? plan.name : data.planId) + ' ' + data.months + ' เดือนให้ ' + who;
       effect = 'แพ็กเดิมที่ยังไม่หมดอายุจะต่อจากวันหมดเดิมโดยไม่เติมเครดิตเพิ่ม แพ็กใหม่หรือหมดแล้วเริ่มวันนี้และเติมให้ถึงยอดแพ็กเกจ โดยไม่ลดยอดที่สูงกว่า ไม่มีใบเสร็จจากรายการนี้';
+    } else if (action === 'feature') {
+      title = (data.mode === 'plan' ? 'ให้ ' + featureName(data.feature) + ' กลับไปตามแพ็กเกจ' : (data.mode === 'on' ? 'เปิด ' : 'ปิด ') + featureName(data.feature)) + ' สำหรับ ' + who;
+      effect = data.mode === 'plan' ? 'ลบค่าที่ตั้งรายคน ลูกค้าได้ตามแพ็กเกจปัจจุบัน'
+        : (data.mode === 'on' ? 'โควตา ' + (data.monthlyLimit == null ? 'ตามแพ็กเกจ' : num(data.monthlyLimit) + ' ต่อเดือน') : 'ลูกค้าใช้ฟีเจอร์นี้ไม่ได้ (รวมถึงในสตูดิโอ)')
+          + (data.days ? ' · มีผล ' + data.days + ' วัน แล้วกลับไปตามแพ็กเกจ' : ' · ไม่มีวันหมดอายุ');
     } else if (action === 'password') { title = 'ตั้งรหัสผ่านใหม่ให้ ' + who; effect = 'ระบบสุ่มรหัสใหม่และแสดงครั้งเดียวหลังยืนยัน รหัสเดิมใช้ไม่ได้ และลูกค้าจะออกจากระบบทุกอุปกรณ์'; }
     else { title = (data.status === 'disabled' ? 'ระงับบัญชี ' : 'เปิดใช้งานบัญชี ') + who; effect = data.status === 'disabled' ? 'ลูกค้าจะออกจากระบบทุกอุปกรณ์ทันที' : 'ลูกค้าต้องเข้าสู่ระบบใหม่เพื่อใช้งาน'; }
     $('confirm-summary').textContent = title; $('confirm-effect').textContent = effect;
     $('confirm-note').textContent = 'เหตุผล: ' + note; $('confirmation').hidden = false;
     message('mutation-status', 'ตรวจสอบรายการก่อนกดยืนยัน'); lock(false); $('confirm-title').focus();
   }
-  ['credits', 'package', 'status', 'password'].forEach(function (action) {
+  ['credits', 'package', 'status', 'password', 'feature'].forEach(function (action) {
     $(action + '-form').addEventListener('submit', function (event) {
       event.preventDefault(); if (pending || busy) return;
       var data = { note: $(action + '-note').value };
       if (action === 'credits') data.amount = Number($('amount').value);
       else if (action === 'package') { data.planId = $('plan').value; data.months = Number($('months').value); }
       else if (action === 'status') data.status = $('status').value;
+      else if (action === 'feature') {
+        data.feature = $('feature').value; data.mode = $('feature-mode').value;
+        var limit = $('feature-limit').value.trim(), days = $('feature-days').value.trim();
+        data.monthlyLimit = data.mode === 'on' && limit !== '' ? Number(limit) : null;
+        data.days = data.mode !== 'plan' && days !== '' ? Number(days) : null;
+      }
       review(action, data, event);
     });
   });

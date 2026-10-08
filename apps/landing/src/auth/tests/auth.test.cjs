@@ -283,7 +283,10 @@ test('login issues secure hashed session; me reads user; logout revokes it', asy
   assert.equal(scalar(f.db, 'SELECT id FROM sessions'), await sha256(token));
   const headers = { Cookie: cookie };
   // the full schema has auth_passwords, so /me also says whether a password is set (a phone-only member has none)
-  assert.deepEqual(await (await f.call('me', undefined, { headers })).json(), { user, credits: 0, hasPassword: false });
+  const me = await (await f.call('me', undefined, { headers })).json();
+  // what the member may use (docs/entitlements.md): a new member is on the free plan
+  assert.deepEqual(me.features.filter(x => x.enabled).map(x => x.key), ['landing.clips', 'landing.marketer']);
+  assert.deepEqual({ ...me, features: undefined }, { user, credits: 0, hasPassword: false, features: undefined });
   assert.deepEqual(await requireUser(f.req('me', undefined, { headers }), f.env), user);
   const logout = await f.call('logout', {}, { headers });
   assert.equal(logout.status, 204);

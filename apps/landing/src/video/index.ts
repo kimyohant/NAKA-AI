@@ -4,6 +4,7 @@
 import type { Env } from "../types";
 import { appOrigin, constantTimeEqual, hmac } from "../auth/common";
 import { enqueueJob, JobDeferredError, PermanentJobError, type Job, type JobHandler } from "../jobs";
+import { featureRefusal, releaseFeature, useFeature } from "../entitlements";
 import { VIDEO_PROVIDERS, VideoProviderRejected, type VideoProvider, type VideoProviderConfig, type VideoRequest } from "./provider";
 
 export const AI_VIDEO_JOB_KIND = "ai_video";
@@ -197,8 +198,12 @@ export async function createAiVideo(request: Request, env: Env, userId: string, 
   const prompt = buildVideoPrompt(kind, { script, productName, hasPerson: !!personKey, productImages: productKeys.length });
   const cost = aiVideoCredits(env);
   const id = crypto.randomUUID();
+  // the plan's monthly AI videos (docs/entitlements.md): counted first, given back if the job cannot start
+  const use = await useFeature(env, userId, "landing.ai_video");
+  if (!use.ok) return featureRefusal(use, "วิดีโอ AI");
   const result = await enqueueJob(env.DB, { userId, kind: AI_VIDEO_JOB_KIND, input: { videoId: id }, costCredits: cost, maxAttempts: 3 });
   if (!result.ok) {
+    await releaseFeature(env, userId, "landing.ai_video", 1, use.period);
     return new Response(JSON.stringify(result.reason === "insufficient_credits"
       ? { error: `เครดิตไม่พอ วิดีโอ AI ใช้ ${cost} เครดิต`, reason: "credits" } : { error: "มีงานที่กำลังทำอยู่ครบตามแพ็กเกจแล้ว รอให้เสร็จก่อนนะ", reason: "busy" }),
     { status: result.reason === "insufficient_credits" ? 402 : 429, headers: { "Content-Type": "application/json; charset=utf-8" } });

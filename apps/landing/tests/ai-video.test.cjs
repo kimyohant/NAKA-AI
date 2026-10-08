@@ -60,6 +60,8 @@ function customer(credits = 10) {
   sqlite.prepare('INSERT INTO users (id, display_name, created_at) VALUES (?, ?, ?)').run(id, 'ร้าน', now());
   sqlite.prepare('INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)').run(sha(token), id, now() + 86400, now());
   if (credits) sqlite.prepare("INSERT INTO credit_ledger (user_id, delta, reason) VALUES (?, ?, 'grant')").run(id, credits);
+  // the free plan has no AI video: an admin override turns it on, no monthly limit (docs/entitlements.md)
+  sqlite.prepare("INSERT INTO user_features (user_id, feature_key, enabled, note, updated_at) VALUES (?, 'landing.ai_video', true, 'test', ?)").run(id, now());
   return { id, cookie: 'naka_session=' + token };
 }
 const balance = id => sqlite.prepare('SELECT COALESCE(SUM(delta), 0) AS n FROM credit_ledger WHERE user_id = ?').get(id).n;
