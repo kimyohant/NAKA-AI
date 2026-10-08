@@ -3,9 +3,9 @@ name: DB CI
 
 on:
   push:
-    paths: ['infra/postgres/**', 'package.json', 'package-lock.json', '.github/workflows/db-ci.yml']
+    paths: ['infra/postgres/**', 'apps/landing/migrations/pg/**', 'package.json', 'package-lock.json', '.github/workflows/db-ci.yml']
   pull_request:
-    paths: ['infra/postgres/**', 'package.json', 'package-lock.json', '.github/workflows/db-ci.yml']
+    paths: ['infra/postgres/**', 'apps/landing/migrations/pg/**', 'package.json', 'package-lock.json', '.github/workflows/db-ci.yml']
 
 jobs:
   roles:
