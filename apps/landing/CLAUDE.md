@@ -59,7 +59,7 @@ Tests are `node:test` `.cjs` files that import the TS-free logic through the Wor
 
 ### Issue tracker
 
-Issues live in GitHub Issues (`kimyohant/naka-ai-landing`, via `gh`). See `docs/agents/issue-tracker.md`.
+Issues live in GitHub Issues on the monorepo `kimyohant/NAKA-AI` (via `gh`; older issues remain on `kimyohant/naka-ai-landing`). See `docs/agents/issue-tracker.md`.
 
 ### Domain docs
 

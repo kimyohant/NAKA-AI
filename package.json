@@ -1,0 +1,16 @@
+{
+  "name": "naka-ai-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NAKA-AI monorepo — naka-ai.com landing/account Worker (apps/landing) + NAKA Studio production engine (apps/studio)",
+  "scripts": {
+    "dev:landing": "npm --prefix apps/landing run dev",
+    "test:landing": "npm --prefix apps/landing test",
+    "typecheck:landing": "npm --prefix apps/landing run typecheck",
+    "deploy:landing": "npm --prefix apps/landing run deploy",
+    "dev:studio": "npm --prefix apps/studio/backend run dev",
+    "dev:studio-web": "npm --prefix apps/studio/frontend run dev",
+    "dev:studio-admin": "npm --prefix apps/studio/admin run dev",
+    "typecheck:studio": "npm --prefix apps/studio/backend run typecheck"
+  }
+}

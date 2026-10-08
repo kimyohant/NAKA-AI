@@ -1,0 +1,13 @@
+{
+  "name": "naka-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NAKA Studio — AI short drama / product-video production (backend + admin + frontend)",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run generate",
+    "dev:admin": "cd admin && npm run dev",
+    "build:admin": "cd admin && npm run generate"
+  }
+}
