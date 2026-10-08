@@ -30,6 +30,7 @@ import studio from './routes/studio.js'
 import clone from './routes/clone.js'
 import live from './routes/live.js'
 import seller from './routes/seller.js'
+import social from './routes/social.js'
 import storage from './routes/storage.js'
 import serverUpdate from './routes/serverUpdate.js'
 import { requestLogger, errorHandler } from './middleware/logger.js'
@@ -43,6 +44,8 @@ import { failStaleCloneAnalyzes, resumeStaleCloneRenders } from './services/clon
 import { resumeStaleAutoRenders } from './services/studio-autorender.js'
 import { resumeSellerVideos } from './services/seller.js'
 import { recoverGenerationTasks } from './services/generation.js'
+import { startSocialPoller } from './services/social/poller.js'
+import './services/social/facebook.js' // registers the `facebook` adapter
 import { DATA_ROOT } from './utils/paths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -140,6 +143,7 @@ api.route('/studio', studio)
 api.route('/clone', clone)
 api.route('/live', live)
 api.route('/seller', seller)
+api.route('/social', social)
 api.route('/server-update', serverUpdate)
 
 app.route('/api/v1', api)
@@ -237,5 +241,9 @@ try {
 } catch (err: any) {
   console.error('resume clone render failed:', err?.message)
 }
+
+// Social Auto Reply poller: one timer, first round right after boot, no-op
+// when no Social Account is connected and watching.
+startSocialPoller()
 
 serve({ fetch: app.fetch, port, hostname })

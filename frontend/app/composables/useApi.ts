@@ -644,6 +644,81 @@ export const cloneAPI = {
   overview: () => api.get<CloneOverview>('/clone/overview'),
 }
 
+// ===== Social Auto Reply — inbox board (ticket 02) + accounts/brand (ticket 07) =====
+export interface SocialAccount {
+  id: number; platform: string; name: string | null
+  avatarUrl?: string | null
+  status: string; watching: boolean; lastPolledAt: string | null
+  replyMode?: string; watchDays?: number; replyToPraise?: boolean
+  tokenExpiresAt?: string | null; pausedUntil?: string | null
+}
+export interface SocialBoardComment {
+  id: number; accountId: number; platform: string | null
+  postId: number | null; postText: string | null
+  platformCommentId: string; text: string | null; authorName: string | null
+  commentedAt: string | null; status: string
+  verdict: string | null; reason: string | null; fallback: boolean
+  statusNote: string | null; replyText: string | null
+  replySource: string | null; repliedAt: string | null
+}
+
+export interface SocialBrand {
+  accountId: number; about: string; tone: string; faq: string
+  forbidden: string; defaultLanguage: string
+}
+export interface SocialSettingsInput {
+  reply_mode?: 'draft' | 'auto'; watching?: boolean
+  watch_days?: number; reply_to_praise?: boolean
+}
+export interface SocialBrandInput {
+  about?: string; tone?: string; faq?: string; forbidden?: string
+  default_language?: string
+}
+export interface SocialCanConnect {
+  can: boolean; reason?: string
+}
+export interface SocialPendingPage {
+  platformAccountId: string; name: string; avatarUrl?: string | null
+}
+
+export const socialAPI = {
+  accounts: () => api.get<{ items: SocialAccount[] }>('/social/accounts'),
+  canConnect: (platform: string) =>
+    api.get<SocialCanConnect>(`/social/oauth/${platform}/can-connect`),
+  startLogin: (platform: string) =>
+    api.post<{ url: string; state: string }>(`/social/oauth/${platform}/start`, {}),
+  pendingPages: (platform: string, login: string) =>
+    api.get<{ items: SocialPendingPage[] }>(`/social/oauth/${platform}/pending?login=${encodeURIComponent(login)}`),
+  savePages: (platform: string, login: string, ids: string[]) =>
+    api.post<{ items: SocialAccount[] }>(`/social/oauth/${platform}/save`, { login, platform_account_ids: ids }),
+  disconnect: (id: number) =>
+    api.post<SocialAccount>(`/social/accounts/${id}/disconnect`, {}),
+  comments: (params?: { account_id?: number; fallback_only?: boolean }) => {
+    const query = new URLSearchParams()
+    if (params?.account_id) query.set('account_id', String(params.account_id))
+    if (params?.fallback_only) query.set('fallback_only', '1')
+    const qs = query.toString()
+    return api.get<{ items: SocialBoardComment[] }>(`/social/comments${qs ? `?${qs}` : ''}`)
+  },
+  updateSettings: (id: number, data: SocialSettingsInput) =>
+    api.put<SocialAccount>(`/social/accounts/${id}/settings`, data),
+  brand: (id: number) => api.get<SocialBrand>(`/social/accounts/${id}/brand`),
+  updateBrand: (id: number, data: SocialBrandInput) =>
+    api.put<SocialBrand>(`/social/accounts/${id}/brand`, data),
+  approveComment: (id: number) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/approve`, {}),
+  sendComment: (id: number, text?: string) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/send`, text === undefined ? {} : { text }),
+  rejectComment: (id: number) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/reject`, {}),
+  closeComment: (id: number) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/close`, {}),
+  bringBackComment: (id: number) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/bring-back`, {}),
+  helpDraft: (id: number) =>
+    api.post<{ text: string }>(`/social/comments/${id}/help-draft`, {}),
+}
+
 // ---------- AI Live (backend /api/v1/live → naka-live-agent on the GPU box; docs/ai-live/PLAN.md) ----------
 export interface LiveConfig {
   agentUrl: string

@@ -37,6 +37,10 @@
           <Radio :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.live') }}</span>
         </NuxtLink>
+        <NuxtLink to="/social" class="side-link" :class="{ active: isSocialRoute }" :title="t('layout.nav.social')" @click="navOpen = false">
+          <MessagesSquare :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.social') }}</span>
+        </NuxtLink>
       </nav>
 
 
@@ -84,7 +88,7 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Menu, X, Megaphone, Copy, Radio, Store, LogOut } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Menu, X, Megaphone, Copy, Radio, Store, LogOut, MessagesSquare } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI, authAPI } from '~/composables/useApi'
 import { useAdminUrl } from '~/composables/useAdminUrl'
@@ -100,6 +104,7 @@ const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.
 const isSellerRoute = computed(() => route.path === '/seller' || route.path.startsWith('/seller/'))
 const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
 const isLiveRoute = computed(() => route.path === '/live')
+const isSocialRoute = computed(() => route.path === '/social' || route.path.startsWith('/social/'))
 
 // ตั้งค่าระบบย้ายไปแอปผู้ดูแล (admin/)
 const adminUrl = useAdminUrl()

@@ -613,7 +613,70 @@ export const studioInfluencerContents = sqliteTable('studio_influencer_contents'
   updatedAt: text('updated_at').notNull(),
 })
 
-// v18: AI นักขาย — โพสต์ขายสินค้า + แคปชั่น/แฮชแท็ก/คอมเมนต์ต่อช่องทาง (content = JSON ตาม channel)
+// v20 (Social Auto Reply, spec Schema): Social Accounts, Posts, Comments.
+// All columns now so later tickets do not change the schema. Tokens are plain
+// text, like the stored AI service API keys.
+export const socialAccounts = sqliteTable('social_accounts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  platform: text('platform').notNull(),
+  platformAccountId: text('platform_account_id').notNull(),
+  name: text('name'),
+  avatarUrl: text('avatar_url'),
+  status: text('status').notNull().default('disconnected'),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  tokenExpiresAt: text('token_expires_at'),
+  replyMode: text('reply_mode').notNull().default('draft'),
+  watching: integer('watching', { mode: 'boolean' }).notNull().default(true),
+  watchDays: integer('watch_days').notNull().default(7),
+  replyToPraise: integer('reply_to_praise', { mode: 'boolean' }).notNull().default(true),
+  brandAbout: text('brand_about'),
+  brandTone: text('brand_tone'),
+  brandFaq: text('brand_faq'),
+  brandForbidden: text('brand_forbidden'),
+  defaultLanguage: text('default_language').notNull().default('th'),
+  pausedUntil: text('paused_until'),
+  backoffStep: integer('backoff_step').notNull().default(0),
+  lastPolledAt: text('last_polled_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+export const socialPosts = sqliteTable('social_posts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  accountId: integer('account_id').notNull(),
+  platformPostId: text('platform_post_id').notNull(),
+  text: text('text'),
+  url: text('url'),
+  postedAt: text('posted_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+export const socialComments = sqliteTable('social_comments', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  accountId: integer('account_id').notNull(),
+  postId: integer('post_id'),
+  platformCommentId: text('platform_comment_id').notNull(),
+  parentPlatformCommentId: text('parent_platform_comment_id'),
+  text: text('text'),
+  authorId: text('author_id'),
+  authorName: text('author_name'),
+  commentedAt: text('commented_at'),
+  status: text('status').notNull().default('new'),
+  verdict: text('verdict'),
+  reason: text('reason'),
+  fallback: integer('fallback', { mode: 'boolean' }).notNull().default(false),
+  judgeAttempts: integer('judge_attempts').notNull().default(0),
+  sendAttempts: integer('send_attempts').notNull().default(0),
+  statusNote: text('status_note'),
+  replyText: text('reply_text'),
+  replySource: text('reply_source'),
+  replyPlatformId: text('reply_platform_id'),
+  repliedAt: text('replied_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
 export const sellerPosts = sqliteTable('seller_posts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   ownerUserId: ownerUserId(),
