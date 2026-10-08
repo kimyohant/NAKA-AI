@@ -9,7 +9,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-owner-'))
-process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
+process.env.DATABASE_URL = 'pglite://memory'
 process.env.STORAGE_PATH = path.join(dir, 'static')
 const { Hono } = await import('hono')
 const { ownership } = await import('../src/core/auth/ownership.js')

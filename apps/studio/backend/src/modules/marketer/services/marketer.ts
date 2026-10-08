@@ -7,7 +7,7 @@
  */
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { ownedBy } from '../../../core/auth/owner-context.js'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { AppError, now } from '../../../core/http/response.js'
 import { getTextConfig, getActiveConfigId, getActiveConfig } from '../../../core/ai/ai.js'
 import { ingestProductUrl, type IngestedProduct } from '../../../core/product/product-ingest.js'
@@ -237,8 +237,8 @@ export async function createCampaign(body: any) {
   if (body.researchNotes !== undefined) values.researchNotes = isNonEmptyString(body.researchNotes) ? body.researchNotes : null
   if (body.budgetThb !== undefined) values.budgetThb = parseBudgetThb(body.budgetThb)
 
-  const res = await db.insert(schema.campaigns).values(values)
-  const row = await getCampaignRow(getInsertId(res))
+  const res = await db.insert(schema.campaigns).values(values).returning({ id: schema.campaigns.id })
+  const row = await getCampaignRow(insertedId(res))
   return row ? toCampaignJson(row) : null
 }
 
@@ -779,8 +779,8 @@ export async function produceCreative(campaignId: number, creativeId: number) {
       status: 'draft',
       createdAt: ts,
       updatedAt: ts,
-    })
-    dramaId = getInsertId(res)
+    }).returning({ id: schema.dramas.id })
+    dramaId = insertedId(res)
     await db.update(schema.campaigns).set({ dramaId, updatedAt: now() })
       .where(eq(schema.campaigns.id, campaign.id))
   }
@@ -808,8 +808,8 @@ export async function produceCreative(campaignId: number, creativeId: number) {
     videoConfigId: videoConfigId ?? null,
     createdAt: ts,
     updatedAt: ts,
-  })
-  const episodeId = getInsertId(epRes)
+  }).returning({ id: schema.episodes.id })
+  const episodeId = insertedId(epRes)
 
   // 真实商品 → prop 参考素材：ingest 到的商品图挂到道具上，让白底单品图贴合实际商品
   // （extractor 同名合并时会保留 referenceImages；storyboard 经 prop_ids 引用同一道具）
@@ -852,8 +852,8 @@ async function ensureProductProp(dramaId: number, episodeId: number, campaign: C
       referenceImages: JSON.stringify(images),
       createdAt: ts,
       updatedAt: ts,
-    })
-    propId = getInsertId(res)
+    }).returning({ id: schema.props.id })
+    propId = insertedId(res)
   }
   const links = await db.select().from(schema.episodeProps)
     .where(and(eq(schema.episodeProps.episodeId, episodeId), eq(schema.episodeProps.propId, propId)))
@@ -930,8 +930,8 @@ export async function createAdReference(campaignId: number, body: any) {
     analysis: null,
     createdAt: ts,
     updatedAt: ts,
-  })
-  const row = await getAdReferenceRow(campaignId, getInsertId(res))
+  }).returning({ id: schema.campaignAdReferences.id })
+  const row = await getAdReferenceRow(campaignId, insertedId(res))
   return row ? toAdReferenceJson(row) : null
 }
 
@@ -1120,8 +1120,8 @@ export async function generateVisuals(campaignId: number, body: any) {
       taskId,
       createdAt: ts,
       updatedAt: ts,
-    })
-    const [row] = await db.select().from(schema.campaignVisuals).where(eq(schema.campaignVisuals.id, getInsertId(res)))
+    }).returning({ id: schema.campaignVisuals.id })
+    const [row] = await db.select().from(schema.campaignVisuals).where(eq(schema.campaignVisuals.id, insertedId(res)))
     if (row) rows.push(await toVisualJson(row, productImages))
   }
   logTaskSuccess('Marketer', 'visuals', { campaignId, created: rows.length })
@@ -1165,5 +1165,6 @@ export async function failStaleCampaigns(): Promise<number> {
   const res = await db.update(schema.campaigns)
     .set({ status: 'failed', errorMsg: 'E_TASK_INTERRUPTED: 服务重启，任务中断，请重试', updatedAt: now() })
     .where(inArray(schema.campaigns.status, ING_STATUSES))
-  return res?.changes ?? 0
+    .returning({ id: schema.campaigns.id })
+  return res.length
 }

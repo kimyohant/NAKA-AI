@@ -12,18 +12,11 @@ import { test, after } from 'node:test'
 import sharp from 'sharp'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-avatar-'))
-process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
+process.env.DATABASE_URL = 'pglite://memory'
 process.env.STORAGE_PATH = path.join(dir, 'static')
 mkdirSync(path.join(dir, 'static', 'uploads'), { recursive: true })
 mkdirSync(path.join(dir, 'static', 'videos'), { recursive: true })
 
-const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
-{
-  const { default: Database } = await import('better-sqlite3')
-  const sqlite = new Database(process.env.SQLITE_PATH!)
-  initSqliteSchema(sqlite)
-  sqlite.close()
-}
 const live = await import('../src/modules/live/services/ai-live.js')
 const avatars = await import('../src/modules/live/services/live-avatars.js')
 

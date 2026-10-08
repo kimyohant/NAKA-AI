@@ -47,22 +47,40 @@ export interface PublicLiveConfig {
 
 const DEFAULTS: LiveConfig = { agentUrl: '', token: '', avatarId: 'wav2lip256_avatar1', voice: 'th-TH-PremwadeeNeural', rtmpUrl: '', tiktokUsername: '', tiktokSignApiKey: '' }
 
-function readConfig(): LiveConfig {
-  const row = db.select().from(schema.appSettings).where(eq(schema.appSettings.key, SETTINGS_KEY)).get()
+// The config is read from PostgreSQL once at startup and kept in memory: the readers are synchronous
+// (agent(), liveStatus(), …). Writes update the cache first, then persist in order in the background;
+// the settings route waits for flushLiveConfig() before it answers.
+let cached: LiveConfig = { ...DEFAULTS }
+
+export async function loadLiveConfig(): Promise<void> {
+  const [row] = await db.select().from(schema.appSettings).where(eq(schema.appSettings.key, SETTINGS_KEY))
   try {
-    return { ...DEFAULTS, ...(row?.value ? JSON.parse(row.value) : {}) }
+    cached = { ...DEFAULTS, ...(row?.value ? JSON.parse(row.value) : {}) }
   } catch {
-    return { ...DEFAULTS }
+    cached = { ...DEFAULTS }
   }
 }
 
-function writeConfig(cfg: LiveConfig) {
-  const value = JSON.stringify(cfg)
-  db.insert(schema.appSettings)
-    .values({ key: SETTINGS_KEY, value, updatedAt: now() })
-    .onConflictDoUpdate({ target: schema.appSettings.key, set: { value, updatedAt: now() } })
-    .run()
+function readConfig(): LiveConfig {
+  return { ...cached }
 }
+
+let persisting: Promise<unknown> = Promise.resolve()
+function writeConfig(cfg: LiveConfig) {
+  cached = { ...cfg }
+  const value = JSON.stringify(cfg)
+  persisting = persisting.then(() => db.insert(schema.appSettings)
+    .values({ key: SETTINGS_KEY, value, updatedAt: now() })
+    .onConflictDoUpdate({ target: schema.appSettings.key, set: { value, updatedAt: now() } }))
+    .catch(err => console.error('live config was not saved:', err?.message))
+}
+
+/** Resolves when every saveLiveConfig() so far is in the database. */
+export function flushLiveConfig(): Promise<unknown> {
+  return persisting
+}
+
+await loadLiveConfig()
 
 function rtmpHost(url: string) {
   try { return new URL(url.replace(/^rtmps?:/, 'http:')).host } catch { return '' }
@@ -226,7 +244,7 @@ export async function whep(offer: string): Promise<string> {
 
 /** ปลดโมเดล Unsloth (รูป/วิดีโอ) ที่ค้างบน GPU ก่อนเริ่มไลฟ์ — การ์ด 24 GB รับ H3/Qwen-Image + LiveTalking พร้อมกันไม่ไหว */
 export async function freeUnslothGpu() {
-  const rows = db.select().from(schema.aiServiceConfigs).all().filter(r => (r.provider || '').toLowerCase() === 'unsloth' && r.baseUrl)
+  const rows = (await db.select().from(schema.aiServiceConfigs)).filter(r => (r.provider || '').toLowerCase() === 'unsloth' && r.baseUrl)
   const servers = [...new Map(rows.map(r => [r.baseUrl.replace(/\/+$/, ''), r.apiKey])).entries()]
   const results: Array<{ server: string; image: number | string; video: number | string }> = []
   for (const [base, key] of servers) {

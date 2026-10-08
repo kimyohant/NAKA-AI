@@ -8,28 +8,28 @@ function digest(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex')
 }
 
-export function sourceSnapshotForShot(storyboardId: number): Snapshot | null {
-  const shot = db.select().from(schema.storyboards).where(eq(schema.storyboards.id, storyboardId)).get()
+export async function sourceSnapshotForShot(storyboardId: number): Promise<Snapshot | null> {
+  const shot = (await db.select().from(schema.storyboards).where(eq(schema.storyboards.id, storyboardId)))[0]
   if (!shot) return null
-  const episode = db.select().from(schema.episodes).where(eq(schema.episodes.id, shot.episodeId)).get()
+  const episode = (await db.select().from(schema.episodes).where(eq(schema.episodes.id, shot.episodeId)))[0]
   if (!episode) return null
-  const drama = db.select().from(schema.dramas).where(eq(schema.dramas.id, episode.dramaId)).get()
-  const scene = shot.sceneId ? db.select().from(schema.scenes).where(eq(schema.scenes.id, shot.sceneId)).get() : null
-  const characterIds = db.select().from(schema.storyboardCharacters)
-    .where(eq(schema.storyboardCharacters.storyboardId, storyboardId)).all()
+  const drama = (await db.select().from(schema.dramas).where(eq(schema.dramas.id, episode.dramaId)))[0]
+  const scene = shot.sceneId ? (await db.select().from(schema.scenes).where(eq(schema.scenes.id, shot.sceneId)))[0] : null
+  const characterIds = (await db.select().from(schema.storyboardCharacters)
+    .where(eq(schema.storyboardCharacters.storyboardId, storyboardId)))
     .map(link => link.characterId).sort((a, b) => a - b)
-  const characters = characterIds.map(id => db.select().from(schema.characters).where(eq(schema.characters.id, id)).get())
-  const lookLinks = db.select().from(schema.storyboardCharacterLooks)
-    .where(eq(schema.storyboardCharacterLooks.storyboardId, storyboardId)).all()
+  const characters = await Promise.all(characterIds.map(async id => (await db.select().from(schema.characters).where(eq(schema.characters.id, id)))[0]))
+  const lookLinks = (await db.select().from(schema.storyboardCharacterLooks)
+    .where(eq(schema.storyboardCharacterLooks.storyboardId, storyboardId)))
     .sort((a, b) => a.characterId - b.characterId)
-  const looks = lookLinks.map(link => ({
+  const looks = await Promise.all(lookLinks.map(async link => ({
     characterId: link.characterId,
-    look: db.select().from(schema.characterLooks).where(eq(schema.characterLooks.id, link.lookId)).get(),
-  }))
-  const propIds = db.select().from(schema.storyboardProps)
-    .where(eq(schema.storyboardProps.storyboardId, storyboardId)).all()
+    look: (await db.select().from(schema.characterLooks).where(eq(schema.characterLooks.id, link.lookId)))[0],
+  })))
+  const propIds = (await db.select().from(schema.storyboardProps)
+    .where(eq(schema.storyboardProps.storyboardId, storyboardId)))
     .map(link => link.propId).sort((a, b) => a - b)
-  const props = propIds.map(id => db.select().from(schema.props).where(eq(schema.props.id, id)).get())
+  const props = await Promise.all(propIds.map(async id => (await db.select().from(schema.props).where(eq(schema.props.id, id)))[0]))
 
   return {
     script: digest([episode.content, episode.scriptContent]),
@@ -47,13 +47,13 @@ export function sourceSnapshotForShot(storyboardId: number): Snapshot | null {
   }
 }
 
-export function videoSourceStatus(storyboardId: number, videoPath: string | null) {
+export async function videoSourceStatus(storyboardId: number, videoPath: string | null) {
   if (!videoPath) return { state: 'missing' as const, changed: [] as string[] }
-  const tasks = db.select().from(schema.sysTask).where(eq(schema.sysTask.storyboardId, storyboardId)).all()
+  const tasks = await db.select().from(schema.sysTask).where(eq(schema.sysTask.storyboardId, storyboardId))
   const task = tasks.filter(row => row.type === 'video' && row.status === 'completed' && row.localPath === videoPath)
     .sort((a, b) => b.id - a.id)[0]
   if (!task?.sourceSnapshot) return { state: 'untracked' as const, changed: [] as string[] }
-  const current = sourceSnapshotForShot(storyboardId)
+  const current = await sourceSnapshotForShot(storyboardId)
   if (!current) return { state: 'untracked' as const, changed: [] as string[] }
   let stored: Snapshot
   try { stored = JSON.parse(task.sourceSnapshot) } catch { return { state: 'untracked' as const, changed: [] as string[] } }

@@ -7,7 +7,7 @@
  */
 import { Hono } from 'hono'
 import { DATA_ROOT, STORAGE_ROOT } from '../utils/paths.js'
-import { dbPath } from '../db/index.js'
+import { rawQuery } from '../db/index.js'
 import { dirUsage, volumeFreeBytes } from '../utils/dirsize.js'
 import { success } from '../http/response.js'
 
@@ -26,7 +26,12 @@ async function computeUsage() {
   if (cache.computing) return
   cache.computing = true
   try {
-    const usage = await dirUsage(DATA_ROOT, dbPath)
+    const usage = await dirUsage(DATA_ROOT, '')
+    // the database is PostgreSQL now: count this app's schema (tables + indexes + TOAST)
+    const [size] = await rawQuery(`SELECT COALESCE(SUM(pg_total_relation_size(c.oid)), 0)::bigint AS bytes
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = current_schema() AND c.relkind = 'r'`)
+    usage.db = Number(size?.bytes ?? 0)
+    usage.total += usage.db
     cache.usage = usage
     cache.computedAt = new Date().toISOString()
   } finally {
@@ -57,7 +62,7 @@ app.get('/', async (c) => {
     mode,
     dataDir: DATA_ROOT,
     storageRoot: STORAGE_ROOT,
-    sqlitePath: dbPath,
+    sqlitePath: 'PostgreSQL (schema studio)', // kept for the admin page; the database is no longer a file
     usage: cache.usage,
     usageStale: usageStale || cache.computing,
     computedAt: cache.computedAt,

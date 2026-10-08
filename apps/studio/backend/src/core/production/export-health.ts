@@ -36,7 +36,7 @@ function frameRate(raw: string | undefined): number | null {
 
 async function inspectClip(shot: typeof schema.storyboards.$inferSelect): Promise<ClipHealth> {
   const url = shot.videoUrl || shot.composedVideoUrl
-  const source = videoSourceStatus(shot.id, url)
+  const source = await videoSourceStatus(shot.id, url)
   const health: ClipHealth = {
     storyboard_id: shot.id, shot_number: shot.storyboardNumber, url,
     duration_seconds: null, width: null, height: null, frame_rate: null, has_audio: false,
@@ -68,8 +68,8 @@ async function inspectClip(shot: typeof schema.storyboards.$inferSelect): Promis
 }
 
 export async function episodeExportHealth(episodeId: number, selectedIds?: number[]) {
-  const shots = db.select().from(schema.storyboards).where(eq(schema.storyboards.episodeId, episodeId))
-    .orderBy(schema.storyboards.storyboardNumber).all().filter(shot => !shot.deletedAt)
+  const shots = (await db.select().from(schema.storyboards).where(eq(schema.storyboards.episodeId, episodeId))
+    .orderBy(schema.storyboards.storyboardNumber)).filter(shot => !shot.deletedAt)
   const selected = selectedIds?.length ? shots.filter(shot => selectedIds.includes(shot.id)) : shots
   const clips: ClipHealth[] = []
   for (let index = 0; index < selected.length; index += 4) {

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { eq, and } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../db/index.js'
+import { db, insertedId, schema } from '../db/index.js'
 import { success, created, badRequest, notFound, now } from '../http/response.js'
 import { toSnakeCase } from '../utils/transform.js'
 import { importBuiltinStyles } from '../generation/style-gallery.js'
@@ -47,9 +47,9 @@ app.post('/', async (c) => {
     isActive: body.is_active === false || body.is_active === 0 ? false : true,
     createdAt: ts,
     updatedAt: ts,
-  })
+  }).returning({ id: schema.stylePresets.id })
   const [row] = await db.select().from(schema.stylePresets)
-    .where(eq(schema.stylePresets.id, getInsertId(res)))
+    .where(eq(schema.stylePresets.id, insertedId(res)))
   return created(c, toSnakeCase(row))
 })
 

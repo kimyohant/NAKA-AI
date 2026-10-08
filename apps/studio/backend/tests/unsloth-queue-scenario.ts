@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict'
 
-import { db, getInsertId, schema } from '../src/core/db/index.js'
+import { db, insertedId, schema } from '../src/core/db/index.js'
 import { eq } from 'drizzle-orm'
 import { now } from '../src/core/http/response.js'
 import { generateVideo, pumpVideoQueue, recoverGenerationTasks, videoQueuePosition } from '../src/core/generation/generation.js'

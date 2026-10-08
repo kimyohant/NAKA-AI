@@ -47,7 +47,7 @@ async function defaultMakeVideo(firstFrameDataUrl: string): Promise<string> {
   // a data URL works for every provider (the Unsloth H3 adapter accepts only data/http URLs)
   const taskId = await generateVideo({ prompt: IDLE_PROMPT, referenceMode: 'reference', firstFrameUrl: firstFrameDataUrl, generateAudio: false, duration: 10, aspectRatio: '9:16' })
   for (;;) {
-    const row = db.select().from(schema.sysTask).where(eq(schema.sysTask.id, taskId)).get()
+    const [row] = await db.select().from(schema.sysTask).where(eq(schema.sysTask.id, taskId))
     if (!row) throw new Error('video task disappeared')
     if (row.status === 'completed' && row.localPath) return row.localPath
     if (row.status === 'failed' || row.status === 'unknown') throw new Error(row.errorMsg || 'video generation failed')

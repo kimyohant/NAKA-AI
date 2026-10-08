@@ -106,7 +106,7 @@ export async function startTask(params: {
     })
   } catch (err: any) {
     // 并发竞态：另一请求刚插入了同 key 行 → 若它在 running 就拒绝，否则同样重置
-    if (!String(err?.code || '').includes('SQLITE_CONSTRAINT')) throw err
+    if (err?.code !== '23505') throw err // unique_violation (the same key was inserted a moment ago)
     const [race] = await db.select().from(schema.pipelineTasks)
       .where(eq(schema.pipelineTasks.key, params.key))
     if (!race || race.status === 'running') return null
@@ -165,5 +165,6 @@ export async function failStaleRunningTasks(): Promise<number> {
       // ห้ามแตะ kind ที่ resume ได้ — ไม่งั้น resumeStaleAutoRenders (รันทีหลัง) จะไม่เหลืออะไรให้ resume
       notInArray(schema.pipelineTasks.kind, RESUMABLE_PIPELINE_KINDS),
     ))
-  return res?.changes ?? 0
+    .returning({ id: schema.pipelineTasks.id })
+  return res.length
 }

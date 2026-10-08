@@ -10,7 +10,7 @@ import { episodeExportHealth } from '../src/core/production/export-health.js'
 import tasksApp from '../src/core/routes/tasks.js'
 
 const ts = new Date().toISOString()
-const file = path.join(path.dirname(process.env.SQLITE_PATH!), 'invalid.mp4')
+const file = path.join(process.env.SCRATCH_DIR!, 'invalid.mp4')
 db.insert(schema.dramas).values({ title: 'Test drama', budgetThb: 5, createdAt: ts, updatedAt: ts }).run()
 db.insert(schema.episodes).values({ dramaId: 1, episodeNumber: 1, title: 'Episode', scriptContent: 'Original script', createdAt: ts, updatedAt: ts }).run()
 db.insert(schema.storyboards).values({ episodeId: 1, storyboardNumber: 1, videoPrompt: 'Original prompt', videoUrl: file, duration: 3, createdAt: ts, updatedAt: ts }).run()

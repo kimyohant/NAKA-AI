@@ -7,7 +7,7 @@
  */
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { ownedBy } from '../../../core/auth/owner-context.js'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { AppError, now } from '../../../core/http/response.js'
 import { getActiveConfig } from '../../../core/ai/ai.js'
 import { generateImage, generateVideo, videoQueuePosition } from '../../../core/generation/generation.js'
@@ -134,16 +134,16 @@ function slashPath(raw: string | null | undefined): string | null {
   return raw.startsWith('/') ? raw : `/${raw}`
 }
 
-async function toShotJson(storyboard: typeof schema.storyboards.$inferSelect, shot: ShotRow | null): Promise<ReturnType<typeof buildShotJsonSync>> {
+async function toShotJson(storyboard: typeof schema.storyboards.$inferSelect, shot: ShotRow | null): Promise<Awaited<ReturnType<typeof buildShotJson>>> {
   const tasks = await db.select().from(schema.sysTask)
     .where(eq(schema.sysTask.storyboardId, storyboard.id))
     .orderBy(desc(schema.sysTask.id))
   const latestImage = tasks.find(t => t.type === 'image')
   const latestVideo = tasks.find(t => t.type === 'video')
-  return buildShotJsonSync(storyboard, shot, latestImage, latestVideo)
+  return buildShotJson(storyboard, shot, latestImage, latestVideo)
 }
 
-function buildShotJsonSync(
+async function buildShotJson(
   storyboard: typeof schema.storyboards.$inferSelect,
   shot: ShotRow | null,
   latestImage: typeof schema.sysTask.$inferSelect | undefined,
@@ -167,7 +167,7 @@ function buildShotJsonSync(
     videoStatus,
     videoError: videoStatus === 'failed' ? (latestVideo?.errorMsg || 'video generation failed') : null,
     // งานวิดีโอที่ยังรอคิวของ provider แบบ maxConcurrent (เช่น unsloth) — null เมื่อไม่ได้รอคิว
-    videoQueuePosition: latestVideo ? videoQueuePosition(latestVideo) : null,
+    videoQueuePosition: latestVideo ? await videoQueuePosition(latestVideo) : null,
   }
 }
 
@@ -416,8 +416,8 @@ export async function createProject(body: any) {
   if (body.aiLabelBurnIn !== undefined) values.aiLabelBurnIn = !!body.aiLabelBurnIn
   if (body.sourceCampaignId !== undefined && body.sourceCampaignId !== null) values.sourceCampaignId = Number(body.sourceCampaignId)
 
-  const res = await db.insert(schema.studioProjects).values(values)
-  const row = await getProjectRow(getInsertId(res))
+  const res = await db.insert(schema.studioProjects).values(values).returning({ id: schema.studioProjects.id })
+  const row = await getProjectRow(insertedId(res))
   return row ? toProjectJson(row) : null
 }
 
@@ -541,8 +541,8 @@ async function ensureDramaAndEpisode(row: ProjectRow): Promise<{ dramaId: number
       status: 'draft',
       createdAt: ts,
       updatedAt: ts,
-    })
-    dramaId = getInsertId(res)
+    }).returning({ id: schema.dramas.id })
+    dramaId = insertedId(res)
   }
   let episodeId = row.episodeId
   if (episodeId) {
@@ -569,8 +569,8 @@ async function ensureDramaAndEpisode(row: ProjectRow): Promise<{ dramaId: number
       videoConfigId: videoConfigId?.id ?? null,
       createdAt: ts,
       updatedAt: ts,
-    })
-    episodeId = getInsertId(epRes)
+    }).returning({ id: schema.episodes.id })
+    episodeId = insertedId(epRes)
   }
   await db.update(schema.studioProjects).set({ dramaId, episodeId, updatedAt: now() })
     .where(eq(schema.studioProjects.id, row.id))
@@ -659,7 +659,8 @@ export async function failStaleStudioProjects(): Promise<number> {
   const res = await db.update(schema.studioProjects)
     .set({ status: 'failed', errorMsg: 'E_TASK_INTERRUPTED: 服务重启，任务中断，请重试', updatedAt: now() })
     .where(inArray(schema.studioProjects.status, STUDIO_PROJECT_ING_STATUSES))
-  return res?.changes ?? 0
+    .returning({ id: schema.studioProjects.id })
+  return res.length
 }
 
 // ---------- Shot edit + Render + Merge ----------
@@ -993,8 +994,8 @@ export async function generateProjectImages(projectId: number, body: any) {
       taskId,
       createdAt: ts,
       updatedAt: ts,
-    })
-    const [row] = await db.select().from(schema.studioImages).where(eq(schema.studioImages.id, getInsertId(res)))
+    }).returning({ id: schema.studioImages.id })
+    const [row] = await db.select().from(schema.studioImages).where(eq(schema.studioImages.id, insertedId(res)))
     rows.push(toStudioImageJson(row, undefined, productImages))
   }
   return rows
@@ -1122,8 +1123,8 @@ export async function createAvatar(body: any) {
     imageUrl: isNonEmptyString(body.imageUrl) ? body.imageUrl.trim() : null,
     createdAt: ts,
     updatedAt: ts,
-  })
-  const [row] = await db.select().from(schema.studioAvatars).where(eq(schema.studioAvatars.id, getInsertId(res)))
+  }).returning({ id: schema.studioAvatars.id })
+  const [row] = await db.select().from(schema.studioAvatars).where(eq(schema.studioAvatars.id, insertedId(res)))
   return toAvatarJson(row, undefined)
 }
 

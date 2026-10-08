@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { and, eq } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { success, created, now, badRequest } from '../../../core/http/response.js'
 import { toSnakeCase } from '../../../core/utils/transform.js'
 import { logTaskPayload, logTaskStart, logTaskSuccess } from '../../../core/tasks/task-logger.js'
@@ -29,14 +29,14 @@ app.post('/:id/select-media', async (c) => {
     return badRequest(c, 'Completed media task for this shot and slot is required')
   }
   const column = { composed: 'composedImage', first_frame: 'firstFrameImage', last_frame: 'lastFrameImage', video: 'videoUrl' }[slot]
-  db.transaction((tx) => {
-    tx.insert(schema.storyboardMediaSelections).values({ storyboardId, slot, taskId, selectedAt: now() })
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.storyboardMediaSelections).values({ storyboardId, slot, taskId, selectedAt: now() })
       .onConflictDoUpdate({
         target: [schema.storyboardMediaSelections.storyboardId, schema.storyboardMediaSelections.slot],
         set: { taskId, selectedAt: now() },
-      }).run()
-    tx.update(schema.storyboards).set({ [column]: task.localPath, updatedAt: now() })
-      .where(eq(schema.storyboards.id, storyboardId)).run()
+      })
+    await tx.update(schema.storyboards).set({ [column]: task.localPath, updatedAt: now() })
+      .where(eq(schema.storyboards.id, storyboardId))
   })
   return success(c, { storyboard_id: storyboardId, slot, task_id: taskId, path: task.localPath })
 })
@@ -162,11 +162,11 @@ app.post('/', async (c) => {
     duration: body.duration || 10,
     createdAt: ts,
     updatedAt: ts,
-  })
-  await syncStoryboardCharacters(getInsertId(res), body.character_ids || [])
-  await syncStoryboardProps(getInsertId(res), body.prop_ids || [])
+  }).returning({ id: schema.storyboards.id })
+  await syncStoryboardCharacters(insertedId(res), body.character_ids || [])
+  await syncStoryboardProps(insertedId(res), body.prop_ids || [])
   const [result] = await db.select().from(schema.storyboards)
-    .where(eq(schema.storyboards.id, getInsertId(res)))
+    .where(eq(schema.storyboards.id, insertedId(res)))
   logTaskSuccess('StoryboardAPI', 'create', {
     storyboardId: result.id,
     episodeId: result.episodeId,

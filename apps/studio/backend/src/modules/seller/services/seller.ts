@@ -8,7 +8,7 @@
  */
 import { and, desc, eq, isNull } from 'drizzle-orm'
 import { ownedBy, ownerScope, runAsOwner } from '../../../core/auth/owner-context.js'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { AppError, now } from '../../../core/http/response.js'
 import { getActiveConfig, getTextConfig } from '../../../core/ai/ai.js'
 import { mastra } from '../../../core/mastra/index.js'
@@ -210,8 +210,8 @@ export async function createPost(body: Record<string, unknown>) {
     title: patch.title || patch.productName || '',
     createdAt: ts,
     updatedAt: ts,
-  })
-  return getPost(getInsertId(res))
+  }).returning({ id: schema.sellerPosts.id })
+  return getPost(insertedId(res))
 }
 
 export async function updatePost(id: number, body: Record<string, unknown>) {

@@ -10,21 +10,13 @@ import path from 'node:path'
 import { test } from 'node:test'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-seller-'))
-process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
+process.env.DATABASE_URL = 'pglite://memory'
 process.env.STORAGE_PATH = path.join(dir, 'static')
 
-const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
 const { db, schema } = await import('../src/core/db/index.js')
 const { now } = await import('../src/core/http/response.js')
 const seller = await import('../src/modules/seller/services/seller.js')
 const { mastra } = await import('../src/core/mastra/index.js')
-{
-  const { default: Database } = await import('better-sqlite3')
-  const sqlite = new Database(process.env.SQLITE_PATH)
-  sqlite.pragma('journal_mode = WAL')
-  initSqliteSchema(sqlite)
-  sqlite.close()
-}
 
 const replies: string[] = []
 const { eq } = await import('drizzle-orm')

@@ -12,11 +12,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import Database from 'better-sqlite3'
+import postgres from 'postgres'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const API = process.env.HUOBAO_API || `http://localhost:${process.env.PORT || 5679}/api/v1`
-const DB_PATH = process.env.SQLITE_PATH || path.join(here, '..', '..', 'data', 'huobao.sqlite3')
+const DATABASE_URL = process.env.DATABASE_URL || ''
+if (!DATABASE_URL.startsWith('postgres')) throw new Error('set DATABASE_URL (postgres://studio_app:…@host:5432/naka) — the episode links are written straight to the database')
 
 const file = process.argv[2]
 if (!file) {
@@ -120,11 +121,11 @@ if (!active('image') || !active('video')) {
 
 async function importEpisodes() {
 const existingEps = (full.episodes || [])
-const db = new Database(DB_PATH)
+const sql = postgres(DATABASE_URL, { max: 1, connection: { search_path: process.env.DB_SCHEMA || 'studio' } })
 const now = new Date().toISOString()
-const link = (table, col, episodeId, id) => {
-  const hit = db.prepare(`SELECT 1 FROM ${table} WHERE episode_id = ? AND ${col} = ?`).get(episodeId, id)
-  if (!hit) db.prepare(`INSERT INTO ${table} (episode_id, ${col}, created_at) VALUES (?, ?, ?)`).run(episodeId, id, now)
+const link = async (table, col, episodeId, id) => {
+  const hit = await sql.unsafe(`SELECT 1 FROM ${table} WHERE episode_id = $1 AND ${col} = $2`, [episodeId, id])
+  if (!hit.length) await sql.unsafe(`INSERT INTO ${table} (episode_id, ${col}, created_at) VALUES ($1, $2, $3)`, [episodeId, id, now])
 }
 
 for (const ep of data.episodes) {
@@ -145,9 +146,9 @@ for (const ep of data.episodes) {
     content,
     ...(ep.script ? { script_content: ep.script } : {}),
   })
-  for (const name of ep.characters) if (charIds[name]) link('episode_characters', 'character_id', row.id, charIds[name])
-  for (const key of ep.environments) if (sceneIds[key]) link('episode_scenes', 'scene_id', row.id, sceneIds[key])
-  for (const key of ep.props) if (propIds[key]) link('episode_props', 'prop_id', row.id, propIds[key])
+  for (const name of ep.characters) if (charIds[name]) await link('episode_characters', 'character_id', row.id, charIds[name])
+  for (const key of ep.environments) if (sceneIds[key]) await link('episode_scenes', 'scene_id', row.id, sceneIds[key])
+  for (const key of ep.props) if (propIds[key]) await link('episode_props', 'prop_id', row.id, propIds[key])
 }
-db.close()
+await sql.end()
 }

@@ -33,9 +33,9 @@ const limitArg = args.find(a => a.startsWith('--products='))
 const productLimit = limitArg ? Number(limitArg.split('=')[1]) : 5
 
 // 完整流程会写入 [E2E] 活动/剧集并调用付费模型：默认库（data/naka.sqlite3）即生产库，须显式确认
-if (!ingestOnly && !process.env.SQLITE_PATH && !args.includes('--use-default-db')) {
-  console.error('Refusing to run the full E2E against the default database (data/naka.sqlite3).')
-  console.error('Point SQLITE_PATH at a copy that has a text model configured, or pass --use-default-db to write [E2E] campaigns into it.')
+if (!ingestOnly && !process.env.DATABASE_URL && !args.includes('--use-default-db')) {
+  console.error('Refusing to run the full E2E against the default database (data/pglite).')
+  console.error('Point DATABASE_URL at a copy that has a text model configured, or pass --use-default-db to write [E2E] campaigns into it.')
   process.exit(2)
 }
 

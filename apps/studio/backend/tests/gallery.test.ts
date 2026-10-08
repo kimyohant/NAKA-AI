@@ -10,7 +10,7 @@ import { test } from 'node:test'
 import Database from 'better-sqlite3'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-gallery-test-'))
-process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
+process.env.DATABASE_URL = 'pglite://memory'
 
 const { db, schema } = await import('../src/core/db/index.js')
 const gallery = await import('../src/modules/marketer/services/gallery.js')
@@ -56,8 +56,7 @@ async function seedCreative(campaignId: number, overrides: Record<string, unknow
 }
 
 test('migration v16: ตาราง creative_results มี UNIQUE(creative_id) และ init ซ้ำได้', async () => {
-  const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
-  const sqlite = new Database(path.join(dir, 'test.sqlite3'))
+    const sqlite = new Database(path.join(dir, 'test.sqlite3'))
   initSqliteSchema(sqlite) // รีเพลย์ต้องเงียบ ๆ ผ่าน
   const ddl = sqlite.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'creative_results'").get() as { sql: string }
   assert.match(ddl.sql, /creative_id INTEGER NOT NULL UNIQUE/)

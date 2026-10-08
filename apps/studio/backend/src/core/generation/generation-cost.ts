@@ -26,10 +26,10 @@ export function estimateCostThb(settings: string | null, type: BillableType, dur
   return Math.ceil(price * units * 100) / 100
 }
 
-export function budgetForDrama(dramaId: number) {
-  const [drama] = db.select().from(schema.dramas).where(eq(schema.dramas.id, dramaId)).all()
+export async function budgetForDrama(dramaId: number) {
+  const [drama] = await db.select().from(schema.dramas).where(eq(schema.dramas.id, dramaId))
   if (!drama) throw new Error('Project not found')
-  const tasks = db.select().from(schema.sysTask).where(eq(schema.sysTask.dramaId, dramaId)).all()
+  const tasks = await db.select().from(schema.sysTask).where(eq(schema.sysTask.dramaId, dramaId))
   const estimatedTotalThb = Math.round(tasks.reduce((sum, task) => sum + (task.estimatedCostThb || 0), 0) * 100) / 100
   const unpricedTasks = tasks.filter(task => task.estimatedCostThb == null).length
   return {
@@ -40,10 +40,10 @@ export function budgetForDrama(dramaId: number) {
   }
 }
 
-export function quoteGeneration(dramaId: number | undefined, configId: number | undefined, type: BillableType, duration?: number) {
-  const config = configId ? db.select().from(schema.aiServiceConfigs).where(eq(schema.aiServiceConfigs.id, configId)).get() : null
+export async function quoteGeneration(dramaId: number | undefined, configId: number | undefined, type: BillableType, duration?: number) {
+  const config = configId ? (await db.select().from(schema.aiServiceConfigs).where(eq(schema.aiServiceConfigs.id, configId)))[0] : null
   const estimatedCostThb = estimateCostThb(config?.settings || null, type, duration)
-  const budget = dramaId ? budgetForDrama(dramaId) : null
+  const budget = dramaId ? await budgetForDrama(dramaId) : null
   return {
     estimated_cost_thb: estimatedCostThb,
     ...budget,
@@ -51,7 +51,7 @@ export function quoteGeneration(dramaId: number | undefined, configId: number | 
   }
 }
 
-export function validateBudgetQuote(quote: ReturnType<typeof quoteGeneration>) {
+export function validateBudgetQuote(quote: Awaited<ReturnType<typeof quoteGeneration>>) {
   if (quote.budget_thb == null) return
   if (quote.estimated_cost_thb === null) throw new Error('Set a price for this AI configuration before generating within a project budget')
   if (!quote.within_budget) throw new Error(`Project budget exceeded. Remaining estimate: ฿${Math.max(0, quote.remaining_thb ?? 0).toFixed(2)}`)

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { and, eq } from 'drizzle-orm'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { success, created, badRequest, now } from '../../../core/http/response.js'
 import { generateImage } from '../../../core/generation/generation.js'
 import { getDramaStylePrompt } from '../../../core/generation/style-preset.js'
@@ -24,8 +24,8 @@ app.post('/', async (c) => {
     lighting: body.lighting || '',
     createdAt: ts,
     updatedAt: ts,
-  })
-  const sceneId = getInsertId(res)
+  }).returning({ id: schema.scenes.id })
+  const sceneId = insertedId(res)
   if (body.episode_id) {
     const existing = await db.select().from(schema.episodeScenes)
       .where(and(eq(schema.episodeScenes.episodeId, Number(body.episode_id)), eq(schema.episodeScenes.sceneId, sceneId)))

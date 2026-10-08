@@ -12,15 +12,8 @@ import path from 'node:path'
 import { test, after } from 'node:test'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-sso-'))
-process.env.SQLITE_PATH = path.join(dir, 'test.sqlite3')
+process.env.DATABASE_URL = 'pglite://memory'
 process.env.STORAGE_PATH = path.join(dir, 'static')
-const { initSqliteSchema } = await import('../src/core/db/sqlite-schema.js')
-{
-  const { default: Database } = await import('better-sqlite3')
-  const sqlite = new Database(process.env.SQLITE_PATH)
-  initSqliteSchema(sqlite)
-  sqlite.close()
-}
 const { Hono } = await import('hono')
 const sso = await import('../src/core/auth/naka-sso.js')
 const { adminGuard } = await import('../src/core/auth/admin.js')

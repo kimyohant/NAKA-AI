@@ -13,7 +13,7 @@ import path from 'path'
 import { v4 as uuid } from 'uuid'
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { ownedBy } from '../../../core/auth/owner-context.js'
-import { db, getInsertId, schema } from '../../../core/db/index.js'
+import { db, insertedId, schema } from '../../../core/db/index.js'
 import { AppError, now } from '../../../core/http/response.js'
 import { generateImage, generateVideo } from '../../../core/generation/generation.js'
 import { getActiveConfig, getTextConfig } from '../../../core/ai/ai.js'
@@ -102,7 +102,7 @@ export function toCloneProjectJson(row: CloneProjectRow) {
   }
 }
 
-export function toCloneVariantJson(row: CloneVariantRow) {
+export async function toCloneVariantJson(row: CloneVariantRow) {
   return {
     id: row.id,
     projectId: row.projectId,
@@ -114,7 +114,7 @@ export function toCloneVariantJson(row: CloneVariantRow) {
     errorCode: row.errorCode,
     errorMsg: row.errorMsg,
     pipelineTaskId: row.pipelineTaskId,
-    queuePosition: variantQueuePosition(row),
+    queuePosition: await variantQueuePosition(row),
     episodeId: row.episodeId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -122,11 +122,10 @@ export function toCloneVariantJson(row: CloneVariantRow) {
 }
 
 /** ตำแหน่งคิว render (1-based) — นับตัวแปร queued ของโปรเจกต์เดียวกันที่เก่ากว่า; null เมื่อไม่ได้รอคิว */
-export function variantQueuePosition(row: CloneVariantRow): number | null {
+export async function variantQueuePosition(row: CloneVariantRow): Promise<number | null> {
   if (row.status !== 'queued') return null
-  const queued = db.select({ id: schema.cloneVariants.id }).from(schema.cloneVariants)
+  const queued = await db.select({ id: schema.cloneVariants.id }).from(schema.cloneVariants)
     .where(and(eq(schema.cloneVariants.projectId, row.projectId), eq(schema.cloneVariants.status, 'queued')))
-    .all()
   const index = queued.findIndex(v => v.id === row.id)
   return index >= 0 ? index + 1 : null
 }
@@ -404,8 +403,8 @@ export async function createCloneProject(body: any) {
     blueprintJson: null,
     createdAt: ts,
     updatedAt: ts,
-  })
-  const row = await getCloneProjectRow(getInsertId(res))
+  }).returning({ id: schema.cloneProjects.id })
+  const row = await getCloneProjectRow(insertedId(res))
   return row ? toCloneProjectJson(row) : null
 }
 
@@ -417,7 +416,7 @@ export async function getCloneProjectDetail(id: number) {
     .orderBy(schema.cloneVariants.id)
   return {
     ...toCloneProjectJson(row),
-    variants: variants.map(toCloneVariantJson),
+    variants: await Promise.all(variants.map(toCloneVariantJson)),
   }
 }
 
@@ -454,7 +453,7 @@ export async function updateCloneProject(id: number, body: any) {
 export async function getCloneVariantDetail(id: number) {
   const row = await getCloneVariantRow(id)
   if (!row) return null
-  return toCloneVariantJson(row)
+  return await toCloneVariantJson(row)
 }
 
 export async function deleteCloneProject(id: number) {
@@ -665,7 +664,7 @@ export async function createCloneVariants(projectId: number, body: any) {
     .where(eq(schema.cloneVariants.projectId, projectId))
   const used = new Set(existing.map(r => r.label))
   const ts = now()
-  const created: ReturnType<typeof toCloneVariantJson>[] = []
+  const created: Awaited<ReturnType<typeof toCloneVariantJson>>[] = []
   for (const combo of combos) {
     const label = buildVariantLabel(combo, productNames, avatarNames, used)
     const res = await db.insert(schema.cloneVariants).values({
@@ -680,9 +679,9 @@ export async function createCloneVariants(projectId: number, body: any) {
       status: 'draft',
       createdAt: ts,
       updatedAt: ts,
-    })
-    const row = await getCloneVariantRow(getInsertId(res))
-    if (row) created.push(toCloneVariantJson(row))
+    }).returning({ id: schema.cloneVariants.id })
+    const row = await getCloneVariantRow(insertedId(res))
+    if (row) created.push(await toCloneVariantJson(row))
   }
   logTaskStart('Clone', 'variants', { projectId, count: created.length })
   return created
@@ -965,8 +964,8 @@ async function renderSingleVariant(project: CloneProjectRow, variant: CloneVaria
       status: 'draft',
       createdAt: ts,
       updatedAt: ts,
-    }).run()
-    const dramaId = getInsertId(dramaRes)
+    }).returning({ id: schema.dramas.id })
+    const dramaId = insertedId(dramaRes)
     const [imageConfig, videoConfig] = await Promise.all([
       getActiveConfig('image'), getActiveConfig('video'),
     ])
@@ -980,8 +979,8 @@ async function renderSingleVariant(project: CloneProjectRow, variant: CloneVaria
       videoConfigId: videoConfigId ?? videoConfig?.id ?? null,
       createdAt: ts,
       updatedAt: ts,
-    }).run()
-    const episodeId = getInsertId(epRes)
+    }).returning({ id: schema.episodes.id })
+    const episodeId = insertedId(epRes)
     await db.update(schema.cloneVariants).set({ episodeId, updatedAt: now() }).where(eq(schema.cloneVariants.id, variant.id))
 
     const ctx = await renderContext(project, variant)
@@ -1001,8 +1000,8 @@ async function renderSingleVariant(project: CloneProjectRow, variant: CloneVaria
         status: 'pending',
         createdAt: ts,
         updatedAt: ts,
-      }).run()
-      storyboardIds.push(getInsertId(res))
+      }).returning({ id: schema.storyboards.id })
+      storyboardIds.push(insertedId(res))
     }
 
     // stage 1: keyframes (first_frame) — refs จาก productImages/avatar ของตัวแปร

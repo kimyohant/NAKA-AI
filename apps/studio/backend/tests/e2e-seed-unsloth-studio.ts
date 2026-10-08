@@ -3,7 +3,7 @@
  * สร้าง: drama + episode (video config = unsloth) + studio project (2 ช็อต, keyframe สมมุติเสร็จแล้ว)
  * บทพูด/keyframe เป็นภาษาไทยตาม brief — ไม่สร้างงานจริงในสคริปต์นี้
  */
-import { db, getInsertId, schema } from '../src/core/db/index.js'
+import { db, insertedId, schema } from '../src/core/db/index.js'
 import { eq } from 'drizzle-orm'
 import { now } from '../src/core/http/response.js'
 

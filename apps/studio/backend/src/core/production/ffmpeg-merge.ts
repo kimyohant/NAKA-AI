@@ -4,7 +4,7 @@
 import fs from 'fs'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
-import { db, getInsertId, schema } from '../db/index.js'
+import { db, insertedId, schema } from '../db/index.js'
 import { eq } from 'drizzle-orm'
 import { now } from '../http/response.js'
 import { logTaskError, logTaskStart, logTaskSuccess } from '../tasks/task-logger.js'
@@ -82,8 +82,8 @@ export async function mergeEpisodeVideos(episodeId: number, dramaId: number, sto
     status: 'processing',
     scenes: JSON.stringify(videos),
     createdAt: ts,
-  })
-  const mergeId = getInsertId(res)
+  }).returning({ id: schema.videoMerges.id })
+  const mergeId = insertedId(res)
 
   // 异步执行
   doMerge(mergeId, episodeId, videos).catch(async err => {

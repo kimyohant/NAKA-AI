@@ -12,6 +12,7 @@
  * Admins may open anything; with SSO off everyone is the 'local' admin, so nothing changes.
  */
 import type { Context, Next } from 'hono'
+import { rawQuery } from '../db/index.js'
 import { db } from '../db/index.js'
 import { LOCAL_OWNER, canAccessOwner, runAsOwner } from './owner-context.js'
 import { userOf, TOKEN_ADMIN } from './naka-sso.js'
@@ -96,9 +97,9 @@ const PARAM_KINDS: Record<string, Kind> = {
 }
 
 /** owner of one row; undefined when the row does not exist (the route answers its own 404) */
-export function ownerOf(kind: Kind, id: number): string | undefined {
-  const row = db.$client.prepare(OWNER_SQL[kind]).get(id) as { owner: string } | undefined
-  return row?.owner
+export async function ownerOf(kind: Kind, id: number): Promise<string | undefined> {
+  const [row] = await rawQuery(OWNER_SQL[kind].replace('?', '$1'), [id])
+  return row?.owner as string | undefined
 }
 
 const asId = (v: unknown): number | null => {
@@ -147,7 +148,7 @@ export async function ownership(c: Context, next: Next) {
   return runAsOwner({ ownerId: ownerIdFor(user.id), admin: user.admin }, async () => {
     if (!user.admin) {
       for (const [kind, id] of await referencedIds(c)) {
-        const owner = ownerOf(kind, id)
+        const owner = await ownerOf(kind, id)
         if (owner !== undefined && !canAccessOwner(owner)) {
           return c.json({ code: 404, message: 'ไม่พบข้อมูล หรือไม่ใช่ของบัญชีนี้', errorCode: 'E_FORBIDDEN_OWNER' }, 404)
         }
