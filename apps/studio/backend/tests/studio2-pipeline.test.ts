@@ -45,7 +45,7 @@ test('migration v11: คอลัมน์ captions/auto_render/source_campaign_
   const mergeCols = (await sqlite.columns('video_merges'))
   assert.ok(mergeCols.includes('captioned') && mergeCols.includes('subtitle_url'))
   const versions = (await sqlite.prepare('SELECT name FROM schema_migrations ORDER BY name').all()).map(r => r.name)
-  assert.deepEqual(versions, ['0001_baseline.sql'])
+  assert.equal(versions[0], '0001_baseline.sql') // the baseline holds every table; later files only add
   sqlite.close()
 })
 

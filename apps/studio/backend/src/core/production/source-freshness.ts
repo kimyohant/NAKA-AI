@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 
 type Snapshot = Record<string, string>
@@ -11,25 +11,33 @@ function digest(value: unknown): string {
 export async function sourceSnapshotForShot(storyboardId: number): Promise<Snapshot | null> {
   const shot = (await db.select().from(schema.storyboards).where(eq(schema.storyboards.id, storyboardId)))[0]
   if (!shot) return null
-  const episode = (await db.select().from(schema.episodes).where(eq(schema.episodes.id, shot.episodeId)))[0]
+  const [episodeRows, sceneRows, characterLinks, lookRows, propLinks] = await Promise.all([
+    db.select().from(schema.episodes).where(eq(schema.episodes.id, shot.episodeId)),
+    shot.sceneId ? db.select().from(schema.scenes).where(eq(schema.scenes.id, shot.sceneId)) : [],
+    db.select().from(schema.storyboardCharacters).where(eq(schema.storyboardCharacters.storyboardId, storyboardId)),
+    db.select().from(schema.storyboardCharacterLooks).where(eq(schema.storyboardCharacterLooks.storyboardId, storyboardId)),
+    db.select().from(schema.storyboardProps).where(eq(schema.storyboardProps.storyboardId, storyboardId)),
+  ])
+  const episode = episodeRows[0]
   if (!episode) return null
-  const drama = (await db.select().from(schema.dramas).where(eq(schema.dramas.id, episode.dramaId)))[0]
-  const scene = shot.sceneId ? (await db.select().from(schema.scenes).where(eq(schema.scenes.id, shot.sceneId)))[0] : null
-  const characterIds = (await db.select().from(schema.storyboardCharacters)
-    .where(eq(schema.storyboardCharacters.storyboardId, storyboardId)))
-    .map(link => link.characterId).sort((a, b) => a - b)
-  const characters = await Promise.all(characterIds.map(async id => (await db.select().from(schema.characters).where(eq(schema.characters.id, id)))[0]))
-  const lookLinks = (await db.select().from(schema.storyboardCharacterLooks)
-    .where(eq(schema.storyboardCharacterLooks.storyboardId, storyboardId)))
-    .sort((a, b) => a.characterId - b.characterId)
-  const looks = await Promise.all(lookLinks.map(async link => ({
-    characterId: link.characterId,
-    look: (await db.select().from(schema.characterLooks).where(eq(schema.characterLooks.id, link.lookId)))[0],
-  })))
-  const propIds = (await db.select().from(schema.storyboardProps)
-    .where(eq(schema.storyboardProps.storyboardId, storyboardId)))
-    .map(link => link.propId).sort((a, b) => a - b)
-  const props = await Promise.all(propIds.map(async id => (await db.select().from(schema.props).where(eq(schema.props.id, id)))[0]))
+  const scene = sceneRows[0] ?? null
+  // ids ascending and looks by character: the digests below depend on this order
+  const characterIds = characterLinks.map(link => link.characterId).sort((a, b) => a - b)
+  const lookLinks = lookRows.sort((a, b) => a.characterId - b.characterId)
+  const propIds = propLinks.map(link => link.propId).sort((a, b) => a - b)
+  const lookIds = lookLinks.map(link => link.lookId)
+  const [dramaRows, characterRows, lookRecords, propRows] = await Promise.all([
+    db.select().from(schema.dramas).where(eq(schema.dramas.id, episode.dramaId)),
+    characterIds.length ? db.select().from(schema.characters).where(inArray(schema.characters.id, characterIds)) : [],
+    lookIds.length ? db.select().from(schema.characterLooks).where(inArray(schema.characterLooks.id, lookIds)) : [],
+    propIds.length ? db.select().from(schema.props).where(inArray(schema.props.id, propIds)) : [],
+  ])
+  const drama = dramaRows[0]
+  const byId = <T extends { id: number }>(rows: T[]) => new Map(rows.map(row => [row.id, row]))
+  const characterById = byId(characterRows), lookById = byId(lookRecords), propById = byId(propRows)
+  const characters = characterIds.map(id => characterById.get(id))
+  const looks = lookLinks.map(link => ({ characterId: link.characterId, look: lookById.get(link.lookId) }))
+  const props = propIds.map(id => propById.get(id))
 
   return {
     script: digest([episode.content, episode.scriptContent]),

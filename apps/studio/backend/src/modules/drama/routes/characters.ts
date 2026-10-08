@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { db, insertedId, schema } from '../../../core/db/index.js'
 import { success, created, badRequest, now } from '../../../core/http/response.js'
 import { toSnakeCase } from '../../../core/utils/transform.js'
@@ -14,10 +14,12 @@ const CHARACTER_IMAGE_SIZE = '1920x1080'
 app.get('/looks', async (c) => {
   const dramaId = Number(c.req.query('drama_id'))
   if (!Number.isInteger(dramaId) || dramaId < 1) return badRequest(c, 'drama_id is required')
-  const characters = await db.select().from(schema.characters).where(eq(schema.characters.dramaId, dramaId))
-  const ids = new Set(characters.map(row => row.id))
+  const characters = await db.select({ id: schema.characters.id }).from(schema.characters).where(eq(schema.characters.dramaId, dramaId))
+  if (!characters.length) return success(c, [])
   const looks = await db.select().from(schema.characterLooks)
-  return success(c, looks.filter(row => ids.has(row.characterId)).map(toSnakeCase))
+    .where(inArray(schema.characterLooks.characterId, characters.map(row => row.id)))
+    .orderBy(schema.characterLooks.id)
+  return success(c, looks.map(toSnakeCase))
 })
 
 app.post('/:id/looks', async (c) => {

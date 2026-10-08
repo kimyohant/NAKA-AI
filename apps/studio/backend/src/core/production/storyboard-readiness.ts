@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 
 export type MediaSlot = 'composed' | 'first_frame' | 'last_frame' | 'video'
@@ -23,10 +23,13 @@ export async function storyboardReadiness(storyboardId: number) {
     db.select().from(schema.storyboardCharacterLooks).where(eq(schema.storyboardCharacterLooks.storyboardId, storyboardId)),
   ])
   const scene = sceneRows[0]
+  const characterIds = characterLinks.map(link => link.characterId)
+  const propIds = propLinks.map(link => link.propId)
+  const lookIds = lookAssignments.map(row => row.lookId)
   const [allCharacters, allProps, allLooks] = await Promise.all([
-    db.select().from(schema.characters),
-    db.select().from(schema.props),
-    db.select().from(schema.characterLooks),
+    characterIds.length ? db.select().from(schema.characters).where(inArray(schema.characters.id, characterIds)) : [],
+    propIds.length ? db.select().from(schema.props).where(inArray(schema.props.id, propIds)) : [],
+    lookIds.length ? db.select().from(schema.characterLooks).where(inArray(schema.characterLooks.id, lookIds)) : [],
   ])
   const blockers: Array<{ code: string; name?: string; slot?: string }> = []
   if (!String(shot.videoPrompt || '').trim()) blockers.push({ code: 'missing_prompt' })
