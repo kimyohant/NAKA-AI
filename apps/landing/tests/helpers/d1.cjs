@@ -27,6 +27,7 @@ process.on("exit", () => rmSync(adapterDir, { recursive: true, force: true }));
 let worker;
 let port;
 let shared;
+let lastId = 0;
 
 function call(msg) {
   if (!worker) {
@@ -44,12 +45,25 @@ function call(msg) {
   return callNow(msg);
 }
 
+// Each request carries an id and the worker echoes it. Waking up does not mean the reply is already on
+// the port (on Node 24 it sometimes lands a moment later; Node's own sync loader hooks loop the same way),
+// so wait until the reply with this id arrives. Reading too early used to leave that reply queued: the
+// next call then got this one's answer, and every call after it was one behind.
 function callNow(msg) {
+  const id = ++lastId;
+  const deadline = Date.now() + 60_000;
   Atomics.store(shared, 0, 0);
-  worker.postMessage(msg);
-  // a crashed worker would never answer: fail loudly instead of hanging the test run
-  if (Atomics.wait(shared, 0, 0, 60_000) === "timed-out") throw new Error(`PGlite worker did not answer ${msg.op} within 60 s`);
-  const reply = receiveMessageOnPort(port).message;
+  worker.postMessage({ ...msg, id });
+  let reply;
+  for (;;) {
+    const left = deadline - Date.now();
+    // a crashed worker would never answer: fail loudly instead of hanging the test run
+    if (left <= 0 || Atomics.wait(shared, 0, 0, left) === "timed-out") throw new Error(`PGlite worker did not answer ${msg.op} within 60 s`);
+    const got = receiveMessageOnPort(port);
+    if (got?.message.id === id) { reply = got.message; break; }
+    if (!got) Atomics.wait(shared, 0, Atomics.load(shared, 0), 1); // signalled, reply not delivered yet: 1 ms
+    // a reply with another id belongs to a call that already gave up: drop it
+  }
   if (reply.error) {
     const err = new Error(reply.error.message);
     err.code = reply.error.code;
