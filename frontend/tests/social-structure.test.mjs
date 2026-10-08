@@ -29,12 +29,14 @@ test('socialAPI covers the board routes with both filters', () => {
   assert.ok(api.includes('fallback_only'), 'missing fallback_only filter')
 })
 
-test('board: five columns, no action buttons yet', () => {
+test('board: five columns with per-state card actions (ticket 05)', () => {
   for (const s of ['needs_human', 'draft', 'queued', 'replied', 'skipped']) {
     assert.ok(page.includes(s), `missing column ${s}`)
   }
   assert.match(page, /v-for="col in columns"/)
-  assert.ok(!page.includes('approve'), 'no approve button in ticket 02')
+  for (const frag of ['approveComment', 'sendComment', 'rejectComment', 'closeComment', 'bringBackComment', 'helpDraft']) {
+    assert.ok(page.includes(frag), `missing action ${frag}`)
+  }
 })
 
 test('card: platform tag, author, age, comment text, reply, fallback badge, status note', () => {

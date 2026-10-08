@@ -58,6 +58,34 @@
               <span v-if="c.fallback" class="tag sc-tag-fallback">{{ t('social.fallbackBadge') }}</span>
               <span v-if="c.statusNote" class="sc-note">{{ c.statusNote }}</span>
             </div>
+            <p v-if="actionError && busyId === c.id" class="sc-error">{{ t('social.actionFailed') }} <span class="mono">{{ actionError }}</span></p>
+            <div v-if="isFailed(c)" class="sc-actions">
+              <button v-if="c.replyText" class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.approveComment(c.id))">{{ t('social.sendAgain') }}</button>
+              <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.closeComment(c.id))">{{ t('social.doNotReply') }}</button>
+            </div>
+            <div v-if="c.status === 'draft'" class="sc-actions">
+              <template v-if="!editing[c.id]">
+                <button class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.approveComment(c.id))">{{ t('social.approve') }}</button>
+                <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="startEdit(c)">{{ t('social.edit') }}</button>
+                <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.rejectComment(c.id))">{{ t('social.reject') }}</button>
+              </template>
+              <template v-else>
+                <textarea v-model="drafts[c.id]" class="input sc-editor" rows="2" />
+                <button class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.sendComment(c.id, drafts[c.id] || ''))">{{ t('social.send') }}</button>
+                <button class="btn btn-sm" type="button" @click="cancelEdit(c.id)">{{ t('social.cancel') }}</button>
+              </template>
+            </div>
+            <div v-if="c.status === 'needs_human'" class="sc-actions sc-col-actions">
+              <textarea v-model="drafts[c.id]" class="input sc-editor" rows="2" :placeholder="t('social.replyPlaceholder')" />
+              <div class="sc-actions">
+                <button class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.sendComment(c.id, drafts[c.id] || ''))">{{ t('social.send') }}</button>
+                <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="helpDraft(c)">{{ busyId === c.id && helping ? t('social.drafting') : t('social.helpDraft') }}</button>
+                <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.closeComment(c.id))">{{ t('social.doNotReply') }}</button>
+              </div>
+            </div>
+            <div v-if="c.status === 'skipped'" class="sc-actions">
+              <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.bringBackComment(c.id))">{{ t('social.bringBack') }}</button>
+            </div>
           </li>
         </ul>
       </section>
@@ -84,6 +112,59 @@ const accountId = ref(0)
 const fallbackOnly = ref(false)
 const loading = ref(true)
 const error = ref('')
+const drafts = ref<Record<number, string>>({})
+const editing = ref<Record<number, boolean>>({})
+const busyId = ref<number | null>(null)
+const helping = ref(false)
+const actionError = ref('')
+
+/** a send failed but the card stays: show send-again / do-not-reply */
+function isFailed(c: SocialBoardComment): boolean {
+  return !!c.statusNote && c.statusNote.startsWith('send failed:')
+}
+
+/** run a card action, then reload so the card moves to its new column */
+async function act(id: number, fn: () => Promise<unknown>) {
+  busyId.value = id
+  actionError.value = ''
+  helping.value = false
+  try {
+    await fn()
+    delete drafts.value[id]
+    delete editing.value[id]
+    await reload()
+  } catch (err: any) {
+    actionError.value = err?.message || ''
+  } finally {
+    busyId.value = null
+  }
+}
+
+function startEdit(c: SocialBoardComment) {
+  drafts.value[c.id] = c.replyText || ''
+  editing.value[c.id] = true
+}
+
+function cancelEdit(id: number) {
+  delete drafts.value[id]
+  delete editing.value[id]
+}
+
+/** "help me draft" fills the text box; it never publishes */
+async function helpDraft(c: SocialBoardComment) {
+  busyId.value = c.id
+  actionError.value = ''
+  helping.value = true
+  try {
+    const { text } = await socialAPI.helpDraft(c.id)
+    drafts.value[c.id] = text
+  } catch (err: any) {
+    actionError.value = err?.message || ''
+  } finally {
+    busyId.value = null
+    helping.value = false
+  }
+}
 
 /** comments in state `new` are not shown in any column (judged in later tickets) */
 const visible = computed(() => comments.value.filter(c => c.status !== 'new'))
@@ -153,6 +234,10 @@ onMounted(reload)
 .sc-card-foot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .sc-tag-fallback { background: color-mix(in srgb, #f59e0b 18%, transparent); color: #f59e0b; border-color: color-mix(in srgb, #f59e0b 40%, transparent); }
 .sc-note { font-size: 11.5px; color: var(--text-3); }
+.sc-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.sc-col-actions { flex-direction: column; align-items: stretch; }
+.sc-col-actions .sc-actions { margin-top: 0; }
+.sc-editor { width: 100%; min-height: 52px; resize: vertical; font-size: 12.5px; }
 @media (max-width: 1180px) { .sc-board { grid-template-columns: repeat(2, minmax(220px, 1fr)); } }
 @media (max-width: 760px) { .page { padding: 20px 16px 32px; } .sc-board { grid-template-columns: 1fr; } }
 </style>

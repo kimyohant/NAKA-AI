@@ -669,6 +669,18 @@ export const socialAPI = {
   brand: (id: number) => api.get<SocialBrand>(`/social/accounts/${id}/brand`),
   updateBrand: (id: number, data: SocialBrandInput) =>
     api.put<SocialBrand>(`/social/accounts/${id}/brand`, data),
+  approveComment: (id: number) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/approve`, {}),
+  sendComment: (id: number, text?: string) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/send`, text === undefined ? {} : { text }),
+  rejectComment: (id: number) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/reject`, {}),
+  closeComment: (id: number) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/close`, {}),
+  bringBackComment: (id: number) =>
+    api.post<SocialBoardComment>(`/social/comments/${id}/bring-back`, {}),
+  helpDraft: (id: number) =>
+    api.post<{ text: string }>(`/social/comments/${id}/help-draft`, {}),
 }
 
 // ---------- AI Live (backend /api/v1/live → naka-live-agent on the GPU box; docs/ai-live/PLAN.md) ----------

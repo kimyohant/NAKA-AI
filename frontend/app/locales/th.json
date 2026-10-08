@@ -2921,6 +2921,18 @@
       "saveFailed": "บันทึกไม่สำเร็จ",
       "loadFailed": "โหลดโปรไฟล์ไม่สำเร็จ",
       "retry": "ลองใหม่"
-    }
+    },
+    "approve": "อนุมัติและส่ง",
+    "edit": "แก้ไข",
+    "send": "ส่ง",
+    "reject": "ปฏิเสธ",
+    "helpDraft": "ช่วยร่าง",
+    "doNotReply": "ไม่ตอบ",
+    "bringBack": "นำกลับมา",
+    "sendAgain": "ส่งอีกครั้ง",
+    "cancel": "ยกเลิก",
+    "replyPlaceholder": "เขียนข้อความตอบ...",
+    "actionFailed": "ทำรายการไม่สำเร็จ",
+    "drafting": "กำลังร่าง..."
   }
 }

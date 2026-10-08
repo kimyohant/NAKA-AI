@@ -8,7 +8,7 @@
     "start": "tsx src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test:social": "tsx --test tests/social-poll.test.ts tests/social-board.test.ts tests/social-filter.test.ts tests/social-accounts.test.ts tests/social-verdict.test.ts",
+    "test:social": "tsx --test tests/social-poll.test.ts tests/social-board.test.ts tests/social-filter.test.ts tests/social-accounts.test.ts tests/social-verdict.test.ts tests/social-actions.test.ts",
     "backfill-artwork": "tsx scripts/backfill-artwork.ts",
     "db:snapshot": "tsx scripts/sqlite-snapshot.ts"
   },
