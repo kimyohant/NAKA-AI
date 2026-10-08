@@ -292,7 +292,7 @@ test('at most 10 replies per round, oldest first, rest stay queued', async () =>
 
 // --- Queued send-failure table ---
 
-test('queued rate_limited goes back to queued with no pause', async () => {
+test('queued rate_limited goes back to queued and pauses the account', async () => {
   const acc = addAccount({ platformAccountId: 'q-rate', replyMode: 'auto' })
   const post = addPost(acc)
   const id = addComment(acc, post, {
@@ -301,9 +301,11 @@ test('queued rate_limited goes back to queued with no pause', async () => {
   fake.failNext('rate_limited')
   const r = await actions.sendQueuedReplies(acc, noGap)
   assert.equal(r.sent, 0)
+  assert.equal(r.rateLimited, true)
   assert.equal(row(id).status, 'queued')
   assert.equal(accRow(acc).status, 'connected')
-  assert.equal(accRow(acc).pausedUntil, null)
+  assert.ok(accRow(acc).pausedUntil, 'expected paused_until to be set')
+  assert.ok(Date.parse(accRow(acc).pausedUntil!) > Date.now())
 })
 
 test('queued auth_expired goes to draft and the account needs reconnect', async () => {

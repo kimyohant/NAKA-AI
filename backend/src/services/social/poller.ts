@@ -13,11 +13,20 @@ import { reclaimStuckSending, expireQueuedComments, sendQueuedReplies } from './
 import { SKIP_ALREADY_REPLIED, SKIP_OWN, collectPlainRuleContext, judgePlainRule } from './filter.js'
 import { judgeNewComments } from './responder.js'
 import { getSocialAdapter } from './registry.js'
-import type { SocialAccountAuth, SocialComment } from './types.js'
+import {
+  MAX_COMMENT_PAGES_PER_POST,
+  MAX_READ_CALLS_PER_ACCOUNT,
+  POSTS_CACHE_TTL_MS,
+  ensureFreshToken,
+  isPaused,
+  markReconnectNeeded,
+  pauseAccount,
+  resetBackoff,
+  setLastPolled,
+} from './limits.js'
+import { SocialPlatformError, type SocialComment, type SocialPost } from './types.js'
 
 export const SOCIAL_POLL_INTERVAL_MS = 5 * 60 * 1000
-const MAX_READ_CALLS_PER_ACCOUNT = 30
-const MAX_COMMENT_PAGES_PER_POST = 10
 
 let pollRunning = false
 let pollTimer: ReturnType<typeof setInterval> | null = null
@@ -28,17 +37,23 @@ export interface SocialPollResult {
   newComments: number
 }
 
-function toAuth(account: typeof schema.socialAccounts.$inferSelect): SocialAccountAuth {
-  return {
-    platformAccountId: account.platformAccountId,
-    accessToken: account.accessToken ?? '',
-    refreshToken: account.refreshToken ?? undefined,
-  }
+/**
+ * In-memory read position per account (ticket 08): the cached post list
+ * (refreshed once per hour) plus where comment reading stopped when the
+ * 30-call budget ran out. The next round continues there. A restart clears
+ * this map, so reading starts again from the newest post.
+ */
+interface AccountReadState {
+  posts: SocialPost[]
+  fetchedAt: number
+  nextPostIdx: number
 }
 
-function paused(account: typeof schema.socialAccounts.$inferSelect): boolean {
-  if (!account.pausedUntil) return false
-  return Date.parse(account.pausedUntil) > Date.now()
+const readState = new Map<number, AccountReadState>()
+
+/** Test hook: forget cached post lists and resume positions (simulates a restart). */
+export function __resetSocialPollerState(): void {
+  readState.clear()
 }
 
 /**
@@ -97,15 +112,64 @@ async function pollAccount(
   opts: { waitBetweenSends?: () => Promise<void> } = {},
 ): Promise<number> {
   const adapter = getSocialAdapter(account.platform)
-  const auth = toAuth(account)
+
+  // Token refresh before any adapter call (no-op unless expiring <10min).
+  const fresh = await ensureFreshToken(account, adapter)
+  if (!fresh.ok) {
+    setLastPolled(account.id)
+    return 0
+  }
+  const auth = fresh.auth
+
   const since = new Date(Date.now() - (account.watchDays ?? 7) * 86400_000)
   let readCalls = 0
   let stored = 0
   /** every comment the Platform returned this round, including already-known ones */
-  const fresh: SocialComment[] = []
+  const freshComments: SocialComment[] = []
 
   // Step 2: queued comments that aged past 24h become drafts, never auto-sent.
   expireQueuedComments(account.id)
+
+  const finish = (): number => {
+    setLastPolled(account.id)
+    return stored
+  }
+
+  // Post list: fetched once per hour, newest post first. The rest of the
+  // budget stays for comments; the next round reuses the cache.
+  let state = readState.get(account.id)
+  if (!state || Date.now() - state.fetchedAt >= POSTS_CACHE_TTL_MS) {
+    const posts: SocialPost[] = []
+    let postCursor: string | undefined
+    for (;;) {
+      if (readCalls >= MAX_READ_CALLS_PER_ACCOUNT) break
+      let page
+      try {
+        page = await adapter.listPosts(auth, since, postCursor)
+      } catch (err) {
+        readCalls++
+        if (err instanceof SocialPlatformError && err.kind === 'auth_expired') {
+          markReconnectNeeded(account.id)
+          return finish()
+        }
+        if (err instanceof SocialPlatformError && err.kind === 'rate_limited') {
+          pauseAccount(account.id, err.retryAfterSec)
+          return finish()
+        }
+        console.error(`Social poll: post list failed for account ${account.id}:`, (err as Error)?.message)
+        break
+      }
+      readCalls++
+      for (const p of page.items) {
+        if (p.createdAt >= since) posts.push(p)
+      }
+      if (!page.nextCursor) break
+      postCursor = page.nextCursor
+    }
+    posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    state = { posts, fetchedAt: Date.now(), nextPostIdx: 0 }
+    readState.set(account.id, state)
+  }
 
   const known = new Set(
     db.select({ platformCommentId: schema.socialComments.platformCommentId })
@@ -115,22 +179,8 @@ async function pollAccount(
       .map(r => r.platformCommentId),
   )
 
-  // Post list, newest first — follow cursors within the read budget.
-  const posts: Array<{ id: string; text: string; url?: string; createdAt: Date }> = []
-  let postCursor: string | undefined
-  for (;;) {
-    if (readCalls >= MAX_READ_CALLS_PER_ACCOUNT) break
-    const page = await adapter.listPosts(auth, since, postCursor)
-    readCalls++
-    for (const p of page.items) {
-      if (p.createdAt >= since) posts.push(p)
-    }
-    if (!page.nextCursor) break
-    postCursor = page.nextCursor
-  }
-
   const ts = now()
-  for (const post of posts) {
+  for (const post of state.posts) {
     db.insert(schema.socialPosts).values({
       accountId: account.id,
       platformPostId: post.id,
@@ -142,18 +192,43 @@ async function pollAccount(
     }).onConflictDoNothing({ target: [schema.socialPosts.accountId, schema.socialPosts.platformPostId] }).run()
   }
 
-  for (const post of posts) {
+  // Comment reading resumes where the last round stopped (budget ran out).
+  let idx = state.nextPostIdx < state.posts.length ? state.nextPostIdx : 0
+  for (; idx < state.posts.length; idx++) {
     if (readCalls >= MAX_READ_CALLS_PER_ACCOUNT) break
+    const post = state.posts[idx]
     const [postRow] = db.select({ id: schema.socialPosts.id })
       .from(schema.socialPosts)
       .where(and(eq(schema.socialPosts.accountId, account.id), eq(schema.socialPosts.platformPostId, post.id)))
       .all()
     let commentCursor: string | undefined
+    let postDone = true
     for (let pageNo = 0; pageNo < MAX_COMMENT_PAGES_PER_POST; pageNo++) {
-      if (readCalls >= MAX_READ_CALLS_PER_ACCOUNT) break
-      const page = await adapter.listComments(auth, post.id, commentCursor)
+      if (readCalls >= MAX_READ_CALLS_PER_ACCOUNT) {
+        postDone = false
+        break
+      }
+      let page
+      try {
+        page = await adapter.listComments(auth, post.id, commentCursor)
+      } catch (err) {
+        readCalls++
+        if (err instanceof SocialPlatformError && err.kind === 'auth_expired') {
+          state.nextPostIdx = idx
+          markReconnectNeeded(account.id)
+          return finish()
+        }
+        if (err instanceof SocialPlatformError && err.kind === 'rate_limited') {
+          state.nextPostIdx = idx
+          pauseAccount(account.id, err.retryAfterSec)
+          return finish()
+        }
+        // `unknown` on one post: log it, skip that post, keep the others.
+        console.error(`Social poll: comments failed for post ${post.id}:`, (err as Error)?.message)
+        break
+      }
       readCalls++
-      fresh.push(...page.items)
+      freshComments.push(...page.items)
       let stop = false
       for (const c of page.items) {
         if (known.has(c.id)) {
@@ -180,22 +255,24 @@ async function pollAccount(
       if (stop || !page.nextCursor) break
       commentCursor = page.nextCursor
     }
+    if (!postDone) break
   }
+  state.nextPostIdx = idx >= state.posts.length ? 0 : idx
 
-  judgeFreshComments(account.id, fresh)
+  judgeFreshComments(account.id, freshComments)
 
   // Step 4: LLM judging — remaining `new` comments get one verdict each.
   // A `reply` verdict queues in Auto mode (comment at most 24h old).
   await judgeNewComments(account.id)
 
   // Step 5: send queued replies, oldest first, at most 10, 3 seconds apart.
-  await sendQueuedReplies(account.id, { waitBetweenSends: opts.waitBetweenSends })
+  // A rate-limited send already paused the account — stop the round.
+  const sendRes = await sendQueuedReplies(account.id, { waitBetweenSends: opts.waitBetweenSends })
+  if (sendRes.rateLimited) return finish()
 
-  db.update(schema.socialAccounts)
-    .set({ lastPolledAt: now(), updatedAt: now() })
-    .where(eq(schema.socialAccounts.id, account.id))
-    .run()
-  return stored
+  // A round that finishes without a rate-limit error resets the step.
+  resetBackoff(account.id)
+  return finish()
 }
 
 /** One polling round. Callable directly from a test; the send gap wait is injectable. */
@@ -211,7 +288,7 @@ export async function runSocialPollRound(
     let newComments = 0
     let handled = 0
     for (const account of accounts) {
-      if (account.status !== 'connected' || !account.watching || paused(account)) continue
+      if (account.status !== 'connected' || !account.watching || isPaused(account)) continue
       handled++
       try {
         newComments += await pollAccount(account, opts)

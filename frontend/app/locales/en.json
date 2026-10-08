@@ -2874,6 +2874,7 @@
     "noCommentsYet": "No comments yet",
     "noCommentsHint": "New comments on watched posts will show up here within a few minutes.",
     "fallbackBadge": "Not in FAQ",
+    "reconnectBanner": "One account needs reconnecting. Its drafts stay visible but cannot be sent.",
     "unknownAuthor": "Viewer",
     "justNow": "just now",
     "minutesAgo": "{n} min ago",

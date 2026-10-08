@@ -158,7 +158,7 @@ test('a second round over the same comments stores each comment once', async () 
 test('disconnected and non-watching accounts are not read', async () => {
   const callsBefore = fake.listPostsCalls
   await poller.runSocialPollRound()
-  assert.equal(fake.listPostsCalls, callsBefore + 1) // only the connected watching account
+  assert.equal(fake.listPostsCalls, callsBefore) // post list comes from the hourly cache (ticket 08)
   const rowsFor = (id: number) => db.select().from(schema.socialComments).all().filter(c => c.accountId === id)
   assert.equal(rowsFor(disconnectedId).length, 0)
   assert.equal(rowsFor(pausedWatchId).length, 0)

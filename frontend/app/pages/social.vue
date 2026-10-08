@@ -27,6 +27,7 @@
       {{ t('social.loadFailed') }} <span class="mono">{{ error }}</span>
       <button class="btn btn-sm" type="button" @click="reload">{{ t('social.retry') }}</button>
     </p>
+    <p v-else-if="!loading && reconnectIds.size" class="sc-warn">{{ t('social.reconnectBanner') }}</p>
     <div v-else-if="!loading && !accounts.length" class="card sc-empty">
       <MessagesSquare :size="22" :stroke-width="1.7" />
       <div>
@@ -60,25 +61,25 @@
             </div>
             <p v-if="actionError && busyId === c.id" class="sc-error">{{ t('social.actionFailed') }} <span class="mono">{{ actionError }}</span></p>
             <div v-if="isFailed(c)" class="sc-actions">
-              <button v-if="c.replyText" class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.approveComment(c.id))">{{ t('social.sendAgain') }}</button>
+              <button v-if="c.replyText" class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id || sendOff(c)" @click="act(c.id, () => socialAPI.approveComment(c.id))">{{ t('social.sendAgain') }}</button>
               <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.closeComment(c.id))">{{ t('social.doNotReply') }}</button>
             </div>
             <div v-if="c.status === 'draft'" class="sc-actions">
               <template v-if="!editing[c.id]">
-                <button class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.approveComment(c.id))">{{ t('social.approve') }}</button>
+                <button class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id || sendOff(c)" @click="act(c.id, () => socialAPI.approveComment(c.id))">{{ t('social.approve') }}</button>
                 <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="startEdit(c)">{{ t('social.edit') }}</button>
                 <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.rejectComment(c.id))">{{ t('social.reject') }}</button>
               </template>
               <template v-else>
                 <textarea v-model="drafts[c.id]" class="input sc-editor" rows="2" />
-                <button class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.sendComment(c.id, drafts[c.id] || ''))">{{ t('social.send') }}</button>
+                <button class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id || sendOff(c)" @click="act(c.id, () => socialAPI.sendComment(c.id, drafts[c.id] || ''))">{{ t('social.send') }}</button>
                 <button class="btn btn-sm" type="button" @click="cancelEdit(c.id)">{{ t('social.cancel') }}</button>
               </template>
             </div>
             <div v-if="c.status === 'needs_human'" class="sc-actions sc-col-actions">
               <textarea v-model="drafts[c.id]" class="input sc-editor" rows="2" :placeholder="t('social.replyPlaceholder')" />
               <div class="sc-actions">
-                <button class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.sendComment(c.id, drafts[c.id] || ''))">{{ t('social.send') }}</button>
+                <button class="btn btn-sm btn-primary" type="button" :disabled="busyId === c.id || sendOff(c)" @click="act(c.id, () => socialAPI.sendComment(c.id, drafts[c.id] || ''))">{{ t('social.send') }}</button>
                 <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="helpDraft(c)">{{ busyId === c.id && helping ? t('social.drafting') : t('social.helpDraft') }}</button>
                 <button class="btn btn-sm" type="button" :disabled="busyId === c.id" @click="act(c.id, () => socialAPI.closeComment(c.id))">{{ t('social.doNotReply') }}</button>
               </div>
@@ -121,6 +122,14 @@ const actionError = ref('')
 /** a send failed but the card stays: show send-again / do-not-reply */
 function isFailed(c: SocialBoardComment): boolean {
   return !!c.statusNote && c.statusNote.startsWith('send failed:')
+}
+
+/** send is off for drafts of a reconnect-needed account (ticket 08) */
+const reconnectIds = computed(() => new Set(
+  accounts.value.filter(a => a.status === 'reconnect_needed').map(a => a.id),
+))
+function sendOff(c: SocialBoardComment): boolean {
+  return reconnectIds.value.has(c.accountId)
 }
 
 /** run a card action, then reload so the card moves to its new column */
@@ -216,6 +225,7 @@ onMounted(reload)
 .sc-flex { flex: 1; min-width: 200px; }
 .sc-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-1); padding-bottom: 10px; }
 .sc-error { margin: 0 0 12px; font-size: 12.5px; color: var(--danger, #ef4444); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sc-warn { margin: 0 0 12px; font-size: 12.5px; color: var(--warn, #f59e0b); padding: 10px 14px; border: 1px solid color-mix(in srgb, #f59e0b 40%, transparent); border-radius: var(--radius); background: color-mix(in srgb, #f59e0b 10%, transparent); }
 .sc-empty { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 14px; }
 .sc-empty h3 { margin: 0 0 2px; font-size: 15px; }
 .sc-empty p { margin: 0; font-size: 12.5px; color: var(--text-2); }
