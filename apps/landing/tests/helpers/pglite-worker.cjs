@@ -55,6 +55,7 @@ parentPort.on("message", async msg => {
     }
     reply = { error: { message: err.message, code: err.code, detail: err.detail } };
   }
+  reply.id = msg.id;
   port.postMessage(reply);
   Atomics.store(shared, 0, 1);
   Atomics.notify(shared, 0);
