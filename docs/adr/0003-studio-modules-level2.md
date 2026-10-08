@@ -102,7 +102,7 @@ services/studio-api/src/
       ├─ routes/   live.ts
       └─ services/ ai-live.ts · tiktok-live.ts · live-avatars.ts
 ```
-**ลบ:** `routes/serverUpdate.ts`, `services/server-update.ts` (desktop/watchtower เลิกใช้)
+**คงไว้:** `routes/serverUpdate.ts`, `services/server-update.ts` — ปุ่มอัปเดตใน /admin ใช้กับ Docker ผ่าน Watchtower ไม่ใช่ของ desktop (แก้ไขจากร่างแรก) · ย้ายเข้า `core/routes` ใน PR 2
 
 ### 2.1 สัญญาของโมดูล (ทุกเมนูหน้าตาเหมือนกัน)
 ```ts
@@ -208,7 +208,7 @@ apps/studio-web/
 
 | PR | งาน | ไฟล์ที่ย้าย | ความเสี่ยง | เวลา |
 |---|---|---|---|---|
-| **1** | ตั้งโครง: `core/module.ts`, `modules.ts`, dependency-cruiser (โหมดเตือนก่อน), ลบ server-update | ~3 | ต่ำ | 0.5 วัน |
+| **1** ✅ | `src/modules.ts`: แต่ละเมนูประกาศ routes + failStale/resume, `index.ts` วนลูปโหลด (commit `78efbbd4`) — dependency-cruiser ย้ายไป PR 9 เพราะ path ยังไม่ใช่ core/modules | 13 | ต่ำ | 0.5 วัน |
 | **2** | **core** — ย้าย utils, db, auth, ai, adapters, tasks, generation, production, product, agents | ~45 | **สูง** (ทุกไฟล์ import เปลี่ยน) | 2–3 วัน |
 | **3** | กลับทิศ agent registry (ข้อค้นพบ #3) + ย้าย `getActiveVideoProviderInfo`/`waitForMergeCompletion` เข้า core (#4) | ~5 | กลาง | 1 วัน |
 | **4** | **live** | 4 | ต่ำ | 0.5 วัน |
