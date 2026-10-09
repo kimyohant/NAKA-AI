@@ -73,15 +73,16 @@ test('login page wires the OTP + Google flow with accessible errors', () => {
   assert.match(js, /body && body\.error/, 'API error messages are shown');
 });
 
-test('app dashboard renders three account states and links all four workflows', () => {
+test('app dashboard renders three account states and opens every studio menu', () => {
   const html = read('public/app/index.html');
   assert.ok(html.includes('data-account-menu'), 'account menu slot');
   assert.ok(html.includes('id="app-error"'), 'unavailable state panel');
   assert.ok(html.includes('id="retry-button"'), 'retry control');
   assert.ok(html.includes('id="signout-status"'), 'sign-out status is announced');
-  for (const workflow of ['sales', 'drama', 'live']) {
-    assert.ok(html.includes(`/create/?workflow=${workflow}`), `missing workflow ${workflow}`);
+  for (const menu of ['skills', 'drama', 'viral-clone', 'live', 'seller', 'marketer']) {
+    assert.ok(html.includes(`href="/go/studio/${menu}"`), `missing studio menu ${menu}`);
   }
+  assert.ok(!html.includes('/create/') && !html.includes('/review/'), 'no link to the retired pages');
   // The chat-bot card opens the working inbox rather than the old brief form.
   assert.ok(html.includes('href="/app/inbox/"'), 'missing chat-bot inbox link');
   const js = read('public/app/app.js');

@@ -1,0 +1,116 @@
+/* The studio look (public/ui-land.css) for the inner public pages: /login/ (+ reset), /app/* and
+   /legal/*. Load it after the page's own stylesheet and after /ui-land.css.
+   Member pages draw everything from the --m-* tokens of public/member.css, so most of the change
+   is new token values; the rest covers the few spots those pages hard-code. */
+
+:root {
+  --m-bg: #f7f8fa;
+  --m-surface-2: #eef0f3;
+  --m-blue-soft: #fff1e7;
+  --m-ink: #17181a;
+  --m-ink-2: #5c6370;
+  --m-ink-3: #8a919d;
+  --m-line: #e7e9ee;
+  --m-line-strong: #d6dae1;
+  --m-brand: #c2410c;
+  --m-brand-ink: #9a3412;
+  --m-grad: linear-gradient(0deg, #f97316, #f97316);
+  --m-shadow-sm: none;
+  --m-shadow-lg: 0 20px 50px rgba(23, 24, 26, .10);
+  --m-shadow-btn: none;
+  --m-radius: 20px;
+  --m-font: "IBM Plex Sans Thai", system-ui, sans-serif;
+  --m-display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
+}
+body.member-ui { background: var(--m-bg); }
+
+/* ---------- one floating white bar for every inner page ---------- */
+.member-ui .glass-nav.auth-topbar, .member-ui .glass-nav.app-topbar, .doc-topbar {
+  position: sticky; top: 12px; z-index: 50;
+  width: min(100% - 32px, 1240px); height: 64px; margin: 12px auto 0; padding: 0 10px 0 18px;
+  border: 0; border-radius: 20px; background: #fff; color: var(--ink); box-shadow: var(--u-float);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:is(.member-ui, .doc-topbar) .brand { font-family: var(--u-display); color: var(--ink); letter-spacing: -.02em; }
+:is(.member-ui, .doc-topbar) .brand b { color: var(--logo-blue); }
+.member-ui .back-link, .doc-topbar .back {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 999px;
+  background: var(--u-gray); color: var(--ink); font-size: 13.5px; font-weight: 600;
+}
+.member-ui .back-link:hover, .doc-topbar .back:hover { background: var(--u-gray-2); color: var(--ink); }
+.member-ui .header-divider { background: var(--m-line); }
+
+/* app menu: a segmented control, like the home nav */
+.member-ui .topbar-nav { gap: 2px; padding: 4px; border-radius: 999px; background: var(--m-surface-2); }
+.member-ui .topbar-nav a { min-height: 36px; padding: 0 14px; }
+.member-ui .topbar-nav a:hover { background: #fff; color: var(--m-ink); }
+.member-ui .topbar-nav a[aria-current="page"] { background: #fff; color: var(--m-ink); box-shadow: 0 1px 3px rgba(13, 27, 51, .08); }
+.member-ui .topbar-nav .nav-studio, .member-ui .topbar-nav .nav-studio:hover { background: var(--action); color: var(--ink); box-shadow: none; }
+.member-ui .app-topbar [data-account-menu] { margin-left: 6px; }
+.member-ui .acct-login { border-color: transparent; background: var(--u-gray); color: var(--ink); }
+.member-ui .acct-login:hover { border-color: transparent; background: var(--u-gray-2); }
+
+/* ---------- member pages: flat cards, black main action ---------- */
+.member-ui :is(.m-card, .auth-card, .credits-card, .workflow-card, .app-error, .onboarding-inner, .works-section, .account-card,
+  .current, .plan-option, .pay, .receipts, .thread-pane, .thread-view, .card-form, .kb-item) { border-color: transparent; box-shadow: none; }
+.member-ui :is(.auth-card, .works-section, .account-card, .current, .pay, .receipts, .thread-pane, .thread-view, .card-form) { border-radius: 24px; }
+.member-ui .auth-card { border-radius: 28px; }
+.member-ui .onboarding-inner { background: #fff; }
+.member-ui :is(.works-button, .works-open, .secondary-button, .bot-state, .filter button) { border-color: transparent; background: var(--m-surface-2); }
+.member-ui .plan-option:hover { border-color: var(--m-line-strong); }
+.member-ui .plan-option[aria-checked="true"] { border-color: var(--m-brand); background: #fff; box-shadow: none; }
+.member-ui .workflow-card:hover { border-color: transparent; }
+.member-ui :is(.primary-button, .m-btn-primary, .account-submit) { background: var(--action); color: var(--ink); box-shadow: none; }
+.member-ui :is(.primary-button, .m-btn-primary, .account-submit):hover:not(:disabled) { background: var(--action-hover); transform: none; box-shadow: none; }
+.member-ui .provider-button:hover { transform: none; }
+.member-ui .signout-button:not(.account-submit) { border-color: transparent; background: var(--m-surface-2); }
+.member-ui .signout-button:not(.account-submit):hover { border-color: transparent; background: var(--m-line); }
+.member-ui .mode-note { border-color: transparent; }
+.member-ui .card-index { padding: 2px 10px; border-radius: 999px; background: var(--m-blue-soft); color: var(--m-brand); font-family: var(--m-display); letter-spacing: .02em; }
+.member-ui .studio-card .card-index { background: rgba(255, 255, 255, .2); color: #fff; }
+.member-ui .credits-number { font-family: var(--m-display); color: var(--m-ink); }
+.member-ui .greeting-mascot, .member-ui .showcase-mascot { filter: none; }
+.member-ui .field input { border-radius: 14px; border-color: var(--m-line-strong); }
+.member-ui .showcase-list li { border: 0; }
+.member-ui .auth-showcase h2 { font-size: 30px; letter-spacing: -.03em; }
+
+/* /app/: "your work lives in the studio" panel (replaces the old works list) */
+.member-ui .works-section { margin: 20px 0 64px; padding: 24px; border: 1px solid var(--m-line); border-radius: 20px; background: #fff; }
+.member-ui .works-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.member-ui .works-heading h2 { margin: 0; font-family: var(--m-display); font-size: 22px; font-weight: 600; color: var(--m-ink); }
+.member-ui .works-note { margin: 6px 0 0; font-size: 14px; line-height: 1.7; color: var(--m-ink-2); }
+.member-ui .works-heading .works-button { display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--action); color: var(--ink); font-size: 14px; font-weight: 600; }
+.member-ui .works-heading .works-button:hover { background: var(--action-hover); }
+.member-ui .workflow-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.member-ui .card-index { color: var(--m-brand); }
+@media (max-width: 560px) { .member-ui .works-heading { flex-direction: column; align-items: flex-start; } }
+
+/* ---------- /legal/*: same bar, flat white panels ---------- */
+.doc-shell { padding-top: 48px; }
+.doc-updated { color: var(--ink-3); }
+.doc-page h1, .doc-page h2, .doc-contact .doc-phone { font-family: var(--u-display); }
+.doc-page h1 { font-size: clamp(32px, 5vw, 48px); letter-spacing: -.03em; }
+.doc-page h2 { scroll-margin-top: 96px; }
+.doc-lead { color: var(--ink-2); }
+.doc-toc, .doc-table-wrap, .doc-contact { border: 0; border-radius: 20px; background: #fff; }
+.doc-toc { padding: 18px 22px; }
+.doc-toc strong, .doc-crosslinks strong { color: var(--brand); }
+.doc-toc a:hover { color: var(--brand); }
+.doc-table-wrap th { background: var(--u-gray); color: var(--ink); }
+.doc-table-wrap th, .doc-table-wrap td { border-bottom-color: var(--line); }
+.doc-page code { background: var(--u-sky); }
+.doc-contact .doc-phone { color: var(--brand); }
+.doc-crosslinks { border-top-color: var(--line); }
+.doc-crosslinks a { border: 0; background: #fff; color: var(--ink); }
+.doc-crosslinks a:hover { background: var(--u-gray-2); }
+
+@media (max-width: 560px) {
+  /* app bar: brand + account on the first row, the menu on its own row */
+  .member-ui .glass-nav.app-topbar { height: auto; padding: 8px 8px 8px 14px; row-gap: 8px; }
+  .member-ui .topbar-nav { justify-content: flex-start; }
+  .member-ui .glass-nav.auth-topbar, .doc-topbar { height: 58px; padding: 0 8px 0 14px; }
+  .member-ui .app-topbar [data-account-menu] { margin-left: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .member-ui .workflow-card:hover { transform: none; }
+}
