@@ -3,9 +3,10 @@
  * seed's own text (a preset the user edited in settings is user data and is left alone).
  * Runs at startup after the migrations (src/core/db/index.ts).
  */
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import * as schema from './schema.js'
+import { artStyleSeeds } from './style-seeds.js'
 
 /**
  * 风格预设种子数据 — value 存入 dramas.style，prompt 注入生图提示词（作为前缀拼接）
@@ -79,11 +80,13 @@ const REMOVED_SEED_PROMPTS: Record<string, string> = {
 
 export async function seedStylePresets(db: PostgresJsDatabase<typeof schema>): Promise<void> {
   const presets = schema.stylePresets
-  for (const s of stylePresetSeeds) {
+  // the 8 built-in presets are the "Animation" tab's first cards; the art style catalog adds Live Action + more Animation
+  const builtIn = stylePresetSeeds.map(s => ({ ...s, category: 'animation' as const }))
+  for (const s of [...builtIn, ...artStyleSeeds]) {
     const ts = new Date().toISOString()
     // only fills a missing value; never overwrites a user's edit (value is unique)
     await db.insert(presets).values({
-      name: s.name, value: s.value, prompt: s.prompt, description: s.description,
+      name: s.name, value: s.value, prompt: s.prompt, description: s.description, category: s.category,
       sortOrder: s.sortOrder, isActive: true, createdAt: ts, updatedAt: ts,
     }).onConflictDoNothing({ target: presets.value })
     const legacyPrompt = LEGACY_SEED_PROMPTS[s.value]
@@ -95,6 +98,9 @@ export async function seedStylePresets(db: PostgresJsDatabase<typeof schema>): P
       if (upgraded.length > 0) console.log(`🎨 风格预设「${s.name}」已升级为结构化提示词`)
     }
   }
+  // built-in rows seeded before categories existed: file them under Animation (a category someone set stays)
+  await db.update(presets).set({ category: 'animation' })
+    .where(and(inArray(presets.value, builtIn.map(s => s.value)), isNull(presets.category)))
   for (const [value, prompt] of Object.entries(REMOVED_SEED_PROMPTS)) {
     const removed = await db.delete(presets).where(and(eq(presets.value, value), eq(presets.prompt, prompt))).returning({ id: presets.id })
     if (removed.length > 0) console.log(`🗑️ 风格预设「${value}」已下架`)
