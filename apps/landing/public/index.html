@@ -23,12 +23,13 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" sizes="180x180">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="/assets/soap-640.jpg">
   <link rel="stylesheet" href="/glass-nav.css">
   <link rel="stylesheet" href="/member.css">
   <link rel="stylesheet" href="/landing.css">
   <link rel="stylesheet" href="/hero-line.css">
+  <link rel="stylesheet" href="/ui-land.css">
   <script src="/account-menu.js" defer></script>
   <script src="/landing.js" defer></script>
   <script src="/glass-nav.js" defer></script>
@@ -122,6 +123,75 @@
 
       <div class="shell platforms" aria-label="ช่องทางขาย">
         <span>ขายได้บน</span><b>TikTok</b><b>Facebook</b><b>Instagram</b><b>Shopee</b>
+      </div>
+    </section>
+
+    <!-- Products rail (ui-land.css): one flat card per product, linking to its sample wall below -->
+    <section class="u-section u-services" aria-labelledby="services-title">
+      <div class="shell">
+        <div class="u-head">
+          <p class="u-kicker">ผลิตภัณฑ์ของนาคา</p>
+          <h2 id="services-title">เลือกงานที่อยากให้นาคาทำ</h2>
+          <p>คลิปรีวิว ละครสั้น ไลฟ์ และตอบแชท เริ่มจากรูปและข้อมูลสินค้าที่ร้านคุณมีอยู่แล้ว</p>
+        </div>
+        <div class="u-rail">
+          <a class="u-svc is-blue" href="#p-review">
+            <span class="u-tag">ลองฟรี</span>
+            <h3>รีวิว Affiliate</h3>
+            <p>คลิปรีวิวแนวตั้งจากรูปสินค้า 1–6 รูป พร้อมเสียงพากย์ไทยและลิงก์ของคุณ</p>
+            <span class="u-arrow" aria-hidden="true">↗</span>
+            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-soap-campaign.jpg" aria-hidden="true"><source src="/showcase/h3/rv-soap-campaign.mp4" type="video/mp4"></video></span>
+          </a>
+          <a class="u-svc" href="#p-drama">
+            <h3>ละครสั้น AI</h3>
+            <p>จากพล็อตและตัวละคร เป็นฉากแนวตั้งพร้อมเสียงพากย์ ตัดเป็นตอนสั้นชวนติดตาม</p>
+            <span class="u-arrow" aria-hidden="true">↗</span>
+            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-heir.jpg" aria-hidden="true"><source src="/showcase/h3/dr-heir.mp4" type="video/mp4"></video></span>
+          </a>
+          <a class="u-svc is-black" href="#p-live">
+            <h3>AI Live</h3>
+            <p>อวตาร AI แนะนำสินค้าและตอบคำถามคนดูระหว่างไลฟ์ ตามข้อมูลที่คุณให้</p>
+            <span class="u-arrow" aria-hidden="true">↗</span>
+            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-naka-host.jpg" aria-hidden="true"><source src="/showcase/h3/lv-naka-host.mp4" type="video/mp4"></video></span>
+          </a>
+          <a class="u-svc is-sky" href="#p-bot">
+            <h3>แชทบอท</h3>
+            <p>ตอบแชทและคอมเมนต์ด้วยข้อมูลของร้าน เรื่องที่ต้องตัดสินใจส่งต่อให้คนในร้าน</p>
+            <span class="u-arrow" aria-hidden="true">↗</span>
+            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-cafe.jpg" aria-hidden="true"><source src="/showcase/h3/bt-cafe.mp4" type="video/mp4"></video></span>
+          </a>
+        </div>
+        <p class="u-note">คลิปในการ์ดคือตัวอย่างที่ทำด้วยนาคา</p>
+      </div>
+    </section>
+
+    <!-- How it works (ui-land.css): 2 x 2 bento, one step per card -->
+    <section class="u-section u-steps" aria-labelledby="steps-title">
+      <div class="shell">
+        <div class="u-head">
+          <p class="u-kicker">ทำงานยังไง</p>
+          <h2 id="steps-title">จากรูปสินค้า ถึงคลิปพร้อมโพสต์</h2>
+          <p>ใส่รูปสินค้า นาคาเขียนบทและพากย์เสียงไทยให้ แล้วคุณตรวจก่อนโพสต์ทุกครั้ง</p>
+          <div class="u-links"><a href="/review/?demo=1">ลองด้วยบทตัวอย่าง →</a><a href="/login/?mode=register">สมัครสมาชิก →</a></div>
+        </div>
+        <div class="u-bento">
+          <article class="u-card is-blue">
+            <div><p class="u-step">01</p><h3>ใส่รูปสินค้า</h3><p>รูปสินค้า 1–6 รูปกับจุดขายจริงของสินค้า ไม่ต้องถ่ายวิดีโอ ไม่ต้องพูดเอง</p><a class="u-pill" href="/review/?demo=1">ลองเลย ↗</a></div>
+            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-upload.jpg" aria-hidden="true"><source src="/showcase/h3/anim-upload.mp4" type="video/mp4"></video></span>
+          </article>
+          <article class="u-card">
+            <div><p class="u-step">02</p><h3>นาคาเขียนบทและพากย์เสียงไทย</h3><p>บทเขียนจากข้อมูลที่คุณให้เท่านั้น ไม่เติมสรรพคุณ รีวิวปลอม หรือส่วนลดที่ไม่มี</p><a class="u-pill" href="#reel">ฟังตัวอย่าง ↓</a></div>
+            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-voice.jpg" aria-hidden="true"><source src="/showcase/h3/anim-voice.mp4" type="video/mp4"></video></span>
+          </article>
+          <article class="u-card is-black">
+            <div><p class="u-step">03</p><h3>คุณตรวจก่อนโพสต์</h3><p>เห็นบท เสียง และคลิปก่อนเผยแพร่เสมอ ไม่มีอะไรขึ้นฟีดโดยที่คุณไม่รู้</p><a class="u-pill" href="#trust">การรับประกัน ↓</a></div>
+            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-review.jpg" aria-hidden="true"><source src="/showcase/h3/anim-review.mp4" type="video/mp4"></video></span>
+          </article>
+          <article class="u-card is-line">
+            <div><p class="u-step">04</p><h3>ได้คลิปแนวตั้ง พร้อมลง<span class="nw">ทุกช่องทาง</span></h3><p>คลิป 9:16 ใช้ได้ทั้ง TikTok Facebook Instagram และ Shopee</p><a class="u-pill" href="#social">ดูบนโซเชียล ↓</a></div>
+            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-done.jpg" aria-hidden="true"><source src="/showcase/h3/anim-done.mp4" type="video/mp4"></video></span>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -541,12 +611,19 @@
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="shell footer-row">
-      <a class="brand" href="/"><img src="/logo.svg?v=4" alt="" width="30" height="30"><span>naka<span>-ai</span><b>.</b></span></a>
-      <nav aria-label="ลิงก์ท้ายหน้า"><a href="#p-review">รีวิว Affiliate</a><a href="#p-drama">ละครสั้น AI</a><a href="#p-live">AI Live</a><a href="#p-bot">แชทบอท</a><a href="#social">ตัวอย่างบนโซเชียล</a><a href="#trust">การรับประกัน</a><a href="tel:+66892788587">0892788587</a><a href="/legal/privacy/">ความเป็นส่วนตัว</a><a href="/legal/terms/">ข้อกำหนด</a><a href="/legal/refund/">คืนเงิน</a><a href="/legal/data-deletion/">ลบข้อมูล</a></nav>
-      <span class="footer-copy">© <span id="year">2026</span> naka-ai · NAKA-AI Tech</span>
+  <footer class="site-footer u-footer">
+    <div class="shell u-foot-grid">
+      <div class="u-foot-brand">
+        <a class="brand" href="/"><img src="/logo.svg?v=4" alt="" width="30" height="30"><span>naka<span>-ai</span><b>.</b></span></a>
+        <p>เครื่องมือ AI ของร้านไทย เสกคลิปขายของ ละครสั้น ไลฟ์ และตอบแชท จากรูปสินค้า พร้อมเสียงพากย์ไทย</p>
+        <a class="btn btn-primary btn-sm" href="/login/?mode=register">สมัครสมาชิก <span aria-hidden="true">↗</span></a>
+      </div>
+      <nav class="u-foot-col" aria-label="ผลิตภัณฑ์"><p>ผลิตภัณฑ์</p><a href="#p-review">รีวิว Affiliate</a><a href="#p-drama">ละครสั้น AI</a><a href="#p-live">AI Live</a><a href="#p-bot">แชทบอท</a></nav>
+      <nav class="u-foot-col" aria-label="ดูตัวอย่าง"><p>ดูตัวอย่าง</p><a href="#reel">โรงงานวิดีโอ</a><a href="#social">ตัวอย่างบนโซเชียล</a><a href="#trust">การรับประกัน</a><a href="/review/?demo=1">ลองด้วยบทตัวอย่าง</a></nav>
+      <nav class="u-foot-col" aria-label="ติดต่อและนโยบาย"><p>ติดต่อและนโยบาย</p><a href="tel:+66892788587">โทร 089 278 8587</a><a href="/legal/privacy/">ความเป็นส่วนตัว</a><a href="/legal/terms/">ข้อกำหนด</a><a href="/legal/refund/">คืนเงิน</a><a href="/legal/data-deletion/">ลบข้อมูล</a></nav>
     </div>
+    <div class="shell u-foot-bottom"><span class="footer-copy">© <span id="year">2026</span> naka-ai · NAKA-AI Tech</span><a href="#main">กลับขึ้นด้านบน ↑</a></div>
+    <p class="u-wordmark" aria-hidden="true">naka-ai</p>
   </footer>
 </body>
 </html>
