@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" sizes="180x180">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="/assets/soap-640.jpg">
   <link rel="stylesheet" href="/glass-nav.css">
   <link rel="stylesheet" href="/member.css">
@@ -34,6 +34,7 @@
   <script src="/landing.js" defer></script>
   <script src="/glass-nav.js" defer></script>
   <script src="/hero-line.js" defer></script>
+  <script src="/gallery.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">ข้ามไปเนื้อหา</a>
@@ -41,10 +42,10 @@
   <header class="landing-nav glass-nav">
     <div class="shell nav-row">
       <a class="brand" href="/" aria-label="naka-ai หน้าแรก"><img src="/logo.svg?v=4" alt="" width="36" height="36"><span>naka<span>-ai</span><b>.</b></span><small class="brand-tag" aria-hidden="true">AI FACTORY</small></a>
-      <!-- Main menu = the factory's video wall (#reel) plus the four products as numbered production lines;
-           each line opens a small panel with samples and a start link -->
+      <!-- Main menu = the clip library (#reel) plus the four products; each opens a small panel whose
+           sample link (#p-review ...) opens that product's tab in the library -->
       <nav class="nav-links" aria-label="ผลิตภัณฑ์">
-        <a class="nav-factory" href="#reel"><i class="fx-led" aria-hidden="true"></i>โรงงานวิดีโอ</a>
+        <a class="nav-factory" href="#reel"><i class="fx-led" aria-hidden="true"></i>คลังคลิป</a>
         <div class="nav-item">
           <button class="nav-trigger" type="button" aria-expanded="false" aria-controls="menu-review"><i class="line-no" aria-hidden="true">01</i>รีวิว Affiliate <span aria-hidden="true">▾</span></button>
           <div class="nav-panel" id="menu-review" hidden>
@@ -87,7 +88,7 @@
       <button class="menu-button" type="button" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
     </div>
     <nav class="mobile-nav shell" id="mobile-nav" aria-label="เมนูมือถือ" hidden>
-      <a class="mobile-factory" href="#reel"><b><i class="fx-led" aria-hidden="true"></i>โรงงานวิดีโอของนาคา</b><small>ดูคลิปที่นาคาเสกจากรูปสินค้า</small></a>
+      <a class="mobile-factory" href="#reel"><b><i class="fx-led" aria-hidden="true"></i>คลังคลิปของนาคา</b><small>คลิปจริงที่นาคาทำจากรูปสินค้า</small></a>
       <a href="#p-review"><b><i class="line-no" aria-hidden="true">01</i>รีวิว Affiliate</b><small>คลิปรีวิวพร้อมลิงก์ · ลองฟรี</small></a>
       <a href="#p-drama"><b><i class="line-no" aria-hidden="true">02</i>ละครสั้น AI</b><small>ฉากแนวตั้งพร้อมเสียงพากย์</small></a>
       <a href="#p-live"><b><i class="line-no" aria-hidden="true">03</i>AI Live</b><small>อวตารไลฟ์ขายสินค้า</small></a>
@@ -126,375 +127,279 @@
       </div>
     </section>
 
-    <!-- Products rail (ui-land.css): one flat card per product, linking to its sample wall below -->
-    <section class="u-section u-services" aria-labelledby="services-title">
-      <div class="shell">
-        <div class="u-head">
-          <p class="u-kicker">ผลิตภัณฑ์ของนาคา</p>
-          <h2 id="services-title">เลือกงานที่อยากให้นาคาทำ</h2>
-          <p>คลิปรีวิว ละครสั้น ไลฟ์ และตอบแชท เริ่มจากรูปและข้อมูลสินค้าที่ร้านคุณมีอยู่แล้ว</p>
-        </div>
-        <div class="u-rail">
-          <a class="u-svc is-blue" href="#p-review">
-            <span class="u-tag">ลองฟรี</span>
-            <h3>รีวิว Affiliate</h3>
-            <p>คลิปรีวิวแนวตั้งจากรูปสินค้า 1–6 รูป พร้อมเสียงพากย์ไทยและลิงก์ของคุณ</p>
-            <span class="u-arrow" aria-hidden="true">↗</span>
-            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-soap-campaign.jpg" aria-hidden="true"><source src="/showcase/h3/rv-soap-campaign.mp4" type="video/mp4"></video></span>
-          </a>
-          <a class="u-svc" href="#p-drama">
-            <h3>ละครสั้น AI</h3>
-            <p>จากพล็อตและตัวละคร เป็นฉากแนวตั้งพร้อมเสียงพากย์ ตัดเป็นตอนสั้นชวนติดตาม</p>
-            <span class="u-arrow" aria-hidden="true">↗</span>
-            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-heir.jpg" aria-hidden="true"><source src="/showcase/h3/dr-heir.mp4" type="video/mp4"></video></span>
-          </a>
-          <a class="u-svc is-black" href="#p-live">
-            <h3>AI Live</h3>
-            <p>อวตาร AI แนะนำสินค้าและตอบคำถามคนดูระหว่างไลฟ์ ตามข้อมูลที่คุณให้</p>
-            <span class="u-arrow" aria-hidden="true">↗</span>
-            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-naka-host.jpg" aria-hidden="true"><source src="/showcase/h3/lv-naka-host.mp4" type="video/mp4"></video></span>
-          </a>
-          <a class="u-svc is-sky" href="#p-bot">
-            <h3>แชทบอท</h3>
-            <p>ตอบแชทและคอมเมนต์ด้วยข้อมูลของร้าน เรื่องที่ต้องตัดสินใจส่งต่อให้คนในร้าน</p>
-            <span class="u-arrow" aria-hidden="true">↗</span>
-            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-cafe.jpg" aria-hidden="true"><source src="/showcase/h3/bt-cafe.mp4" type="video/mp4"></video></span>
-          </a>
-        </div>
-        <p class="u-note">คลิปในการ์ดคือตัวอย่างที่ทำด้วยนาคา</p>
-      </div>
-    </section>
-
-    <!-- How it works (ui-land.css): 2 x 2 bento, one step per card -->
-    <section class="u-section u-steps" aria-labelledby="steps-title">
-      <div class="shell">
-        <div class="u-head">
-          <p class="u-kicker">ทำงานยังไง</p>
-          <h2 id="steps-title">จากรูปสินค้า ถึงคลิปพร้อมโพสต์</h2>
-          <p>ใส่รูปสินค้า นาคาเขียนบทและพากย์เสียงไทยให้ แล้วคุณตรวจก่อนโพสต์ทุกครั้ง</p>
-          <div class="u-links"><a href="/review/?demo=1">ลองด้วยบทตัวอย่าง →</a><a href="/login/?mode=register">สมัครสมาชิก →</a></div>
-        </div>
-        <div class="u-bento">
-          <article class="u-card is-blue">
-            <div><p class="u-step">01</p><h3>ใส่รูปสินค้า</h3><p>รูปสินค้า 1–6 รูปกับจุดขายจริงของสินค้า ไม่ต้องถ่ายวิดีโอ ไม่ต้องพูดเอง</p><a class="u-pill" href="/review/?demo=1">ลองเลย ↗</a></div>
-            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-upload.jpg" aria-hidden="true"><source src="/showcase/h3/anim-upload.mp4" type="video/mp4"></video></span>
-          </article>
-          <article class="u-card">
-            <div><p class="u-step">02</p><h3>นาคาเขียนบทและพากย์เสียงไทย</h3><p>บทเขียนจากข้อมูลที่คุณให้เท่านั้น ไม่เติมสรรพคุณ รีวิวปลอม หรือส่วนลดที่ไม่มี</p><a class="u-pill" href="#reel">ฟังตัวอย่าง ↓</a></div>
-            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-voice.jpg" aria-hidden="true"><source src="/showcase/h3/anim-voice.mp4" type="video/mp4"></video></span>
-          </article>
-          <article class="u-card is-black">
-            <div><p class="u-step">03</p><h3>คุณตรวจก่อนโพสต์</h3><p>เห็นบท เสียง และคลิปก่อนเผยแพร่เสมอ ไม่มีอะไรขึ้นฟีดโดยที่คุณไม่รู้</p><a class="u-pill" href="#trust">การรับประกัน ↓</a></div>
-            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-review.jpg" aria-hidden="true"><source src="/showcase/h3/anim-review.mp4" type="video/mp4"></video></span>
-          </article>
-          <article class="u-card is-line">
-            <div><p class="u-step">04</p><h3>ได้คลิปแนวตั้ง พร้อมลง<span class="nw">ทุกช่องทาง</span></h3><p>คลิป 9:16 ใช้ได้ทั้ง TikTok Facebook Instagram และ Shopee</p><a class="u-pill" href="#social">ดูบนโซเชียล ↓</a></div>
-            <span class="u-shot"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-done.jpg" aria-hidden="true"><source src="/showcase/h3/anim-done.mp4" type="video/mp4"></video></span>
-          </article>
-        </div>
-      </div>
-    </section>
-
     <!-- reel:start -->
-    <!-- generated by creative/unsloth-reel/build-reel.cjs; edit shots.json, not this block -->
-    <section class="reel" id="reel" aria-labelledby="reel-title">
-      <div class="reel-shell reel-head">
-        <div>
-          <p class="reel-kicker"><span class="reel-led" aria-hidden="true"></span>MAIN LINE · NAKA VIDEO ENGINE</p>
-          <h2 id="reel-title">โรงงานวิดีโอของ<em>นาคา</em></h2>
-          <p class="row-sub">ทุกคลิปบนผนังนี้เริ่มจากรูปนิ่งรูปเดียว ภาพเคลื่อนไหวและเสียงพูดไทยถูกสร้างมาพร้อมกัน แตะไอคอนลำโพงเพื่อฟังเสียง</p>
-        </div>
-        <ul class="reel-status" aria-label="สถานะสายการผลิต"><li>MiniMax H3 · Unsloth</li><li>9:16 · 24fps</li><li>เสียงพากย์ไทย</li></ul>
+    <!-- generated by creative/unsloth-reel/build-reel.cjs; edit shots.json or chat-cards.html, not this block -->
+    <section class="g-gallery" id="reel" aria-labelledby="reel-title" data-gallery>
+      <span class="g-anchor" id="p-review" data-tab-anchor="review"></span>
+      <span class="g-anchor" id="p-drama" data-tab-anchor="drama"></span>
+      <span class="g-anchor" id="p-live" data-tab-anchor="live"></span>
+      <span class="g-anchor" id="p-bot" data-tab-anchor="bot"></span>
+      <div class="g-shell g-head">
+        <p class="g-kicker">คลังคลิปจริง · 29 คลิป</p>
+        <h2 id="reel-title">ทุกคลิปเริ่มจาก<em>ภาพนิ่งภาพเดียว</em></h2>
+        <p class="g-sub">ภาพเคลื่อนไหวกับเสียงพากย์ไทยสร้างมาพร้อมกัน แตะปุ่มลำโพงบนคลิปเพื่อฟังเสียง หรือกดปุ่มใต้คลิปเพื่อเริ่มจากแบบเดียวกัน</p>
       </div>
-      <div class="reel-shell reel-wall" role="group" aria-label="ตัวอย่างวิดีโอที่นาคาสร้าง">
-        <div class="reel-feature">
-          <p class="rf-kicker">STATION 00 · เอนจินวิดีโอของนาคา</p>
-          <h3>รูปเดียว<br>เป็นคลิปพร้อม<br><em>เสียงพากย์ไทย</em></h3>
-          <ol class="rf-steps"><li><b>1</b><span>ใส่รูปสินค้า<small>INPUT · รูป 1 รูป</small></span></li><li><b>2</b><span>นาคาเขียนบท<small>SCRIPT · ภาษาไทย</small></span></li><li><b>3</b><span>ได้คลิป 9:16 พร้อมเสียง<small>OUTPUT · พร้อมโพสต์</small></span></li></ol>
-          <a class="btn btn-primary" href="/login/?mode=register">เริ่มเสกคลิปแรก <span aria-hidden="true">↗</span></a>
-          <img class="rf-naka" src="/assets/naka-plush-320.png" width="320" height="320" loading="lazy" alt=""><span class="rf-belt" aria-hidden="true"></span>
-        </div>
-          <div class="tpl reel-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/naka-line.jpg" aria-hidden="true"><source src="/showcase/h3/naka-line.mp4" type="video/mp4"></video></div><span class="tpl-chip reel-ticket tpl-chip-new"><i>#01</i>ระบบนาคา</span><div class="tpl-body"><h3>สายพานเสกคลิป</h3><p>รูปสินค้าเข้า คลิปแนวตั้งออก</p><span class="tpl-try">ลองส่งรูปแรก ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/naka-line-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สายพานเสกคลิป"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สายพานเสกคลิป"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl reel-card">
-            <a class="reel-link" href="/create/?workflow=live"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/live-naka.jpg" aria-hidden="true"><source src="/showcase/h3/live-naka.mp4" type="video/mp4"></video></div><span class="tpl-chip reel-ticket tpl-chip-live"><i>#02</i>AI Live</span><div class="tpl-body"><h3>นาคาไลฟ์ขายผ้าไหม</h3><p>อวตารทักคนดูและชูสินค้าเอง</p><span class="tpl-try">ตั้งค่าไลฟ์ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/live-naka-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป นาคาไลฟ์ขายผ้าไหม"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป นาคาไลฟ์ขายผ้าไหม"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl reel-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/review-soap.jpg" aria-hidden="true"><source src="/showcase/h3/review-soap.mp4" type="video/mp4"></video></div><span class="tpl-chip reel-ticket"><i>#03</i>รีวิวสินค้า</span><div class="tpl-body"><h3>สบู่สมุนไพรทำมือ</h3><p>จากรูปสินค้า 1 รูป</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/review-soap-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สบู่สมุนไพรทำมือ"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สบู่สมุนไพรทำมือ"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl reel-card">
-            <a class="reel-link" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/drama-naka.jpg" aria-hidden="true"><source src="/showcase/h3/drama-naka.mp4" type="video/mp4"></video></div><span class="tpl-chip reel-ticket"><i>#04</i>ละครสั้น</span><div class="tpl-body"><h3>แอคชั่น!</h3><p>นาคากำกับฉากเปิดเรื่อง</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/drama-naka-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป แอคชั่น!"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป แอคชั่น!"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl reel-card">
-            <a class="reel-link" href="/create/?workflow=bot"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bot-naka.jpg" aria-hidden="true"><source src="/showcase/h3/bot-naka.mp4" type="video/mp4"></video></div><span class="tpl-chip reel-ticket"><i>#05</i>แชทบอท</span><div class="tpl-body"><h3>ตอบแชทไม่มีพัก</h3><p>ตอบตามข้อมูลของร้าน</p><span class="tpl-try">ตั้งค่าบอท ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/bot-naka-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป ตอบแชทไม่มีพัก"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ตอบแชทไม่มีพัก"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl reel-card">
-            <a class="reel-link" href="/login/?mode=register"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/naka-hello.jpg" aria-hidden="true"><source src="/showcase/h3/naka-hello.mp4" type="video/mp4"></video></div><span class="tpl-chip reel-ticket tpl-chip-new"><i>#06</i>นาคา</span><div class="tpl-body"><h3>สวัสดี ผมนาคา</h3><p>ผู้ช่วย AI ของร้านคุณ</p><span class="tpl-try">สมัครสมาชิก ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/naka-hello-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สวัสดี ผมนาคา"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สวัสดี ผมนาคา"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl reel-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/streetfood.jpg" aria-hidden="true"><source src="/showcase/h3/streetfood.mp4" type="video/mp4"></video></div><span class="tpl-chip reel-ticket"><i>#07</i>ร้านอาหาร</span><div class="tpl-body"><h3>ผัดไทยตลาดนัด</h3><p>คลิปขายของแนวตั้ง</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ผัดไทยตลาดนัด"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl reel-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lipstick.jpg" aria-hidden="true"><source src="/showcase/h3/lipstick.mp4" type="video/mp4"></video></div><span class="tpl-chip reel-ticket"><i>#08</i>ความงาม</span><div class="tpl-body"><h3>รีวิวลิปติดทน</h3><p>พรีเซนเตอร์ AI พูดไทย</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป รีวิวลิปติดทน"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl reel-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/thai-tea.jpg" aria-hidden="true"><source src="/showcase/h3/thai-tea.mp4" type="video/mp4"></video></div><span class="tpl-chip reel-ticket"><i>#09</i>คาเฟ่</span><div class="tpl-body"><h3>ชาไทยเย็น</h3><p>ช็อตสินค้าพร้อมเสียงบรรยาย</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ชาไทยเย็น"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <a class="reel-slot" href="/login/?mode=register" data-d="2" data-t="0" data-m="1"><span class="reel-ticket"><i>#10</i>รอคิว</span><span class="slot-plus" aria-hidden="true">+</span><b>คลิปถัดไปของร้านคุณ</b><span class="slot-cta">ส่งรูปเข้าสายพาน ↗</span></a>
+      <div class="g-shell g-tabs" role="group" aria-label="เลือกประเภทงาน">
+        <button type="button" data-tab="all" aria-pressed="true">ทั้งหมด <span>32</span></button>
+        <button type="button" data-tab="review" aria-pressed="false">รีวิว Affiliate <span>10</span></button>
+        <button type="button" data-tab="drama" aria-pressed="false">ละครสั้น AI <span>6</span></button>
+        <button type="button" data-tab="live" aria-pressed="false">AI Live <span>7</span></button>
+        <button type="button" data-tab="bot" aria-pressed="false">แชทบอท <span>8</span></button>
       </div>
-      <p class="reel-shell reel-note">คลิปที่มี “จากรูปนี้” สร้างด้วยโมเดลวิดีโอ MiniMax H3 ที่รันผ่าน Unsloth · ภาพและเสียงสร้างด้วย AI · สินค้าและร้านเป็นตัวอย่างสมมติ</p>
+      <div class="g-shell g-panels">
+        <div class="g-panel" data-panel="all"><p>สี่งานขายในที่เดียว: คลิปรีวิว ละครสั้น ไลฟ์ และตอบแชท เริ่มจากรูปและข้อมูลสินค้าที่ร้านมีอยู่แล้ว</p><a class="btn btn-blue btn-sm" href="/login/?mode=register">สมัครสมาชิก เริ่มเสกกับนาคา <span aria-hidden="true">↗</span></a></div>
+        <div class="g-panel" data-panel="review" hidden><p><b>ลองฟรี</b> รูปสินค้า 1 ถึง 6 รูป ได้บท เสียงพากย์ไทย และคลิปแนวตั้งพร้อมแคปชันที่แนบลิงก์ของคุณ</p><a class="btn btn-blue btn-sm" href="/review/?demo=1">เริ่มสร้างคลิปรีวิว <span aria-hidden="true">↗</span></a></div>
+        <div class="g-panel" data-panel="drama" hidden><p>จากพล็อตและตัวละคร เป็นฉากแนวตั้งพร้อมเสียงพากย์ ตัดเป็นตอนสั้นชวนติดตาม</p><a class="btn btn-blue btn-sm" href="/create/?workflow=drama">เริ่มทำละคร <span aria-hidden="true">↗</span></a></div>
+        <div class="g-panel" data-panel="live" hidden><p>อวตาร AI แนะนำสินค้าและตอบคำถามคนดูระหว่างไลฟ์ ตามข้อมูลสินค้าที่คุณให้</p><a class="btn btn-blue btn-sm" href="/create/?workflow=live">เริ่มตั้งค่าไลฟ์ <span aria-hidden="true">↗</span></a></div>
+        <div class="g-panel" data-panel="bot" hidden><p>ตอบแชทและคอมเมนต์ด้วยข้อมูลของร้าน เรื่องที่ต้องตัดสินใจส่งต่อให้คนในร้าน</p><a class="btn btn-blue btn-sm" href="/create/?workflow=bot">เริ่มตั้งค่าบอท <span aria-hidden="true">↗</span></a></div>
+      </div>
+      <div class="g-shell g-grid">
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/review-soap.jpg" aria-hidden="true"><source src="/showcase/h3/review-soap.mp4" type="video/mp4"></video>
+          <span class="g-chip">รีวิวสินค้า</span>
+          <figure class="g-from"><img src="/showcase/h3/review-soap-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สบู่สมุนไพรทำมือ"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สบู่สมุนไพรทำมือ"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>สบู่สมุนไพรทำมือ</h3><p>จากรูปสินค้า 1 รูป</p><a class="g-use" href="/review/?demo=1">ลองแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="drama">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-heir.jpg" aria-hidden="true"><source src="/showcase/h3/dr-heir.mp4" type="video/mp4"></video>
+          <span class="g-chip">ละครสั้น</span>
+          <figure class="g-from"><img src="/showcase/h3/dr-heir-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป ทายาทกลับบ้าน"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ทายาทกลับบ้าน"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ทายาทกลับบ้าน</h3><p>ฉากเปิดตัวพร้อมบทพูด</p><a class="g-use" href="/create/?workflow=drama">ทำละครแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="live">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-skincare.jpg" aria-hidden="true"><source src="/showcase/h3/lv-skincare.mp4" type="video/mp4"></video>
+          <span class="g-chip is-live">LIVE</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ไลฟ์ขายเซรั่ม"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ไลฟ์ขายเซรั่ม</h3><p>พิธีกรโชว์สินค้า</p><a class="g-use" href="/create/?workflow=live">ตั้งค่าไลฟ์ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="bot">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-packing.jpg" aria-hidden="true"><source src="/showcase/h3/bt-packing.mp4" type="video/mp4"></video>
+          <span class="g-chip">แชทบอท</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป บอตตอบแชท คุณแพ็กของ"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>บอตตอบแชท คุณแพ็กของ</h3><p>ไม่ต้องวางมือจากงาน</p><a class="g-use" href="/create/?workflow=bot">ตั้งค่าบอท ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/streetfood.jpg" aria-hidden="true"><source src="/showcase/h3/streetfood.mp4" type="video/mp4"></video>
+          <span class="g-chip">ร้านอาหาร</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ผัดไทยตลาดนัด"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ผัดไทยตลาดนัด</h3><p>คลิปขายของแนวตั้ง</p><a class="g-use" href="/review/?demo=1">ลองแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="drama">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-maid.jpg" aria-hidden="true"><source src="/showcase/h3/dr-maid.mp4" type="video/mp4"></video>
+          <span class="g-chip">ละครสั้น</span>
+          <figure class="g-from"><img src="/showcase/h3/dr-maid-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สาวใช้คนใหม่"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สาวใช้คนใหม่"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>สาวใช้คนใหม่</h3><p>วันแรกในคฤหาสน์</p><a class="g-use" href="/create/?workflow=drama">ทำละครแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="live">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-durian.jpg" aria-hidden="true"><source src="/showcase/h3/lv-durian.mp4" type="video/mp4"></video>
+          <span class="g-chip is-live">LIVE</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ไลฟ์ขายทุเรียนสวน"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ไลฟ์ขายทุเรียนสวน</h3><p>ขายสดจากสวน</p><a class="g-use" href="/create/?workflow=live">ตั้งค่าไลฟ์ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="bot">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-cafe.jpg" aria-hidden="true"><source src="/showcase/h3/bt-cafe.mp4" type="video/mp4"></video>
+          <span class="g-chip">แชทบอท</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป คาเฟ่ยุ่ง บอตรับออเดอร์"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>คาเฟ่ยุ่ง บอตรับออเดอร์</h3><p>ตอบเมนูและราคาให้</p><a class="g-use" href="/create/?workflow=bot">ตั้งค่าบอท ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lipstick.jpg" aria-hidden="true"><source src="/showcase/h3/lipstick.mp4" type="video/mp4"></video>
+          <span class="g-chip">ความงาม</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป รีวิวลิปติดทน"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>รีวิวลิปติดทน</h3><p>พรีเซนเตอร์ AI พูดไทย</p><a class="g-use" href="/review/?demo=1">ลองแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="drama">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-hallway.jpg" aria-hidden="true"><source src="/showcase/h3/dr-hallway.mp4" type="video/mp4"></video>
+          <span class="g-chip">ละครสั้น</span>
+          <figure class="g-from"><img src="/showcase/h3/dr-hallway-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป โถงทางเดินสีทอง"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป โถงทางเดินสีทอง"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>โถงทางเดินสีทอง</h3><p>งานหนักที่ไม่มีใครเห็น</p><a class="g-use" href="/create/?workflow=drama">ทำละครแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card g-chat" data-cat="live" data-chat role="group" aria-label="ตัวอย่างคอมเมนต์ระหว่างไลฟ์">
+          <p class="chat-head"><span class="live-dot" aria-hidden="true"></span>คอมเมนต์ระหว่างไลฟ์</p>
+          <ol class="chat-log"><li class="in">มีไซส์ L ไหมคะ</li><li class="out">มีค่ะ ไซส์ L ยังมีตามสต็อกที่ร้านอัปเดตไว้</li><li class="in">ส่งกี่วันถึงคะ</li><li class="out">ร้านส่งทุกวัน ตัดรอบบ่ายสองค่ะ รายละเอียดอยู่ในลิงก์ปักหมุด</li></ol>
+          <p class="g-chat-foot">ตัวอย่างบทสนทนา</p>
+        </article>
+        <article class="g-card g-chat" data-cat="bot" data-chat role="group" aria-label="ตัวอย่าง: ถามนอกข้อมูลร้าน">
+          <p class="chat-head">แชท · คำถามนอกข้อมูลร้าน</p>
+          <ol class="chat-log"><li class="in">ใช้กับผิวแพ้ง่ายได้ไหมคะ</li><li class="out">เรื่องนี้ขอให้แอดมินตอบให้ชัวร์นะคะ รอสักครู่ค่ะ</li><li class="note">ไม่เดาคำตอบเรื่องที่ร้านไม่ได้ให้ข้อมูล</li></ol>
+          <p class="g-chat-foot">ตัวอย่างบทสนทนา</p>
+        </article>
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/thai-tea.jpg" aria-hidden="true"><source src="/showcase/h3/thai-tea.mp4" type="video/mp4"></video>
+          <span class="g-chip">คาเฟ่</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ชาไทยเย็น"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ชาไทยเย็น</h3><p>ช็อตสินค้าพร้อมเสียงบรรยาย</p><a class="g-use" href="/review/?demo=1">ลองแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="drama">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-letter.jpg" aria-hidden="true"><source src="/showcase/h3/dr-letter.mp4" type="video/mp4"></video>
+          <span class="g-chip">หักมุม</span>
+          <figure class="g-from"><img src="/showcase/h3/dr-letter-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป จดหมายปริศนา"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป จดหมายปริศนา"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>จดหมายปริศนา</h3><p>ข้อความที่เปลี่ยนทุกอย่าง</p><a class="g-use" href="/create/?workflow=drama">ทำละครแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="live">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-dress.jpg" aria-hidden="true"><source src="/showcase/h3/lv-dress.mp4" type="video/mp4"></video>
+          <span class="g-chip is-live">LIVE</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ไลฟ์ขายเดรส"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ไลฟ์ขายเดรส</h3><p>ตอบเรื่องไซส์สด ๆ</p><a class="g-use" href="/create/?workflow=live">ตั้งค่าไลฟ์ ↗</a></div>
+        </article>
+        <article class="g-card g-chat" data-cat="bot" data-chat role="group" aria-label="ตัวอย่าง: ส่งต่อคนในร้าน">
+          <p class="chat-head">แชท · ขอคืนเงิน</p>
+          <ol class="chat-log"><li class="in">ของมาถึงแตกค่ะ ขอคืนเงินได้ไหม</li><li class="out">ขอโทษด้วยนะคะ ส่งเรื่องให้แอดมินดูแลแล้วค่ะ รบกวนส่งรูปสินค้าไว้ในแชทนี้</li><li class="note">บอตหยุดตอบ · แจ้งแอดมินให้รับช่วงต่อ</li></ol>
+          <p class="g-chat-foot">ตัวอย่างบทสนทนา</p>
+        </article>
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-soap-campaign.jpg" aria-hidden="true"><source src="/showcase/h3/rv-soap-campaign.mp4" type="video/mp4"></video>
+          <span class="g-chip">รีวิวสินค้า</span>
+          <figure class="g-from"><img src="/showcase/h3/rv-soap-campaign-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สบู่ก้อนหอมมะลิ"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สบู่ก้อนหอมมะลิ"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>สบู่ก้อนหอมมะลิ</h3><p>จากรูปโฆษณา 1 รูป</p><a class="g-use" href="/review/?demo=1">ลองแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="drama">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-room4.jpg" aria-hidden="true"><source src="/showcase/h3/dr-room4.mp4" type="video/mp4"></video>
+          <span class="g-chip">ลึกลับ</span>
+          <figure class="g-from"><img src="/showcase/h3/dr-room4-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป ห้องหมายเลข 4"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ห้องหมายเลข 4"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ห้องหมายเลข 4</h3><p>ประตูที่ไม่ควรเปิด</p><a class="g-use" href="/create/?workflow=drama">ทำละครแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="live">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-chili.jpg" aria-hidden="true"><source src="/showcase/h3/lv-chili.mp4" type="video/mp4"></video>
+          <span class="g-chip is-live">LIVE</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ไลฟ์ขายน้ำพริก"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ไลฟ์ขายน้ำพริก</h3><p>ชิมให้ดูระหว่างไลฟ์</p><a class="g-use" href="/create/?workflow=live">ตั้งค่าไลฟ์ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="bot">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-morning.jpg" aria-hidden="true"><source src="/showcase/h3/bt-morning.mp4" type="video/mp4"></video>
+          <span class="g-chip">แชทบอท</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ตื่นมาออเดอร์เต็ม"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ตื่นมาออเดอร์เต็ม</h3><p>ตอบแชทตลอดคืน</p><a class="g-use" href="/create/?workflow=bot">ตั้งค่าบอท ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-coffee.jpg" aria-hidden="true"><source src="/showcase/h3/rv-coffee.mp4" type="video/mp4"></video>
+          <span class="g-chip">กาแฟ</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป กาแฟดอยคั่วกลาง"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>กาแฟดอยคั่วกลาง</h3><p>ฮุกแรกใน 2 วินาที</p><a class="g-use" href="/review/?demo=1">ลองแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="drama">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/drama-naka.jpg" aria-hidden="true"><source src="/showcase/h3/drama-naka.mp4" type="video/mp4"></video>
+          <span class="g-chip">ละครสั้น</span>
+          <figure class="g-from"><img src="/showcase/h3/drama-naka-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป แอคชั่น!"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป แอคชั่น!"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>แอคชั่น!</h3><p>นาคากำกับฉากเปิดเรื่อง</p><a class="g-use" href="/create/?workflow=drama">ทำละครแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="live">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/live-naka.jpg" aria-hidden="true"><source src="/showcase/h3/live-naka.mp4" type="video/mp4"></video>
+          <span class="g-chip is-live">AI Live</span>
+          <figure class="g-from"><img src="/showcase/h3/live-naka-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป นาคาไลฟ์ขายผ้าไหม"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป นาคาไลฟ์ขายผ้าไหม"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>นาคาไลฟ์ขายผ้าไหม</h3><p>อวตารทักคนดูและชูสินค้าเอง</p><a class="g-use" href="/create/?workflow=live">ตั้งค่าไลฟ์ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="bot">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-handoff.jpg" aria-hidden="true"><source src="/showcase/h3/bt-handoff.mp4" type="video/mp4"></video>
+          <span class="g-chip">ส่งต่อแอดมิน</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป เรื่องสำคัญ ส่งต่อคน"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>เรื่องสำคัญ ส่งต่อคน</h3><p>บอตรู้ว่าเมื่อไรต้องหยุด</p><a class="g-use" href="/create/?workflow=bot">ตั้งค่าบอท ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-sunscreen.jpg" aria-hidden="true"><source src="/showcase/h3/rv-sunscreen.mp4" type="video/mp4"></video>
+          <span class="g-chip">สกินแคร์</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป กันแดดเนื้อบางเบา"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>กันแดดเนื้อบางเบา</h3><p>โชว์เนื้อครีมจริง</p><a class="g-use" href="/review/?demo=1">ลองแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="live">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-naka-host.jpg" aria-hidden="true"><source src="/showcase/h3/lv-naka-host.mp4" type="video/mp4"></video>
+          <span class="g-chip">อวตาร AI</span>
+          <figure class="g-from"><img src="/showcase/h3/lv-naka-host-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป นาคาเป็นพิธีกรไลฟ์"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป นาคาเป็นพิธีกรไลฟ์"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>นาคาเป็นพิธีกรไลฟ์</h3><p>อวตารไลฟ์แทนคุณ</p><a class="g-use" href="/create/?workflow=live">ตั้งค่าไลฟ์ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="bot">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-comments.jpg" aria-hidden="true"><source src="/showcase/h3/bt-comments.mp4" type="video/mp4"></video>
+          <span class="g-chip">คอมเมนต์</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ตอบคอมเมนต์ใต้คลิป"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ตอบคอมเมนต์ใต้คลิป</h3><p>ไม่มีลูกค้าตกหล่น</p><a class="g-use" href="/create/?workflow=bot">ตั้งค่าบอท ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-mango.jpg" aria-hidden="true"><source src="/showcase/h3/rv-mango.mp4" type="video/mp4"></video>
+          <span class="g-chip">ของกิน</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป มะม่วงอบแห้ง"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>มะม่วงอบแห้ง</h3><p>รีวิวกินจริง</p><a class="g-use" href="/review/?demo=1">ลองแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="bot">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bot-naka.jpg" aria-hidden="true"><source src="/showcase/h3/bot-naka.mp4" type="video/mp4"></video>
+          <span class="g-chip">แชทบอท</span>
+          <figure class="g-from"><img src="/showcase/h3/bot-naka-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป ตอบแชทไม่มีพัก"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ตอบแชทไม่มีพัก"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>ตอบแชทไม่มีพัก</h3><p>ตอบตามข้อมูลของร้าน</p><a class="g-use" href="/create/?workflow=bot">ตั้งค่าบอท ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-linen.jpg" aria-hidden="true"><source src="/showcase/h3/rv-linen.mp4" type="video/mp4"></video>
+          <span class="g-chip">แฟชั่น</span>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป เสื้อลินินใส่สบาย"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>เสื้อลินินใส่สบาย</h3><p>ลองใส่ หมุนให้ดูทรง</p><a class="g-use" href="/review/?demo=1">ลองแบบนี้ ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="review">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/naka-line.jpg" aria-hidden="true"><source src="/showcase/h3/naka-line.mp4" type="video/mp4"></video>
+          <span class="g-chip">ระบบนาคา</span>
+          <figure class="g-from"><img src="/showcase/h3/naka-line-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สายพานเสกคลิป"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สายพานเสกคลิป"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>สายพานเสกคลิป</h3><p>รูปสินค้าเข้า คลิปแนวตั้งออก</p><a class="g-use" href="/review/?demo=1">ลองส่งรูปแรก ↗</a></div>
+        </article>
+        <article class="g-card" data-cat="naka">
+          <video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/naka-hello.jpg" aria-hidden="true"><source src="/showcase/h3/naka-hello.mp4" type="video/mp4"></video>
+          <span class="g-chip">นาคา</span>
+          <figure class="g-from"><img src="/showcase/h3/naka-hello-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สวัสดี ผมนาคา"><figcaption>จากรูปนี้</figcaption></figure>
+          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สวัสดี ผมนาคา"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
+          <div class="g-cap"><h3>สวัสดี ผมนาคา</h3><p>ผู้ช่วย AI ของร้านคุณ</p><a class="g-use" href="/login/?mode=register">สมัครสมาชิก ↗</a></div>
+        </article>
+      </div>
+      <div class="g-shell g-more"><button class="g-more-btn" type="button" data-more hidden>ดูอีก <span data-more-count></span> คลิป <i aria-hidden="true">↓</i></button></div>
+      <p class="g-shell g-note">คลิปที่มีปุ่มลำโพงสร้างด้วยโมเดลวิดีโอ MiniMax H3 ที่รันผ่าน Unsloth จากภาพนิ่งภาพเดียว ภาพและเสียงสร้างด้วย AI สินค้า ร้าน และตัวละครเป็นตัวอย่างสมมติ · การ์ดแชทเป็นตัวอย่างบทสนทนา</p>
     </section>
     <!-- reel:end -->
 
-    <!-- Product rows: one per product, each a rail of sample clips (Buzzy-style packs) -->
-    <section class="section products fx-lines" aria-label="ตัวอย่างงานของแต่ละผลิตภัณฑ์">
-
-      <div class="product-row" id="p-review">
-        <div class="reel-shell reel-head">
-          <div><p class="reel-kicker"><span class="reel-led" aria-hidden="true"></span>LINE 01 · REVIEW <span class="pill">ลองฟรี</span></p><h2>คลิปรีวิวสินค้า affiliate</h2><p class="row-sub">รูปสินค้า 1–6 รูป ได้บท เสียงพากย์ไทย และคลิปแนวตั้งพร้อมแคปชันที่แนบลิงก์ของคุณ</p></div>
-          <div class="row-actions"><ul class="reel-status" aria-label="จุดเด่น"><li>รูปสินค้า 1–6 รูป</li><li>เสียงพากย์ไทย</li><li>แนบลิงก์ affiliate</li></ul><a class="btn btn-primary btn-sm" href="/review/?demo=1">เริ่มสร้างคลิป ↗</a></div>
+    <!-- How it works (ui-land.css .s-*): three steps, each with Naka acting it out -->
+    <section class="s-steps" aria-labelledby="steps-title">
+      <div class="shell">
+        <div class="u-head">
+          <p class="u-kicker">ทำงานยังไง</p>
+          <h2 id="steps-title">สามขั้น จากรูปสินค้า<span class="nw">ถึงคลิปพร้อมโพสต์</span></h2>
         </div>
-        <div class="reel-shell reel-wall prod-wall" id="rail-review" role="group" aria-label="ตัวอย่างคลิปรีวิว">
-          <!-- h3:review:start -->
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-soap-campaign.jpg" aria-hidden="true"><source src="/showcase/h3/rv-soap-campaign.mp4" type="video/mp4"></video></div><span class="tpl-chip">รีวิวสินค้า</span><div class="tpl-body"><h3>สบู่ก้อนหอมมะลิ</h3><p>จากรูปโฆษณา 1 รูป</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/rv-soap-campaign-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สบู่ก้อนหอมมะลิ"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สบู่ก้อนหอมมะลิ"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-coffee.jpg" aria-hidden="true"><source src="/showcase/h3/rv-coffee.mp4" type="video/mp4"></video></div><span class="tpl-chip">กาแฟ</span><div class="tpl-body"><h3>กาแฟดอยคั่วกลาง</h3><p>ฮุกแรกใน 2 วินาที</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป กาแฟดอยคั่วกลาง"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-sunscreen.jpg" aria-hidden="true"><source src="/showcase/h3/rv-sunscreen.mp4" type="video/mp4"></video></div><span class="tpl-chip">สกินแคร์</span><div class="tpl-body"><h3>กันแดดเนื้อบางเบา</h3><p>โชว์เนื้อครีมจริง</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป กันแดดเนื้อบางเบา"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-mango.jpg" aria-hidden="true"><source src="/showcase/h3/rv-mango.mp4" type="video/mp4"></video></div><span class="tpl-chip">ของกิน</span><div class="tpl-body"><h3>มะม่วงอบแห้ง</h3><p>รีวิวกินจริง</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป มะม่วงอบแห้ง"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/rv-linen.jpg" aria-hidden="true"><source src="/showcase/h3/rv-linen.mp4" type="video/mp4"></video></div><span class="tpl-chip">แฟชั่น</span><div class="tpl-body"><h3>เสื้อลินินใส่สบาย</h3><p>ลองใส่ หมุนให้ดูทรง</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป เสื้อลินินใส่สบาย"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <!-- h3:review:end -->
-          <a class="tpl" href="/review/?demo=1"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/naka-demo-poster.jpg" aria-hidden="true"><source src="/assets/naka-demo-30s.webm" type="video/webm"><source src="/assets/naka-demo-30s.mp4" type="video/mp4"></video></div><span class="tpl-chip">สบู่สมุนไพร</span><div class="tpl-body"><h3>รีวิว 3 จุดเด่น</h3><p>ฮุก · จุดเด่นจริง · ชวนกดลิงก์</p><span class="tpl-try">ลองแบบนี้ ↗</span></div></a>
-          <a class="tpl tpl-create" href="/review/?demo=1"><span class="create-plus" aria-hidden="true">＋</span><h3>สร้างคลิปรีวิวของคุณ</h3><p>ใส่รูปสินค้าแล้วลองฟรีด้วยบทตัวอย่าง ไม่ต้องสมัคร</p><span class="tpl-try">เริ่มเลย ↗</span></a>
-        </div>
+        <ol class="s-list">
+          <li class="s-step"><span class="s-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-upload.jpg" aria-hidden="true"><source src="/showcase/h3/anim-upload.mp4" type="video/mp4"></video><em class="s-tag">ส่งรูปมา</em></span><div><span class="s-no">ขั้นที่ 1</span><h3>ใส่รูปสินค้า</h3><p>รูป 1 ถึง 6 รูปกับจุดขายจริงของสินค้า ไม่ต้องถ่ายวิดีโอ ไม่ต้องพูดเอง</p></div></li>
+          <li class="s-step"><span class="s-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-voice.jpg" aria-hidden="true"><source src="/showcase/h3/anim-voice.mp4" type="video/mp4"></video><em class="s-tag">เขียนบทและพากย์</em></span><div><span class="s-no">ขั้นที่ 2</span><h3>นาคาเขียนบทและพากย์เสียงไทย</h3><p>บทเขียนจากข้อมูลที่คุณให้เท่านั้น ไม่เติมสรรพคุณ รีวิวปลอม หรือส่วนลดที่ไม่มี</p></div></li>
+          <li class="s-step"><span class="s-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/anim-review.jpg" aria-hidden="true"><source src="/showcase/h3/anim-review.mp4" type="video/mp4"></video><em class="s-tag">ตรวจก่อนโพสต์</em></span><div><span class="s-no">ขั้นที่ 3</span><h3>ตรวจแล้วโพสต์</h3><p>เห็นบท เสียง และคลิปก่อนเผยแพร่เสมอ คลิปแนวตั้ง 9:16 ลงได้ทั้ง TikTok Facebook Instagram และ Shopee</p></div></li>
+        </ol>
+        <p class="s-cta"><a class="btn btn-primary" href="/review/?demo=1">ลองด้วยบทตัวอย่าง ไม่ต้องสมัคร <span aria-hidden="true">↗</span></a></p>
       </div>
-
-      <div class="product-row" id="p-drama">
-        <div class="reel-shell reel-head">
-          <div><p class="reel-kicker"><span class="reel-led" aria-hidden="true"></span>LINE 02 · DRAMA</p><h2>ละครสั้นที่สร้างด้วยนาคา</h2><p class="row-sub">ทุกฉากในแถวนี้สร้างจากระบบละคร AI ของนาคา ตั้งแต่ตัวละคร ฉาก จนเป็นวิดีโอแนวตั้ง</p></div>
-          <div class="row-actions"><ul class="reel-status" aria-label="จุดเด่น"><li>ตัวละครคงเดิม</li><li>ฉากแนวตั้ง 9:16</li><li>ตัดเป็นตอน</li></ul><a class="btn btn-primary btn-sm" href="/create/?workflow=drama">เริ่มทำละคร ↗</a></div>
-        </div>
-        <div class="reel-shell reel-wall prod-wall" id="rail-drama" role="group" aria-label="ตัวอย่างละครสั้น">
-          <!-- h3:drama:start -->
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-heir.jpg" aria-hidden="true"><source src="/showcase/h3/dr-heir.mp4" type="video/mp4"></video></div><span class="tpl-chip">ละครสั้น</span><div class="tpl-body"><h3>ทายาทกลับบ้าน</h3><p>ฉากเปิดตัวพร้อมบทพูด</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/dr-heir-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป ทายาทกลับบ้าน"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ทายาทกลับบ้าน"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-maid.jpg" aria-hidden="true"><source src="/showcase/h3/dr-maid.mp4" type="video/mp4"></video></div><span class="tpl-chip">ละครสั้น</span><div class="tpl-body"><h3>สาวใช้คนใหม่</h3><p>วันแรกในคฤหาสน์</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/dr-maid-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป สาวใช้คนใหม่"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป สาวใช้คนใหม่"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-hallway.jpg" aria-hidden="true"><source src="/showcase/h3/dr-hallway.mp4" type="video/mp4"></video></div><span class="tpl-chip">ละครสั้น</span><div class="tpl-body"><h3>โถงทางเดินสีทอง</h3><p>งานหนักที่ไม่มีใครเห็น</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/dr-hallway-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป โถงทางเดินสีทอง"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป โถงทางเดินสีทอง"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-letter.jpg" aria-hidden="true"><source src="/showcase/h3/dr-letter.mp4" type="video/mp4"></video></div><span class="tpl-chip">หักมุม</span><div class="tpl-body"><h3>จดหมายปริศนา</h3><p>ข้อความที่เปลี่ยนทุกอย่าง</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/dr-letter-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป จดหมายปริศนา"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป จดหมายปริศนา"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/dr-room4.jpg" aria-hidden="true"><source src="/showcase/h3/dr-room4.mp4" type="video/mp4"></video></div><span class="tpl-chip">ลึกลับ</span><div class="tpl-body"><h3>ห้องหมายเลข 4</h3><p>ประตูที่ไม่ควรเปิด</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/dr-room4-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป ห้องหมายเลข 4"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ห้องหมายเลข 4"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <!-- h3:drama:end -->
-          <a class="tpl" href="/create/?workflow=drama"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-ep1.webp" aria-hidden="true"><source src="/showcase/drama/drama-ep1.mp4" type="video/mp4"></video></div><span class="tpl-chip tpl-chip-new">เต็มตอน</span><div class="tpl-body"><h3>EP1 เต็มตอน</h3><p>หลายฉากต่อกันเป็นตอนเดียว</p><span class="tpl-try">ทำละครแบบนี้ ↗</span></div></a>
-                                                            <a class="tpl tpl-create" href="/create/?workflow=drama"><span class="create-plus" aria-hidden="true">＋</span><h3>เริ่มละครเรื่องของคุณ</h3><p>ใส่พล็อตและตัวละคร นาคาช่วยวางฉากและเขียนบท</p><span class="tpl-try">เริ่มเลย ↗</span></a>
-        </div>
-      </div>
-
-      <div class="product-row" id="p-live">
-        <div class="reel-shell reel-head">
-          <div><p class="reel-kicker"><span class="reel-led" aria-hidden="true"></span>LINE 03 · LIVE</p><h2>AI Live ขายสินค้า</h2><p class="row-sub">อวตาร AI แนะนำสินค้าและตอบคำถามคนดูระหว่างไลฟ์ ตามข้อมูลสินค้าที่คุณให้</p></div>
-          <div class="row-actions"><ul class="reel-status" aria-label="จุดเด่น"><li>อวตาร AI</li><li>ตอบคอมเมนต์สด</li><li>ข้อมูลสินค้าของร้าน</li></ul><a class="btn btn-primary btn-sm" href="/create/?workflow=live">เริ่มตั้งค่าไลฟ์ ↗</a></div>
-        </div>
-        <div class="reel-shell reel-wall prod-wall" id="rail-live" role="group" aria-label="ตัวอย่าง AI Live">
-          <!-- h3:live:start -->
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=live"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-skincare.jpg" aria-hidden="true"><source src="/showcase/h3/lv-skincare.mp4" type="video/mp4"></video></div><span class="tpl-chip tpl-chip-live">● LIVE</span><div class="tpl-body"><h3>ไลฟ์ขายเซรั่ม</h3><p>พิธีกรโชว์สินค้า</p><span class="tpl-try">ตั้งค่าไลฟ์ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ไลฟ์ขายเซรั่ม"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=live"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-durian.jpg" aria-hidden="true"><source src="/showcase/h3/lv-durian.mp4" type="video/mp4"></video></div><span class="tpl-chip tpl-chip-live">● LIVE</span><div class="tpl-body"><h3>ไลฟ์ขายทุเรียนสวน</h3><p>ขายสดจากสวน</p><span class="tpl-try">ตั้งค่าไลฟ์ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ไลฟ์ขายทุเรียนสวน"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=live"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-dress.jpg" aria-hidden="true"><source src="/showcase/h3/lv-dress.mp4" type="video/mp4"></video></div><span class="tpl-chip tpl-chip-live">● LIVE</span><div class="tpl-body"><h3>ไลฟ์ขายเดรส</h3><p>ตอบเรื่องไซส์สด ๆ</p><span class="tpl-try">ตั้งค่าไลฟ์ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ไลฟ์ขายเดรส"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=live"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-chili.jpg" aria-hidden="true"><source src="/showcase/h3/lv-chili.mp4" type="video/mp4"></video></div><span class="tpl-chip tpl-chip-live">● LIVE</span><div class="tpl-body"><h3>ไลฟ์ขายน้ำพริก</h3><p>ชิมให้ดูระหว่างไลฟ์</p><span class="tpl-try">ตั้งค่าไลฟ์ ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ไลฟ์ขายน้ำพริก"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=live"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/lv-naka-host.jpg" aria-hidden="true"><source src="/showcase/h3/lv-naka-host.mp4" type="video/mp4"></video></div><span class="tpl-chip tpl-chip-new">อวตาร AI</span><div class="tpl-body"><h3>นาคาเป็นพิธีกรไลฟ์</h3><p>อวตารไลฟ์แทนคุณ</p><span class="tpl-try">ตั้งค่าไลฟ์ ↗</span></div></a>
-            <figure class="reel-from"><img src="/showcase/h3/lv-naka-host-from.jpg" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป นาคาเป็นพิธีกรไลฟ์"><figcaption>จากรูปนี้</figcaption></figure>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป นาคาเป็นพิธีกรไลฟ์"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <!-- h3:live:end -->
-          <a class="tpl" href="/create/?workflow=live"><div class="tpl-media"><img src="/assets/card-live.jpg" width="1600" height="900" loading="lazy" alt=""></div><span class="tpl-chip tpl-chip-live">● LIVE</span><div class="tpl-body"><h3>พิธีกรไลฟ์ตลาดไทย</h3><p>ภาพประกอบแนวทางไลฟ์ขายของ</p><span class="tpl-try">เริ่มตั้งค่า ↗</span></div></a>
-          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่างคอมเมนต์ระหว่างไลฟ์">
-            <p class="chat-head"><span class="live-dot" aria-hidden="true"></span>คอมเมนต์ระหว่างไลฟ์</p>
-            <ol class="chat-log"><li class="in">มีไซส์ L ไหมคะ</li><li class="out">มีค่ะ ไซส์ L ยังมีตามสต็อกที่ร้านอัปเดตไว้</li><li class="in">ส่งกี่วันถึงคะ</li><li class="out">ร้านส่งทุกวัน ตัดรอบบ่ายสองค่ะ รายละเอียดอยู่ในลิงก์ปักหมุด</li></ol>
-            <p class="chat-foot">อวตารอ่านคอมเมนต์และตอบจากข้อมูลร้าน</p>
-          </div>
-          <a class="tpl tpl-create" href="/create/?workflow=live"><span class="create-plus" aria-hidden="true">＋</span><h3>ตั้งค่าไลฟ์ของร้านคุณ</h3><p>สินค้า สคริปต์พิธีกร และคำถามที่พบบ่อย</p><span class="tpl-try">เริ่มเลย ↗</span></a>
-        </div>
-      </div>
-
-      <div class="product-row" id="p-bot">
-        <div class="reel-shell reel-head">
-          <div><p class="reel-kicker"><span class="reel-led" aria-hidden="true"></span>LINE 04 · CHATBOT</p><h2>AI ตอบแชทและคอมเมนต์อัตโนมัติ</h2><p class="row-sub">ตอบด้วยข้อมูลและน้ำเสียงของร้าน เรื่องคืนเงินหรือร้องเรียนส่งต่อให้คนในร้าน</p></div>
-          <div class="row-actions"><ul class="reel-status" aria-label="จุดเด่น"><li>ตอบแชทอัตโนมัติ</li><li>ตอบคอมเมนต์</li><li>ส่งต่อแอดมิน</li></ul><a class="btn btn-primary btn-sm" href="/create/?workflow=bot">เริ่มตั้งค่าบอท ↗</a></div>
-        </div>
-        <div class="reel-shell reel-wall prod-wall" id="rail-bot" role="group" aria-label="ตัวอย่างบทสนทนาของบอท">
-          <!-- h3:bot:start -->
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=bot"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-packing.jpg" aria-hidden="true"><source src="/showcase/h3/bt-packing.mp4" type="video/mp4"></video></div><span class="tpl-chip">แชทบอท</span><div class="tpl-body"><h3>บอตตอบแชท คุณแพ็กของ</h3><p>ไม่ต้องวางมือจากงาน</p><span class="tpl-try">ตั้งค่าบอท ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป บอตตอบแชท คุณแพ็กของ"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=bot"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-cafe.jpg" aria-hidden="true"><source src="/showcase/h3/bt-cafe.mp4" type="video/mp4"></video></div><span class="tpl-chip">แชทบอท</span><div class="tpl-body"><h3>คาเฟ่ยุ่ง บอตรับออเดอร์</h3><p>ตอบเมนูและราคาให้</p><span class="tpl-try">ตั้งค่าบอท ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป คาเฟ่ยุ่ง บอตรับออเดอร์"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=bot"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-morning.jpg" aria-hidden="true"><source src="/showcase/h3/bt-morning.mp4" type="video/mp4"></video></div><span class="tpl-chip">แชทบอท</span><div class="tpl-body"><h3>ตื่นมาออเดอร์เต็ม</h3><p>ตอบแชทตลอดคืน</p><span class="tpl-try">ตั้งค่าบอท ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ตื่นมาออเดอร์เต็ม"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=bot"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-handoff.jpg" aria-hidden="true"><source src="/showcase/h3/bt-handoff.mp4" type="video/mp4"></video></div><span class="tpl-chip">ส่งต่อแอดมิน</span><div class="tpl-body"><h3>เรื่องสำคัญ ส่งต่อคน</h3><p>บอตรู้ว่าเมื่อไรต้องหยุด</p><span class="tpl-try">ตั้งค่าบอท ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป เรื่องสำคัญ ส่งต่อคน"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <div class="tpl h3-card">
-            <a class="reel-link" href="/create/?workflow=bot"><div class="tpl-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/h3/bt-comments.jpg" aria-hidden="true"><source src="/showcase/h3/bt-comments.mp4" type="video/mp4"></video></div><span class="tpl-chip">คอมเมนต์</span><div class="tpl-body"><h3>ตอบคอมเมนต์ใต้คลิป</h3><p>ไม่มีลูกค้าตกหล่น</p><span class="tpl-try">ตั้งค่าบอท ↗</span></div></a>
-            <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ตอบคอมเมนต์ใต้คลิป"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5"/></svg></button>
-          </div>
-          <!-- h3:bot:end -->
-          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่าง: ถามราคา">
-            <p class="chat-head">แชท · ถามราคา</p>
-            <ol class="chat-log"><li class="in">สบู่มะลิราคาเท่าไหร่คะ</li><li class="out">ก้อนละ 129 บาทค่ะ สนใจกี่ก้อนดีคะ</li><li class="in">เอา 3 ก้อนค่ะ</li><li class="out">รวม 387 บาทค่ะ ขอชื่อและที่อยู่จัดส่งทางแชทนี้ได้เลยค่ะ</li></ol>
-          </div>
-          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่าง: คอมเมนต์ใต้คลิป">
-            <p class="chat-head">คอมเมนต์ใต้คลิป</p>
-            <ol class="chat-log"><li class="in">ส่งต่างจังหวัดได้ไหมคะ</li><li class="out">ส่งได้ทั่วประเทศค่ะ รายละเอียดส่งให้ทางข้อความแล้วนะคะ</li><li class="note">เรื่องส่วนตัวคุยต่อในแชท ไม่ตอบในคอมเมนต์สาธารณะ</li></ol>
-          </div>
-          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่าง: ส่งต่อคนในร้าน">
-            <p class="chat-head">แชท · ขอคืนเงิน</p>
-            <ol class="chat-log"><li class="in">ของมาถึงแตกค่ะ ขอคืนเงินได้ไหม</li><li class="out">ขอโทษด้วยนะคะ ส่งเรื่องให้แอดมินดูแลแล้วค่ะ รบกวนส่งรูปสินค้าไว้ในแชทนี้</li><li class="note">บอตหยุดตอบ · แจ้งแอดมินให้รับช่วงต่อ</li></ol>
-          </div>
-          <div class="tpl tpl-chat" data-chat role="group" aria-label="ตัวอย่าง: ถามนอกข้อมูลร้าน">
-            <p class="chat-head">แชท · คำถามนอกข้อมูลร้าน</p>
-            <ol class="chat-log"><li class="in">ใช้กับผิวแพ้ง่ายได้ไหมคะ</li><li class="out">เรื่องนี้ขอให้แอดมินตอบให้ชัวร์นะคะ รอสักครู่ค่ะ</li><li class="note">ไม่เดาคำตอบเรื่องที่ร้านไม่ได้ให้ข้อมูล</li></ol>
-          </div>
-          <a class="tpl tpl-create" href="/create/?workflow=bot"><span class="create-plus" aria-hidden="true">＋</span><h3>ตั้งค่าบอทของร้านคุณ</h3><p>ใส่ข้อมูลสินค้า ค่าส่ง และเรื่องที่ต้องส่งต่อคน</p><span class="tpl-try">เริ่มเลย ↗</span></a>
-        </div>
-      </div>
-
-      <p class="shell sample-note">คลิปละครสร้างจากระบบของนาคา · บทสนทนาและร้านค้าเป็นตัวอย่างสาธิต</p>
-      <!-- h3:note:start -->
-      <p class="shell h3-note">คลิปที่มีปุ่มลำโพงสร้างด้วยโมเดลวิดีโอ MiniMax H3 ที่รันผ่าน Unsloth · ภาพและเสียงสร้างด้วย AI · สินค้า ร้าน และตัวละครเป็นตัวอย่างสมมติ</p>
-      <!-- h3:note:end -->
     </section>
 
-    <!-- Social showcase: the same clips as they would appear on each platform (Buzzy's community wall) -->
-    <section class="section social" id="social" aria-labelledby="social-title">
+    <!-- Trust: facts the product already delivers, and guarantees the system enforces.
+         Add a real user count here once there is one; never an estimate. -->
+    <section class="t-trust" id="trust" aria-labelledby="trust-title">
       <div class="shell">
-        <div class="section-head">
-          <div><p class="kicker">คลิปเดียว ใช้ได้ทุกช่องทาง</p><h2 id="social-title">ตัวอย่างบนโซเชียล</h2><p class="row-sub">คลิปแนวตั้งจากนาคาพร้อมลงทุกแพลตฟอร์ม ดูว่าหน้าตาจะออกมาเป็นอย่างไรบนฟีดของลูกค้า</p></div>
+        <div class="u-head">
+          <p class="u-kicker">มั่นใจได้ตั้งแต่คลิปแรก</p>
+          <h2 id="trust-title">สิ่งที่นาคารับประกัน<span class="nw">ให้ร้านคุณ</span></h2>
         </div>
-        <div class="platform-filter" role="group" aria-label="กรองตามแพลตฟอร์ม">
-          <button type="button" data-filter="all" aria-pressed="true">ทั้งหมด</button>
-          <button type="button" data-filter="tiktok" aria-pressed="false">TikTok</button>
-          <button type="button" data-filter="facebook" aria-pressed="false">Facebook</button>
-          <button type="button" data-filter="instagram" aria-pressed="false">Instagram</button>
-          <button type="button" data-filter="youtube" aria-pressed="false">YouTube</button>
-          <button type="button" data-filter="shopee" aria-pressed="false">Shopee</button>
-        </div>
-        <div class="social-grid">
-          <article class="post" data-platform="tiktok">
-            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-01.jpg" aria-hidden="true"><source src="/showcase/drama/drama-01.mp4" type="video/mp4"></video></div>
-            <span class="plat plat-tiktok">TikTok</span>
-            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
-            <div class="post-bottom"><b>@ช่องละครของคุณ</b><p>ทายาทเจ้าของบ้านกลับมาแล้ว ตอนต่อไปพรุ่งนี้ #ละครสั้น</p></div>
-          </article>
-          <article class="post" data-platform="instagram">
-            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/naka-demo-poster.jpg" aria-hidden="true"><source src="/assets/naka-demo-30s.webm" type="video/webm"><source src="/assets/naka-demo-30s.mp4" type="video/mp4"></video></div>
-            <span class="plat plat-instagram">Instagram Reels</span>
-            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
-            <div class="post-bottom"><b>@ร้านของคุณ</b><p>สบู่มะลิ 100 กรัม หอมทั้งวัน ลิงก์อยู่ในไบโอ #ของดีบอกต่อ</p></div>
-          </article>
-          <article class="post" data-platform="youtube">
-            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-ep1.webp" aria-hidden="true"><source src="/showcase/drama/drama-ep1.mp4" type="video/mp4"></video></div>
-            <span class="plat plat-youtube">YouTube Shorts</span>
-            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
-            <div class="post-bottom"><b>@ช่องละครของคุณ</b><p>EP1 เต็มตอน ดูจบในนาทีเดียว #ละครไทย</p></div>
-          </article>
-          <article class="post" data-platform="facebook">
-            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-05.jpg" aria-hidden="true"><source src="/showcase/drama/drama-05.mp4" type="video/mp4"></video></div>
-            <span class="plat plat-facebook">Facebook Reels</span>
-            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
-            <div class="post-bottom"><b>เพจละครของคุณ</b><p>สาวใช้คนใหม่ วันแรกในคฤหาสน์ ติดตามตอนต่อไปได้ที่เพจ</p></div>
-          </article>
-          <article class="post" data-platform="shopee">
-            <div class="post-media"><img class="kenburns" src="/assets/soap-640.jpg" width="640" height="640" loading="lazy" alt=""></div>
-            <span class="plat plat-shopee">Shopee Video</span>
-            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
-            <div class="post-bottom"><b>@ร้านของคุณ</b><p>รีวิวสบู่สมุนไพร จุดเด่น 3 ข้อ</p><span class="shop-bar"><span>สบู่สมุนไพรกลิ่นมะลิ</span><em>฿129</em></span></div>
-          </article>
-          <article class="post" data-platform="tiktok">
-            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-04.jpg" aria-hidden="true"><source src="/showcase/drama/drama-04.mp4" type="video/mp4"></video></div>
-            <span class="plat plat-tiktok">TikTok</span>
-            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
-            <div class="post-bottom"><b>@ช่องละครของคุณ</b><p>จดหมายฉบับนี้เปลี่ยนทุกอย่าง #หักมุม</p></div>
-          </article>
-          <article class="post" data-platform="instagram">
-            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-03.jpg" aria-hidden="true"><source src="/showcase/drama/drama-03.mp4" type="video/mp4"></video></div>
-            <span class="plat plat-instagram">Instagram Reels</span>
-            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
-            <div class="post-bottom"><b>@ช่องละครของคุณ</b><p>อย่าเปิดประตูห้องหมายเลข 4 #ลึกลับ</p></div>
-          </article>
-          <article class="post" data-platform="facebook">
-            <div class="post-media"><video data-autoplay muted loop playsinline preload="none" poster="/showcase/drama/drama-02.jpg" aria-hidden="true"><source src="/showcase/drama/drama-02.mp4" type="video/mp4"></video></div>
-            <span class="plat plat-facebook">Facebook Reels</span>
-            <div class="post-side" aria-hidden="true"><i class="ic-heart"></i><i class="ic-comment"></i><i class="ic-share"></i></div>
-            <div class="post-bottom"><b>เพจละครของคุณ</b><p>งานหนักที่ไม่มีใครเห็น แต่เธอยังสู้ต่อ</p></div>
-          </article>
-        </div>
-        <p class="sample-note">ภาพจำลองการแสดงผลบนแต่ละแพลตฟอร์ม ชื่อบัญชีและแคปชันเป็นตัวอย่าง ยังไม่ได้เผยแพร่จริง</p>
+        <dl class="t-stats">
+          <div><dt>ผลิตภัณฑ์ AI ในที่เดียว</dt><dd>4</dd></div>
+          <div><dt>แพลตฟอร์มที่คลิปพร้อมลง</dt><dd>5</dd></div>
+          <div><dt>ความยาวคลิปรีวิว (วินาที)</dt><dd>20<small>ถึง</small>35</dd></div>
+          <div><dt>ลองสร้างคลิปก่อนสมัคร</dt><dd>฿0</dd></div>
+        </dl>
+        <ul class="t-list">
+          <li><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg></span><div><h3>สร้างไม่สำเร็จ คืนเครดิตทันที</h3><p>ถ้านาคาสร้างงานไม่สำเร็จ ระบบคืนเครดิตให้อัตโนมัติ ไม่ต้องแจ้ง ไม่ต้องรอ</p></div></li>
+          <li><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><div><h3>รูปสินค้าอยู่บนเครื่องคุณ</h3><p>คลิปรีวิวสร้างในเบราว์เซอร์ของคุณ รูปสินค้าไม่ถูกอัปโหลดขึ้นเซิร์ฟเวอร์</p></div></li>
+          <li><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></span><div><h3>ไม่แต่งสรรพคุณเกินจริง</h3><p>นาคาเขียนบทจากข้อมูลที่คุณให้เท่านั้น ไม่เติมสรรพคุณ รีวิวปลอม หรือส่วนลดที่ไม่มี</p></div></li>
+          <li><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></span><div><h3>คุณตรวจก่อนโพสต์ทุกครั้ง</h3><p>เห็นบท เสียง และคลิปก่อนเผยแพร่เสมอ ไม่มีอะไรขึ้นฟีดโดยที่คุณไม่รู้</p></div></li>
+          <li><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/></svg></span><div><h3>บอทไม่เดาคำตอบ</h3><p>คำถามนอกข้อมูลร้าน คืนเงิน หรือร้องเรียน บอทหยุดและส่งต่อให้คนในร้าน</p></div></li>
+          <li><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg></span><div><h3>ลองฟรีก่อนจ่าย</h3><p>ลองสร้างคลิปด้วยบทตัวอย่างได้ทันที ไม่ต้องสมัคร ไม่ต้องใส่บัตร</p></div></li>
+        </ul>
       </div>
     </section>
 
@@ -576,37 +481,13 @@
       </div>
     </section>
 
-    <!-- Trust: facts the product already delivers, and guarantees the system enforces.
-         Add a real user count here once there is one; never an estimate. -->
-    <section class="section trust" id="trust" aria-labelledby="trust-title">
+    <!-- Closing (ui-land.css .c-*): the dark band that runs into the footer -->
+    <section class="c-end" aria-labelledby="end-title">
       <div class="shell">
-        <div class="pricing-head">
-          <p class="kicker">มั่นใจได้ตั้งแต่คลิปแรก</p>
-          <h2 id="trust-title">สิ่งที่นาคารับประกันให้ร้านคุณ</h2>
-        </div>
-
-        <dl class="stat-band">
-          <div><dt>ผลิตภัณฑ์ AI ในที่เดียว</dt><dd>4</dd></div>
-          <div><dt>แพลตฟอร์มที่คลิปพร้อมลง</dt><dd>5</dd></div>
-          <div><dt>ความยาวคลิปรีวิว</dt><dd>20–35<small>วินาที</small></dd></div>
-          <div><dt>ลองสร้างคลิปก่อนสมัคร</dt><dd>฿0</dd></div>
-        </dl>
-
-        <div class="guarantee-grid">
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg></span><h3>สร้างไม่สำเร็จ คืนเครดิตทันที</h3><p>ถ้านาคาสร้างงานไม่สำเร็จ ระบบคืนเครดิตให้อัตโนมัติ ไม่ต้องแจ้ง ไม่ต้องรอ</p></article>
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>รูปสินค้าอยู่บนเครื่องคุณ</h3><p>คลิปรีวิวสร้างในเบราว์เซอร์ของคุณ รูปสินค้าไม่ถูกอัปโหลดขึ้นเซิร์ฟเวอร์</p></article>
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></span><h3>ไม่แต่งสรรพคุณเกินจริง</h3><p>นาคาเขียนบทจากข้อมูลที่คุณให้เท่านั้น ไม่เติมสรรพคุณ รีวิวปลอม หรือส่วนลดที่ไม่มี</p></article>
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></span><h3>คุณตรวจก่อนโพสต์ทุกครั้ง</h3><p>เห็นบท เสียง และคลิปก่อนเผยแพร่เสมอ ไม่มีอะไรขึ้นฟีดโดยที่คุณไม่รู้</p></article>
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/></svg></span><h3>บอทไม่เดาคำตอบ</h3><p>คำถามนอกข้อมูลร้าน คืนเงิน หรือร้องเรียน บอทหยุดและส่งต่อให้คนในร้าน</p></article>
-          <article><span class="why-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg></span><h3>ลองฟรีก่อนจ่าย</h3><p>ลองสร้างคลิปด้วยบทตัวอย่างได้ทันที ไม่ต้องสมัคร ไม่ต้องใส่บัตร</p></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="closing">
-      <div class="shell closing-card">
-        <div><h2>คุณขายของ<br>นาคาเสกทุกอย่างที่เหลือ</h2><p>สมัครสมาชิกแล้วเริ่มเสกคลิป ละคร และไลฟ์ขายของด้วย AI</p></div>
-        <div class="closing-actions"><a class="btn btn-light" href="/login/?mode=register">สมัครสมาชิก เริ่มเสกกับนาคา <span aria-hidden="true">↗</span></a><a class="closing-call" href="tel:+66892788587">คุยกับทีมงานคนจริง ↗</a></div>
+        <img class="c-naka" src="/assets/naka-plush-320.png" width="320" height="320" loading="lazy" alt="นาคา มาสคอตของ naka-ai">
+        <h2 id="end-title">คุณขายของ<br>นาคาเสกทุกอย่างที่เหลือ</h2>
+        <p>สมัครสมาชิกแล้วเริ่มเสกคลิป ละคร และไลฟ์ขายของด้วย AI หรือโทรคุยกับทีมงานก่อนก็ได้</p>
+        <div class="c-actions"><a class="btn btn-blue" href="/login/?mode=register">สมัครสมาชิก เริ่มเสกกับนาคา <span aria-hidden="true">↗</span></a><a class="btn btn-night" href="tel:+66892788587">คุยกับทีมงาน 089 278 8587</a></div>
       </div>
     </section>
   </main>
@@ -616,10 +497,9 @@
       <div class="u-foot-brand">
         <a class="brand" href="/"><img src="/logo.svg?v=4" alt="" width="30" height="30"><span>naka<span>-ai</span><b>.</b></span></a>
         <p>เครื่องมือ AI ของร้านไทย เสกคลิปขายของ ละครสั้น ไลฟ์ และตอบแชท จากรูปสินค้า พร้อมเสียงพากย์ไทย</p>
-        <a class="btn btn-primary btn-sm" href="/login/?mode=register">สมัครสมาชิก <span aria-hidden="true">↗</span></a>
       </div>
       <nav class="u-foot-col" aria-label="ผลิตภัณฑ์"><p>ผลิตภัณฑ์</p><a href="#p-review">รีวิว Affiliate</a><a href="#p-drama">ละครสั้น AI</a><a href="#p-live">AI Live</a><a href="#p-bot">แชทบอท</a></nav>
-      <nav class="u-foot-col" aria-label="ดูตัวอย่าง"><p>ดูตัวอย่าง</p><a href="#reel">โรงงานวิดีโอ</a><a href="#social">ตัวอย่างบนโซเชียล</a><a href="#trust">การรับประกัน</a><a href="/review/?demo=1">ลองด้วยบทตัวอย่าง</a></nav>
+      <nav class="u-foot-col" aria-label="ดูตัวอย่าง"><p>ดูตัวอย่าง</p><a href="#reel">คลังคลิป</a><a href="#trust">การรับประกัน</a><a href="/review/?demo=1">ลองด้วยบทตัวอย่าง</a></nav>
       <nav class="u-foot-col" aria-label="ติดต่อและนโยบาย"><p>ติดต่อและนโยบาย</p><a href="tel:+66892788587">โทร 089 278 8587</a><a href="/legal/privacy/">ความเป็นส่วนตัว</a><a href="/legal/terms/">ข้อกำหนด</a><a href="/legal/refund/">คืนเงิน</a><a href="/legal/data-deletion/">ลบข้อมูล</a></nav>
     </div>
     <div class="shell u-foot-bottom"><span class="footer-copy">© <span id="year">2026</span> naka-ai · NAKA-AI Tech</span><a href="#main">กลับขึ้นด้านบน ↑</a></div>

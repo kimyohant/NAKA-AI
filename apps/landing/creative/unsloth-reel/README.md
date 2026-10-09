@@ -1,12 +1,13 @@
 # Naka Reel: AI clips from Unsloth (MiniMax H3)
 
-The light "AI factory" video wall under the hero (`#reel` in `public/index.html`) works like Buzzy's video grid. A large featured tile (the 3-step production line) opens a grid of 9:16 clips. Each clip is rendered from a single still image by MiniMax H3 running in Unsloth Studio. H3 generates the Thai voice together with the picture. The cards play muted. The speaker button turns on sound for one clip at a time, and "จากรูปนี้" shows the exact first frame that was sent.
+The clip library under the hero (`#reel` in `public/index.html`) is one dark grid of 9:16 clips with a tab per product (รีวิว, ละครสั้น, AI Live, แชทบอท) and a "ดูอีก N คลิป" button, run by `public/gallery.js`. Each clip is rendered from a single still image by MiniMax H3 running in Unsloth Studio. H3 generates the Thai voice together with the picture. The cards play muted. The speaker button turns on sound for one clip at a time, and "จากรูปนี้" shows the exact first frame that was sent.
 
 | File | Role |
 |---|---|
-| `shots.json` | Shot list (prompt, first frame, fixed seed, card text) plus filler clips used until 6 H3 clips exist. Shots with `"row"` (review, drama, live or bot) go into that product rail (`<!-- h3:<row>:start/end -->`) instead of the video wall |
+| `shots.json` | Shot list (prompt, first frame, fixed seed, card text) plus filler clips used until 6 H3 clips exist. `"row"` (review, drama, live or bot) picks the tab; without it the tab comes from `href`. `"row": "app"` shots are in-app mascot animations and stay off the landing |
+| `chat-cards.html` | Written chat examples shown as cards in the live and bot tabs |
 | `generate.cjs` | Renders the shots one at a time on the Unsloth server and encodes them to `public/showcase/h3/` |
-| `build-reel.cjs` | Writes the band between `<!-- reel:start -->` and `<!-- reel:end -->` (generate runs it after every clip) |
+| `build-reel.cjs` | Writes the library between `<!-- reel:start -->` and `<!-- reel:end -->` (generate runs it after every clip). Product clips lead each tab, clips starring Naka follow |
 
 ## Setup
 

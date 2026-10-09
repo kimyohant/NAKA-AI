@@ -19,7 +19,7 @@
   --m-shadow-lg: 0 20px 50px rgba(13, 27, 51, .10);
   --m-shadow-btn: none;
   --m-radius: 24px;
-  --m-display: "Bricolage Grotesque", "Anuphan", system-ui, sans-serif;
+  --m-display: "Anuphan", system-ui, sans-serif;
 }
 body.member-ui { background: var(--m-bg); }
 
