@@ -216,7 +216,17 @@ PostgreSQL 17  (database: naka)
 6. [ ] sync → async: 46 จุด (เริ่มที่ `core/ai/app-settings.ts` แล้วไล่ผู้เรียก)
 7. [ ] `getInsertId()` → `.returning({ id })` (20 ไฟล์); `ownership.ts` raw SQL → Postgres
 8. [ ] test: better-sqlite3 → PGlite; test ที่ pin เลข migration ต้องปรับ
-9. [ ] ย้ายข้อมูล: `pgloader` (SQLite → Postgres) + เทียบจำนวนแถวทุกตาราง; ซ้อม 1 รอบ
+9. [ ] ย้ายข้อมูล (SQLite → Postgres) + เทียบจำนวนแถวทุกตาราง; ซ้อม 1 รอบ — ใช้ `apps/studio/backend/scripts/import-sqlite.mjs` แทน pgloader (เคารพ id/boolean/identity, ไม่ทับข้อมูลที่ Postgres มีแล้ว; ซ้อมกับ Postgres 17 + Node 20 แบบ production แล้ว, test `tests/import-sqlite.test.ts`). production เปิดใช้ Postgres ไปก่อนขั้นนี้ จึงยังไม่เห็นสไตล์ภาพ/ค่า AI/ละคร/แคมเปญเก่า ขั้นตอนบนเซิร์ฟเวอร์ (ที่ root ของ repo):
+   ```bash
+   docker compose exec -T postgres pg_dump -U naka_admin -d naka -n studio > studio-before-import.sql   # สำรองก่อน
+   docker compose exec studio ls -la /app/data/huobao.sqlite3                                          # ไฟล์ SQLite เดิมใน volume naka-drama-studio_naka-data
+   docker compose exec studio mkdir -p /app/backend/scripts
+   docker compose cp apps/studio/backend/scripts/import-sqlite.mjs studio:/app/backend/scripts/import-sqlite.mjs
+   docker compose exec studio npm i --silent --no-save --prefix /tmp/sq better-sqlite3@11            # image เป็น Node 20 (ไม่มี node:sqlite)
+   docker compose exec -w /app/backend -e SQLITE_DRIVER=/tmp/sq/node_modules/better-sqlite3 studio node scripts/import-sqlite.mjs /app/data/huobao.sqlite3           # dry run
+   docker compose exec -w /app/backend -e SQLITE_DRIVER=/tmp/sq/node_modules/better-sqlite3 studio node scripts/import-sqlite.mjs /app/data/huobao.sqlite3 --apply   # คัดลอก (transaction เดียว)
+   docker compose restart studio
+   ```
 10. [ ] cutover studio (downtime สั้น) — เก็บไฟล์ SQLite เดิมไว้ย้อนกลับ
 
 ### Phase 2 — Landing → Postgres (2–3 สัปดาห์)
