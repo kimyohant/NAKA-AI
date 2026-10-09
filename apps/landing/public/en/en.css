@@ -1,0 +1,12 @@
+/* English home (/en/): the Thai page's styles, with a still hero instead of the "Naka line" conveyor (hero-line.js is Thai-only). */
+.en-hero { padding-bottom: 36px; }
+.en-hero h1 { font-size: clamp(34px, 4.4vw, 62px); }
+.en-naka { display: block; width: clamp(140px, 18vw, 200px); height: auto; margin: 30px auto 0; filter: drop-shadow(0 18px 30px rgba(15, 23, 42, .16)); }
+.en-hero .platforms { margin-top: 24px; }
+.en-gallery .g-sub a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.en-gallery .g-grid { margin-top: 32px; }
+/* 12 clips: 4 → 3 → 2 columns keep every row full (the Thai page's 5-column grid would leave 2 alone) */
+.en-gallery .g-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .en-gallery .g-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .en-gallery .g-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .en-hero h1 br { display: none; } }

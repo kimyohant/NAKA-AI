@@ -45,7 +45,9 @@
     var setOpen = function (open) {
       mobileNav.hidden = !open;
       menuButton.setAttribute('aria-expanded', String(open));
-      menuButton.setAttribute('aria-label', open ? 'ปิดเมนู' : 'เปิดเมนู');
+      // the English home (/en/) shares this script
+      var english = document.documentElement.lang === 'en';
+      menuButton.setAttribute('aria-label', open ? (english ? 'Close menu' : 'ปิดเมนู') : (english ? 'Open menu' : 'เปิดเมนู'));
     };
     menuButton.addEventListener('click', function () { setOpen(mobileNav.hidden); });
     mobileNav.addEventListener('click', function (event) { if (event.target.closest('a')) setOpen(false); });
