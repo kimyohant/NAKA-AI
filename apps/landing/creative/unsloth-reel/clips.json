@@ -1,0 +1,264 @@
+{
+  "_comment": "The 50 sample clips restored from naka-ai.com (public/showcase/clips/<id>.mp4 + .jpg poster). build-reel.cjs puts drama and live clips in those tabs and every other group under รีวิว, with the group as the card's label. Made from a photo and a short script with AI, Thai voice-over included.",
+  "groups": {
+    "beauty": "ความงาม",
+    "food": "อาหาร",
+    "fashion": "แฟชั่น",
+    "home": "ของใช้บ้าน",
+    "drama": "ละครสั้น",
+    "live": "AI Live",
+    "shop": "ร้านค้า"
+  },
+  "clips": [
+    {
+      "id": "vid-001",
+      "group": "beauty",
+      "title": "สบู่มะลิ"
+    },
+    {
+      "id": "vid-002",
+      "group": "beauty",
+      "title": "เซรั่มหยดแก้ว"
+    },
+    {
+      "id": "vid-003",
+      "group": "beauty",
+      "title": "กันแดด"
+    },
+    {
+      "id": "vid-004",
+      "group": "beauty",
+      "title": "ลิปคอรัล"
+    },
+    {
+      "id": "vid-005",
+      "group": "beauty",
+      "title": "ออยล์ผม"
+    },
+    {
+      "id": "vid-006",
+      "group": "beauty",
+      "title": "โทนเนอร์"
+    },
+    {
+      "id": "vid-007",
+      "group": "beauty",
+      "title": "ครีมรอบตา"
+    },
+    {
+      "id": "vid-008",
+      "group": "beauty",
+      "title": "มาส์กดิน"
+    },
+    {
+      "id": "vid-009",
+      "group": "food",
+      "title": "ชาไทยเย็น"
+    },
+    {
+      "id": "vid-010",
+      "group": "food",
+      "title": "มะม่วงอบแห้ง"
+    },
+    {
+      "id": "vid-011",
+      "group": "food",
+      "title": "กาแฟดอย"
+    },
+    {
+      "id": "vid-012",
+      "group": "food",
+      "title": "น้ำพริก"
+    },
+    {
+      "id": "vid-013",
+      "group": "food",
+      "title": "ทุเรียน"
+    },
+    {
+      "id": "vid-014",
+      "group": "food",
+      "title": "ข้าวเหนียวมะม่วง"
+    },
+    {
+      "id": "vid-015",
+      "group": "food",
+      "title": "น้ำผึ้ง"
+    },
+    {
+      "id": "vid-016",
+      "group": "food",
+      "title": "น้ำมะพร้าว"
+    },
+    {
+      "id": "vid-017",
+      "group": "fashion",
+      "title": "เสื้อลินิน"
+    },
+    {
+      "id": "vid-018",
+      "group": "fashion",
+      "title": "ผ้าพันคอไหม"
+    },
+    {
+      "id": "vid-019",
+      "group": "fashion",
+      "title": "เดรส"
+    },
+    {
+      "id": "vid-020",
+      "group": "fashion",
+      "title": "กระเป๋าสาน"
+    },
+    {
+      "id": "vid-021",
+      "group": "fashion",
+      "title": "รองเท้าหนัง"
+    },
+    {
+      "id": "vid-022",
+      "group": "fashion",
+      "title": "ต่างหู"
+    },
+    {
+      "id": "vid-023",
+      "group": "home",
+      "title": "เทียน"
+    },
+    {
+      "id": "vid-024",
+      "group": "home",
+      "title": "แก้วเซรามิก"
+    },
+    {
+      "id": "vid-025",
+      "group": "home",
+      "title": "ผ้าขนหนู"
+    },
+    {
+      "id": "vid-026",
+      "group": "home",
+      "title": "ต้นไม้"
+    },
+    {
+      "id": "vid-027",
+      "group": "home",
+      "title": "หมอนอิง"
+    },
+    {
+      "id": "vid-028",
+      "group": "home",
+      "title": "แจกัน"
+    },
+    {
+      "id": "vid-029",
+      "group": "drama",
+      "title": "ทายาทกลับบ้าน"
+    },
+    {
+      "id": "vid-030",
+      "group": "drama",
+      "title": "วันแรกของสาวใช้"
+    },
+    {
+      "id": "vid-031",
+      "group": "drama",
+      "title": "โถงสีทอง"
+    },
+    {
+      "id": "vid-032",
+      "group": "drama",
+      "title": "จดหมาย"
+    },
+    {
+      "id": "vid-033",
+      "group": "drama",
+      "title": "ประตูห้อง"
+    },
+    {
+      "id": "vid-034",
+      "group": "drama",
+      "title": "ศาลาในสวน"
+    },
+    {
+      "id": "vid-035",
+      "group": "drama",
+      "title": "โต๊ะอาหาร"
+    },
+    {
+      "id": "vid-036",
+      "group": "drama",
+      "title": "ชานชาลา"
+    },
+    {
+      "id": "vid-037",
+      "group": "live",
+      "title": "ไลฟ์เซรั่ม"
+    },
+    {
+      "id": "vid-038",
+      "group": "live",
+      "title": "ไลฟ์ผ้าไหม"
+    },
+    {
+      "id": "vid-039",
+      "group": "live",
+      "title": "ไลฟ์ทุเรียน"
+    },
+    {
+      "id": "vid-040",
+      "group": "live",
+      "title": "ไลฟ์เดรส"
+    },
+    {
+      "id": "vid-041",
+      "group": "live",
+      "title": "ไลฟ์น้ำพริก"
+    },
+    {
+      "id": "vid-042",
+      "group": "live",
+      "title": "ไลฟ์เครื่องประดับ"
+    },
+    {
+      "id": "vid-043",
+      "group": "live",
+      "title": "ไลฟ์ของกินเล่น"
+    },
+    {
+      "id": "vid-044",
+      "group": "live",
+      "title": "ไลฟ์สบู่"
+    },
+    {
+      "id": "vid-045",
+      "group": "shop",
+      "title": "แพ็กของ"
+    },
+    {
+      "id": "vid-046",
+      "group": "shop",
+      "title": "คาเฟ่รับออเดอร์"
+    },
+    {
+      "id": "vid-047",
+      "group": "shop",
+      "title": "ตื่นมาออเดอร์เต็ม"
+    },
+    {
+      "id": "vid-048",
+      "group": "shop",
+      "title": "ส่งต่อแอดมิน"
+    },
+    {
+      "id": "vid-049",
+      "group": "shop",
+      "title": "ตลาดเช้า"
+    },
+    {
+      "id": "vid-050",
+      "group": "shop",
+      "title": "คาเฟ่ริมคลอง"
+    }
+  ]
+}

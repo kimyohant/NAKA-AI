@@ -1,8 +1,9 @@
 // Write the landing clip library (dark band under the hero: one grid, filter tabs per product)
 // into public/index.html between <!-- reel:start --> and <!-- reel:end -->.
-// Every shot in shots.json that generate.cjs has rendered to public/showcase/h3/<id>.mp4 becomes a
-// card; "row" (or the href) decides its tab. Chat demos come from chat-cards.html. Until six clips
-// are rendered, the fallback clips fill the grid. public/gallery.js runs the tabs.
+// Cards come from three sources: every shot in shots.json that generate.cjs has rendered to
+// public/showcase/h3/<id>.mp4 ("row", or the href, decides its tab), the 50 sample clips in
+// clips.json (public/showcase/clips/), and the chat demos in chat-cards.html. Until six H3 clips
+// are rendered, the shots.json fallback clips fill in. public/gallery.js runs the tabs.
 //   node creative/unsloth-reel/build-reel.cjs
 'use strict';
 const fs = require('node:fs');
@@ -33,6 +34,26 @@ const isRendered = s => fs.existsSync(path.join(H3_DIR, `${s.id}.mp4`));
 const rendered = shots.filter(s => s.row !== 'app' && isRendered(s));
 const fill = rendered.length < 6 ? fallback : [];
 
+// the 50 sample clips: drama and live keep their tab, shop scenes (packing, orders, handoff) show
+// what the bot works alongside, every other product group is a review clip
+const lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'clips.json'), 'utf8'));
+const CLIPS_DIR = path.join(ROOT, 'public', 'showcase', 'clips');
+const libCat = g => (g === 'drama' || g === 'live') ? g : g === 'shop' ? 'bot' : 'review';
+const TRY = {
+  review: ['ลองแบบนี้ ↗', '/review/?demo=1'],
+  drama: ['ทำละครแบบนี้ ↗', '/create/?workflow=drama'],
+  live: ['ตั้งค่าไลฟ์ ↗', '/create/?workflow=live'],
+  bot: ['ตั้งค่าบอท ↗', '/create/?workflow=bot'],
+};
+// review clips alternate product groups so a tab never opens on eight of one kind
+function interleave(list, key) {
+  const groups = [...new Set(list.map(key))].map(k => list.filter(x => key(x) === k));
+  const out = [];
+  for (let i = 0; out.length < list.length; i++) for (const g of groups) if (g[i]) out.push(g[i]);
+  return out;
+}
+const libClips = interleave(lib.clips.filter(c => fs.existsSync(path.join(CLIPS_DIR, `${c.id}.mp4`))), c => c.group);
+
 // tab of a shot: its row, else read from where its button leads; anything else shows under "all" only
 function catOf(s) {
   if (CATS.includes(s.row)) return s.row;
@@ -46,7 +67,7 @@ function card({ cat, href, poster, sources, chip, live, title, sub, tryLabel, fr
   return `        <article class="g-card" data-cat="${cat}">
           <video data-autoplay muted loop playsinline preload="none" poster="${esc(poster)}" aria-hidden="true">${sources.map(([src, type]) => `<source src="${esc(src)}" type="${type}">`).join('')}</video>
           <span class="g-chip${live ? ' is-live' : ''}">${esc(chip.replace(/^●\s*/, ''))}</span>
-${from ? `          <figure class="g-from"><img src="${esc(from)}" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป ${esc(title)}"><figcaption>จากรูปนี้</figcaption></figure>\n` : ''}${sound ? `          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ${esc(title)}">${SPEAKER}</button>\n` : ''}          <div class="g-cap"><h3>${esc(title)}</h3><p>${esc(sub)}</p><a class="g-use" href="${esc(href)}">${esc(tryLabel)}</a></div>
+${from ? `          <figure class="g-from"><img src="${esc(from)}" width="180" height="320" loading="lazy" alt="รูปตั้งต้นของคลิป ${esc(title)}"><figcaption>จากรูปนี้</figcaption></figure>\n` : ''}${sound ? `          <button class="reel-sound" type="button" aria-pressed="false" aria-label="เปิดเสียงคลิป ${esc(title)}">${SPEAKER}</button>\n` : ''}          <div class="g-cap"><h3>${esc(title)}</h3>${sub ? `<p>${esc(sub)}</p>` : ''}<a class="g-use" href="${esc(href)}">${esc(tryLabel)}</a></div>
         </article>`;
 }
 
@@ -61,6 +82,13 @@ const items = [
     sound: true,
   })),
   ...fill.map(f => ({ cat: catOf(f), href: f.href, poster: f.poster, sources: f.sources, chip: f.chip, title: f.title, sub: f.sub, tryLabel: f.try })),
+  ...libClips.map(c => {
+    const cat = libCat(c.group);
+    return {
+      cat, href: TRY[cat][1], poster: `/showcase/clips/${c.id}.jpg`, sources: [[`/showcase/clips/${c.id}.mp4`, 'video/mp4']],
+      chip: lib.groups[c.group] || c.group, live: c.group === 'live', title: c.title, sub: '', tryLabel: TRY[cat][0], sound: true,
+    };
+  }),
 ];
 
 // chat demos join their tab as the third card
@@ -69,7 +97,11 @@ const chats = fs.readFileSync(path.join(__dirname, 'chat-cards.html'), 'utf8')
   .map(b => ({ cat: /data-cat="(\w+)"/.exec(b)[1], html: b.trim().split('\n').map(l => '        ' + l).join('\n') }));
 
 // One list per tab, then deal them out round-robin so "all" opens on a mix of every product.
-const lists = Object.fromEntries([...CATS, 'naka'].map(c => [c, items.filter(it => it.cat === c).map(card)]));
+const starsNaka = it => /\/(naka-[\w-]+|[\w]+-naka)\.jpg$/.test(it.poster);
+const lists = Object.fromEntries([...CATS, 'naka'].map(c => {
+  const inTab = items.filter(it => it.cat === c);
+  return [c, [...inTab.filter(it => !starsNaka(it)), ...inTab.filter(starsNaka)].map(card)];
+}));
 for (const ch of chats) lists[ch.cat].splice(2, 0, ch.html);
 const order = [];
 for (let i = 0; order.length < items.length + chats.length - lists.naka.length; i++) {
@@ -80,7 +112,8 @@ const videoCount = items.length;
 const count = c => items.filter(it => it.cat === c).length + chats.filter(ch => ch.cat === c).length;
 
 const note = [
-  rendered.length && 'คลิปที่มีปุ่มลำโพงสร้างด้วยโมเดลวิดีโอ MiniMax H3 ที่รันผ่าน Unsloth จากภาพนิ่งภาพเดียว ภาพและเสียงสร้างด้วย AI สินค้า ร้าน และตัวละครเป็นตัวอย่างสมมติ',
+  'ทุกคลิปสร้างด้วย AI ทั้งภาพและเสียง สินค้า ร้าน และตัวละครเป็นตัวอย่างสมมติ',
+  rendered.length && 'คลิปที่มีป้าย “จากรูปนี้” เริ่มจากภาพนิ่งในป้าย สร้างด้วยโมเดลวิดีโอ MiniMax H3 ที่รันผ่าน Unsloth',
   fill.length && 'คลิปละครสร้างจากระบบละครของนาคา',
   chats.length && 'การ์ดแชทเป็นตัวอย่างบทสนทนา',
 ].filter(Boolean).join(' · ');
@@ -91,8 +124,8 @@ const block = `${START}
 ${CATS.map(c => `      <span class="g-anchor" id="p-${c}" data-tab-anchor="${c}"></span>`).join('\n')}
       <div class="g-shell g-head">
         <p class="g-kicker">คลังคลิปจริง · ${videoCount} คลิป</p>
-        <h2 id="reel-title">ทุกคลิปเริ่มจาก<em>ภาพนิ่งภาพเดียว</em></h2>
-        <p class="g-sub">ภาพเคลื่อนไหวกับเสียงพากย์ไทยสร้างมาพร้อมกัน แตะปุ่มลำโพงบนคลิปเพื่อฟังเสียง หรือกดปุ่มใต้คลิปเพื่อเริ่มจากแบบเดียวกัน</p>
+        <h2 id="reel-title">ดูงานจริงก่อน<em>ตัดสินใจ</em></h2>
+        <p class="g-sub">ทุกคลิปทำด้วยนาคา พร้อมเสียงพากย์ไทย แตะปุ่มลำโพงบนคลิปเพื่อฟังเสียง หรือกดปุ่มใต้คลิปเพื่อเริ่มจากแบบเดียวกัน</p>
       </div>
       <div class="g-shell g-tabs" role="group" aria-label="เลือกประเภทงาน">
 ${TABS.map((t, i) => `        <button type="button" data-tab="${t.id}" aria-pressed="${i === 0}">${esc(t.label)} <span>${t.id === 'all' ? videoCount + chats.length : count(t.id)}</span></button>`).join('\n')}
