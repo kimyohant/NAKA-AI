@@ -279,7 +279,6 @@
 </template>
 
 <script setup>
-import { openAdmin } from '~/composables/useAdminUrl'
 import { toast } from 'vue-sonner'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
@@ -524,7 +523,7 @@ async function startFromStory() {
     const hasActive = type => configs.some(c => c.service_type === type && c.is_active)
     if (!hasActive('image') || !hasActive('video')) {
       toast.error(t('index.studio.needConfig'), {
-        action: { label: t('layout.banner.goSettings'), onClick: () => openAdmin() },
+        action: { label: t('layout.banner.goSettings'), onClick: () => navigateTo({ path: '/settings', query: { tab: 'ai' } }) },
       })
       return
     }

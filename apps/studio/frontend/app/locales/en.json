@@ -37,7 +37,7 @@
       "projects": "Projects",
       "settings": "Settings",
       "home": "Drama Studio",
-      "setup": "Setup",
+      "setup": "System settings",
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
       "marketer": "AI Marketer",
@@ -46,7 +46,7 @@
       "seller": "AI Seller"
     },
     "banner": {
-      "missing": "{types} model not configured yet, so AI features are unavailable. Ask an admin to set it up in NAKA Admin.",
+      "missing": "{types} model not configured yet, so AI features are unavailable. Ask an admin to set it up in System settings.",
       "goSettings": "Open Admin"
     },
     "theme": {
@@ -737,5 +737,26 @@
         "desc": "Click this \"?\" button to replay this page's guide. Happy creating!"
       }
     }
+  },
+  "admin": {
+    "kicker": "NAKA-AI",
+    "title": "Admin",
+    "subtitle": "NAKA-AI system settings",
+    "guardOff": "ADMIN_TOKEN is not set on the server — anyone can change settings",
+    "login": {
+      "desc": "Enter the admin password (the server's ADMIN_TOKEN) to manage AI services, styles, agents and storage.",
+      "token": "Admin password",
+      "tokenPlaceholder": "ADMIN_TOKEN",
+      "remember": "Keep me signed in on this device",
+      "submit": "Sign in",
+      "invalid": "Wrong admin password",
+      "unreachable": "Cannot reach the server. Check that the backend is running.",
+      "expired": "Your session expired or the password changed. Please sign in again.",
+      "hint": "Set on the server with the ADMIN_TOKEN variable (at least 16 characters).",
+      "sso": "Sign in with naka-ai",
+      "ssoHint": "For admins listed in naka-ai.com ADMIN_EMAILS (Google account)",
+      "or": "or use the admin password"
+    },
+    "onlyAdmins": "This page is for administrators only. Ask an administrator to change these settings."
   }
 }

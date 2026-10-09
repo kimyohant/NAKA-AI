@@ -29,7 +29,6 @@ npm run dev:landing        # landing on 127.0.0.1:8788 (needs apps/landing/.env)
 npm run test:landing       # node --test (PostgreSQL in-process via PGlite; no Docker needed)
 npm run dev:studio         # studio backend on :5679
 npm run dev:studio-web     # studio frontend on :3013
-npm run dev:studio-admin   # studio admin on :3014/admin/
 ```
 
 CI: `.github/workflows/landing-ci.yml` (with a PostgreSQL service), `studio-ci.yml` and `db-ci.yml` run only when their files change. Deploy: `docker compose up -d --build` at the root (postgres + landing + studio; one app: `docker compose up -d --build studio`). The Cloudflare Worker deploy was retired with D1.
