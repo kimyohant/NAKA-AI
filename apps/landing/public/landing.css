@@ -624,3 +624,16 @@ body.acct-signed-in .landing-nav .nav-cta { display: none; }
   .fx-lines .tpl-chip { top: 10px; left: 10px; max-width: calc(100% - 20px); font-size: 10.5px; }
   :is(.reel, .fx-lines) .tpl.tpl-create { min-height: 0; padding: 22px 14px; }
 }
+
+/* clip gallery (built by creative/unsloth-reel/build-gallery.cjs) */
+.gal-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.gal-tab { padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.gal-tab[aria-pressed="true"] { border-color: var(--brand); background: var(--brand); color: #fff; }
+.gal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; }
+.gal-card { position: relative; margin: 0; }
+.gal-card[hidden] { display: none; }
+.gal-media { position: relative; aspect-ratio: 9 / 16; overflow: hidden; border-radius: 16px; background: #eef2f7; box-shadow: var(--shadow-sm); }
+.gal-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.gal-card figcaption { margin-top: 10px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.gal-card figcaption span { display: block; font-size: 12px; font-weight: 500; color: var(--ink-2); }
+@media (max-width: 640px) { .gal-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }

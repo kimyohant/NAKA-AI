@@ -1,0 +1,79 @@
+/* "Naka factory" theme for the rest of the landing page. Carries the hero conveyor (hero-line.css) down the
+   page: belt strips between sections, pearl machine-panel cards with a coloured tab, navy HUD panels for
+   the numbers and the closing call. Loaded after landing.css and hero-line.css; CSS only, no markup hooks. */
+
+:root {
+  --f-navy: #0d1b33;
+  --f-navy-2: #12316d;
+  --f-panel: linear-gradient(180deg, #ffffff 0%, #f1f5fc 100%);
+  --f-panel-line: #d6e0ef;
+}
+
+.products { padding-top: 96px; border-top: 0; background:
+  radial-gradient(circle, rgba(36, 89, 214, .09) 1px, transparent 1.3px) 0 0 / 24px 24px,
+  linear-gradient(180deg, #eef3fb 0, #fff 260px); }
+
+/* ---------- station labels: kickers read like machine tags ---------- */
+.kicker { display: inline-flex; align-items: center; gap: 9px; padding: 5px 12px 5px 9px; border: 1px solid var(--f-panel-line); border-radius: 999px; background: #fff; box-shadow: var(--shadow-sm); color: var(--brand-ink); }
+.kicker::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 0 3px rgba(20, 179, 214, .2); }
+.pill { background: var(--f-navy-2); color: #8ff0ff; }
+
+/* ---------- pearl machine panels ---------- */
+.plan, .guarantee-grid article {
+  position: relative; border-color: var(--f-panel-line); background: var(--f-panel);
+  box-shadow: 0 1px 2px rgba(13, 27, 51, .05), 0 16px 34px rgba(20, 45, 110, .08);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.plan:hover, .guarantee-grid article:hover { transform: translateY(-3px); box-shadow: 0 2px 4px rgba(13, 27, 51, .05), 0 24px 46px rgba(20, 45, 110, .14); }
+/* coloured bin tab on top, like the platform bins on the hero belt */
+.plan::before, .guarantee-grid article::before {
+  content: ""; position: absolute; top: -1px; left: 22px; right: 22px; height: 6px;
+  border-radius: 0 0 6px 6px; background: var(--brand);
+}
+.plan-featured { background: linear-gradient(#fff, #f1f5fc) padding-box, var(--grad) border-box; }
+.plan-featured::before { background: var(--cyan); }
+.plan-badge { background: var(--f-navy-2); color: #8ff0ff; box-shadow: 0 6px 14px rgba(18, 49, 109, .28); }
+.plan li::before { color: var(--cyan); }
+
+/* icon chips = dark robot joints with a cyan ring */
+.why-icon { background: var(--f-navy-2); box-shadow: inset 0 0 0 2px rgba(20, 179, 214, .55), 0 8px 16px rgba(18, 49, 109, .22); }
+.why-icon svg { stroke: #8ff0ff; }
+
+/* ---------- HUD panel for the numbers ---------- */
+.stat-band { position: relative; border: 0; border-radius: 24px; background: linear-gradient(135deg, var(--f-navy) 0%, var(--f-navy-2) 100%); box-shadow: 0 24px 50px rgba(13, 27, 51, .22); }
+.stat-band::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); background-size: 40% 100%; background-repeat: no-repeat; animation: f-scan 4.5s ease-in-out infinite alternate; }
+@keyframes f-scan { from { background-position: -10% 0; } to { background-position: 110% 0; } }
+.stat-band div + div { border-left-color: rgba(143, 240, 255, .16); }
+.stat-band dt { color: #a9bddf; }
+.stat-band dd { background: linear-gradient(115deg, #ffffff 0%, #8ff0ff 100%); -webkit-background-clip: text; background-clip: text; }
+
+/* ---------- section backdrops ---------- */
+.social { background:
+  radial-gradient(circle, rgba(13, 27, 51, .07) 1px, transparent 1.3px) 0 0 / 24px 24px,
+  linear-gradient(180deg, #f7f8fb, #eef3fb); }
+.pricing { background: linear-gradient(180deg, #eef3fb 0%, #f5f8fc 60%); }
+.trust { background: #fff; }
+.platform-filter button[aria-pressed="true"] { border-color: var(--f-navy-2); background: var(--f-navy-2); box-shadow: 0 6px 14px rgba(18, 49, 109, .25); }
+.billing-toggle button[aria-pressed="true"] { background: var(--f-navy-2); }
+
+/* sample clips: a cyan frame lights up when the visitor points at one */
+.tpl, .post { transition: transform .25s ease, box-shadow .25s ease; }
+.tpl:hover, .post:hover { box-shadow: 0 0 0 2px var(--cyan), 0 24px 50px rgba(20, 45, 110, .22); }
+
+/* ---------- closing call = the machine's control panel ---------- */
+.closing-card { overflow: hidden;  background:
+  radial-gradient(40% 90% at 88% 20%, rgba(20, 179, 214, .32), transparent 70%),
+  radial-gradient(circle, rgba(143, 240, 255, .12) 1px, transparent 1.3px) 0 0 / 22px 22px,
+  linear-gradient(135deg, var(--f-navy) 0%, var(--f-navy-2) 100%);
+  box-shadow: 0 30px 70px rgba(13, 27, 51, .32); }
+.closing-card p { color: #c3d3ee; }
+.closing-card .btn-light { color: var(--f-navy-2); box-shadow: 0 8px 22px rgba(20, 179, 214, .35); }
+
+@media (max-width: 760px) {
+  .products { padding-top: 88px; }
+  .plan::before, .guarantee-grid article::before { left: 16px; right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stat-band::before { animation: none; }
+  .plan, .guarantee-grid article, .tpl, .post { transition: none; }
+}

@@ -114,6 +114,21 @@
     });
   });
 
+  // ---- clip gallery: filter by group ----
+  var galTabs = Array.prototype.slice.call(document.querySelectorAll('.gal-tab'));
+  galTabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var f = tab.dataset.filter;
+      galTabs.forEach(function (t) { t.setAttribute('aria-pressed', t === tab ? 'true' : 'false'); });
+      Array.prototype.forEach.call(document.querySelectorAll('.gal-card'), function (c) {
+        var show = f === 'all' || c.dataset.group === f;
+        c.hidden = !show;
+        var v = c.querySelector('video');
+        if (!show && v) v.pause();
+      });
+    });
+  });
+
   // ---- chat demos: reveal messages one by one when the card scrolls into view ----
   var chats = Array.prototype.slice.call(document.querySelectorAll('[data-chat]'));
   function playChat(card) {
