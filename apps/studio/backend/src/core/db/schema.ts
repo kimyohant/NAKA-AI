@@ -384,6 +384,22 @@ export const campaigns = pgTable('campaigns', {
   deletedAt: text('deleted_at'),
 })
 
+// AI Marketer quick start: one-off analyses from the prompt box / templates (modules/marketer/services/marketer-quick.ts)
+export const marketerInsights = pgTable('marketer_insights', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  ownerUserId: ownerUserId(),
+  templateId: text('template_id'),
+  prompt: text('prompt').notNull(),
+  expert: text('expert').notNull().default('general'),
+  category: text('category'),
+  productName: text('product_name'),
+  status: text('status').notNull().default('processing'),
+  result: text('result'),
+  errorMsg: text('error_msg'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
 export const campaignDocs = pgTable('campaign_docs', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   campaignId: bigint('campaign_id', { mode: 'number' }).notNull(),

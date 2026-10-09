@@ -1,7 +1,10 @@
 <template>
-  <article class="trend-card" tabindex="0" role="button" :aria-label="t('marketer.trending.card.replicateAria', { title: entry.title })" @click="emit('replicate', entry)" @keydown.enter.prevent="emit('replicate', entry)" @keydown.space.prevent="emit('replicate', entry)">
-    <!-- Cover: gradient ตามหมวด + hook text ใหญ่ (ไม่ใช้ thumbnail จากแพลตฟอร์ม — ไม่มีสิทธิ์) -->
-    <div class="trend-cover" :class="`cover-${entry.industry}`">
+  <article class="trend-card" data-mm-hover tabindex="0" role="button" :aria-label="t('marketer.trending.card.replicateAria', { title: entry.title })" @click="emit('replicate', entry)" @keydown.enter.prevent="emit('replicate', entry)" @keydown.space.prevent="emit('replicate', entry)">
+    <!-- Cover: gradient ตามหมวด + hook text ใหญ่ (ไม่ใช้ thumbnail จากแพลตฟอร์ม — ไม่มีสิทธิ์)
+         ถ้ามีภาพประกอบที่ NAKA-AI สร้างเอง (utils/marketerMedia.js) จะวางไว้ใต้ข้อความ พร้อมป้าย "ภาพประกอบ AI" -->
+    <div class="trend-cover" :class="[`cover-${entry.industry}`, { 'has-media': hasMedia }]">
+      <MarketerMedia v-if="hasMedia" class="trend-media" :id="mediaId" :badge="t('marketer.trending.card.aiPreview')" />
+      <span v-if="hasMedia" class="trend-shade" aria-hidden="true"></span>
       <div class="trend-cover-top">
         <span class="trend-chip">
           <component :is="platformIcon" :size="10" :stroke-width="2.2" />
@@ -9,7 +12,7 @@
         </span>
         <span class="trend-chip th">TH</span>
       </div>
-      <p class="trend-hook">“{{ entry.pattern.hook }}”</p>
+      <p class="trend-hook">“{{ hookText }}”</p>
       <div class="trend-metrics">
         <div class="trend-metric">
           <strong>{{ fmtViews(entry.views) }}</strong>
@@ -47,12 +50,18 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Copy, Instagram, Music2, Youtube } from 'lucide-vue-next'
 import type { TrendVideo } from '~/composables/useApi'
+import { mkImage } from '../utils/marketerMedia'
 
 /** MarketerTrendingCard — การ์ดคลังเทรนด์ไทย (docs/ai-marketer/TRENDING.md §3) */
 const props = defineProps<{ entry: TrendVideo }>()
 const emit = defineEmits<{ replicate: [entry: TrendVideo] }>()
 
 const { t } = useI18n()
+
+const mediaId = computed(() => `trend-${props.entry.id}`)
+const hasMedia = computed(() => !!mkImage(mediaId.value))
+// hook ในข้อมูลบางตัวมีเครื่องหมายคำพูดมาแล้ว — ตัดออกก่อนครอบด้วย “ ” ของการ์ด
+const hookText = computed(() => props.entry.pattern.hook.trim().replace(/^["“”']+|["“”']+$/g, ''))
 
 const platformIcon = computed(() => {
   if (props.entry.platform === 'reels') return Instagram
@@ -117,6 +126,18 @@ function fmtDuration(sec: number) {
 .cover-pets { background: linear-gradient(160deg, #4a3a15 0%, #241c0a 70%); }
 .cover-other { background: linear-gradient(160deg, #2c3440 0%, #171c24 70%); }
 
+.trend-media { position: absolute; inset: 0; z-index: 0; }
+.trend-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.15) 50%, rgba(0, 0, 0, 0.82) 100%);
+}
+.trend-cover > :not(.trend-media):not(.trend-shade) { z-index: 2; }
+.trend-cover > .trend-hook, .trend-cover > .trend-metrics { position: relative; }
+/* มีภาพแล้ว: ป้าย AI ไปมุมซ้ายล่างเหนือ metrics ไม่ชนเวลาคลิปที่มุมขวา */
+.has-media :deep(.mm-badge) { right: auto; left: 10px; top: 38px; bottom: auto; }
 .trend-cover-top {
   position: absolute;
   top: 10px;

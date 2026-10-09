@@ -19,6 +19,9 @@
       </div>
     </header>
 
+    <!-- ===== Quick start แบบ TopView: กล่องสั่งงาน + แม่แบบ + การ์ด 4 แบบ + งานวิเคราะห์ของฉัน (ย้ายจาก naka-ai studio 05) ===== -->
+    <MarketerQuickStart />
+
     <!-- ===== Trending Videos (Thailand) — Ready to Replicate (docs/ai-marketer/TRENDING.md) ===== -->
     <MarketerTrendingSection />
 
@@ -79,7 +82,9 @@
     </div>
 
     <div v-else class="mk-empty">
-      <Megaphone :size="26" :stroke-width="1.5" />
+      <MarketerMedia class="mk-empty-art" id="empty-campaigns" play="none">
+        <Megaphone :size="26" :stroke-width="1.5" />
+      </MarketerMedia>
       <p class="mk-empty-title">{{ t('marketer.list.emptyTitle') }}</p>
       <p class="mk-empty-desc">{{ t('marketer.list.emptyDesc') }}</p>
       <button class="btn btn-primary" type="button" @click="openCreate">
@@ -403,6 +408,7 @@ onBeforeUnmount(() => {
   color: var(--text-3);
   text-align: center;
 }
+.mk-empty-art { width: 140px; aspect-ratio: 1; display: grid; place-items: center; border-radius: 20px; }
 .mk-empty-title { margin: 8px 0 0; font-size: 15px; font-weight: 700; color: var(--text-1); }
 .mk-empty-desc { margin: 0 0 14px; font-size: 12.5px; max-width: 380px; }
 

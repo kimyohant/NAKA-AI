@@ -24,6 +24,26 @@ function requireId(raw: string): number | null {
   return Number.isInteger(id) && id >= 1 ? id : null
 }
 
+// POST /campaigns/:id/autopilot — research → strategy → creatives in one go (AI Marketer quick start)
+app.post('/:id/autopilot', async (c) => {
+  const id = requireId(c.req.param('id'))
+  if (!id) return badRequest(c, 'invalid id')
+  const body = await c.req.json().catch(() => ({})) as any
+  try {
+    const platforms = body.platforms === undefined ? undefined : marketer.enumArrayForRoute(body.platforms, marketer.PLATFORMS, 'platforms')
+    const referenceId = body.referenceId === undefined || body.referenceId === null ? undefined : Number(body.referenceId)
+    if (referenceId !== undefined && (!Number.isInteger(referenceId) || referenceId < 1)) return badRequest(c, 'invalid referenceId', 'E_INVALID_FIELD')
+    const result = await marketer.startAutopilot(id, {
+      count: body.count === undefined ? undefined : Number(body.count),
+      referenceId, platforms, notes: isNonEmptyString(body.notes) ? body.notes.trim() : undefined,
+    })
+    if (!result) return notFound(c, 'campaign not found')
+    return accepted(c, result.status)
+  } catch (err: any) {
+    return badRequest(c, err?.message || 'เริ่ม autopilot ไม่สำเร็จ', err?.errorCode)
+  }
+})
+
 // GET /campaigns — 列表（可选 status / drama_id 过滤）
 app.get('/', async (c) => {
   const status = c.req.query('status') || undefined
