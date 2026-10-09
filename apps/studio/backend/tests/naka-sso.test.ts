@@ -111,6 +111,13 @@ test('SSO on: API needs a session; round trip creates one, stores the member, re
   // cross-site write refused; same-origin write accepted
   assert.equal((await app.request('/api/v1/dramas', { method: 'POST', headers: { Cookie: cookie, Origin: 'https://evil.example' } })).status, 403)
   assert.equal((await app.request('/api/v1/dramas', { method: 'POST', headers: { Cookie: cookie, Origin: 'http://localhost' } })).status, 200)
+  // behind Cloudflare/a proxy TLS ends before the app: the server sees http:// while the browser sends https://
+  const viaProxy = (origin: string) =>
+    app.request('http://studio.example.com/api/v1/dramas', { method: 'POST', headers: { Cookie: cookie, Origin: origin } })
+  assert.equal((await viaProxy('https://studio.example.com')).status, 200)
+  assert.equal((await viaProxy('https://evil.example')).status, 403)
+  assert.equal((await viaProxy('https://studio.example.com.evil.example')).status, 403)
+  assert.equal((await viaProxy('null')).status, 403)
   // tampered session
   assert.equal((await app.request('/api/v1/dramas', { headers: { Cookie: cookie.replace(/.$/, c => (c === 'a' ? 'b' : 'a')) } })).status, 401)
   // logout clears it

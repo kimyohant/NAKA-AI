@@ -124,6 +124,19 @@ async function upsertUser(u: StudioUser) {
 const OPEN_PATHS = ['/api/v1/health', '/api/v1/auth/naka/']
 
 /**
+ * Same-site write check: the Origin's host must be the host the request was sent to. Hosts only, not schemes:
+ * behind Cloudflare / a reverse proxy TLS ends before the app, so the server sees http://studio.naka-ai.com
+ * while the browser sends Origin https://studio.naka-ai.com (comparing full origins refused every write).
+ */
+function sameHost(origin: string, requestUrl: string): boolean {
+  try {
+    return new URL(origin).host === new URL(requestUrl).host
+  } catch {
+    return false
+  }
+}
+
+/**
  * Mounted on /api/v1/*: with SSO on, every call needs a member session (401 E_AUTH_REQUIRED) and state-changing
  * calls must come from an allowed Origin. Sets c.var.user either way.
  */
@@ -141,8 +154,7 @@ export function requireSession(allowedOrigins: () => string[], isTokenAdmin: (c:
     if (!user) return c.json({ code: 401, message: 'กรุณาเข้าสู่ระบบด้วยบัญชี naka-ai', errorCode: 'E_AUTH_REQUIRED' }, 401)
     if (!['GET', 'HEAD'].includes(c.req.method)) {
       const origin = c.req.header('Origin')
-      const self = new URL(c.req.url).origin
-      if (origin && origin !== self && !allowedOrigins().includes(origin)) {
+      if (origin && !sameHost(origin, c.req.url) && !allowedOrigins().includes(origin)) {
         return c.json({ code: 403, message: 'origin not allowed', errorCode: 'E_ORIGIN' }, 403)
       }
     }
