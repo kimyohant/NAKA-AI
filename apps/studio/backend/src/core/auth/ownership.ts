@@ -21,7 +21,7 @@ type Kind =
   | 'drama' | 'episode' | 'storyboard' | 'character' | 'scene' | 'prop' | 'look' | 'task'
   | 'campaign' | 'creative' | 'adReference' | 'visual' | 'doc' | 'revision'
   | 'studioProject' | 'studioImage' | 'avatar' | 'influencer' | 'influencerContent'
-  | 'cloneProject' | 'cloneVariant' | 'sellerPost'
+  | 'cloneProject' | 'cloneVariant' | 'sellerPost' | 'insight'
 
 const DRAMA = 'SELECT owner_user_id AS owner FROM dramas WHERE id = ?'
 const viaDrama = (table: string) =>
@@ -57,6 +57,7 @@ const OWNER_SQL: Record<Kind, string> = {
   cloneProject: own('clone_projects'),
   cloneVariant: `SELECT p.owner_user_id AS owner FROM clone_variants x JOIN clone_projects p ON p.id = x.project_id WHERE x.id = ?`,
   sellerPost: own('seller_posts'),
+  insight: own('marketer_insights'),
 }
 
 /** path segment → kind, per top-level route (/api/v1/<route>/…) */
@@ -78,6 +79,7 @@ const PATH_KINDS: Record<string, Record<string, Kind>> = {
   },
   clone: { projects: 'cloneProject', variants: 'cloneVariant' },
   seller: { posts: 'sellerPost' },
+  marketer: { insights: 'insight' },
 }
 
 /** parent ids named in the query string or JSON body */

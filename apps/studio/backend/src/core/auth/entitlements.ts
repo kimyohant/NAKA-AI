@@ -74,6 +74,7 @@ export const ROUTE_FEATURES: Array<[string, StudioFeature[]]> = [
   ['/api/v1/campaigns', ['studio.marketer']],
   ['/api/v1/trending-videos', ['studio.marketer']],
   ['/api/v1/gallery', ['studio.marketer']],
+  ['/api/v1/marketer', ['studio.marketer']],
   ['/api/v1/studio', ['studio.product_studio', 'studio.seller', 'studio.viral_clone']],
   ['/api/v1/seller', ['studio.seller']],
   ['/api/v1/clone', ['studio.viral_clone']],

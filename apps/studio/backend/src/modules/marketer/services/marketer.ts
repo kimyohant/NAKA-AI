@@ -352,6 +352,8 @@ interface AgentJobOptions {
   referenceId?: number
   maxSteps?: number
   label: string
+  /** Autopilot: the next step once this one succeeds (if it throws: campaign failed + errorMsg, like a normal job) */
+  next?: () => Promise<unknown>
 }
 
 /** 异步执行 Agent 任务：成功置 readyStatus、失败置 failed + errorMsg（前端轮询 GET /campaigns/:id） */
@@ -392,6 +394,15 @@ function runCampaignAgentJob(opts: AgentJobOptions): void {
         steps: result?.steps?.length,
         toolCalls: toolNames.join(',') || undefined,
       })
+      if (opts.next) {
+        try { await opts.next() } catch (err: any) {
+          const raw = err?.message || 'autopilot step failed'
+          const msg = err?.errorCode && !raw.startsWith(err.errorCode) ? `${err.errorCode}: ${raw}` : raw
+          await db.update(schema.campaigns).set({ status: 'failed', errorMsg: msg, updatedAt: now() })
+            .where(eq(schema.campaigns.id, opts.campaignId))
+          logTaskError('Marketer', `${opts.label}-autopilot-next`, { campaignId: opts.campaignId, error: msg })
+        }
+      }
     })
     .catch(async (err: any) => {
       // 有稳定错误码时以「E_XXX: 原文」落库：契约只有 errorMsg 字符串，前端据此前缀翻译（不展示原始中文）
@@ -412,7 +423,7 @@ async function startCampaignTask(campaignId: number, kind: PipelineTaskKind): Pr
   return key
 }
 
-export async function startResearch(campaignId: number, notes?: string) {
+export async function startResearch(campaignId: number, notes?: string, next?: () => Promise<unknown>) {
   const row = await getCampaignRow(campaignId)
   if (!row) return null
   assertNotBusy(row)
@@ -442,11 +453,12 @@ export async function startResearch(campaignId: number, notes?: string) {
     message,
     readyStatus: 'research_ready',
     label: 'research',
+    next,
   })
   return { status: 'researching' as const }
 }
 
-export async function startStrategy(campaignId: number) {
+export async function startStrategy(campaignId: number, next?: () => Promise<unknown>) {
   const row = await getCampaignRow(campaignId)
   if (!row) return null
   assertNotBusy(row)
@@ -472,6 +484,7 @@ export async function startStrategy(campaignId: number) {
     message,
     readyStatus: 'strategy_ready',
     label: 'strategy',
+    next,
   })
   return { status: 'strategizing' as const }
 }
@@ -1158,6 +1171,27 @@ export async function promoteVisual(campaignId: number, visualId: number) {
     return toCampaignJson(updated!)
   }
   return toCampaignJson(campaign)
+}
+
+/**
+ * Autopilot (AI Marketer quick start: the "product link → clip" / "recreate a viral clip" / "many ads" cards):
+ * research → strategy → creatives(count[, referenceId]) run one after another without a click per step.
+ * A referenceId not analyzed yet is analyzed (sync) first. Every step keeps its usual guard/status, so the campaign page polls as usual.
+ */
+export async function startAutopilot(campaignId: number, opts: { count?: number; referenceId?: number; platforms?: string[]; notes?: string } = {}) {
+  const row = await getCampaignRow(campaignId)
+  if (!row) return null
+  assertNotBusy(row)
+  const count = opts.count === undefined ? DEFAULT_CREATIVES_COUNT : opts.count
+  if (!Number.isInteger(count) || count < 1 || count > 10) throw new AppError('count ต้องเป็น 1–10', 'E_INVALID_FIELD')
+  if (opts.referenceId !== undefined) {
+    const reference = await getAdReferenceRow(campaignId, opts.referenceId)
+    if (!reference) throw new AppError('ไม่พบ reference นี้ในแคมเปญ', 'E_INVALID_FIELD')
+    if (!reference.analysis) await analyzeAdReference(campaignId, opts.referenceId)
+  }
+  const creatives = () => startCreatives(campaignId, { count, referenceId: opts.referenceId, platforms: opts.platforms })
+  logTaskStart('Marketer', 'autopilot', { campaignId, count, referenceId: opts.referenceId })
+  return startResearch(campaignId, opts.notes, () => startStrategy(campaignId, creatives))
 }
 
 /** boot 清理：进程重启后 *ing 状态不可能还在跑 → 标记失败（同 failStaleRunningTasks） */

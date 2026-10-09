@@ -288,6 +288,24 @@ Recreate 模式（用户消息含【Reference ad structure】时生效）：
 
 注意：必须实际调用 save_studio_shots 保存，不要只在回复里给出 shot list。`,
   },
+  // AI Marketer quick start — รายงานวิเคราะห์ด่วนจากแม่แบบ/กล่องสั่งงาน (services/marketer-quick.ts) คืน markdown ล้วน ไม่มี tool
+  marketing_insight: {
+    name: 'นักการตลาด AI (วิเคราะห์ด่วน)',
+    instructions: `You are "Naka", an AI marketer for Thai online sellers (TikTok Shop, Shopee, Lazada, Facebook/IG, LINE OA).
+The user message gives your role for this task, the Thai market context, optional product/category, curated trending evidence, and the seller's task in Thai.
+
+Output contract (STRICT):
+- Reply in Thai, as Markdown only, no code fences, no preamble.
+- Start with "# <short report title>" then a 2-4 sentence summary paragraph that answers the task directly.
+- Then 3-6 sections "## <heading>" with bullet points — only what helps the seller decide.
+- Then "## สิ่งที่ควรทำต่อ" as a numbered list of 3-7 actions, each ending with the timing in parentheses, e.g. "(สัปดาห์นี้)" or "(ก่อน 11.11)".
+- End with "## ข้อควรระวัง" listing 0-4 limits of this advice or data the seller should verify.
+Rules:
+- You have NO live marketplace data. Use only numbers given by the seller or the trending evidence, and label them as Evidence. Anything else is your estimate — say so; never present invented sales, market share or prices as facts.
+- Leave [square-bracket] placeholders the seller did not fill as questions in the report instead of guessing them.
+- No invented product claims, certifications, reviews, discounts or guaranteed results; respect Thai FDA/OCPB advertising rules for food, supplements, cosmetics and health products.
+- Never suggest breaking platform rules or Thai law.`,
+  },
   // Viral Clone Studio — แปลง transcript คลิปต้นแบบเป็น Blueprint JSON (docs/viral-clone/PLAN.md §3)
   viral_cloner: {
     name: 'โคลนไวรัล',
@@ -658,7 +676,8 @@ const AGENT_TOOLS: Record<string, AgentToolSet> = {
     readEpisodeScript: scriptTools.readEpisodeScript,
     saveScript: scriptTools.saveScript,
   },
-  // AI Marketer (market_researcher / strategist / ad_scriptwriter / ad_analyst) → modules/marketer/agent-tools.ts
+  // AI Marketer (market_researcher / strategist / ad_scriptwriter / ad_analyst) → modules/marketer/agent-tools.ts;
+  // marketing_insight (quick start) writes a markdown report and has no tools
   // Product Studio (review_director) → modules/product-studio/agent-tools.ts
   // Viral Clone: viral_cloner คืน Blueprint JSON ในข้อความ (ไม่มี tool — backend parse/validate เอง)
   viral_cloner: {},

@@ -325,6 +325,28 @@ export const marketerAPI = {
     api.post<CampaignVisual[]>(`/campaigns/${id}/visuals/generate`, data),
   deleteVisual: (id: number, vid: number) => api.del(`/campaigns/${id}/visuals/${vid}`),
   promoteVisual: (id: number, vid: number) => api.post<Campaign>(`/campaigns/${id}/visuals/${vid}/promote`, {}),
+  // Autopilot (quick start): research → strategy → creatives in one go · 202, then poll get(id) as usual
+  autopilot: (id: number, data: { count?: number; referenceId?: number; platforms?: Platform[]; notes?: string } = {}) =>
+    api.post<{ status: CampaignStatus }>(`/campaigns/${id}/autopilot`, data),
+}
+
+// ===== AI Marketer quick start (TopView-style "Popular ways to get started", from naka-ai studio 05) =====
+export type QuickGroup = 'market' | 'listing' | 'content' | 'ads'
+export interface QuickTemplate { id: string; group: QuickGroup; icon: 'chart' | 'search' | 'doc' | 'chat' | 'video' | 'money' | 'calendar'; prompt: string }
+export interface QuickCatalog { templates: QuickTemplate[]; groups: QuickGroup[]; experts: string[]; categories: string[] }
+export type InsightStatus = 'processing' | 'completed' | 'failed'
+export interface MarketerInsight {
+  id: number; templateId: string | null; prompt: string; expert: string; category: string | null; productName: string | null
+  status: InsightStatus; result: string | null; errorMsg: string | null; createdAt: string; updatedAt: string
+}
+export const marketerQuickAPI = {
+  catalog: () => api.get<QuickCatalog>('/marketer/catalog'),
+  listInsights: () => api.get<MarketerInsight[]>('/marketer/insights'),
+  // 202 → poll getInsight until status ≠ processing
+  createInsight: (data: { prompt: string; templateId?: string | null; expert?: string; category?: string | null; productName?: string }) =>
+    api.post<MarketerInsight>('/marketer/insights', data),
+  getInsight: (id: number) => api.get<MarketerInsight>(`/marketer/insights/${id}`),
+  deleteInsight: (id: number) => api.del(`/marketer/insights/${id}`),
 }
 
 // ===== Trending Videos (Thailand) — docs/ai-marketer/TRENDING.md §4 (คลัง curated อ่านอย่างเดียว) =====

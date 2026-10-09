@@ -52,7 +52,8 @@
         "engagement": "Engagement",
         "replicate": "Replicate",
         "replicateAria": "Replicate {title}",
-        "why": "Why it works"
+        "why": "Why it works",
+        "aiPreview": "AI preview"
       },
       "dialog": {
         "title": "Replicate: {title}",
@@ -465,6 +466,190 @@
       "copyPlan": "Copy as Markdown",
       "copied": "Plan copied",
       "exportHeading": "Marketing plan — {title}"
+    },
+    "quick": {
+      "eyebrow": "AI marketer · Thailand",
+      "title": "Learns your shop, then does the marketing",
+      "subtitle": "Give tasks in plain language: market analysis for TikTok Shop · Shopee · Lazada · Facebook · LINE, then campaigns and real video ads",
+      "placeholder": "Assign any marketing task, e.g. plan an 11.11 campaign for a cosmetics shop with a 5,000 THB budget",
+      "send": "Send task",
+      "templateHint": "Template: {title} · fill in the [ ] parts for your shop",
+      "allCategories": "All categories",
+      "expert": "Expert",
+      "category": "Category",
+      "groups": {
+        "market": "Market insights",
+        "listing": "Listing & reviews",
+        "content": "Content & creators",
+        "ads": "Ads & results"
+      },
+      "templates": {
+        "category_opportunity": "Category opportunity",
+        "trending_products": "Trending products",
+        "competitor_scan": "Competitor scan",
+        "pricing_strategy": "New product pricing",
+        "title_optimization": "Title optimization",
+        "review_insights": "Review & pain points",
+        "ugc_brief": "UGC creator brief",
+        "video_script": "TikTok video script",
+        "viral_analysis": "Viral video breakdown",
+        "campaign_calendar": "Double-date & payday plan",
+        "roas_analysis": "ROAS analysis",
+        "search_terms": "Ad search terms"
+      },
+      "experts": {
+        "general": "Generalist marketer",
+        "tiktok_shop": "TikTok Shop expert",
+        "shopee": "Shopee expert",
+        "lazada": "Lazada expert",
+        "facebook": "Facebook & Instagram expert",
+        "line_oa": "LINE OA expert"
+      },
+      "categories": {
+        "beauty": "Beauty & personal care",
+        "health": "Health & supplements",
+        "fashion": "Fashion & accessories",
+        "food": "Food & beverages",
+        "home": "Home",
+        "kitchen": "Kitchen",
+        "mom_baby": "Mom & baby",
+        "electronics": "Phones & electronics",
+        "appliances": "Appliances",
+        "sports": "Sports & outdoors",
+        "auto": "Automotive",
+        "pets": "Pets",
+        "toys": "Toys & hobbies",
+        "other": "Other"
+      },
+      "ways": {
+        "title": "Popular ways to get started",
+        "desc": "Pick what fits today · cards 02–04 create a campaign and let AI run research → strategy → creatives",
+        "insight": {
+          "title": "Marketing insight",
+          "desc": "Market, competitors, pricing, reviews, campaign plans"
+        },
+        "url": {
+          "title": "URL to video",
+          "desc": "Paste a Shopee, Lazada or shop page link"
+        },
+        "recreate": {
+          "title": "Recreate viral ads",
+          "desc": "Break down a winning clip and make ours"
+        },
+        "bulk": {
+          "title": "Bulk create ads",
+          "desc": "One brief, 1–10 selling angles"
+        }
+      },
+      "insights": {
+        "title": "My insights",
+        "delete": "Delete insight",
+        "status": {
+          "processing": "Analyzing",
+          "completed": "Done",
+          "failed": "Failed"
+        }
+      },
+      "insight": {
+        "title": "Marketing insight",
+        "desc": "Pick a topic and fill in the [ ] parts; Naka turns it into a report with next actions",
+        "suggested": "Suggested for you",
+        "shuffle": "Shuffle",
+        "prompt": "What should be analyzed",
+        "product": "Your product (optional)",
+        "productPlaceholder": "e.g. Vitamin C serum 30 ml",
+        "submit": "Start insight",
+        "submitting": "Sending…"
+      },
+      "result": {
+        "waiting": "Naka is analyzing; this takes about 30–90 seconds…",
+        "noModel": "No text model configured yet — set one in Settings → AI first",
+        "interrupted": "The server restarted during the task; please try again",
+        "failed": "The analysis failed; adjust the task and send it again",
+        "copy": "Copy",
+        "copied": "Copied",
+        "copyFailed": "Copy failed"
+      },
+      "campaign": {
+        "urlDesc": "Paste a product page link: name, details and images are filled in, then AI runs research → strategy → video ideas, ready to produce on the campaign page",
+        "recreateDesc": "Paste the spoken lines or scene notes of a winning clip; AI extracts its structure and writes a new clip for our product (no copied wording)",
+        "bulkDesc": "One brief: AI researches, plans the strategy and splits it into several video ideas with different angles, ready to produce",
+        "url": "Product page link",
+        "fetch": "Fetch",
+        "fetching": "Reading the page…",
+        "fetched": "Fetched — review and edit before starting",
+        "fetchFailed": "Could not read the page automatically; fill in below",
+        "useImage": "Use image {n}",
+        "productPlaceholder": "e.g. Centella cleanser 150 ml",
+        "modeLabel": "Mode",
+        "mode": {
+          "structure": "Recreate structure",
+          "structureDesc": "Keep shots and pacing, all-new content",
+          "structureNote": "Mode: recreate structure — keep the shot structure, pacing and hook formula, write all-new content",
+          "replace": "Replace elements",
+          "replaceDesc": "Keep scenes and actions close, swap people or product",
+          "replaceNote": "Mode: replace elements — keep scenes, camera and pacing close to the original, swap only the person/product for ours"
+        },
+        "transcript": "Spoken lines / scene notes of the reference clip",
+        "transcriptPlaceholder": "e.g. [0-3s] Dull skin in the afternoon?… [3-8s] Wash with this…",
+        "transcriptHint": "Nothing is downloaded from TikTok/Reels/YouTube — the link is kept for reference only",
+        "sourceUrl": "Reference clip link",
+        "newContent": "What the new clip should show",
+        "newContentPlaceholder": "e.g. a Thai seller holding our product, value and fast shipping",
+        "brief": "Brief",
+        "details": "Product details",
+        "briefPlaceholder": "What the product is, verified benefits, price, promotion",
+        "sellingPoint": "Selling point / goal",
+        "sellingPointPlaceholder": "e.g. sell out before 11.11",
+        "audience": "Audience",
+        "audiencePlaceholder": "e.g. office workers 25–35 with oily skin",
+        "platforms": "Platforms",
+        "aspect": "Aspect ratio",
+        "count": "Number of video ideas",
+        "less": "Fewer",
+        "more": "More",
+        "autopilotNote": "AI runs market research → strategy docs → video ideas in one go (with your text model), then press \"Produce\" on the ideas you like to make real videos",
+        "submit": "Create campaign and start",
+        "submitting": "Creating…",
+        "started": "Started — AI is researching the market",
+        "referenceTitle": "Reference clip",
+        "examples": "Example results (made with AI)"
+      },
+      "showcase": {
+        "title": "Made with NAKA-AI",
+        "desc": "Vertical product clips, all generated with AI. Click to make one from your product link",
+        "items": {
+          "lip_tint": "Coral lip tint",
+          "durian_snack": "Crispy durian chips",
+          "ring_light": "Live-stream ring light",
+          "rice_cooker": "Rice cooker",
+          "linen_dress": "Linen dress",
+          "massage_gun": "Massage gun",
+          "coffee_drip": "Drip coffee",
+          "cat_fountain": "Cat water fountain",
+          "sunscreen": "Sunscreen",
+          "phone_case": "Shockproof case",
+          "herbal_balm": "Herbal balm",
+          "school_bag": "School backpack",
+          "led_strip": "LED strip lights"
+        }
+      },
+      "influencers": {
+        "title": "AI influencers, ready to review",
+        "desc": "Fictional presenters generated with AI, not real people",
+        "items": {
+          "i01": "Beauty",
+          "i02": "Gadgets",
+          "i03": "Cooking",
+          "i04": "Fitness",
+          "i05": "Lifestyle",
+          "i06": "Travel",
+          "i07": "Tech",
+          "i08": "Pets",
+          "i09": "Menswear",
+          "i10": "Wellness"
+        }
+      }
     }
   }
 }

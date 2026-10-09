@@ -36,7 +36,9 @@
     </div>
 
     <div v-else class="trend-empty">
-      <Flame :size="22" :stroke-width="1.6" />
+      <MarketerMedia class="trend-empty-art" id="empty-trending" play="none">
+        <Flame :size="22" :stroke-width="1.6" />
+      </MarketerMedia>
       <p>{{ t('marketer.trending.filters.empty') }}</p>
     </div>
 
@@ -377,6 +379,7 @@ onMounted(() => load())
   text-align: center;
 }
 .trend-empty p { margin: 0; }
+.trend-empty-art { width: 120px; aspect-ratio: 1; display: grid; place-items: center; border-radius: 18px; }
 
 /* === Dialog === */
 .create-dialog { width: 640px; max-width: calc(100vw - 32px); }
