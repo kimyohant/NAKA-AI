@@ -24,6 +24,8 @@ jobs:
           cache-dependency-path: apps/studio/backend/package-lock.json
       - run: npm ci
       - run: npm run typecheck
+      # docs/adr/0004 step 9: the old SQLite → PostgreSQL import (node:sqlite builds the old file; Node 24)
+      - run: npx tsx --test tests/import-sqlite.test.ts
       # tests run on PGlite (in-process PostgreSQL, DATABASE_URL=pglite://…): no database service needed
       # naka-sso.test.ts also checks the contract against apps/landing/src/auth/studio.ts (same checkout)
       - run: npx tsx --test tests/campaigns-migration.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts tests/entitlements.test.ts tests/concurrency.test.ts tests/query-budget.test.ts tests/module-boundaries.test.mjs
