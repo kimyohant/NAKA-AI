@@ -1,0 +1,135 @@
+/* The uiland look (public/ui-land.css) for the inner public pages: /login/ (+ reset), /create/,
+   /app/* and /legal/*. Load it after the page's own stylesheet and after /ui-land.css.
+   Member pages draw everything from the --m-* tokens of public/member.css, so most of the change
+   is new token values; the rest covers the few spots those pages hard-code. */
+
+:root {
+  --m-bg: #f3f6fb;
+  --m-surface-2: #eef1f6;
+  --m-blue-soft: #e8eeff;
+  --m-ink: #0d1b33;
+  --m-ink-2: #586782;
+  --m-ink-3: #8592a8;
+  --m-line: #e4e9f2;
+  --m-line-strong: #cfd8e6;
+  --m-brand: #235be8;
+  --m-brand-ink: #1849c7;
+  --m-grad: linear-gradient(0deg, #235be8, #235be8);
+  --m-shadow-sm: none;
+  --m-shadow-lg: 0 20px 50px rgba(13, 27, 51, .10);
+  --m-shadow-btn: none;
+  --m-radius: 24px;
+  --m-display: "Bricolage Grotesque", "Anuphan", system-ui, sans-serif;
+}
+body.member-ui { background: var(--m-bg); }
+
+/* ---------- one floating white bar for every inner page ---------- */
+.member-ui .glass-nav.auth-topbar, .member-ui .glass-nav.app-topbar, body.u-create > header.glass-nav, .doc-topbar {
+  position: sticky; top: 12px; z-index: 50;
+  width: min(100% - 32px, 1240px); height: 64px; margin: 12px auto 0; padding: 0 10px 0 18px;
+  border: 0; border-radius: 20px; background: #fff; color: var(--ink); box-shadow: var(--u-float);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:is(.member-ui, .u-create, .doc-topbar) .brand { font-family: var(--u-display); color: var(--ink); letter-spacing: -.04em; }
+:is(.member-ui, .u-create, .doc-topbar) .brand b { color: var(--brand); }
+:is(.member-ui, .u-create) .back-link, .doc-topbar .back {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 999px;
+  background: var(--u-gray); color: var(--ink); font-size: 13.5px; font-weight: 600;
+}
+:is(.member-ui, .u-create) .back-link:hover, .doc-topbar .back:hover { background: var(--u-gray-2); color: var(--ink); }
+.member-ui .header-divider { background: var(--m-line); }
+
+/* app menu: a segmented control, like the home nav */
+.member-ui .topbar-nav { gap: 2px; padding: 4px; border-radius: 999px; background: var(--m-surface-2); }
+.member-ui .topbar-nav a { min-height: 36px; padding: 0 14px; }
+.member-ui .topbar-nav a:hover { background: #fff; color: var(--m-ink); }
+.member-ui .topbar-nav a[aria-current="page"] { background: #fff; color: var(--m-ink); box-shadow: 0 1px 3px rgba(13, 27, 51, .08); }
+.member-ui .topbar-nav .nav-studio, .member-ui .topbar-nav .nav-studio:hover { background: var(--m-brand); color: #fff; box-shadow: none; }
+.member-ui .app-topbar [data-account-menu] { margin-left: 6px; }
+:is(.member-ui, .u-create) .acct-login { border-color: transparent; background: var(--u-gray); color: var(--ink); }
+:is(.member-ui, .u-create) .acct-login:hover { border-color: transparent; background: var(--u-gray-2); }
+.u-create .acct-trigger { color: var(--ink); }
+
+/* ---------- member pages: flat cards, black main action ---------- */
+.member-ui :is(.m-card, .auth-card, .credits-card, .workflow-card, .app-error, .onboarding-inner, .works-section, .account-card,
+  .current, .plan-option, .pay, .receipts, .thread-pane, .thread-view, .card-form, .kb-item) { border-color: transparent; box-shadow: none; }
+.member-ui :is(.auth-card, .works-section, .account-card, .current, .pay, .receipts, .thread-pane, .thread-view, .card-form) { border-radius: 24px; }
+.member-ui .auth-card { border-radius: 28px; }
+.member-ui .onboarding-inner { background: #fff; }
+.member-ui :is(.works-button, .works-open, .secondary-button, .bot-state, .filter button) { border-color: transparent; background: var(--m-surface-2); }
+.member-ui .plan-option:hover { border-color: var(--m-line-strong); }
+.member-ui .plan-option[aria-checked="true"] { border-color: var(--m-brand); background: #fff; box-shadow: none; }
+.member-ui .workflow-card:hover { border-color: transparent; }
+.member-ui :is(.primary-button, .m-btn-primary, .account-submit) { background: var(--m-ink); color: #fff; box-shadow: none; }
+.member-ui :is(.primary-button, .m-btn-primary, .account-submit):hover:not(:disabled) { background: #22324f; transform: none; box-shadow: none; }
+.member-ui .provider-button:hover { transform: none; }
+.member-ui .signout-button:not(.account-submit) { border-color: transparent; background: var(--m-surface-2); }
+.member-ui .signout-button:not(.account-submit):hover { border-color: transparent; background: var(--m-line); }
+.member-ui .mode-note { border-color: transparent; }
+.member-ui .card-index { padding: 2px 10px; border-radius: 999px; background: var(--m-blue-soft); color: var(--m-brand); font-family: var(--m-display); letter-spacing: .02em; }
+.member-ui .studio-card .card-index { background: rgba(255, 255, 255, .2); color: #fff; }
+.member-ui .credits-number { font-family: var(--m-display); color: var(--m-ink); }
+.member-ui .greeting-mascot, .member-ui .showcase-mascot { filter: none; }
+.member-ui .field input { border-radius: 14px; border-color: var(--m-line-strong); }
+.member-ui .showcase-list li { border: 0; }
+.member-ui .auth-showcase h2 { font-size: 30px; letter-spacing: -.03em; }
+
+/* ---------- /create/: the dark page becomes a light one ---------- */
+:root:has(body.u-create) { color: var(--ink); background: var(--bg); }
+body.u-create { color: var(--ink); background: var(--bg); }
+.u-create .header-row { width: 100%; height: 64px; }
+.u-create .header-row .brand img { width: 36px; height: 36px; }
+.u-create .intro .eyebrow { display: inline-flex; margin-bottom: 20px; padding: 6px 14px; border-radius: 999px; background: var(--u-sky); color: var(--brand); }
+.u-create .intro h1 { font-family: var(--u-display); color: var(--ink); letter-spacing: -.03em; }
+.u-create .intro h1 em { color: var(--brand); }
+.u-create .intro > p:not(.eyebrow) { color: var(--ink-2); }
+.u-create .mini-steps span { padding: 8px 14px; border: 0; border-radius: 999px; background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.u-create .mascot { filter: none; }
+.u-create .brief-card { border-radius: 28px; color: var(--ink); box-shadow: none; }
+.u-create .card-header p { color: var(--brand); font-size: 12px; }
+.u-create .card-header h2 { font-family: var(--u-display); letter-spacing: -.025em; }
+.u-create .workflow-switch { gap: 2px; margin: 0 0 18px; padding: 4px; border-radius: 999px; background: var(--u-gray); scrollbar-width: none; }
+.u-create .workflow-switch a { flex: 1 0 auto; min-height: 38px; border: 0; border-radius: 999px; background: none; color: var(--ink-2); }
+.u-create .workflow-switch a:hover { background: rgba(255, 255, 255, .6); }
+.u-create .workflow-switch a[aria-current=page] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(13, 27, 51, .08); }
+.u-create .upload { border: 0; border-radius: 20px; background: var(--u-gray); }
+.u-create .upload b { background: #fff; color: var(--brand); }
+.u-create .upload small, .u-create #copy-status, .u-create .contact > span { color: var(--ink-3); }
+.u-create .field input, .u-create .field select, .u-create .field textarea { border-color: var(--line); border-radius: 14px; color: var(--ink); }
+.u-create .field input:focus, .u-create .field select:focus, .u-create .field textarea:focus { border-color: var(--brand); }
+.u-create .copy-button { border-radius: 999px; background: var(--ink); padding: 14px 22px; }
+.u-create .copy-button:hover { background: #22324f; }
+.u-create .contact { border-top-color: var(--line); }
+.u-create .contact a { color: var(--brand); }
+.u-create footer { color: var(--ink-3); }
+
+/* ---------- /legal/*: same bar, flat white panels ---------- */
+.doc-shell { padding-top: 48px; }
+.doc-updated { color: var(--ink-3); }
+.doc-page h1, .doc-page h2, .doc-contact .doc-phone { font-family: var(--u-display); }
+.doc-page h1 { font-size: clamp(32px, 5vw, 48px); letter-spacing: -.03em; }
+.doc-page h2 { scroll-margin-top: 96px; }
+.doc-lead { color: var(--ink-2); }
+.doc-toc, .doc-table-wrap, .doc-contact { border: 0; border-radius: 20px; background: #fff; }
+.doc-toc { padding: 18px 22px; }
+.doc-toc strong, .doc-crosslinks strong { color: var(--brand); }
+.doc-toc a:hover { color: var(--brand); }
+.doc-table-wrap th { background: var(--u-gray); color: var(--ink); }
+.doc-table-wrap th, .doc-table-wrap td { border-bottom-color: var(--line); }
+.doc-page code { background: var(--u-sky); }
+.doc-contact .doc-phone { color: var(--brand); }
+.doc-crosslinks { border-top-color: var(--line); }
+.doc-crosslinks a { border: 0; background: #fff; color: var(--ink); }
+.doc-crosslinks a:hover { background: var(--u-gray-2); }
+
+@media (max-width: 560px) {
+  /* app bar: brand + account on the first row, the menu on its own row */
+  .member-ui .glass-nav.app-topbar { height: auto; padding: 8px 8px 8px 14px; row-gap: 8px; }
+  .member-ui .topbar-nav { justify-content: flex-start; }
+  .member-ui .app-topbar [data-account-menu] { margin-left: auto; }
+  .member-ui .glass-nav.auth-topbar, .doc-topbar, body.u-create > header.glass-nav { height: 58px; padding: 0 8px 0 14px; }
+  .u-create .back-link { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .member-ui .workflow-card:hover { transform: none; }
+}
