@@ -20,11 +20,11 @@ const SPEAKER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d
 
 // The tabs, in order, with the line and the start link shown above the grid when a tab is open.
 const TABS = [
-  { id: 'all', label: 'ทั้งหมด', text: 'สี่งานขายในที่เดียว: คลิปรีวิว ละครสั้น ไลฟ์ และตอบแชท เริ่มจากรูปและข้อมูลสินค้าที่ร้านมีอยู่แล้ว', cta: 'สมัครสมาชิก เริ่มเสกกับนาคา', href: '/login/?mode=register' },
-  { id: 'review', label: 'รีวิว Affiliate', tag: 'ลองฟรี', text: 'รูปสินค้า 1 ถึง 6 รูป ได้บท เสียงพากย์ไทย และคลิปแนวตั้งพร้อมแคปชันที่แนบลิงก์ของคุณ', cta: 'เริ่มสร้างคลิปรีวิว', href: '/review/?demo=1' },
-  { id: 'drama', label: 'ละครสั้น AI', text: 'จากพล็อตและตัวละคร เป็นฉากแนวตั้งพร้อมเสียงพากย์ ตัดเป็นตอนสั้นชวนติดตาม', cta: 'เริ่มทำละคร', href: '/create/?workflow=drama' },
-  { id: 'live', label: 'AI Live', text: 'อวตาร AI แนะนำสินค้าและตอบคำถามคนดูระหว่างไลฟ์ ตามข้อมูลสินค้าที่คุณให้', cta: 'เริ่มตั้งค่าไลฟ์', href: '/create/?workflow=live' },
-  { id: 'bot', label: 'แชทบอท', text: 'ตอบแชทและคอมเมนต์ด้วยข้อมูลของร้าน เรื่องที่ต้องตัดสินใจส่งต่อให้คนในร้าน', cta: 'เริ่มตั้งค่าบอท', href: '/create/?workflow=bot' },
+  { id: 'all', label: 'ทั้งหมด', text: 'วิดีโอรีวิว ละครสั้น ไลฟ์ และแชทบอท ทุกคลิปในคลังนี้ทำด้วยนาคา ส่วนงานของร้านคุณเริ่มได้ใน Naka Studio', cta: 'เข้า Naka Studio', href: '/go/studio/' },
+  { id: 'review', label: 'วิดีโอรีวิว', tag: 'คลังสกิล', text: 'สินค้า 1 ชิ้น + เทมเพลต 1 แบบ เป็นวิดีโอรีวิวพร้อมเสียงพูด สำหรับ TikTok Shopee และ Lazada', cta: 'เปิดคลังสกิล', href: '/go/studio/skills' },
+  { id: 'drama', label: 'ละครสั้น', tag: 'สตูดิโอละคร', text: 'จากบทเป็นตัวละคร ฉาก สตอรีบอร์ด และวิดีโอทีละตอน แล้วรวมคลิปส่งออก', cta: 'เปิดสตูดิโอละคร', href: '/go/studio/drama' },
+  { id: 'live', label: 'AI Live', tag: 'AI Live', text: 'อวตารพูดไทยตามสคริปต์ขาย ตอบคอมเมนต์จากข้อมูลร้าน และไลฟ์ออก TikTok หรือ Facebook', cta: 'เปิด AI Live', href: '/go/studio/live' },
+  { id: 'bot', label: 'แชทบอท', tag: 'กล่องข้อความ', text: 'ตอบแชทและคอมเมนต์ด้วยข้อมูลของร้าน เรื่องที่ต้องตัดสินใจส่งต่อให้คนในร้าน', cta: 'ตั้งค่าแชทบอท', href: '/app/inbox/' },
 ];
 const CATS = TABS.slice(1).map(t => t.id);
 
@@ -40,10 +40,10 @@ const lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'clips.json'), 'utf8
 const CLIPS_DIR = path.join(ROOT, 'public', 'showcase', 'clips');
 const libCat = g => (g === 'drama' || g === 'live') ? g : g === 'shop' ? 'bot' : 'review';
 const TRY = {
-  review: ['ลองแบบนี้ ↗', '/review/?demo=1'],
-  drama: ['ทำละครแบบนี้ ↗', '/create/?workflow=drama'],
-  live: ['ตั้งค่าไลฟ์ ↗', '/create/?workflow=live'],
-  bot: ['ตั้งค่าบอท ↗', '/create/?workflow=bot'],
+  review: ['ทำแบบนี้ในคลังสกิล ↗', '/go/studio/skills'],
+  drama: ['ทำละครแบบนี้ ↗', '/go/studio/drama'],
+  live: ['ตั้งค่าไลฟ์ ↗', '/go/studio/live'],
+  bot: ['ตั้งค่าบอท ↗', '/app/inbox/'],
 };
 // review clips alternate product groups so a tab never opens on eight of one kind
 function interleave(list, key) {
@@ -58,8 +58,9 @@ const libClips = interleave(lib.clips.filter(c => fs.existsSync(path.join(CLIPS_
 function catOf(s) {
   if (CATS.includes(s.row)) return s.row;
   const href = String(s.href || '');
-  if (href.startsWith('/review')) return 'review';
-  const m = /workflow=(drama|live|bot)/.exec(href);
+  if (href === '/go/studio/skills') return 'review';
+  if (href.startsWith('/app/inbox')) return 'bot';
+  const m = /^\/go\/studio\/(drama|live)$/.exec(href);
   return m ? m[1] : 'naka';
 }
 
@@ -76,8 +77,8 @@ const isNaka = s => /(^|-)naka(-|$)/.test(s.id);
 const ordered = [...rendered.filter(s => !isNaka(s)), ...rendered.filter(isNaka)];
 const items = [
   ...ordered.map(s => ({
-    cat: catOf(s), href: s.href, poster: `/showcase/h3/${s.id}.jpg`, sources: [[`/showcase/h3/${s.id}.mp4`, 'video/mp4']],
-    chip: s.chip, live: s.chip_class === 'tpl-chip-live' || /^●/.test(s.chip), title: s.title, sub: s.sub, tryLabel: s.try,
+    cat: catOf(s), href: (TRY[catOf(s)] || [null, s.href])[1], poster: `/showcase/h3/${s.id}.jpg`, sources: [[`/showcase/h3/${s.id}.mp4`, 'video/mp4']],
+    chip: s.chip, live: s.chip_class === 'tpl-chip-live' || /^●/.test(s.chip), title: s.title, sub: s.sub, tryLabel: (TRY[catOf(s)] || [s.try])[0],
     from: s.first_frame && fs.existsSync(path.join(H3_DIR, `${s.id}-from.jpg`)) ? `/showcase/h3/${s.id}-from.jpg` : null,
     sound: true,
   })),
@@ -124,14 +125,14 @@ const block = `${START}
 ${CATS.map(c => `      <span class="g-anchor" id="p-${c}" data-tab-anchor="${c}"></span>`).join('\n')}
       <div class="g-shell g-head">
         <p class="g-kicker">คลังคลิปจริง · ${videoCount} คลิป</p>
-        <h2 id="reel-title">ดูงานจริงก่อน<em>ตัดสินใจ</em></h2>
+        <h2 id="reel-title">ดูงานจริงก่อน<em class="nw">เริ่มในสตูดิโอ</em></h2>
         <p class="g-sub">ทุกคลิปทำด้วยนาคา พร้อมเสียงพากย์ไทย แตะปุ่มลำโพงบนคลิปเพื่อฟังเสียง หรือกดปุ่มใต้คลิปเพื่อเริ่มจากแบบเดียวกัน</p>
       </div>
       <div class="g-shell g-tabs" role="group" aria-label="เลือกประเภทงาน">
 ${TABS.map((t, i) => `        <button type="button" data-tab="${t.id}" aria-pressed="${i === 0}">${esc(t.label)} <span>${t.id === 'all' ? videoCount + chats.length : count(t.id)}</span></button>`).join('\n')}
       </div>
       <div class="g-shell g-panels">
-${TABS.map((t, i) => `        <div class="g-panel" data-panel="${t.id}"${i ? ' hidden' : ''}><p>${t.tag ? `<b>${esc(t.tag)}</b> ` : ''}${esc(t.text)}</p><a class="btn btn-blue btn-sm" href="${esc(t.href)}">${esc(t.cta)} <span aria-hidden="true">↗</span></a></div>`).join('\n')}
+${TABS.map((t, i) => `        <div class="g-panel" data-panel="${t.id}"${i ? ' hidden' : ''}><p>${t.tag ? `<b>${esc(t.tag)}</b> ` : ''}${esc(t.text)}</p><a class="btn btn-primary btn-sm" href="${esc(t.href)}">${esc(t.cta)} <span aria-hidden="true">↗</span></a></div>`).join('\n')}
       </div>
       <div class="g-shell g-grid">
 ${order.join('\n')}

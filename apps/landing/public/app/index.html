@@ -11,17 +11,15 @@
   <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Kanit:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/glass-nav.css">
   <link rel="stylesheet" href="/account-menu.css">
   <link rel="stylesheet" href="/member.css">
   <link rel="stylesheet" href="/app/app.css">
   <link rel="stylesheet" href="/app/onboarding.css">
-  <link rel="stylesheet" href="/app/works.css">
   <script src="/account-menu.js" defer></script>
   <script src="/app/app.js" defer></script>
   <script src="/app/onboarding.js" defer></script>
-  <script src="/app/works.js" defer></script>
   <link rel="stylesheet" href="/ui-land.css">
   <link rel="stylesheet" href="/ui-pages.css">
 </head>
@@ -35,7 +33,7 @@
       <a href="/app/" aria-current="page">พื้นที่ของร้าน</a>
       <a href="/app/inbox/" data-feature="landing.inbox">กล่องข้อความ</a>
       <a href="/app/billing/">แพ็กเกจ</a>
-      <a class="nav-studio" href="#" data-studio-link hidden>Naka Studio ↗</a>
+      <a class="nav-studio" href="/go/studio/">Naka Studio ↗</a>
     </nav>
     <div data-account-menu></div>
   </header>
@@ -75,25 +73,24 @@
         </section>
 
         <section class="quick-start" aria-labelledby="quick-title">
-          <p class="panel-label" id="quick-title">เริ่มงานของร้าน</p>
+          <p class="panel-label" id="quick-title">เริ่มงานใน Naka Studio</p>
           <div class="workflow-cards">
-            <a class="workflow-card" href="/create/?workflow=sales" data-feature="landing.clips"><span class="card-index">01</span><strong>คลิปขายสินค้า</strong><small>รูปสินค้า 1 รูป กลายเป็นคลิปแนวตั้งพร้อมเสียงพากย์</small><span class="card-go">เริ่มทำคลิป <span aria-hidden="true">↗</span></span></a>
-            <a class="workflow-card" href="/create/?workflow=drama"><span class="card-index">02</span><strong>ละครสั้น AI</strong><small>พล็อต ตัวละคร และเสียงพากย์ เป็นวิดีโอสั้นของร้าน</small><span class="card-go">เริ่มทำละคร <span aria-hidden="true">↗</span></span></a>
-            <a class="workflow-card" href="/create/?workflow=live"><span class="card-index">03</span><strong>AI Live</strong><small>อวตาร AI ช่วยแนะนำสินค้าและคุยกับคนดูระหว่างไลฟ์</small><span class="card-go">เริ่มไลฟ์ <span aria-hidden="true">↗</span></span></a>
-            <a class="workflow-card" href="/app/inbox/" data-feature="landing.inbox"><span class="card-index">04</span><strong>ตอบลูกค้าอัตโนมัติ</strong><small>ตอบคอมเมนต์และแชตด้วยข้อมูลและน้ำเสียงของร้าน</small><span class="card-go">เปิดกล่องข้อความ <span aria-hidden="true">↗</span></span></a>
-            <a class="workflow-card studio-card" href="#" data-studio-link hidden><span class="card-index">STUDIO</span><strong>Naka Studio</strong><small>สตูดิโอเต็มรูปแบบ: ละครหลายตอน นักการตลาด AI และโคลนคลิปไวรัล ล็อกอินด้วยบัญชีนี้ได้เลย</small><span class="card-go">เปิด Naka Studio <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/go/studio/skills" data-feature="studio.product_studio"><span class="card-index">คลังสกิล</span><strong>วิดีโอรีวิวสินค้า</strong><small>สินค้า 1 ชิ้น + เทมเพลต 1 แบบ เป็นวิดีโอรีวิวพร้อมเสียงพูด</small><span class="card-go">เปิดคลังสกิล <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/go/studio/drama" data-feature="studio.drama"><span class="card-index">สตูดิโอละคร</span><strong>ละครสั้น AI</strong><small>จากบทเป็นตัวละคร ฉาก สตอรีบอร์ด และวิดีโอทีละตอน</small><span class="card-go">เปิดสตูดิโอละคร <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/go/studio/viral-clone" data-feature="studio.viral_clone"><span class="card-index">โคลนไวรัล</span><strong>โฆษณาหลายชุดจากคลิปต้นแบบ</strong><small>สลับ hook สินค้า ผู้พูด และภาษา แล้วสร้างทั้งชุด</small><span class="card-go">เปิดสตูดิโอโคลนไวรัล <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/go/studio/live" data-feature="studio.live"><span class="card-index">AI Live</span><strong>ไลฟ์ขายของด้วยอวตาร</strong><small>อวตารพูดไทยตามสคริปต์ขาย ตอบคอมเมนต์จากข้อมูลร้าน</small><span class="card-go">เปิด AI Live <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/go/studio/seller" data-feature="studio.seller"><span class="card-index">AI นักขาย</span><strong>โพสต์ขายจากวิดีโอรีวิว</strong><small>แคปชัน แฮชแท็ก คอมเมนต์ปักหมุด พร้อมลิงก์สินค้า</small><span class="card-go">เปิด AI นักขาย <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/go/studio/marketer" data-feature="studio.marketer"><span class="card-index">นักการตลาด AI</span><strong>บรีฟ วิจัยตลาด กลยุทธ์</strong><small>จากบรีฟสินค้าเป็นเอกสารกลยุทธ์และไอเดียโฆษณา</small><span class="card-go">เปิดนักการตลาด AI <span aria-hidden="true">↗</span></span></a>
+            <a class="workflow-card" href="/app/inbox/" data-feature="landing.inbox"><span class="card-index">แชทบอท</span><strong>ตอบลูกค้าอัตโนมัติ</strong><small>ตอบคอมเมนต์และแชทด้วยข้อมูลและน้ำเสียงของร้าน</small><span class="card-go">เปิดกล่องข้อความ <span aria-hidden="true">↗</span></span></a>
           </div>
         </section>
       </div>
 
       <section class="works-section" aria-labelledby="works-title">
         <div class="works-heading">
-          <div><p class="panel-label">งานที่เคยสร้าง</p><h2 id="works-title">ผลงานของฉัน</h2></div>
-          <button class="works-button" id="works-refresh" type="button">รีเฟรช</button>
+          <div><p class="panel-label">งานของร้าน</p><h2 id="works-title">ผลงานทั้งหมดอยู่ใน Naka Studio</h2><p class="works-note">วิดีโอ ละคร โพสต์ขาย และไลฟ์ที่ทำไว้ เปิดดูและทำต่อได้ในสตูดิโอ</p></div>
+          <a class="works-button" href="/go/studio/">เปิด Naka Studio <span aria-hidden="true">↗</span></a>
         </div>
-        <p class="works-message" id="works-message" role="status" aria-live="polite">กำลังโหลดผลงาน…</p>
-        <ul class="works-list" id="works-list" aria-label="รายการผลงาน"></ul>
-        <button class="works-button works-more" id="works-more" type="button" hidden>ดูเพิ่ม</button>
       </section>
     </div>
   </main>

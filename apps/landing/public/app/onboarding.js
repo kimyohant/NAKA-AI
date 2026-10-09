@@ -1,7 +1,8 @@
 // Phase 5B welcome card (docs/phase5-onboarding.md).
 // Fetches GET /api/onboarding and renders the top card of /app/: the signup
 // bonus message (only when a bonus was actually granted) and a 3-step
-// checklist leading to /review/, /app/inbox/ and /app/billing/.
+// checklist leading to /app/inbox/ and /app/billing/ (videos are made in Naka Studio, which this
+// checklist cannot see yet).
 //
 // Hiding: once all three steps are done, or the user presses "ซ่อน", the card
 // stays hidden via localStorage (wrapped in try/catch — if storage is
@@ -55,7 +56,6 @@
   }
 
   var STEPS = [
-    { key: 'firstVideo', label: 'สร้างคลิปรีวิวแรก', href: '/review/' },
     { key: 'pageConnected', label: 'เชื่อมเพจ Facebook ให้บอทตอบแชท', href: '/app/inbox/' },
     { key: 'hasPackage', label: 'เลือกแพ็กเกจ', href: '/app/billing/' },
   ];
@@ -64,7 +64,7 @@
     if (signupBonus > 0) {
       return 'ยินดีต้อนรับ! คุณได้เครดิตฟรี ' + signupBonus + ' เครดิต ลองสร้างคลิปแรกได้เลย';
     }
-    return 'ยินดีต้อนรับ! เริ่ม 3 ขั้นแรกเพื่อให้ร้านเห็นผลงานชิ้นแรก';
+    return 'ยินดีต้อนรับ! ตั้งค่าร้านให้พร้อมใน ' + STEPS.length + ' ขั้น';
   }
 
   function stepRow(step, done) {

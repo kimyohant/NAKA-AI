@@ -1,9 +1,8 @@
 const assert = require('node:assert/strict');
 const { after, beforeEach, test } = require('node:test');
 const { execFileSync } = require('node:child_process');
-const { readFileSync, rmSync } = require('node:fs');
+const { rmSync } = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 const { migratedDb } = require('./helpers/d1.cjs');
 
 const root = path.resolve(__dirname, '..');
@@ -100,59 +99,4 @@ test('45 jobs with matching timestamps paginate in descending order without gaps
   assert.equal(new Set(ids).size, 45);
   const descendingIds = (start, end) => Array.from({ length: start - end + 1 }, (_, i) => `job-${String(start - i).padStart(2, '0')}`);
   assert.deepEqual(ids, [...descendingIds(34, 0), ...descendingIds(44, 35)]);
-});
-
-test('review page immediately fetches ?job= on load and shows the existing job status', async () => {
-  class Element {
-    constructor() { this.hidden = false; this.textContent = ''; this.listeners = {}; this.style = {}; this.value = ''; }
-    addEventListener(name, callback) { this.listeners[name] = callback; }
-    replaceChildren() {}
-    append() {}
-  }
-  const nodes = new Map();
-  const document = { getElementById(id) { if (!nodes.has(id)) nodes.set(id, new Element()); return nodes.get(id); }, createElement: () => new Element() };
-  const requests = [];
-  const timers = [];
-  vm.runInNewContext(readFileSync(path.join(root, 'public/review/review.js'), 'utf8'), {
-    document, location: { search: '?job=saved-123', href: 'https://naka.test/review/?job=saved-123' },
-    URLSearchParams, URL, Date, Array, FormData, encodeURIComponent,
-    setTimeout: (fn, delay) => { timers.push({ fn, delay }); return timers.length; }, clearTimeout: () => {},
-    fetch: async (url) => { requests.push(url); return new Response(JSON.stringify({ status: 'running' })); },
-  });
-  assert.deepEqual(requests, ['/api/affiliate/reviews/saved-123']);
-  await new Promise(resolve => setImmediate(resolve));
-  assert.equal(document.getElementById('review-form').hidden, true);
-  assert.equal(document.getElementById('review-panel').hidden, false);
-  assert.match(document.getElementById('panel-status').textContent, /กำลังเขียนบท/);
-  assert.deepEqual(timers.map(t => t.delay), [3000]);
-});
-
-test('review page puts a successfully submitted job into the refreshable URL', async () => {
-  class Element {
-    constructor() { this.hidden = false; this.textContent = ''; this.listeners = {}; this.style = {}; this.value = ''; this.files = []; }
-    addEventListener(name, callback) { this.listeners[name] = callback; }
-    replaceChildren() {}
-    append() {}
-  }
-  const nodes = new Map();
-  const document = { getElementById(id) { if (!nodes.has(id)) nodes.set(id, new Element()); return nodes.get(id); }, createElement: () => new Element() };
-  const replaced = [];
-  let nextBlob = 0;
-  class FakeURL extends URL {}
-  FakeURL.createObjectURL = () => `blob:${++nextBlob}`;
-  FakeURL.revokeObjectURL = () => {};
-  vm.runInNewContext(readFileSync(path.join(root, 'public/review/review.js'), 'utf8'), {
-    document, location: { search: '?name=สบู่', href: 'https://naka.test/review/?name=%E0%B8%AA%E0%B8%9A%E0%B8%B9%E0%B9%88' },
-    history: { replaceState: (...args) => replaced.push(args) },
-    URLSearchParams, URL: FakeURL, Date, Array, encodeURIComponent,
-    FormData: class { constructor() {} *[Symbol.iterator]() { yield ['productName', 'สบู่']; yield ['details', 'กลิ่นมะลิ']; yield ['channel', 'tiktok']; yield ['tone', 'friendly']; } },
-    setTimeout: () => 1, clearTimeout: () => {},
-    fetch: async () => new Response(JSON.stringify({ jobId: 'new-123' }), { status: 202 }),
-  });
-  const file = { type: 'image/png', size: 100 };
-  document.getElementById('review-images').files = [file];
-  document.getElementById('review-images').listeners.change();
-  await document.getElementById('review-form').listeners.submit({ preventDefault() {} });
-  assert.equal(replaced.length, 1);
-  assert.equal(replaced[0][2], '/review/?name=%E0%B8%AA%E0%B8%9A%E0%B8%B9%E0%B9%88&job=new-123');
 });

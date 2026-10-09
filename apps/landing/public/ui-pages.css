@@ -1,42 +1,43 @@
-/* The uiland look (public/ui-land.css) for the inner public pages: /login/ (+ reset), /create/,
-   /app/* and /legal/*. Load it after the page's own stylesheet and after /ui-land.css.
+/* The studio look (public/ui-land.css) for the inner public pages: /login/ (+ reset), /app/* and
+   /legal/*. Load it after the page's own stylesheet and after /ui-land.css.
    Member pages draw everything from the --m-* tokens of public/member.css, so most of the change
    is new token values; the rest covers the few spots those pages hard-code. */
 
 :root {
-  --m-bg: #f3f6fb;
-  --m-surface-2: #eef1f6;
-  --m-blue-soft: #e8eeff;
-  --m-ink: #0d1b33;
-  --m-ink-2: #586782;
-  --m-ink-3: #8592a8;
-  --m-line: #e4e9f2;
-  --m-line-strong: #cfd8e6;
-  --m-brand: #235be8;
-  --m-brand-ink: #1849c7;
-  --m-grad: linear-gradient(0deg, #235be8, #235be8);
+  --m-bg: #f7f8fa;
+  --m-surface-2: #eef0f3;
+  --m-blue-soft: #fff1e7;
+  --m-ink: #17181a;
+  --m-ink-2: #5c6370;
+  --m-ink-3: #8a919d;
+  --m-line: #e7e9ee;
+  --m-line-strong: #d6dae1;
+  --m-brand: #c2410c;
+  --m-brand-ink: #9a3412;
+  --m-grad: linear-gradient(0deg, #f97316, #f97316);
   --m-shadow-sm: none;
-  --m-shadow-lg: 0 20px 50px rgba(13, 27, 51, .10);
+  --m-shadow-lg: 0 20px 50px rgba(23, 24, 26, .10);
   --m-shadow-btn: none;
-  --m-radius: 24px;
-  --m-display: "Anuphan", system-ui, sans-serif;
+  --m-radius: 20px;
+  --m-font: "IBM Plex Sans Thai", system-ui, sans-serif;
+  --m-display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
 }
 body.member-ui { background: var(--m-bg); }
 
 /* ---------- one floating white bar for every inner page ---------- */
-.member-ui .glass-nav.auth-topbar, .member-ui .glass-nav.app-topbar, body.u-create > header.glass-nav, .doc-topbar {
+.member-ui .glass-nav.auth-topbar, .member-ui .glass-nav.app-topbar, .doc-topbar {
   position: sticky; top: 12px; z-index: 50;
   width: min(100% - 32px, 1240px); height: 64px; margin: 12px auto 0; padding: 0 10px 0 18px;
   border: 0; border-radius: 20px; background: #fff; color: var(--ink); box-shadow: var(--u-float);
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
-:is(.member-ui, .u-create, .doc-topbar) .brand { font-family: var(--u-display); color: var(--ink); letter-spacing: -.04em; }
-:is(.member-ui, .u-create, .doc-topbar) .brand b { color: var(--brand); }
-:is(.member-ui, .u-create) .back-link, .doc-topbar .back {
+:is(.member-ui, .doc-topbar) .brand { font-family: var(--u-display); color: var(--ink); letter-spacing: -.02em; }
+:is(.member-ui, .doc-topbar) .brand b { color: var(--logo-blue); }
+.member-ui .back-link, .doc-topbar .back {
   display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 999px;
   background: var(--u-gray); color: var(--ink); font-size: 13.5px; font-weight: 600;
 }
-:is(.member-ui, .u-create) .back-link:hover, .doc-topbar .back:hover { background: var(--u-gray-2); color: var(--ink); }
+.member-ui .back-link:hover, .doc-topbar .back:hover { background: var(--u-gray-2); color: var(--ink); }
 .member-ui .header-divider { background: var(--m-line); }
 
 /* app menu: a segmented control, like the home nav */
@@ -44,11 +45,10 @@ body.member-ui { background: var(--m-bg); }
 .member-ui .topbar-nav a { min-height: 36px; padding: 0 14px; }
 .member-ui .topbar-nav a:hover { background: #fff; color: var(--m-ink); }
 .member-ui .topbar-nav a[aria-current="page"] { background: #fff; color: var(--m-ink); box-shadow: 0 1px 3px rgba(13, 27, 51, .08); }
-.member-ui .topbar-nav .nav-studio, .member-ui .topbar-nav .nav-studio:hover { background: var(--m-brand); color: #fff; box-shadow: none; }
+.member-ui .topbar-nav .nav-studio, .member-ui .topbar-nav .nav-studio:hover { background: var(--action); color: var(--ink); box-shadow: none; }
 .member-ui .app-topbar [data-account-menu] { margin-left: 6px; }
-:is(.member-ui, .u-create) .acct-login { border-color: transparent; background: var(--u-gray); color: var(--ink); }
-:is(.member-ui, .u-create) .acct-login:hover { border-color: transparent; background: var(--u-gray-2); }
-.u-create .acct-trigger { color: var(--ink); }
+.member-ui .acct-login { border-color: transparent; background: var(--u-gray); color: var(--ink); }
+.member-ui .acct-login:hover { border-color: transparent; background: var(--u-gray-2); }
 
 /* ---------- member pages: flat cards, black main action ---------- */
 .member-ui :is(.m-card, .auth-card, .credits-card, .workflow-card, .app-error, .onboarding-inner, .works-section, .account-card,
@@ -60,8 +60,8 @@ body.member-ui { background: var(--m-bg); }
 .member-ui .plan-option:hover { border-color: var(--m-line-strong); }
 .member-ui .plan-option[aria-checked="true"] { border-color: var(--m-brand); background: #fff; box-shadow: none; }
 .member-ui .workflow-card:hover { border-color: transparent; }
-.member-ui :is(.primary-button, .m-btn-primary, .account-submit) { background: var(--m-ink); color: #fff; box-shadow: none; }
-.member-ui :is(.primary-button, .m-btn-primary, .account-submit):hover:not(:disabled) { background: #22324f; transform: none; box-shadow: none; }
+.member-ui :is(.primary-button, .m-btn-primary, .account-submit) { background: var(--action); color: var(--ink); box-shadow: none; }
+.member-ui :is(.primary-button, .m-btn-primary, .account-submit):hover:not(:disabled) { background: var(--action-hover); transform: none; box-shadow: none; }
 .member-ui .provider-button:hover { transform: none; }
 .member-ui .signout-button:not(.account-submit) { border-color: transparent; background: var(--m-surface-2); }
 .member-ui .signout-button:not(.account-submit):hover { border-color: transparent; background: var(--m-line); }
@@ -74,34 +74,16 @@ body.member-ui { background: var(--m-bg); }
 .member-ui .showcase-list li { border: 0; }
 .member-ui .auth-showcase h2 { font-size: 30px; letter-spacing: -.03em; }
 
-/* ---------- /create/: the dark page becomes a light one ---------- */
-:root:has(body.u-create) { color: var(--ink); background: var(--bg); }
-body.u-create { color: var(--ink); background: var(--bg); }
-.u-create .header-row { width: 100%; height: 64px; }
-.u-create .header-row .brand img { width: 36px; height: 36px; }
-.u-create .intro .eyebrow { display: inline-flex; margin-bottom: 20px; padding: 6px 14px; border-radius: 999px; background: var(--u-sky); color: var(--brand); }
-.u-create .intro h1 { font-family: var(--u-display); color: var(--ink); letter-spacing: -.03em; }
-.u-create .intro h1 em { color: var(--brand); }
-.u-create .intro > p:not(.eyebrow) { color: var(--ink-2); }
-.u-create .mini-steps span { padding: 8px 14px; border: 0; border-radius: 999px; background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 600; }
-.u-create .mascot { filter: none; }
-.u-create .brief-card { border-radius: 28px; color: var(--ink); box-shadow: none; }
-.u-create .card-header p { color: var(--brand); font-size: 12px; }
-.u-create .card-header h2 { font-family: var(--u-display); letter-spacing: -.025em; }
-.u-create .workflow-switch { gap: 2px; margin: 0 0 18px; padding: 4px; border-radius: 999px; background: var(--u-gray); scrollbar-width: none; }
-.u-create .workflow-switch a { flex: 1 0 auto; min-height: 38px; border: 0; border-radius: 999px; background: none; color: var(--ink-2); }
-.u-create .workflow-switch a:hover { background: rgba(255, 255, 255, .6); }
-.u-create .workflow-switch a[aria-current=page] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(13, 27, 51, .08); }
-.u-create .upload { border: 0; border-radius: 20px; background: var(--u-gray); }
-.u-create .upload b { background: #fff; color: var(--brand); }
-.u-create .upload small, .u-create #copy-status, .u-create .contact > span { color: var(--ink-3); }
-.u-create .field input, .u-create .field select, .u-create .field textarea { border-color: var(--line); border-radius: 14px; color: var(--ink); }
-.u-create .field input:focus, .u-create .field select:focus, .u-create .field textarea:focus { border-color: var(--brand); }
-.u-create .copy-button { border-radius: 999px; background: var(--ink); padding: 14px 22px; }
-.u-create .copy-button:hover { background: #22324f; }
-.u-create .contact { border-top-color: var(--line); }
-.u-create .contact a { color: var(--brand); }
-.u-create footer { color: var(--ink-3); }
+/* /app/: "your work lives in the studio" panel (replaces the old works list) */
+.member-ui .works-section { margin: 20px 0 64px; padding: 24px; border: 1px solid var(--m-line); border-radius: 20px; background: #fff; }
+.member-ui .works-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.member-ui .works-heading h2 { margin: 0; font-family: var(--m-display); font-size: 22px; font-weight: 600; color: var(--m-ink); }
+.member-ui .works-note { margin: 6px 0 0; font-size: 14px; line-height: 1.7; color: var(--m-ink-2); }
+.member-ui .works-heading .works-button { display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--action); color: var(--ink); font-size: 14px; font-weight: 600; }
+.member-ui .works-heading .works-button:hover { background: var(--action-hover); }
+.member-ui .workflow-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.member-ui .card-index { color: var(--m-brand); }
+@media (max-width: 560px) { .member-ui .works-heading { flex-direction: column; align-items: flex-start; } }
 
 /* ---------- /legal/*: same bar, flat white panels ---------- */
 .doc-shell { padding-top: 48px; }
@@ -126,9 +108,8 @@ body.u-create { color: var(--ink); background: var(--bg); }
   /* app bar: brand + account on the first row, the menu on its own row */
   .member-ui .glass-nav.app-topbar { height: auto; padding: 8px 8px 8px 14px; row-gap: 8px; }
   .member-ui .topbar-nav { justify-content: flex-start; }
+  .member-ui .glass-nav.auth-topbar, .doc-topbar { height: 58px; padding: 0 8px 0 14px; }
   .member-ui .app-topbar [data-account-menu] { margin-left: auto; }
-  .member-ui .glass-nav.auth-topbar, .doc-topbar, body.u-create > header.glass-nav { height: 58px; padding: 0 8px 0 14px; }
-  .u-create .back-link { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .member-ui .workflow-card:hover { transform: none; }

@@ -8,6 +8,7 @@ import { handleAdminCustomers } from "./admin/customers";
 import { handleWorks } from "./works";
 import { handleAuth, requireUser } from "./auth";
 import { handleStudioSso } from "./auth/studio";
+import { handleStudioLinks } from "./studio-links";
 import { readBodyBytes } from "./auth/common";
 import { getBalance, getPlan, grantCredits, ledgerFor } from "./credits";
 import { getConversation, saveConversation } from "./db";
@@ -46,6 +47,10 @@ export default {
     if (main && url.hostname === `www.${main.hostname}`) {
       return Response.redirect(`${main.origin}${url.pathname}${url.search}`, request.method === "GET" || request.method === "HEAD" ? 301 : 308);
     }
+
+    // "start" buttons and the retired /review/, /create/ pages lead into Naka Studio (src/studio-links.ts)
+    const studioLink = handleStudioLinks(request, env, url);
+    if (studioLink) return studioLink;
 
     const unavailable = closedFeature(env, url, request.method);
     if (unavailable) return unavailable;
