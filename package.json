@@ -9,7 +9,6 @@
     "typecheck:landing": "npm --prefix apps/landing run typecheck",
     "dev:studio": "npm --prefix apps/studio/backend run dev",
     "dev:studio-web": "npm --prefix apps/studio/frontend run dev",
-    "dev:studio-admin": "npm --prefix apps/studio/admin run dev",
     "typecheck:studio": "npm --prefix apps/studio/backend run typecheck",
     "test:db": "node --test infra/postgres/tests/*.test.mjs",
     "db:up": "docker compose up -d postgres"

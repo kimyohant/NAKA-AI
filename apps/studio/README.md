@@ -42,8 +42,7 @@ NAKA-AI TECH is an AI-powered short-drama production platform that automates the
 ```
 frontend/   — Nuxt 3 + Vue 3 + TypeScript (pure CSS, no UI framework)
 backend/    — Hono + Drizzle ORM (PostgreSQL) + Mastra AI Agents
-backend/workspace/skills/ — Agent skill definitions (SKILL.md, editable in the back-office)
-admin/      — NAKA Admin: back-office SPA for system settings (AI services, styles, agents, storage), served at /admin
+backend/workspace/skills/ — Agent skill definitions (SKILL.md, editable on /settings)
 study/      — Hypit render engine notes (source installed in study/hypit)
 desktop/    — Electron desktop app (main process + esbuild + electron-builder dmg/exe)
 data/       — Generated assets (+ the local PGlite database when DATABASE_URL is unset)
@@ -133,13 +132,11 @@ No config files — everything is set via environment variables (all have defaul
 | `HYPIT_NODE` | `node` | Node.js ≥ 22.15 executable that runs the Hypit CLI |
 | `HYPIT_WORKERS` / `HYPIT_TIMEOUT_MS` | `2` / 30 min | Hypit render browser workers / per-command timeout |
 | `HYPIT_KEEP_WORKDIR` | — | `1` keeps the generated Hypit project under `data/hypit/` for debugging |
-| `ADMIN_TOKEN` | — | Admin password (≥ 16 chars) for the back-office app (`admin/`, served at `/admin`). When set, the system-settings API (AI services, styles, agent prompts/skills, storage, server update) requires the `X-Admin-Token` header. Unset = open (dev/desktop) |
-| `ADMIN_DIST` | `admin/.output/public` when built | Built back-office app served at `/admin` |
-| `NAKA_SSO_URL` | — | `https://naka-ai.com`: **members sign in with their naka-ai account** (the Worker in `apps/landing`). Every API then needs a member session, Basic Auth is not used, each member only sees their own work, and naka-ai admins (Worker `ADMIN_EMAILS`) get the settings API and `/admin`. Unset = single-user mode |
+| `ADMIN_TOKEN` | — | Admin password (≥ 16 chars) for the system settings page (`/settings`, admins only). When set, the system-settings API (AI services, styles, agent prompts/skills, storage, server update) requires the `X-Admin-Token` header. Unset = open (dev/desktop) |
+| `NAKA_SSO_URL` | — | `https://naka-ai.com`: **members sign in with their naka-ai account** (the Worker in `apps/landing`). Every API then needs a member session, Basic Auth is not used, each member only sees their own work, and naka-ai admins (Worker `ADMIN_EMAILS`) get the settings API and `/settings`. Unset = single-user mode |
 | `NAKA_SSO_SECRET` | — | Same value as the Worker's `STUDIO_SSO_SECRET` (≥ 32 chars `A-Za-z0-9_-`); set together with `NAKA_SSO_URL` |
-| `ADMIN_ORIGINS` | — | Comma-separated origins allowed to call the API when the back-office app is hosted elsewhere |
 
-> **Note**: AI service API keys, base URLs, and model parameters are configured in the back-office app (`admin/`, system settings, served at `/admin`) and stored in the database — never in config files or environment variables. The user-facing app no longer has a Settings menu.
+> **Note**: AI service API keys, base URLs, and model parameters are configured on the system settings page (`/settings`, in the sidebar for admins; old `/admin` links redirect there) and stored in the database, never in config files or environment variables. Members who are not admins don't see it.
 
 ### 📥 Installation
 
@@ -154,8 +151,6 @@ cd backend && npm install
 # Install frontend dependencies
 cd ../frontend && npm install
 
-# Install back-office dependencies (system settings at /admin)
-cd ../admin && npm install
 ```
 
 ### 🎯 Running
@@ -172,14 +167,9 @@ npm run dev
 # Terminal 2: frontend
 cd frontend
 npm run dev
-
-# Terminal 3 (optional): back-office
-cd admin
-npm run dev
 ```
 
 - Frontend: `http://localhost:3013`
-- Back-office: `http://localhost:3014/admin/`
 - Backend API: `http://localhost:5679/api/v1`
 - The frontend automatically proxies `/api` and `/static` to the backend
 
@@ -195,10 +185,7 @@ cd frontend && npm run generate
 #    (generate outputs to .output/public; the backend reads frontend/dist)
 cp -r .output/public dist
 
-# 3. Build the back-office (served at /admin)
-cd ../admin && npm run generate
-
-# 4. Start the backend
+# 3. Start the backend
 cd ../backend && npm start
 ```
 

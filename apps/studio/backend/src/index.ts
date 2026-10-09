@@ -44,8 +44,6 @@ assertAdminTokenConfig()
 if (!isLoopback && !guardOn()) {
   console.warn('⚠️ ADMIN_TOKEN is not set — the settings API (AI keys, models, prompts) is open to every signed-in user')
 }
-// back-office app (admin/) hosted on another origin: comma-separated origins
-const adminOrigins = (process.env.ADMIN_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean)
 
 function matchesCredential(actual: string, expected: string): boolean {
   const a = Buffer.from(actual)
@@ -76,7 +74,7 @@ app.use('*', async (c, next) => {
   return next()
 })
 app.use('*', cors({
-  origin: ['http://localhost:3013', 'http://localhost:5679', 'http://localhost:3014', ...adminOrigins],
+  origin: ['http://localhost:3013', 'http://localhost:5679'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-Admin-Token'],
   credentials: true,
 }))
@@ -92,7 +90,7 @@ app.get('/api/v1/health', (c) => c.json({
 
 // API routes
 // members (naka-ai SSO) → each member's own data (auth/ownership.ts) → system-settings API for admins only (middleware/admin.ts)
-app.use('/api/v1/*', requireSession(() => ['http://localhost:3013', 'http://localhost:3014', ...adminOrigins], isAdminRequest))
+app.use('/api/v1/*', requireSession(() => ['http://localhost:3013'], isAdminRequest))
 app.use('/api/v1/*', ownership)
 // menus outside the member's plan → 403 E_FEATURE_DISABLED (core/auth/entitlements.ts, docs/entitlements.md)
 app.use('/api/v1/*', entitlementGuard)
@@ -126,16 +124,10 @@ app.use('/static/*', async (c, next) => {
 })
 app.use('/static/*', serveStatic({ root: DATA_ROOT }))
 
-// Back-office build (admin/ in this repo, built with base /admin/) at /admin —
-// ADMIN_DIST overrides; default admin/.output/public when it has been built
-const defaultAdminDist = path.join(projectRoot, 'admin', '.output', 'public')
-const adminDist = process.env.ADMIN_DIST || (existsSync(defaultAdminDist) ? defaultAdminDist : '')
-if (adminDist) {
-  const toAdminFile = (p: string) => p.replace(/^\/admin/, '') || '/'
-  app.get('/admin', c => c.redirect('/admin/'))
-  app.use('/admin/*', serveStatic({ root: adminDist, rewriteRequestPath: toAdminFile }))
-  app.get('/admin/*', serveStatic({ root: adminDist, path: 'index.html' }))
-}
+// System settings used to be a separate back-office app at /admin; they are /settings in the app now.
+// Old links and bookmarks keep working, including the section: /admin/?tab=styles → /settings?tab=styles
+app.get('/admin', c => c.redirect(settingsPath(c.req.query('tab')), 301))
+app.get('/admin/*', c => c.redirect(settingsPath(c.req.query('tab')), 301))
 
 // Serve the user-facing frontend (`npm run generate`) — FRONTEND_DIST overrides
 // (desktop: main process injects resources/frontend; Docker: /app/frontend-dist).
@@ -147,6 +139,10 @@ app.use('*', serveStatic({ root: distPath }))
 app.get('*', serveStatic({ root: distPath, path: 'index.html' }))
 
 const port = Number(process.env.PORT || 5679)
+
+function settingsPath(tab?: string): string {
+  return tab && /^[a-z]{2,20}$/.test(tab) ? `/settings?tab=${tab}` : '/settings'
+}
 console.log(`🚀 NAKA-AI server on http://${hostname}:${port}`)
 
 try {

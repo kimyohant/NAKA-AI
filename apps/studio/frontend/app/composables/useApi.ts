@@ -1,4 +1,17 @@
+import { adminTokenValue, onAdminRequired } from '~/composables/useAdminToken'
+
 const BASE = '/api/v1'
+
+/** X-Admin-Token rides along once an admin unlocked /settings with the server's ADMIN_TOKEN */
+function withAdminToken(headers: Record<string, string> = {}): Record<string, string> {
+  const token = adminTokenValue()
+  return token ? { ...headers, 'X-Admin-Token': token } : headers
+}
+
+/** /static/... media is served by this same backend, so a stored path is already a usable URL */
+export function mediaUrl(p?: string | null): string {
+  return p || ''
+}
 
 /**
  * naka-ai single sign-on: the Studio engine answers 401 E_AUTH_REQUIRED when the member session is missing or
@@ -12,7 +25,7 @@ export function redirectToLogin() {
 }
 
 async function req<T = any>(method: string, path: string, body?: any): Promise<T> {
-  const opts: RequestInit = { method, headers: { 'Content-Type': 'application/json' } }
+  const opts: RequestInit = { method, headers: withAdminToken({ 'Content-Type': 'application/json' }) }
   if (body) opts.body = JSON.stringify(body)
 
   const start = performance.now()
@@ -25,6 +38,7 @@ async function req<T = any>(method: string, path: string, body?: any): Promise<T
 
     if (!resp.ok || (json.code && json.code >= 400)) {
       if (resp.status === 401 && json.errorCode === 'E_AUTH_REQUIRED') redirectToLogin()
+      if (resp.status === 401 && json.errorCode === 'E_ADMIN_REQUIRED') onAdminRequired()
       console.log(`%c[API] %c${method} ${path} %c${resp.status} %c${ms}ms`, 'color:#888', 'color:#ef5350', 'color:#ef5350;font-weight:bold', 'color:#888', json.message || '')
       // errorCode: รหัสเสถียรจาก backend (เช่น E_NO_TEXT_MODEL) → toastError แปลเป็นภาษา UI
       throw Object.assign(new Error(json.message || `${resp.status}`), { errorCode: json.errorCode || undefined, status: resp.status })
@@ -136,10 +150,11 @@ async function uploadReq<T = any>(path: string, file: File): Promise<T> {
   const fd = new FormData()
   fd.append('file', file)
   console.log(`%c[API] %cPOST %c${path} %c${file.name}`, 'color:#888', 'color:#4fc3f7;font-weight:bold', 'color:#ccc', 'color:#888')
-  const resp = await fetch(`${BASE}${path}`, { method: 'POST', body: fd })
+  const resp = await fetch(`${BASE}${path}`, { method: 'POST', body: fd, headers: withAdminToken() })
   const json = await resp.json()
   if (!resp.ok || (json.code && json.code >= 400)) {
     if (resp.status === 401 && json.errorCode === 'E_AUTH_REQUIRED') redirectToLogin()
+    if (resp.status === 401 && json.errorCode === 'E_ADMIN_REQUIRED') onAdminRequired()
     console.log(`%c[API] %cPOST ${path} %c${resp.status}`, 'color:#888', 'color:#ef5350', 'color:#ef5350;font-weight:bold')
     throw new Error(json.message || `${resp.status}`)
   }
@@ -784,6 +799,16 @@ export interface StudioUser { id: string; name: string; email: string | null; ad
 export interface StudioFeature { key: string; label: string; quotaUnit: string | null; enabled: boolean; monthlyLimit: number | null; used: number }
 /** features: the studio menus/quotas of the member's plan; null = everything (admin, single-user mode) */
 export interface StudioSession { user: StudioUser; sso: boolean; accountUrl: string | null; features: StudioFeature[] | null }
+/** /settings sign-in check: 200 with a valid ADMIN_TOKEN, as a naka-ai admin, or when the server has no ADMIN_TOKEN */
+export const adminSessionAPI = {
+  check: async (token: string): Promise<{ admin: boolean; guard: boolean; sso: boolean }> => {
+    const resp = await fetch(`${BASE}/admin/session`, { headers: token ? { 'X-Admin-Token': token } : {} })
+    const json = await resp.json().catch(() => ({}))
+    if (!resp.ok) throw Object.assign(new Error(json.message || `${resp.status}`), { errorCode: json.errorCode, status: resp.status })
+    return json.data
+  },
+}
+
 export const authAPI = {
   me: () => api.get<StudioSession>('/auth/naka/me'),
   logout: () => api.post<{ loggedOut: boolean; accountUrl: string | null }>('/auth/naka/logout', {}),

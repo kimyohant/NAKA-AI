@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# NAKA-AI server image: backend API + back-office (admin/) + the user-facing frontend (frontend/).
+# NAKA-AI server image: backend API + the frontend (frontend/, system settings included at /settings).
 #   docker build -t kimyohant/naka-ai .
 
 # ===== 前端构建：Nuxt generate 产出静态站点 =====
@@ -12,15 +12,6 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN node -e "const fs=require('fs');const l=JSON.parse(fs.readFileSync('package-lock.json'));for(const p of Object.values(l.packages||{}))delete p.resolved;fs.writeFileSync('package-lock.json',JSON.stringify(l,null,2))" \
   && npm ci --no-audit --no-fund --registry=https://registry.npmjs.org
 COPY frontend/ ./
-RUN npm run generate
-
-# ===== 后台管理构建（admin/，base path /admin/）=====
-FROM node:20-bookworm-slim AS admin-build
-WORKDIR /build/admin
-COPY admin/package.json admin/package-lock.json ./
-RUN node -e "const fs=require('fs');const l=JSON.parse(fs.readFileSync('package-lock.json'));for(const p of Object.values(l.packages||{}))delete p.resolved;fs.writeFileSync('package-lock.json',JSON.stringify(l,null,2))" \
-  && npm ci --no-audit --no-fund --registry=https://registry.npmjs.org
-COPY admin/ ./
 RUN npm run generate
 
 # ===== 后端构建：安装依赖（sharp 等原生模块） =====
@@ -43,8 +34,7 @@ ENV NODE_ENV=production \
     NAKA_DATA_DIR=/app/data \
     DATABASE_URL=pglite:///app/data/pglite \
     WORKSPACE_PATH=/app/data/workspace \
-    FRONTEND_DIST=/app/frontend-dist \
-    ADMIN_DIST=/app/admin-dist
+    FRONTEND_DIST=/app/frontend-dist
 
 WORKDIR /app
 COPY --from=backend-build /build/backend/src ./backend/src
@@ -56,7 +46,6 @@ COPY --from=backend-build /build/backend/migrations ./backend/migrations
 # workspace 模板（skills/prompts），entrypoint copy-once 到数据卷后可在线编辑
 COPY backend/workspace ./workspace-template
 COPY --from=frontend-build /build/frontend/.output/public ./frontend-dist
-COPY --from=admin-build /build/admin/.output/public ./admin-dist
 COPY docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh && mkdir -p /app/data
 

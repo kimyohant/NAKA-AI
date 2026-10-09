@@ -96,7 +96,7 @@
         <div v-if="modelBanner" class="ps-alert" role="alert">
           <CircleAlert :size="16" :stroke-width="1.9" />
           <div class="ps-alert-copy"><span>{{ t(`errors.codes.${modelBanner}`) }}</span></div>
-          <a :href="adminUrl" target="_blank" rel="noopener" class="btn btn-sm">{{ t('layout.banner.goSettings') }}</a>
+          <NuxtLink :to="{ path: '/settings', query: { tab: 'ai' } }" class="btn btn-sm">{{ t('layout.banner.goSettings') }}</NuxtLink>
         </div>
         <!-- scripting -->
         <div v-if="scripting" class="ps-running" role="status">
@@ -590,7 +590,6 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useAdminUrl } from '~/composables/useAdminUrl'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import {
@@ -614,7 +613,6 @@ import {
 type StepId = typeof STUDIO_STEPS[number]
 
 const { t, te } = useI18n()
-const adminUrl = useAdminUrl()
 const route = useRoute()
 const projectId = Number(route.params.id)
 

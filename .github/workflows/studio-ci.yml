@@ -1,4 +1,4 @@
-# Studio (apps/studio): backend, admin and frontend checks on pushes/PRs that touch it.
+# Studio (apps/studio): backend and frontend checks on pushes/PRs that touch it.
 name: Studio CI
 
 on:
@@ -28,22 +28,6 @@ jobs:
       # naka-sso.test.ts also checks the contract against apps/landing/src/auth/studio.ts (same checkout)
       - run: npx tsx --test tests/campaigns-migration.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts tests/entitlements.test.ts tests/concurrency.test.ts tests/query-budget.test.ts tests/module-boundaries.test.mjs
 
-  admin:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/studio/admin
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: apps/studio/admin/package-lock.json
-      - run: npm ci
-      - run: npm test
-      - run: npm run generate
-
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -57,5 +41,5 @@ jobs:
           cache: npm
           cache-dependency-path: apps/studio/frontend/package-lock.json
       - run: npm ci
-      - run: node --test tests/video-preflight.test.mjs tests/ai-seller-structure.test.mjs
+      - run: node --test tests/video-preflight.test.mjs tests/ai-seller-structure.test.mjs tests/settings-in-app.test.mjs tests/settings-page.test.mjs tests/settings-providers.test.mjs
       - run: npm run build
