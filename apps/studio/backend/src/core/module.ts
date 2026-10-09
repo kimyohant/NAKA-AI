@@ -4,7 +4,7 @@
  */
 import type { Hono } from 'hono'
 
-export type StudioModuleName = 'drama' | 'marketer' | 'product-studio' | 'seller' | 'viral-clone' | 'live'
+export type StudioModuleName = 'drama' | 'marketer' | 'product-studio' | 'seller' | 'viral-clone' | 'live' | 'social'
 
 export interface StudioModule {
   name: StudioModuleName
@@ -14,4 +14,6 @@ export interface StudioModule {
   failStale?: () => Promise<number>
   /** Startup: continue pipelines interrupted by a restart. Returns the number resumed. */
   resume?: () => Promise<number>
+  /** Startup, after recovery: background work this menu keeps running while the server is up (timers). */
+  start?: () => void
 }

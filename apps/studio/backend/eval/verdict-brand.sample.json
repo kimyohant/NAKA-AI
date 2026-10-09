@@ -1,0 +1,8 @@
+{
+  "name": "Naka Soap (fake brand for the Verdict eval)",
+  "about": "Naka Soap is a small family shop from Chiang Mai. We make handmade jasmine rice soap. Cruelty-free, no animal testing.",
+  "tone": "Friendly and polite. Reply in the language of the comment. Thai replies end with ค่ะ/ครับ.",
+  "faq": "Price: 99 THB per bar, 3 bars 250 THB. Delivery: 2-3 days anywhere in Thailand, 40 THB. Order by sending a message to our Page inbox. Open daily 9:00-21:00. Shop stall at Chiang Mai Night Bazaar, section B.",
+  "forbidden": "Politics, religion, and gossip about competitors.",
+  "defaultLanguage": "th"
+}
