@@ -71,6 +71,35 @@ test('overview: version, disk use and one queue summary per video provider', asy
   assert.deepEqual((byId.get(other) as any).waiting, [], 'a provider with nothing waiting is still listed')
 })
 
+test('failed tasks: recent failures of every type, newest first, with the owner and drama; no prompt', async () => {
+  const config = await videoConfig('Unsloth fail list', 'unsloth')
+  const [drama] = await db.insert(schema.dramas).values({ title: 'ละครทดสอบ', createdAt: ts(), updatedAt: ts() } as any)
+    .returning({ id: schema.dramas.id })
+  const older = await task(config, 'failed', { updatedAt: hoursAgo(5), errorMsg: 'provider said no', ownerUserId: 'u_member', dramaId: drama.id })
+  const newer = await task(config, 'failed', { type: 'image', updatedAt: hoursAgo(1), errorMsg: 'x'.repeat(500), errorCode: 'E_TIMEOUT' })
+  const old = await task(config, 'failed', { updatedAt: hoursAgo(24 * 9) }) // outside 7 days
+  const done = await task(config, 'completed', { updatedAt: hoursAgo(1) })
+
+  const res = await app.request('/api/v1/system/failed-tasks')
+  assert.equal(res.status, 200)
+  const { data } = await res.json() as any
+  assert.equal(data.days, 7)
+  const ids = data.tasks.map((t: any) => t.id)
+  assert.ok(ids.indexOf(newer) < ids.indexOf(older), 'newest first')
+  assert.ok(!ids.includes(old) && !ids.includes(done), 'older than 7 days and not failed are left out')
+  const row = data.tasks.find((t: any) => t.id === older)
+  assert.deepEqual([row.ownerUserId, row.dramaTitle, row.configName, row.error], ['u_member', 'ละครทดสอบ', 'Unsloth fail list', 'provider said no'])
+  const image = data.tasks.find((t: any) => t.id === newer)
+  assert.equal(image.type, 'image'); assert.equal(image.errorCode, 'E_TIMEOUT'); assert.equal(image.error.length, 300)
+  assert.ok(!JSON.stringify(data).includes('"prompt"'), 'prompts stay in the studio')
+  assert.equal(data.total, data.tasks.length)
+
+  const wide = await (await app.request('/api/v1/system/failed-tasks?days=30')).json() as any
+  assert.equal(wide.data.days, 30)
+  assert.equal(wide.data.total, data.total + 1)
+  assert.equal((await (await app.request('/api/v1/system/failed-tasks?days=999')).json() as any).data.days, 30)
+})
+
 test('member-works: one member\'s latest works, newest first, each thing once, with the studio page that opens it', async () => {
   const at = (minutes: number) => new Date(Date.UTC(2026, 9, 10, 10, minutes)).toISOString()
   const add = async (table: any, values: Record<string, unknown>) => insertedId(await db.insert(table).values(values).returning({ id: table.id }))

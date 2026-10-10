@@ -15,7 +15,7 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
 /** naka-studio's response envelope: { code, data, message } */
 interface StudioBody { data?: unknown; message?: unknown }
 
-class StudioSystemError extends Error {
+export class StudioSystemError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
@@ -30,7 +30,7 @@ function target(env: Env): { base: string; token: string } {
 }
 
 /** One call to the studio's /api/v1; answers its `data`, or throws a message the admin can act on. */
-async function studio(env: Env, path: string, method: 'GET' | 'POST' = 'GET'): Promise<unknown> {
+export async function studio(env: Env, path: string, method: 'GET' | 'POST' = 'GET', timeoutMs = TIMEOUT_MS): Promise<unknown> {
   const { base, token } = target(env);
   let response: Response;
   try {
@@ -40,7 +40,7 @@ async function studio(env: Env, path: string, method: 'GET' | 'POST' = 'GET'): P
       redirect: 'error',
       headers: { 'X-Admin-Token': token, Accept: 'application/json', ...(method === 'POST' ? { 'Content-Type': 'application/json' } : {}) },
       body: method === 'POST' ? '{}' : undefined,
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch {
     throw new StudioSystemError(502, 'เชื่อมต่อ naka-studio ไม่ได้ ตรวจว่า studio ทำงานอยู่และที่อยู่ภายในถูกต้อง');

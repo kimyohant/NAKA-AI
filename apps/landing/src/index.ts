@@ -24,6 +24,7 @@ import { handleAdminMarketer } from "./marketer/admin";
 import { AI_VIDEO_JOB_KIND, makeAiVideoHandler } from "./video";
 import { handleAdminSystem } from "./system/admin";
 import { handleAdminStudioSystem } from "./admin/studio-system";
+import { handleAdminInsights } from "./admin/insights";
 import { featureOn, withSettings } from "./system/store";
 import { featureRefusal, hasFeature } from "./entitlements";
 import type { Env } from "./types";
@@ -150,6 +151,9 @@ export default {
       // naka-studio's version, disk use and video queues, read server to server (src/admin/studio-system.ts)
       const studioSystemResponse = await handleAdminStudioSystem(request, env, url, actor);
       if (studioSystemResponse) return studioSystemResponse;
+      // overview, all payments (+ CSV) and failed jobs across customers (src/admin/insights.ts)
+      const insightResponse = await handleAdminInsights(request, env, url, actor);
+      if (insightResponse) return insightResponse;
       // The panel is given the Worker's own env so it can tell saved values from wrangler ones.
       const systemResponse = await handleAdminSystem(request, workerEnv, url, actor);
       if (systemResponse) return systemResponse;
