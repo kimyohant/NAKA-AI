@@ -636,7 +636,8 @@
       },
       "influencers": {
         "title": "AI influencers, ready to review",
-        "desc": "Fictional presenters generated with AI, not real people",
+        "desc": "Fictional presenters made with AI, not real people · click one to review your product",
+        "use": "Use for reviews",
         "items": {
           "i01": "Beauty",
           "i02": "Gadgets",

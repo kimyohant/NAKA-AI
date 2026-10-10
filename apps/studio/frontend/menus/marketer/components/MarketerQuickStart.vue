@@ -90,10 +90,13 @@
         <p class="qs-section-sub">{{ t('marketer.quick.influencers.desc') }}</p>
       </div>
       <div class="qs-rail">
-        <figure v-for="id in influencers" :key="id" class="qs-reel qs-person">
+        <button v-for="id in influencers" :key="id" type="button" class="qs-reel qs-person" @click="useInfluencer(id)">
           <MarketerMedia class="qs-reel-media" :id="id" play="none" />
-          <figcaption class="qs-reel-cap">{{ t(`marketer.quick.influencers.items.i${id.slice(11)}`) }}</figcaption>
-        </figure>
+          <span class="qs-reel-cap">
+            {{ t(`marketer.quick.influencers.items.i${id.slice(11)}`) }}
+            <span class="qs-person-use">{{ t('marketer.quick.influencers.use') }} →</span>
+          </span>
+        </button>
       </div>
     </template>
 
@@ -249,6 +252,10 @@ const WAYS: { key: WayKey; no: string; icon: any }[] = [
 const POLL_MS = 3000
 const showcase = mkGroup('showcase')
 const influencers = mkGroup('influencer')
+/** influencer-01 → Product Studio's create form filled from preset i01 (app/utils/influencerPresets.js) */
+function useInfluencer(id: string) {
+  navigateTo({ path: '/studio', query: { tab: 'influencers', preset: `i${id.slice(11)}` } })
+}
 
 const { t, locale } = useI18n()
 
@@ -476,7 +483,8 @@ onBeforeUnmount(stopPoll)
 .qs-rail { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; scrollbar-width: thin; }
 .qs-reel { position: relative; flex: none; width: 148px; aspect-ratio: 9 / 16; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--surface-soft); color: #fff; text-align: left; cursor: pointer; scroll-snap-align: start; transition: transform .15s var(--ease-out), border-color .15s var(--ease-out); }
 .qs-reel:hover { transform: translateY(-2px); border-color: var(--border-strong); }
-.qs-person { cursor: default; }
+.qs-person-use { display: block; margin-top: 3px; font-size: 10.5px; font-weight: 600; opacity: .85; }
+.qs-person:hover .qs-person-use, .qs-person:focus-visible .qs-person-use { opacity: 1; text-decoration: underline; }
 .qs-reel-media { position: absolute; inset: 0; }
 .qs-reel-cap { position: absolute; inset: auto 0 0; z-index: 1; padding: 22px 10px 9px; font-size: 11.5px; font-weight: 700; line-height: 1.35; background: linear-gradient(transparent, rgba(0, 0, 0, .78)); }
 .qs-error { color: var(--danger, #e5484d); font-size: 13px; }
