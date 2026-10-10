@@ -1,9 +1,10 @@
 import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { ownedBy } from '../auth/owner-context.js'
+import { settleTaskCredits } from '../auth/credits.js'
 import { db, schema } from '../db/index.js'
 import { success, created, badRequest } from '../http/response.js'
-import { generateImage, generateVideo, resumeGenerationTask, videoQueuePosition } from '../generation/generation.js'
+import { cancelGenerationTask, generateImage, generateVideo, resumeGenerationTask, videoQueuePosition } from '../generation/generation.js'
 import { logTaskError, logTaskPayload, logTaskStart, logTaskSuccess } from '../tasks/task-logger.js'
 import { quoteGeneration } from '../generation/generation-cost.js'
 import { resolveTaskContext, prepareVideoTask, type TaskType } from '../generation/task-prep.js'
@@ -124,6 +125,17 @@ app.post('/:id/recover', async (c) => {
   return success(c, { status: result })
 })
 
+// Cancel a task the provider is not working on: queued (never submitted) or unknown (polling stopped).
+// Frees its queue slot; a task this server is submitting or polling cannot be cancelled.
+app.post('/:id/cancel', async (c) => {
+  const id = Number(c.req.param('id'))
+  if (!Number.isInteger(id) || id < 1) return badRequest(c, 'Invalid task ID')
+  const result = await cancelGenerationTask(id)
+  if (result === 'active') return badRequest(c, 'The task is being submitted or polled; wait for it to finish')
+  if (result === 'not_cancellable') return badRequest(c, 'Only queued or unknown tasks can be cancelled')
+  return success(c, { status: 'cancelled' })
+})
+
 // GET /tasks — 按 type / storyboard_id / drama_id 过滤
 app.get('/', async (c) => {
   const type = c.req.query('type')
@@ -149,6 +161,8 @@ app.delete('/:id', async (c) => {
   const selections = await db.select().from(schema.storyboardMediaSelections)
     .where(eq(schema.storyboardMediaSelections.taskId, id))
   if (selections.length) return badRequest(c, 'Cannot delete media selected for a shot')
+  // a deleted task that never produced its result gives its credits back (an unknown task still holds them)
+  if (task && task.status !== 'completed') await settleTaskCredits(id, 'refund')
   await db.delete(schema.sysTask).where(eq(schema.sysTask.id, id))
   return success(c)
 })

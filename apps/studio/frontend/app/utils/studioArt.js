@@ -34,6 +34,16 @@ export function styleExample(styleValue) {
   return `${STUDIO_ART_ROOT}/styles/${styleValue}.webp`
 }
 
+/** Ad-style photos of the AI Seller / AI Marketer / AI Live / Skill library menus (banners, workflow cards). */
+export const MENU_ART_IDS = [
+  'hero-seller', 'hero-marketer', 'hero-live', 'hero-skills',
+  'wf-seller', 'wf-drama', 'wf-marketer', 'wf-viral-clone', 'wf-live', 'wf-avatar', 'wf-influencer',
+  'live-preview',
+]
+export function menuArt(id) {
+  return MENU_ART_IDS.includes(id) ? `${STUDIO_ART_ROOT}/menus/${id}.webp` : ''
+}
+
 /** Section banner: coverArt('agent', 'extractor'), coverArt('template-category', 'promo') … */
 export function coverArt(kind, id) {
   if (!COVER_KINDS.includes(kind) || !safeId(id) || id.includes('/')) return ''

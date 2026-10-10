@@ -37,9 +37,13 @@
           <Radio :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.live') }}</span>
         </NuxtLink>
+        <NuxtLink v-if="menuAllowed('studio.social')" to="/social" class="side-link" :class="{ active: isSocialRoute }" :title="t('layout.nav.social')" @click="navOpen = false">
+          <MessagesSquare :size="17" :stroke-width="1.8" />
+          <span class="side-label">{{ t('layout.nav.social') }}</span>
+        </NuxtLink>
       </nav>
 
-      <!-- System settings (AI services, styles, agents, storage, updates): admins only -->
+      <!-- System settings (AI services, styles, agents): admins only. Version, disk use and video queues moved to the naka-ai back office ("ระบบ Studio") -->
       <template v-if="session?.user?.admin">
         <div class="side-divider"></div>
         <nav class="side-nav" :aria-label="t('layout.nav.setup')">
@@ -105,7 +109,7 @@
 </template>
 
 <script setup>
-import { TriangleAlert, Clapperboard, Menu, X, Megaphone, Copy, Radio, Store, LogOut, Cpu, Palette, Bot, SlidersHorizontal, HardDrive, Info } from 'lucide-vue-next'
+import { TriangleAlert, Clapperboard, Menu, X, Megaphone, Copy, Radio, Store, LogOut, MessagesSquare, Cpu, Palette, Bot, SlidersHorizontal } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI, authAPI } from '~/composables/useApi'
 import brandLogo from '~/assets/brand-logo.svg'
@@ -120,6 +124,7 @@ const isMarketerRoute = computed(() => route.path === '/marketer' || route.path.
 const isSellerRoute = computed(() => route.path === '/seller' || route.path.startsWith('/seller/'))
 const isViralCloneRoute = computed(() => route.path === '/viral-clone' || route.path.startsWith('/viral-clone/'))
 const isLiveRoute = computed(() => route.path === '/live')
+const isSocialRoute = computed(() => route.path === '/social' || route.path.startsWith('/social/'))
 
 // system settings (/settings), shown to admins: naka-ai admins via SSO, or the single user
 const currentSettingsTab = computed(() => String(route.query.tab || 'ai'))
@@ -128,8 +133,6 @@ const settingsItems = computed(() => [
   { tab: 'styles', label: t('settings.tabs.styles'), icon: Palette },
   { tab: 'agents', label: t('settings.tabs.agents'), icon: Bot },
   { tab: 'general', label: t('settings.tabs.general'), icon: SlidersHorizontal },
-  { tab: 'storage', label: t('settings.tabs.storage'), icon: HardDrive },
-  { tab: 'about', label: t('settings.tabs.about'), icon: Info },
 ])
 
 // สมาชิก naka-ai ที่ล็อกอินผ่าน SSO (null = ยังโหลด / โหมดผู้ใช้คนเดียวจะได้ sso:false)
@@ -138,7 +141,7 @@ onMounted(async () => {
   try { session.value = await authAPI.me() } catch { /* 401 → useApi พาไปล็อกอินเอง */ }
 })
 // menus the member's naka-ai plan includes (docs/entitlements.md); features null = all (admin, single-user)
-const MENU_HOME = [['studio.seller', '/seller'], ['studio.drama', '/drama'], ['studio.marketer', '/marketer'], ['studio.viral_clone', '/viral-clone'], ['studio.live', '/live']]
+const MENU_HOME = [['studio.seller', '/seller'], ['studio.drama', '/drama'], ['studio.marketer', '/marketer'], ['studio.viral_clone', '/viral-clone'], ['studio.live', '/live'], ['studio.social', '/social']]
 function menuAllowed(key) {
   const features = session.value?.features
   return !features || features.some(f => f.key === key && f.enabled)

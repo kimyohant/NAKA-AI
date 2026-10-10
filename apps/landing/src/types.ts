@@ -21,6 +21,8 @@ export interface Env {
   STUDIO_URL?: string; // naka-studio origin that may sign members in through naka-ai
   STUDIO_ACCESS?: string; // 'admins' (default) | 'members' | 'off'
   STUDIO_SSO_SECRET?: string; // shared with naka-studio for the server-to-server code exchange
+  STUDIO_INTERNAL_URL?: string; // how this server reaches naka-studio directly (Docker: http://studio:5679), for /admin/studio-system/
+  STUDIO_ADMIN_TOKEN?: string; // naka-studio's ADMIN_TOKEN, sent as X-Admin-Token by /admin/studio-system/
   // Affiliate review voiceover (Google Cloud Text-to-Speech)
   GOOGLE_TTS_API_KEY: string;
   GOOGLE_TTS_VOICE?: string;
@@ -72,7 +74,6 @@ export interface Env {
   VIDEO_BASE_URL?: string;
   VIDEO_MODEL?: string;
   VIDEO_RESOLUTION?: string;
-  AI_VIDEO_CREDITS?: string;
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */

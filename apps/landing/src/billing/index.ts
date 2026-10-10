@@ -2,6 +2,7 @@ import type { Env } from "../types";
 import { readBodyBytes } from "../auth/common";
 import { getBalance } from "../credits";
 import { issueReceipt } from "../receipts";
+import { checkCoupon, CouponError, couponStillValid, normalizeCode } from "./coupons";
 import { createCheckoutSession, getCheckoutSession, stripeClient, verifyWebhookEvent, type CheckoutSession } from "./stripe";
 
 // Prepaid packages for Thai customers: pay a month or a year on Stripe's hosted Checkout page
@@ -18,7 +19,7 @@ type Period = "monthly" | "yearly";
 interface PlanRow { id: string; name: string; monthly_credits: number; max_parallel_jobs: number; price_thb: number }
 interface PaymentRow {
   id: string; user_id: string; plan_id: string; period: Period; amount_satang: number; method: string;
-  status: string; stripe_session_id: string | null; expires_at: number | null;
+  status: string; stripe_session_id: string | null; expires_at: number | null; coupon_code: string | null; discount_satang: number;
 }
 
 class BillingError extends Error {
@@ -114,6 +115,21 @@ async function markFailed(env: Env, payment: PaymentRow, session: CheckoutSessio
   await env.DB.prepare("UPDATE payments SET status = 'failed', failure = 'async_payment_failed' WHERE id = ? AND status = 'pending'").bind(payment.id).run();
 }
 
+async function couponFor(env: Env, code: unknown, userId: string, planId: string, period: Period, list: number, t: number) {
+  try { return await checkCoupon(env, code, userId, planId, period, list, t); }
+  catch (error) { if (error instanceof CouponError) throw new BillingError(error.status, error.message); throw error; }
+}
+
+/** POST /api/billing/coupon: what a code takes off the chosen package, before going to pay. */
+async function previewCoupon(request: Request, env: Env, userId: string): Promise<Response> {
+  const body = await readBody(request);
+  const plan = await paidPlan(env, body.planId);
+  const period: Period = body.period === "yearly" ? "yearly" : "monthly";
+  const list = priceSatang(plan, period);
+  const coupon = await couponFor(env, body.code, userId, plan.id, period, list, now());
+  return json({ code: coupon.code, label: coupon.label, price: list / 100, discount: coupon.discount / 100, amount: (list - coupon.discount) / 100 });
+}
+
 async function readBody(request: Request): Promise<Record<string, unknown>> {
   if (request.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase() !== "application/json") throw new BillingError(400, "กรุณาส่งข้อมูลเป็น JSON");
   const text = await request.text();
@@ -133,21 +149,28 @@ async function checkout(request: Request, env: Env, userId: string): Promise<Res
   let stripe;
   try { stripe = stripeClient(env); } catch { throw new BillingError(503, "ระบบชำระเงินออนไลน์ยังไม่เปิดใช้งาน กรุณาติดต่อทีมงาน"); }
 
-  const amount = priceSatang(plan, period);
-  const id = crypto.randomUUID();
   const t = now();
+  const list = priceSatang(plan, period);
+  // a discount code (src/billing/coupons.ts): checked here for a clear message, and again inside the insert
+  const coupon = normalizeCode(body.coupon) ? await couponFor(env, body.coupon, userId, plan.id, period, list, t) : null;
+  const amount = list - (coupon?.discount ?? 0);
+  const id = crypto.randomUUID();
   const expiresAt = t + CHECKOUT_MINUTES * 60;
-  // Counted in the insert itself, so concurrent requests cannot all pass the limit.
-  const inserted = await env.DB.prepare(`INSERT INTO payments (id, user_id, plan_id, period, amount_satang, method, expires_at, created_at)
-    SELECT ?1, ?2, ?3, ?4, ?5, 'stripe_checkout', ?6, ?7
-    WHERE (SELECT COUNT(*) FROM payments WHERE user_id = ?2 AND status = 'pending' AND created_at > ?7 - 3600) < ?8`)
-    .bind(id, userId, plan.id, period, amount, expiresAt, t, MAX_OPEN_CHECKOUTS_PER_HOUR).run();
-  if (inserted.meta.changes !== 1) throw new BillingError(429, "มีรายการที่รอชำระหลายรายการแล้ว กรุณาชำระรายการเดิมหรือรอสักครู่");
+  // Counted in the insert itself, so concurrent requests cannot all pass the limit (nor take a code's last use).
+  const inserted = await env.DB.prepare(`INSERT INTO payments (id, user_id, plan_id, period, amount_satang, method, expires_at, created_at, coupon_code, discount_satang)
+    SELECT ?1, ?2, ?3, ?4, ?5, 'stripe_checkout', ?6, ?7, NULLIF(?9, ''), ?10
+    WHERE (SELECT COUNT(*) FROM payments WHERE user_id = ?2 AND status = 'pending' AND created_at > ?7 - 3600) < ?8
+      AND (?9 = '' OR ${couponStillValid('?9', '?7', '?2', '?3', '?4')})`)
+    .bind(id, userId, plan.id, period, amount, expiresAt, t, MAX_OPEN_CHECKOUTS_PER_HOUR, coupon?.code ?? '', coupon?.discount ?? 0).run();
+  if (inserted.meta.changes !== 1) {
+    if (coupon) await couponFor(env, coupon.code, userId, plan.id, period, list, t); // says why, when the code is the reason
+    throw new BillingError(429, "มีรายการที่รอชำระหลายรายการแล้ว กรุณาชำระรายการเดิมหรือรอสักครู่");
+  }
 
   let session: CheckoutSession;
   try {
     session = await createCheckoutSession(stripe, {
-      paymentId: id, userId, planName: plan.name, period, amountSatang: amount, expiresAt,
+      paymentId: id, userId, planName: coupon ? `${plan.name} (โค้ด ${coupon.code})` : plan.name, period, amountSatang: amount, expiresAt,
       origin: new URL(env.APP_ORIGIN).origin,
     });
   } catch (error) {
@@ -168,7 +191,7 @@ async function paymentView(env: Env, id: string, userId: string) {
   if (!payment) throw new BillingError(404, "ไม่พบรายการชำระเงิน");
   return {
     status: payment.status, planId: payment.plan_id, period: payment.period, amount: payment.amount_satang / 100,
-    method: payment.method, expiresAt: payment.expires_at,
+    method: payment.method, expiresAt: payment.expires_at, coupon: payment.coupon_code, discount: payment.discount_satang / 100,
   };
 }
 
@@ -222,6 +245,7 @@ export async function handleBilling(request: Request, env: Env, url: URL, userId
     if (path === "/config" && request.method === "GET") return json({ enabled: onlinePayment(env) });
     if (path === "/me" && request.method === "GET") return await billingState(env, userId);
     if (path === "/checkout" && request.method === "POST") return await checkout(request, env, userId);
+    if (path === "/coupon" && request.method === "POST") return await previewCoupon(request, env, userId);
     const match = path.match(/^\/payments\/([0-9a-f-]{36})$/);
     if (match && request.method === "GET") return await refreshPayment(env, match[1], userId);
     return json({ error: "not found" }, 404);

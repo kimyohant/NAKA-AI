@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f9fd">
+<meta name="robots" content="noindex">
+<title>บอทขายของ LINE · หลังร้าน naka-ai</title>
+<link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" sizes="180x180">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<link rel="stylesheet" href="/admin/bot/bot.css">
+<script src="/admin/admin-shell.js" defer></script>
+</head>
+<body>
+
+<a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
+<main id="main">
+<section id="login" class="card login hidden" aria-labelledby="login-title">
+  <div class="adm-login-brand"><img src="/logo.svg?v=4" alt="" width="34" height="34"><span>naka-ai · หลังร้าน</span></div>
+  <h1 id="login-title">เข้าสู่หลังร้าน</h1>
+  <p class="muted">ใช้บัญชี Google ของผู้ดูแลระบบ (อีเมลใน ADMIN_EMAILS) · ต้องเข้าใหม่ทุก 12 ชั่วโมง</p>
+  <a class="button primary" id="googleBtn" href="/api/auth/google/start?next=%2Fadmin%2Fbot%2F">เข้าสู่ระบบด้วย Google</a>
+  <p id="loginErr" class="muted" role="status" aria-live="polite"></p>
+  <details class="break-glass">
+    <summary>เข้าด้วยโทเคนฉุกเฉิน</summary>
+    <label for="tok">ADMIN_TOKEN (เก็บเฉพาะแท็บนี้)</label>
+    <input id="tok" type="password" autocomplete="off">
+    <button id="loginBtn" type="button" style="margin-top:12px">เข้าด้วยโทเคน</button>
+  </details>
+</section>
+
+<div id="app" class="hidden">
+    <div class="adm-head">
+    <div><h1>บอทขายของ LINE</h1><p>ทดลองคุยกับบอท แล้วจัดการสินค้า ออเดอร์ แชทลูกค้า และข้อมูลร้านที่บอทใช้ตอบ</p></div>
+    <div class="adm-account"><span class="who" data-adm-who></span><button id="logout" type="button" class="btn-sm">ออกจากระบบ</button></div>
+  </div>
+  <div class="adm-tabs-wrap"><nav class="tabs" id="tabs" aria-label="เครื่องมือบอท">
+    <button data-tab="chat" class="on">ทดลองแชท</button>
+    <button data-tab="products">สินค้า</button>
+    <button data-tab="orders">ออเดอร์</button>
+    <button data-tab="convs">แชทลูกค้า</button>
+    <button data-tab="settings">ตั้งค่าร้าน</button>
+  </nav></div>
+    <section data-panel="chat" class="card">
+      <h2>ทดลองคุยกับ Sales Agent</h2>
+      <p class="muted">ลองคุยแบบเดียวกับลูกค้าบน LINE ได้ที่นี่ ออเดอร์ที่สร้างระหว่างทดสอบจะตัดสต็อกจริง</p>
+      <div class="chat" id="chatLog"></div>
+      <div class="row chat-input">
+        <input id="chatIn" placeholder="พิมพ์ข้อความ เช่น มีเสื้อสีดำไหมคะ" style="flex:1">
+        <button class="primary" id="chatSend">ส่ง</button>
+        <button id="chatReset">เริ่มใหม่</button>
+      </div>
+    </section>
+
+    <section data-panel="products" class="hidden">
+      <div class="card">
+        <h2 id="pFormTitle">เพิ่มสินค้า</h2>
+        <form id="pForm" class="grid">
+          <div><label>ชื่อสินค้า</label><input name="name" required></div>
+          <div><label>หมวดหมู่</label><input name="category"></div>
+          <div><label>ราคา (บาท)</label><input name="price" type="number" step="0.01" min="0" required></div>
+          <div><label>สต็อก</label><input name="stock" type="number" min="0" value="0"></div>
+          <div class="full"><label>รายละเอียด (ไซส์ สี วัสดุ จุดเด่น ฯลฯ)</label><textarea name="description" style="min-height:70px"></textarea></div>
+          <div class="full row" style="margin-top:12px"><button class="primary" type="submit">บันทึก</button><button type="button" id="pCancel" class="hidden">ยกเลิกแก้ไข</button></div>
+        </form>
+      </div>
+      <div class="card scroll"><table id="pTable"></table></div>
+    </section>
+
+    <section data-panel="orders" class="card scroll hidden">
+      <div class="row" style="justify-content:space-between"><h2>ออเดอร์</h2><button id="oRefresh">รีเฟรช</button></div>
+      <table id="oTable"></table>
+    </section>
+
+    <section data-panel="convs" class="hidden">
+      <div class="card scroll">
+        <div class="row" style="justify-content:space-between"><h2>แชทลูกค้า</h2><button id="cRefresh">รีเฟรช</button></div>
+        <p class="muted">แชทที่ "รอแอดมิน" คือแชทที่บอทหยุดตอบแล้ว คุณตอบลูกค้าเองจากที่นี่ได้ เสร็จแล้วกด "ให้บอทตอบต่อ"</p>
+        <table id="cTable"></table>
+      </div>
+      <div class="card hidden" id="cDetail">
+        <h2 id="cName"></h2>
+        <div class="chat" id="cLog" style="height:320px"></div>
+        <div class="row chat-input">
+          <input id="cIn" placeholder="ตอบลูกค้าในนามแอดมิน" style="flex:1">
+          <button class="primary" id="cSend">ส่งทาง LINE</button>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="settings" class="card hidden">
+      <h2>ข้อมูลร้าน</h2>
+      <p class="muted">Agent ใช้ข้อมูลนี้ตอบเรื่องค่าส่ง การชำระเงิน และนโยบายร้าน</p>
+      <label>ชื่อร้าน</label><input id="sName">
+      <label>ข้อมูลร้าน / ค่าส่ง / ช่องทางชำระเงิน / นโยบายคืนสินค้า</label><textarea id="sInfo" style="min-height:200px"></textarea>
+      <div class="row" style="margin-top:12px"><button class="primary" id="sSave">บันทึก</button><span id="sMsg" class="muted"></span></div>
+    </section>
+</div>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const STATUS = { pending: "รอชำระ", paid: "ชำระแล้ว", shipped: "จัดส่งแล้ว", cancelled: "ยกเลิก" };
+let token = "";
+try { token = sessionStorage.getItem("naka_admin_customers") || ""; } catch {}
+
+// Build DOM safely — all customer-supplied text goes through textContent.
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (k === "class") n.className = v;
+    else n.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) n.append(k instanceof Node ? k : document.createTextNode(k ?? ""));
+  return n;
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch("/api/admin/" + path, {
+    ...opts,
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  // 401/403: not signed in, not an admin, or the 12-hour admin sign-in ran out.
+  if (res.status === 401 || res.status === 403) {
+    const data = await res.clone().json().catch(() => ({}));
+    if (data.reason === "origin") { alertBox(data.error); throw new Error(data.error); } // a refused write, not a sign-out
+    if (token) { token = ""; try { sessionStorage.removeItem("naka_admin_customers"); } catch {} }
+    showLogin(data.reason === "signin" ? "" : data.error || "เข้าสู่ระบบไม่สำเร็จ");
+    throw new Error("unauthorized");
+  }
+  const data = await res.json();
+  if (!res.ok) { alertBox(data.error || "เกิดข้อผิดพลาด"); throw new Error(data.error); }
+  return data;
+}
+function alertBox(msg) { console.error(msg); $("#sMsg").textContent = msg; }
+
+const googleError = new URLSearchParams(location.search).get("error") === "google" ? "เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองอีกครั้ง" : "";
+function showLogin(err = "") { $("#app").classList.add("hidden"); $("#login").classList.remove("hidden"); $("#loginErr").textContent = err || googleError; }
+async function showApp() {
+  $("#login").classList.add("hidden"); $("#app").classList.remove("hidden");
+  await loadChat();
+}
+$("#loginBtn").onclick = async () => {
+  token = $("#tok").value.trim();
+  try { sessionStorage.setItem("naka_admin_customers", token); } catch {}
+  try { await api("settings"); showApp(); } catch {}
+};
+$("#tok").onkeydown = (e) => { if (e.key === "Enter") $("#loginBtn").click(); };
+$("#logout").onclick = async () => {
+  token = ""; try { sessionStorage.removeItem("naka_admin_customers"); } catch {}
+  await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+  showLogin();
+};
+
+// tabs
+const loaders = { chat: loadChat, products: loadProducts, orders: loadOrders, convs: loadConvs, settings: loadSettings };
+$("#tabs").onclick = (e) => {
+  const t = e.target.dataset.tab; if (!t) return;
+  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll("[data-panel]").forEach((p) => p.classList.toggle("hidden", p.dataset.panel !== t));
+  loaders[t]();
+};
+
+function renderLog(box, history) {
+  box.replaceChildren(...history.map((m) => el("div", { class: "bubble " + m.role }, m.content)));
+  box.scrollTop = box.scrollHeight;
+}
+
+// ---- test chat ----
+async function loadChat() {
+  const convs = await api("conversations");
+  const mine = convs.find((c) => c.line_user_id === "test:admin");
+  renderLog($("#chatLog"), mine ? mine.history : []);
+}
+async function sendChat() {
+  const msg = $("#chatIn").value.trim();
+  if (!msg) return;
+  $("#chatIn").value = "";
+  const log = $("#chatLog");
+  log.append(el("div", { class: "bubble user" }, msg), el("div", { class: "bubble assistant", id: "typing" }, "กำลังพิมพ์…"));
+  log.scrollTop = log.scrollHeight;
+  $("#chatSend").disabled = true;
+  try {
+    const r = await api("chat", { method: "POST", body: { message: msg } });
+    $("#typing").remove();
+    log.append(el("div", { class: "bubble assistant" }, r.reply + (r.human_mode ? "\n\n[ส่งต่อแอดมินแล้ว]" : "")));
+    log.scrollTop = log.scrollHeight;
+  } catch { $("#typing")?.remove(); }
+  $("#chatSend").disabled = false;
+}
+$("#chatSend").onclick = () => sendChat();
+$("#chatIn").onkeydown = (e) => { if (e.key === "Enter" && !e.isComposing) sendChat(); };
+$("#chatReset").onclick = async () => { await api("chat", { method: "POST", body: { reset: true } }); renderLog($("#chatLog"), []); };
+
+// ---- products ----
+let editingId = null;
+async function loadProducts() {
+  const rows = await api("products");
+  $("#pTable").replaceChildren(
+    el("tr", {}, ["#", "สินค้า", "หมวด", "ราคา", "สต็อก", ""].map((h) => el("th", {}, h))),
+    ...rows.map((p) => el("tr", {},
+      el("td", {}, String(p.id)),
+      el("td", {}, el("b", {}, p.name), el("div", { class: "muted" }, p.description)),
+      el("td", {}, p.category),
+      el("td", { class: "num" }, Number(p.price).toLocaleString("th-TH")),
+      el("td", { class: "num" }, String(p.stock)),
+      el("td", {}, el("div", { class: "row" },
+        el("button", { onclick: () => editProduct(p) }, "แก้ไข"),
+        el("button", { class: "danger", onclick: async () => { if (confirm("ลบ " + p.name + " ?")) { await api("products/" + p.id, { method: "DELETE" }); loadProducts(); } } }, "ลบ"),
+      )),
+    )),
+  );
+}
+function editProduct(p) {
+  editingId = p.id;
+  const f = $("#pForm");
+  for (const k of ["name", "category", "price", "stock", "description"]) f.elements[k].value = p[k];
+  $("#pFormTitle").textContent = "แก้ไขสินค้า #" + p.id;
+  $("#pCancel").classList.remove("hidden");
+  f.scrollIntoView({ behavior: "smooth" });
+}
+function resetProductForm() { editingId = null; $("#pForm").reset(); $("#pFormTitle").textContent = "เพิ่มสินค้า"; $("#pCancel").classList.add("hidden"); }
+$("#pCancel").onclick = resetProductForm;
+$("#pForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const body = { name: f.name.value, category: f.category.value, description: f.description.value, price: Number(f.price.value), stock: Number(f.stock.value) };
+  if (editingId) await api("products/" + editingId, { method: "PUT", body });
+  else await api("products", { method: "POST", body });
+  resetProductForm(); loadProducts();
+};
+
+// ---- orders ----
+async function loadOrders() {
+  const rows = await api("orders");
+  $("#oTable").replaceChildren(
+    el("tr", {}, ["#", "วันที่", "ลูกค้า", "รายการ", "ยอด", "สถานะ"].map((h) => el("th", {}, h))),
+    ...rows.map((o) => {
+      const sel = el("select", { onchange: async (e) => { await api("orders/" + o.id, { method: "PATCH", body: { status: e.target.value } }); loadOrders(); } },
+        Object.entries(STATUS).map(([v, t]) => { const op = el("option", { value: v }, t); if (v === o.status) op.selected = true; return op; }));
+      return el("tr", {},
+        el("td", {}, String(o.id)),
+        el("td", { class: "muted" }, o.created_at),
+        el("td", {}, el("b", {}, o.customer_name), el("div", { class: "muted" }, o.phone), el("div", { class: "muted" }, o.address), o.note ? el("div", {}, "📝 " + o.note) : ""),
+        el("td", {}, JSON.parse(o.items).map((i) => el("div", {}, `${i.name} × ${i.quantity}`))),
+        el("td", { class: "num" }, Number(o.total).toLocaleString("th-TH")),
+        el("td", {}, el("span", { class: "badge b-" + o.status }, STATUS[o.status]), el("div", { style: "margin-top:6px" }, sel)),
+      );
+    }),
+  );
+}
+$("#oRefresh").onclick = loadOrders;
+
+// ---- conversations ----
+let openConv = null;
+async function loadConvs() {
+  const rows = (await api("conversations")).filter((c) => !c.line_user_id.startsWith("test:"));
+  $("#cTable").replaceChildren(
+    el("tr", {}, ["ลูกค้า", "อัปเดต", "สถานะ", ""].map((h) => el("th", {}, h))),
+    ...rows.map((c) => el("tr", {},
+      el("td", {}, el("b", {}, c.display_name || c.line_user_id), el("div", { class: "muted" }, c.history.at(-1)?.content.slice(0, 80) ?? "")),
+      el("td", { class: "muted" }, c.updated_at),
+      el("td", {}, c.human_mode ? el("span", { class: "badge b-pending" }, "รอแอดมิน") : el("span", { class: "badge b-paid" }, "บอทตอบ"),
+        c.handoff_reason ? el("div", { class: "muted" }, c.handoff_reason) : ""),
+      el("td", {}, el("div", { class: "row" },
+        el("button", { onclick: () => showConv(c) }, "เปิดแชท"),
+        el("button", { onclick: async () => { await api("conversations/" + encodeURIComponent(c.line_user_id), { method: "PATCH", body: { human_mode: !c.human_mode } }); loadConvs(); } },
+          c.human_mode ? "ให้บอทตอบต่อ" : "แอดมินรับเอง"),
+      )),
+    )),
+  );
+  if (openConv) { const c = rows.find((r) => r.line_user_id === openConv.line_user_id); if (c) showConv(c); }
+}
+function showConv(c) {
+  openConv = c;
+  $("#cDetail").classList.remove("hidden");
+  $("#cName").textContent = c.display_name || c.line_user_id;
+  renderLog($("#cLog"), c.history);
+}
+$("#cRefresh").onclick = loadConvs;
+$("#cSend").onclick = async () => {
+  const text = $("#cIn").value.trim(); if (!text || !openConv) return;
+  await api("conversations/" + encodeURIComponent(openConv.line_user_id) + "/reply", { method: "POST", body: { text } });
+  $("#cIn").value = ""; loadConvs();
+};
+
+// ---- settings ----
+async function loadSettings() {
+  const s = Object.fromEntries((await api("settings")).map((r) => [r.key, r.value]));
+  $("#sName").value = s.shop_name || ""; $("#sInfo").value = s.shop_info || "";
+}
+$("#sSave").onclick = async () => {
+  await api("settings", { method: "PUT", body: { shop_name: $("#sName").value, shop_info: $("#sInfo").value } });
+  $("#sMsg").textContent = "บันทึกแล้ว ✓";
+  setTimeout(() => ($("#sMsg").textContent = ""), 2500);
+};
+
+// Signed in with Google (session cookie) or a stored break-glass token.
+api("settings").then(showApp).catch(() => {});
+</script>
+</body>
+</html>

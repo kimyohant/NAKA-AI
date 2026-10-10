@@ -12,6 +12,10 @@ import { DatabaseSync } from 'node:sqlite'
 process.env.DATABASE_URL = 'pglite://memory'
 const { rawQuery, rawExec } = await import('../src/core/db/index.js')
 const { importSqlite, openSqlite } = await import('../scripts/import-sqlite.mjs')
+const { stylePresetSeeds } = await import('../src/core/db/seed.js')
+const { artStyleSeeds } = await import('../src/core/db/style-seeds.js')
+// the style presets PostgreSQL starts with (startup seeds)
+const SEEDS = stylePresetSeeds.length + artStyleSeeds.length
 
 const dir = mkdtempSync(path.join(tmpdir(), 'naka-import-'))
 test.after(() => { try { rmSync(dir, { recursive: true, force: true }) } catch { /* Windows keeps the file open */ } })
@@ -54,9 +58,9 @@ test('dry run reports the plan and writes nothing', async () => {
   await importSqlite({ sqlite, query, apply: false, log: (l: string) => lines.push(l) })
   sqlite.close()
   assert.equal(await count('dramas'), 0)
-  assert.equal(await count('style_presets'), 8) // the startup seeds only
+  assert.equal(await count('style_presets'), SEEDS) // the startup seeds only
   const out = lines.join('\n')
-  assert.match(out, /style_presets\s+25 rows \(replaces the 8 seed rows\)\s+· old columns not copied: old_flag/)
+  assert.match(out, new RegExp(`style_presets\\s+25 rows \\(replaces the ${SEEDS} seed rows\\)\\s+· old columns not copied: old_flag`))
   assert.match(out, /not copied\): legacy_notes/)
   assert.doesNotMatch(out, /schema_migrations/)
   assert.match(out, /dry run: nothing written/)

@@ -45,7 +45,7 @@ test('an allowed Google account with a recent sign-in is an admin; the panel rec
   const cookie = signedIn();
   const response = await me({ Cookie: cookie });
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { kind: 'google', label: 'owner@naka.test' });
+  assert.deepEqual(await response.json(), { kind: 'google', label: 'owner@naka.test', role: 'owner' });
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.equal((await write({ Cookie: cookie, Origin: ORIGIN })).status, 200);
   assert.equal(sqlite.prepare('SELECT actor FROM system_audit').get().actor, 'owner@naka.test');
@@ -90,7 +90,7 @@ test('a session-authenticated write must come from our own origin', async () => 
 
 test('ADMIN_TOKEN still works as the break-glass; a wrong token never falls back to the session', async () => {
   const token = await me({ Authorization: 'Bearer ' + TOKEN });
-  assert.deepEqual(await token.json(), { kind: 'token', label: 'โทเคนฉุกเฉิน' });
+  assert.deepEqual(await token.json(), { kind: 'token', label: 'โทเคนฉุกเฉิน', role: 'owner' });
   assert.equal((await write({ Authorization: 'Bearer ' + TOKEN })).status, 200); // bearer is not a cookie: no Origin needed
   assert.equal(sqlite.prepare('SELECT actor FROM system_audit').get().actor, 'โทเคนฉุกเฉิน');
   const cookie = signedIn();
@@ -124,7 +124,7 @@ test('Google sign-in returns to an admin page only, and still works during maint
   assert.equal(done.status, 302);
   assert.equal(done.headers.get('Location'), ORIGIN + '/admin/system/');
   const session = done.headers.getSetCookie().find(c => c.startsWith('naka_session=')).split(';')[0];
-  assert.deepEqual(await (await me({ Cookie: session })).json(), { kind: 'google', label: 'owner@naka.test' });
+  assert.deepEqual(await (await me({ Cookie: session })).json(), { kind: 'google', label: 'owner@naka.test', role: 'owner' });
   // A customer sign-in still lands on /app/.
   const plain = await start();
   const customer = await site(`/api/auth/google/callback?state=${plain.state}&code=test-code`, { headers: { Cookie: plain.cookie } });

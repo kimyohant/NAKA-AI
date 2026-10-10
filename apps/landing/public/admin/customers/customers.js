@@ -236,11 +236,15 @@
   $('login-form').addEventListener('submit', async function (event) {
     event.preventDefault(); var value = $('token').value.trim(); if (!value || busy || signingIn) return;
     signingIn = true; authVersion++; saveToken(value); $('token').value = ''; message('login-status', 'กำลังตรวจสอบ…');
-    try { await loadCustomers(); $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false; message('login-status', ''); }
+    try { await loadCustomers(); $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false; message('login-status', ''); openLinked(); }
     catch (error) { if (usableError(error)) { saveToken(''); message('login-status', 'เชื่อมต่อไม่ได้ กรุณาลองเข้าสู่ระบบอีกครั้ง', true); } }
     finally { signingIn = false; }
   });
   try { token = sessionStorage.getItem(KEY) || ''; } catch { /* storage unavailable */ }
+  // ?customer=<id>: other back-office pages (การเงิน, งานที่ล้มเหลว) link straight to one customer
+  var linked = (new URLSearchParams(location.search).get('customer') || '').slice(0, 200);
+  if (linked) $('query').value = linked;
+  function openLinked() { if (linked) { openCustomer(linked, true).catch(function () {}); linked = ''; } }
   // A Google admin session (cookie) or a stored break-glass token.
-  loadCustomers().then(function () { $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false; }).catch(function (error) { if (usableError(error)) login('เชื่อมต่อไม่ได้ กรุณาลองเข้าสู่ระบบอีกครั้ง'); });
+  loadCustomers().then(function () { $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false; openLinked(); }).catch(function (error) { if (usableError(error)) login('เชื่อมต่อไม่ได้ กรุณาลองเข้าสู่ระบบอีกครั้ง'); });
 })();

@@ -2,6 +2,7 @@
   <div class="page page-enter">
     <!-- ===== Hero (แนวเดียวกับคลังสกิล) ===== -->
     <section class="sh-hero">
+      <MenuHeroArt :src="menuArt('hero-seller')" />
       <p class="sh-kicker">
         <Store :size="13" :stroke-width="2" />
         {{ t('seller.home.kicker') }}
@@ -178,7 +179,8 @@ import { Clock, Film, LayoutGrid, Loader2, MoreHorizontal, Package, Plus, Search
 import { toast } from 'vue-sonner'
 import { sellerAPI, studioAPI, type SellerPost, type SellerStudioVideo, type StudioTemplate } from '~/composables/useApi'
 import { toastError } from '~/composables/useToast'
-import { templateArt } from '~/utils/studioArt'
+import { menuArt, templateArt } from '~/utils/studioArt'
+import MenuHeroArt from '~/components/MenuHeroArt.vue'
 import { beatBars } from '../../product-studio/utils/studioFlow'
 
 const { t, te, locale } = useI18n()
@@ -344,9 +346,10 @@ onMounted(() => {
 
 /* === Hero (แนวเดียวกับคลังสกิล) === */
 .sh-hero {
-  position: relative; overflow: hidden;
-  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
-  padding: 44px 24px 36px;
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 10px;
+  min-height: 300px; justify-content: center;
+  padding: 44px 40px 36px;
   border-radius: var(--radius-xl); border: 1px solid var(--border);
   background:
     radial-gradient(ellipse at 15% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),

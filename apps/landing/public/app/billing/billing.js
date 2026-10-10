@@ -7,7 +7,8 @@
   var params = new URLSearchParams(location.search);
   var state = { plans: [], period: params.get('period') === 'yearly' ? 'yearly' : 'monthly', planId: params.get('plan'), enabled: false, poll: null };
 
-  function baht(n) { return n.toLocaleString('th-TH') + ' บาท'; }
+  // whole baht as they are; a discounted price with satang always shows two decimals (319.20)
+  function baht(n) { return n.toLocaleString('th-TH', Number.isInteger(n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท'; }
   function day(seconds) { return new Date(seconds * 1000).toLocaleDateString('th-TH', { dateStyle: 'long' }); }
   async function api(path, options) {
     var init = Object.assign({ credentials: 'same-origin' }, options || {});
@@ -64,15 +65,38 @@
       var amount = document.createElement('span'); amount.className = 'plan-price'; amount.textContent = baht(price) + (state.period === 'yearly' ? '/ปี' : '/เดือน');
       var detail = document.createElement('small'); detail.textContent = plan.monthlyCredits + ' เครดิต/เดือน · ทำพร้อมกัน ' + plan.parallelJobs + ' งาน';
       card.append(name, amount, detail);
-      card.addEventListener('click', function () { state.planId = plan.id; renderPlans(); });
+      card.addEventListener('click', function () { state.planId = plan.id; renderPlans(); if (state.coupon || $('coupon-code').value.trim()) applyCoupon(); });
       list.append(card);
     });
     var chosen = state.plans.find(function (p) { return p.id === state.planId; });
     $('pay-now').disabled = !chosen || !state.enabled;
+    $('coupon-box').hidden = !state.enabled;
+    var coupon = state.coupon && chosen && state.coupon.planId === chosen.id && state.coupon.period === state.period ? state.coupon : null;
     $('pay-summary').textContent = chosen
-      ? 'แพ็กเกจ' + chosen.name + ' ' + (state.period === 'yearly' ? 'รายปี' : 'รายเดือน') + ' · ' + baht(state.period === 'yearly' ? chosen.yearly : chosen.monthly)
+      ? 'แพ็กเกจ' + chosen.name + ' ' + (state.period === 'yearly' ? 'รายปี' : 'รายเดือน') + ' · ' +
+        (coupon ? baht(coupon.amount) + ' (ปกติ ' + baht(coupon.price) + ' ' + coupon.label + ')' : baht(state.period === 'yearly' ? chosen.yearly : chosen.monthly))
       : 'เลือกแพ็กเกจด้านบนก่อน';
   }
+
+  // A discount code is checked against the chosen package (POST /api/billing/coupon); the server checks it again at checkout.
+  async function applyCoupon() {
+    var code = $('coupon-code').value.trim();
+    state.coupon = null;
+    if (!code) { $('coupon-status').textContent = ''; renderPlans(); return; }
+    if (!state.planId) { $('coupon-status').textContent = 'เลือกแพ็กเกจก่อนแล้วกดใช้โค้ด'; return; }
+    $('coupon-apply').disabled = true;
+    try {
+      var r = await api('/api/billing/coupon', { method: 'POST', body: { code: code, planId: state.planId, period: state.period } });
+      state.coupon = { code: r.code, label: r.label, price: r.price, amount: r.amount, planId: state.planId, period: state.period };
+      $('coupon-status').textContent = 'ใช้โค้ด ' + r.code + ' แล้ว ' + r.label + ' เหลือ ' + baht(r.amount);
+      $('coupon-status').classList.remove('error');
+    } catch (error) {
+      if (error.message === 'signed-out') return;
+      $('coupon-status').textContent = error.message;
+      $('coupon-status').classList.add('error');
+    } finally { $('coupon-apply').disabled = false; renderPlans(); }
+  }
+  $('coupon-form').addEventListener('submit', function (event) { event.preventDefault(); applyCoupon(); });
 
   document.querySelectorAll('.billing-toggle button').forEach(function (button) {
     if (button.dataset.period === state.period) button.setAttribute('aria-pressed', 'true');
@@ -81,6 +105,7 @@
       state.period = button.dataset.period;
       document.querySelectorAll('.billing-toggle button').forEach(function (b) { b.setAttribute('aria-pressed', String(b === button)); });
       renderPlans();
+      if (state.coupon || $('coupon-code').value.trim()) applyCoupon();
     });
   });
 
@@ -122,7 +147,7 @@
     setStatus('กำลังเปิดหน้าชำระเงิน…');
     $('pay-now').disabled = true;
     try {
-      var result = await api('/api/billing/checkout', { method: 'POST', body: { planId: state.planId, period: state.period } });
+      var result = await api('/api/billing/checkout', { method: 'POST', body: { planId: state.planId, period: state.period, coupon: state.coupon ? state.coupon.code : undefined } });
       location.assign(result.redirect); // Stripe returns to /app/billing/?payment=…
     } catch (error) {
       if (error.message !== 'signed-out') setStatus(error.message, true);

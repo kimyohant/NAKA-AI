@@ -21,7 +21,7 @@ type Kind =
   | 'drama' | 'episode' | 'storyboard' | 'character' | 'scene' | 'prop' | 'look' | 'task'
   | 'campaign' | 'creative' | 'adReference' | 'visual' | 'doc' | 'revision'
   | 'studioProject' | 'studioImage' | 'avatar' | 'influencer' | 'influencerContent'
-  | 'cloneProject' | 'cloneVariant' | 'sellerPost' | 'insight'
+  | 'cloneProject' | 'cloneVariant' | 'sellerPost' | 'insight' | 'socialAccount' | 'socialComment'
 
 const DRAMA = 'SELECT owner_user_id AS owner FROM dramas WHERE id = ?'
 const viaDrama = (table: string) =>
@@ -58,6 +58,8 @@ const OWNER_SQL: Record<Kind, string> = {
   cloneVariant: `SELECT p.owner_user_id AS owner FROM clone_variants x JOIN clone_projects p ON p.id = x.project_id WHERE x.id = ?`,
   sellerPost: own('seller_posts'),
   insight: own('marketer_insights'),
+  socialAccount: own('social_accounts'),
+  socialComment: `SELECT a.owner_user_id AS owner FROM social_comments x JOIN social_accounts a ON a.id = x.account_id WHERE x.id = ?`,
 }
 
 /** path segment → kind, per top-level route (/api/v1/<route>/…) */
@@ -80,6 +82,7 @@ const PATH_KINDS: Record<string, Record<string, Kind>> = {
   clone: { projects: 'cloneProject', variants: 'cloneVariant' },
   seller: { posts: 'sellerPost' },
   marketer: { insights: 'insight' },
+  social: { accounts: 'socialAccount', comments: 'socialComment' },
 }
 
 /** parent ids named in the query string or JSON body */

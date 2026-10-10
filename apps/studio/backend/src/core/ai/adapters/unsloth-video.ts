@@ -41,6 +41,14 @@ const RESOLUTION_PRESETS: [number, number][] = [
 const DEFAULT_GGUF_FILENAME = 'minimax_h3_fl2va_pruned-Q8_0.gguf'
 const DEFAULT_REPO = 'unsloth/MiniMax-H3-GGUF'
 
+/**
+ * Polls (10 s apart) that the server may report "idle, no result" right after our job was accepted
+ * before we conclude it is gone. Our job was accepted ({status: 'started'}) and the server renders one
+ * job at a time, so a server that stays idle with no clip for our seed has lost it (restarted, or the
+ * model was unloaded) — without this the task polls for 50 minutes and then holds the queue as 'unknown'.
+ */
+export const IDLE_POLLS_BEFORE_LOST = 6
+
 export interface DurationFrames {
   numFrames: number
   /** true = ค่าที่ส่งเกิน/ต่ำกว่าช่วง lattice และถูก clamp (คลิปจริงจึงสั้น/ยาวกว่าที่ขอ) */
@@ -293,7 +301,15 @@ export class UnslothVideoAdapter implements VideoProviderAdapter {
       const videoUrl = /^https?:\/\//.test(url) ? url : `${base}${url.startsWith('/') ? '' : '/'}${url}`
       return { status: 'completed', videoUrl, duration: Number(result.video.duration_s) || undefined }
     }
-    // active/queued/denoise/export → processing; idle ทั้งที่ยังไม่เห็นผล → รอต่อจนกว่า attempts หมด
+    // nothing running and no clip at all: our accepted job is gone once the grace polls have passed
+    const idle = result?.active === false && !result?.phase && !result?.video
+    if (idle && (ctx?.attempt ?? 0) > IDLE_POLLS_BEFORE_LOST) {
+      return {
+        status: 'failed',
+        error: 'E_PROVIDER_LOST Unsloth has no running job and no clip for this task (server restarted or model unloaded) — generate the shot again',
+      }
+    }
+    // active/queued/denoise/export → processing; idle within the grace polls → keep waiting
     return { status: 'pending' }
   }
 

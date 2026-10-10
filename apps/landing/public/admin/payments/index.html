@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f7f9fd">
+  <title>การเงิน · หลังร้าน naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css">
+  <script src="/admin/admin-shell.js" defer></script>
+  <script src="/admin/admin-app.js" defer></script>
+  <script src="/admin/payments/payments.js" defer></script>
+  <script src="/admin/payments/coupons.js" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
+  <main id="main">
+    <section id="login" class="card login" aria-labelledby="login-title" hidden>
+      <div class="adm-login-brand"><img src="/logo.svg?v=4" alt="" width="34" height="34"><span>naka-ai · หลังร้าน</span></div>
+      <h1 id="login-title">เข้าสู่หลังร้าน</h1>
+      <p class="muted">ใช้บัญชี Google ของผู้ดูแลระบบ (อีเมลใน ADMIN_EMAILS) · ต้องเข้าใหม่ทุก 12 ชั่วโมง</p>
+      <a class="button primary" href="/api/auth/google/start?next=%2Fadmin%2Fpayments%2F">เข้าสู่ระบบด้วย Google</a>
+      <p id="login-status" role="status" aria-live="polite"></p>
+      <details class="break-glass">
+        <summary>เข้าด้วยโทเคนฉุกเฉิน</summary>
+        <form id="login-form">
+          <label for="token">ADMIN_TOKEN (เก็บเฉพาะแท็บนี้)</label>
+          <input id="token" type="password" autocomplete="off" required>
+          <button type="submit">เข้าด้วยโทเคน</button>
+        </form>
+      </details>
+    </section>
+
+    <div id="app" hidden>
+      <div class="adm-head">
+        <div><h1>การเงิน</h1><p>รายการชำระเงินของลูกค้าทุกคน กรองตามสถานะหรือช่วงวันที่ แล้วดาวน์โหลด CSV ไปทำบัญชีได้</p></div>
+        <div class="adm-account"><span class="who" data-adm-who></span><button id="logout" type="button" class="btn-sm">ออกจากระบบ</button></div>
+      </div>
+
+      <div data-adm-tabs="money">
+      <div class="adm-tabs-wrap"><div role="tablist" aria-label="การเงิน">
+        <button type="button" role="tab" id="tab-pay" aria-controls="panel-pay" aria-selected="true">รายการชำระเงิน</button>
+        <button type="button" role="tab" id="tab-codes" aria-controls="panel-codes" aria-selected="false">โค้ดส่วนลด</button>
+      </div></div>
+      <div role="tabpanel" id="panel-pay" aria-labelledby="tab-pay">
+      <section class="card" aria-label="ตัวกรอง">
+        <form id="filters" class="filters">
+          <div class="wide"><label for="q">ค้นหา</label><input id="q" type="search" maxlength="200" placeholder="ชื่อ อีเมล เบอร์โทร หรือรหัสรายการ"></div>
+          <div><label for="status">สถานะ</label>
+            <select id="status"><option value="">ทั้งหมด</option><option value="successful">สำเร็จ</option><option value="pending">รอชำระ</option><option value="failed">ไม่สำเร็จ</option><option value="expired">หมดเวลา</option></select></div>
+          <div><label for="method">ช่องทาง</label>
+            <select id="method"><option value="">ทั้งหมด</option><option value="promptpay">พร้อมเพย์</option><option value="card">บัตร</option><option value="stripe_checkout">Stripe</option></select></div>
+          <div><label for="from">ตั้งแต่วันที่</label><input id="from" type="date"></div>
+          <div><label for="to">ถึงวันที่</label><input id="to" type="date"></div>
+          <div class="filter-actions">
+            <button type="submit" class="primary">กรอง</button>
+            <button type="button" id="reset">ล้างตัวกรอง</button>
+            <button type="button" id="csv">ดาวน์โหลด CSV</button>
+          </div>
+        </form>
+        <p class="muted">วันที่นับตามวันที่สร้างรายการ เวลาไทย</p>
+      </section>
+
+      <section class="card" aria-labelledby="list-title">
+        <div class="card-head"><h2 id="list-title">รายการ</h2><p class="muted" id="totals"></p></div>
+        <p id="status-line" role="status" aria-live="polite"></p>
+        <ul class="records" id="list"></ul>
+        <div class="more-row"><button type="button" id="more" hidden>โหลดเพิ่ม</button></div>
+      </section>
+      </div>
+
+      <div role="tabpanel" id="panel-codes" aria-labelledby="tab-codes" hidden>
+        <section class="card" id="code-create" aria-labelledby="code-title">
+          <h2 id="code-title">สร้างโค้ดส่วนลด</h2>
+          <p class="muted">ลูกค้าใส่โค้ดในหน้าชำระเงิน ราคาหลังลดไม่ต่ำกว่า 10 บาท (ขั้นต่ำของ Stripe) โค้ดที่เดายากปลอดภัยกว่า</p>
+          <form id="code-form">
+            <div class="filters code-grid">
+              <div><label for="c-code">โค้ด</label><input id="c-code" maxlength="30" required placeholder="เช่น OPEN20" autocapitalize="characters"></div>
+              <div><label for="c-kind">ลดเป็น</label><select id="c-kind"><option value="percent">เปอร์เซ็นต์</option><option value="amount">บาท</option></select></div>
+              <div><label for="c-value">ส่วนลด</label><input id="c-value" type="number" min="1" required inputmode="numeric"></div>
+              <div><label for="c-period">รอบ</label><select id="c-period"><option value="">ทั้งรายเดือนและรายปี</option><option value="monthly">รายเดือนเท่านั้น</option><option value="yearly">รายปีเท่านั้น</option></select></div>
+              <div><label for="c-max">ใช้ได้ทั้งหมด (ครั้ง)</label><input id="c-max" type="number" min="1" inputmode="numeric" placeholder="ไม่จำกัด"></div>
+              <div><label for="c-per">ต่อลูกค้า (ครั้ง)</label><input id="c-per" type="number" min="1" max="100" value="1" inputmode="numeric"></div>
+              <div><label for="c-start">เริ่มใช้ (ว่าง = ทันที)</label><input id="c-start" type="datetime-local"></div>
+              <div><label for="c-end">หมดอายุ (ว่าง = ไม่มี)</label><input id="c-end" type="datetime-local"></div>
+              <fieldset class="wide"><legend class="muted">ใช้กับแพ็กเกจ (ไม่เลือก = ทุกแพ็กเกจ)</legend><div class="row" id="c-plans"></div></fieldset>
+              <div class="wide"><label for="c-note">หมายเหตุ (ไม่บังคับ)</label><input id="c-note" maxlength="200" placeholder="เช่น โปรเปิดร้าน"></div>
+              <div class="filter-actions"><button type="submit" class="primary">สร้างโค้ด</button></div>
+            </div>
+          </form>
+        </section>
+        <section class="card" aria-labelledby="codes-title">
+          <h2 id="codes-title">โค้ดทั้งหมด</h2>
+          <p id="code-status" role="status" aria-live="polite"></p>
+          <ul class="records" id="codes"></ul>
+        </section>
+      </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -35,7 +35,7 @@ test('the landing migrations (with 0003) run as account_app', async () => {
 
 test('studio_app reads a member\'s features and counts a use through the functions', async () => {
   const features = await query('studio_app', `SELECT feature_key, enabled, monthly_limit FROM account.member_features('m1') WHERE app = 'studio' AND enabled`)
-  assert.deepEqual(features.map(f => f.feature_key), ['studio.drama', 'studio.seller', 'studio.product_studio', 'studio.video'])
+  assert.deepEqual(features.map(f => f.feature_key), ['studio.drama', 'studio.seller', 'studio.product_studio', 'studio.social', 'studio.video'])
   const [use] = await query('studio_app', `SELECT * FROM account.use_feature('m1', 'studio.video', 1)`)
   assert.deepEqual({ ok: use.ok, used: Number(use.used), limit: Number(use.monthly_limit) }, { ok: true, used: 1, limit: 10 })
   const [{ used }] = await query('studio_app', `SELECT account.release_feature('m1', 'studio.video', 1, $1) AS used`, [use.period])
@@ -60,4 +60,13 @@ test('functions run with a fixed search_path: a caller\'s own objects cannot sha
     WHERE n.nspname = 'account' AND p.proname IN ('member_features', 'use_feature', 'release_feature', 'feature_period') ORDER BY 1`)
   assert.equal(rows.length, 4)
   for (const r of rows) assert.deepEqual(r.proconfig, ['search_path=account, pg_temp'], r.proname)
+})
+
+test('credit prices (0006_credit_prices.sql, docs/credit-pricing.md): studio_app and reporting_ro read them, only account_app changes them', async () => {
+  const prices = await query('studio_app', `SELECT key, credits, per_second FROM account.credit_prices WHERE app = 'studio' ORDER BY key`)
+  assert.deepEqual(prices.map(p => [p.key, Number(p.credits), p.per_second]), [['studio.image', 0, false], ['studio.video', 5, false]])
+  assert.equal((await query('reporting_ro', 'SELECT count(*) AS n FROM account.credit_prices'))[0].n * 1, 5)
+  await denied('studio_app', `UPDATE account.credit_prices SET credits = 0`)
+  await denied('studio_app', `INSERT INTO account.credit_prices (key, app, label, unit_label, credits) VALUES ('x', 'studio', 'x', 'x', 0)`)
+  await denied('reporting_ro', `UPDATE account.credit_prices SET credits = 0`)
 })

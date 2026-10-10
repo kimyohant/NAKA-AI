@@ -16,8 +16,7 @@ import prompts from './core/routes/prompts.js'
 import agent from './core/routes/agent.js'
 import skills from './core/routes/skills.js'
 import settings from './core/routes/settings.js'
-import storage from './core/routes/storage.js'
-import serverUpdate from './core/routes/serverUpdate.js'
+import system from './core/routes/system.js'
 import { requestLogger, errorHandler } from './core/http/logger.js'
 import { adminGuard, assertAdminTokenConfig, guardOn, isAdminRequest } from './core/auth/admin.js'
 import nakaSso, { requireSession, ssoConfig, ssoEnabled } from './core/auth/naka-sso.js'
@@ -108,10 +107,10 @@ api.route('/style-presets', stylePresets)
 api.route('/prompts', prompts)
 api.route('/agent', agent)
 api.route('/skills', skills)
-api.route('/storage', storage)
 api.route('/settings', settings)
-api.route('/server-update', serverUpdate)
-// product menus (drama, marketer, product-studio, seller, viral-clone, live) — src/modules.ts
+// version, disk use and video queues for the naka-ai back office (/admin/studio-system/), admins only
+api.route('/system', system)
+// product menus (drama, marketer, product-studio, seller, viral-clone, live, social) — src/modules.ts
 for (const m of studioModules) m.mount(api)
 
 app.route('/api/v1', api)
@@ -165,5 +164,7 @@ try {
 // module order (product-studio auto-render → seller videos → viral-clone renders).
 await recoverModules('failStale')
 await recoverModules('resume')
+// background work a menu keeps running (the Social Auto Reply poller)
+for (const m of studioModules) m.start?.()
 
 serve({ fetch: app.fetch, port, hostname })

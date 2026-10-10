@@ -215,7 +215,8 @@
                 <span v-if="createTemplate" class="field-hint">{{ t(`productStudio.templates.${projectForm.templateId}.description`) }}</span>
               </div>
             </template>
-            <template v-else>
+            <!-- avatars only: the influencer form below has its own fields -->
+            <template v-else-if="tab === 'avatars'">
               <label class="field">
                 <span class="field-label">{{ t('productStudio.avatars.name') }} <span class="ps-required">*</span></span>
                 <input v-model="avatarForm.name" class="input" :placeholder="t('productStudio.avatars.namePlaceholder')" />
@@ -347,11 +348,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Clock, ImagePlus, LayoutGrid, Loader2, MoreHorizontal, Package, Plus, ShoppingBag, Sparkles, UserRound } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { studioAPI, uploadAPI, type StudioAvatar, type StudioInfluencer, type StudioProject, type StudioTemplate } from '~/composables/useApi'
 import { toastError } from '~/composables/useToast'
+import { influencerPreset, influencerPresetImage } from '~/utils/influencerPresets'
 import { isAutoRenderActive, autoRenderProgress, SCRIPT_POLL_INTERVAL_MS } from '../utils/studioFlow'
 
 type Tab = 'skills' | 'projects' | 'avatars' | 'influencers'
@@ -362,6 +364,7 @@ const NICHES = ['beauty', 'fashion', 'food', 'tech', 'fitness', 'lifestyle', 'ga
 
 const { t, locale } = useI18n()
 const route = useRoute()
+const router = useRouter()
 
 const tab = ref<Tab>(isTab(route.query.tab) ? route.query.tab : 'skills')
 function switchTab(v: Tab) {
@@ -648,9 +651,34 @@ watch(tab, () => {
   else schedulePoll()
 })
 
+/**
+ * From the AI Marketer's "AI Influencer พร้อมรีวิว" cards: open the create form filled from the preset, with the
+ * card photo uploaded as the face (like a picked file), so review images keep that person. No photo → AI makes one.
+ */
+async function applyInfluencerPreset(id: unknown) {
+  const preset = typeof id === 'string' ? influencerPreset(id) : null
+  if (!preset) return
+  router.replace({ query: { ...route.query, preset: undefined } })
+  tab.value = 'influencers'
+  openCreate()
+  influencerForm.value = { ...influencerForm.value, name: preset.name, appearance: preset.appearance, persona: preset.persona, niche: preset.niche }
+  influencerUploading.value = true
+  try {
+    const blob = await (await fetch(influencerPresetImage(preset.id))).blob()
+    const res = await uploadAPI.image(new File([blob], `influencer-${preset.id}.webp`, { type: blob.type || 'image/webp' }))
+    influencerForm.value.imageUrl = res.url
+  } catch {
+    /* the form still works: AI draws the face from the look */
+  } finally {
+    influencerUploading.value = false
+  }
+}
+watch(() => route.query.preset, applyInfluencerPreset)
+
 onMounted(() => {
   load()
   loadOptions()
+  applyInfluencerPreset(route.query.preset)
 })
 onBeforeUnmount(() => {
   disposed = true

@@ -12,6 +12,7 @@ import product_studio from './product-studio/routes'
 import seller from './seller/routes'
 import viral_clone from './viral-clone/routes'
 import live from './live/routes'
+import social from './social/routes'
 
 export interface MenuRoute {
   name: string
@@ -20,7 +21,7 @@ export interface MenuRoute {
   view: string
 }
 
-export const MENUS = ['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live'] as const
+export const MENUS = ['drama', 'marketer', 'product-studio', 'seller', 'viral-clone', 'live', 'social'] as const
 export type MenuName = typeof MENUS[number]
 
 export const MENU_ROUTES: Record<MenuName, MenuRoute[]> = {
@@ -30,4 +31,5 @@ export const MENU_ROUTES: Record<MenuName, MenuRoute[]> = {
   'seller': seller,
   'viral-clone': viral_clone,
   'live': live,
+  'social': social,
 }

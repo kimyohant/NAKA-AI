@@ -1,0 +1,31 @@
+/* ภาพรวม (/admin/): only what this page adds to /admin/admin.css */
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s5); }
+.chart { margin: 0; min-width: 0; }
+.chart figcaption { margin-bottom: var(--s2); font-size: var(--t-small); font-weight: 600; color: var(--ink-3); }
+.bars { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); align-items: end; gap: 3px; height: 96px; padding-bottom: 1px; border-bottom: 1px solid var(--line-strong); }
+.bars span { display: block; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--accent); opacity: .85; }
+.bars span.zero { background: var(--line); }
+.bars span.today { opacity: 1; box-shadow: 0 0 0 2px rgba(35, 91, 232, .2); }
+.bars.money span { background: var(--ok); }
+.chart-axis { display: flex; justify-content: space-between; margin: var(--s1) 0 0; font-size: var(--t-micro); color: var(--ink-3); }
+
+.split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--s4); }
+.queue-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); margin: 0; }
+.queue-grid div { padding: var(--s2) var(--s3); border-radius: var(--r-control); background: var(--bg); }
+.queue-grid dt { font-size: var(--t-small); color: var(--ink-3); }
+.queue-grid dd { margin: 0; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.queue-grid .bad dd { color: var(--bad); }
+.queue-grid .group { grid-column: 1 / -1; padding: 0; background: none; font-size: var(--t-small); font-weight: 700; color: var(--ink-2); }
+
+.plan-bars { display: grid; gap: var(--s3); margin: 0; padding: 0; list-style: none; }
+.plan-bars li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--s3); font-size: 14px; }
+.plan-bars b { font-variant-numeric: tabular-nums; }
+.plan-bars .track { grid-column: 1 / -1; height: 8px; border-radius: var(--r-pill); background: var(--fx-steel); overflow: hidden; }
+.plan-bars .track span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+@media (max-width: 640px) {
+  .charts { grid-template-columns: 1fr; gap: var(--s4); }
+  .bars { height: 72px; }
+  .queue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

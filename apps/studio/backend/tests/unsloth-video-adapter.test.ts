@@ -15,6 +15,7 @@ import {
   FRAME_OFFSET,
   MIN_FRAMES,
   MAX_FRAMES,
+  IDLE_POLLS_BEFORE_LOST,
 } from '../src/core/ai/adapters/unsloth-video.js'
 
 const BASE = { provider: 'unsloth', baseUrl: 'http://127.0.0.1:8888', apiKey: 'test-key', model: 'unsloth/MiniMax-H3-GGUF' }
@@ -151,6 +152,24 @@ test('parsePollResponse: phase mapping + ผูกผลด้วย seed (ง�
     video: { id: 'abc', seed: 1, url: '/api/inference/video/gallery/abc/file' },
   })
   assert.equal(noCtx.status, 'completed')
+})
+
+test('parsePollResponse: a server that stays idle with no clip has lost our job (restart / model unloaded)', () => {
+  const adapter = new UnslothVideoAdapter()
+  const idle = { active: false, phase: null, step: 0, total: 0, video: null }
+  // right after submission the server may still report idle: keep waiting through the grace polls
+  for (let attempt = 1; attempt <= IDLE_POLLS_BEFORE_LOST; attempt++) {
+    assert.deepEqual(adapter.parsePollResponse(idle, { config: BASE, taskId: '42', attempt }), { status: 'pending' })
+  }
+  const lost = adapter.parsePollResponse(idle, { config: BASE, taskId: '42', attempt: IDLE_POLLS_BEFORE_LOST + 1 })
+  assert.equal(lost.status, 'failed')
+  assert.match(lost.error!, /^E_PROVIDER_LOST /)
+  // only "nothing at all" counts: someone else's finished clip or a running job keeps us waiting
+  const later = { config: BASE, taskId: '42', attempt: 100 }
+  assert.equal(adapter.parsePollResponse({ active: false, phase: 'completed', video: { seed: 999, url: '/x' } }, later).status, 'pending')
+  assert.equal(adapter.parsePollResponse({ active: true, phase: 'denoise' }, later).status, 'pending')
+  // callers that do not pass an attempt keep the old behaviour
+  assert.equal(adapter.parsePollResponse(idle, { config: BASE, taskId: '42' }).status, 'pending')
 })
 
 test('isRetryableSubmit: 409/งานชนกัน → รอ submit ใหม่, validation/auth → ไม่ retry', () => {

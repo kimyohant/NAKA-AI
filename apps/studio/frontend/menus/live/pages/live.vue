@@ -2,6 +2,7 @@
   <div class="page page-enter">
     <!-- ===== Header + status ===== -->
     <header class="lv-head">
+      <MenuHeroArt :src="menuArt('hero-live')" />
       <div>
         <p class="eyebrow">{{ t('live.eyebrow') }}</p>
         <h1 class="lv-title">{{ t('live.title') }}</h1>
@@ -31,7 +32,7 @@
         <h2 id="lv-stage" class="lv-col-title">{{ t('live.stage.title') }}</h2>
         <div class="lv-screen">
           <video ref="videoEl" autoplay playsinline :muted="muted"></video>
-          <div v-if="!previewOn" class="lv-screen-empty">
+          <div v-if="!previewOn" class="lv-screen-empty" :style="{ '--lv-empty-art': `url(${menuArt('live-preview')})` }">
             <MonitorPlay :size="26" :stroke-width="1.5" />
             <span>{{ running ? t('live.stage.connecting') : t('live.stage.off') }}</span>
           </div>
@@ -302,6 +303,8 @@ import { Cpu, Hand, Image as ImageIcon, Link2, Loader2, MessageSquare, MonitorPl
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import ConfirmDialog from '~/components/ConfirmDialog.vue'
+import MenuHeroArt from '~/components/MenuHeroArt.vue'
+import { menuArt } from '~/utils/studioArt'
 import { toastError } from '~/composables/useToast'
 import { liveAPI, uploadAPI, type LiveAvatarJob, type LiveStatus, type TikTokEvent, type TikTokStatus } from '~/composables/useApi'
 import { LIVE_VOICES, enqueueLimited, isAnswerable, nextQueueIndex, thanksLine, waitUntilQuiet } from '../utils/liveFlow'
@@ -696,7 +699,12 @@ async function saveSettings() {
 
 <style scoped>
 .page { padding: 32px 40px 48px; overflow-y: auto; height: 100%; }
-.lv-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.lv-head {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px;
+  min-height: 220px; padding: 32px 28px 24px; border: 1px solid var(--border); border-radius: var(--radius-xl, 24px); background: var(--surface-soft);
+}
+.lv-head > div:not(.lv-head-actions) { max-width: 560px; }
 .lv-title { margin: 2px 0 4px; font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--text-0); }
 .lv-sub { margin: 0; font-size: 13px; color: var(--text-2); max-width: 640px; }
 .lv-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -715,6 +723,8 @@ async function saveSettings() {
 .lv-screen { position: relative; aspect-ratio: 9 / 16; max-height: 520px; border-radius: var(--radius-lg); overflow: hidden; background: #05070d; border: 1px solid var(--border); }
 .lv-screen video { width: 100%; height: 100%; object-fit: contain; display: block; }
 .lv-screen-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-3); font-size: 12.5px; text-align: center; padding: 16px; }
+/* before the avatar starts: a host photo (public/studio-art/menus/live-preview.webp), darkened so the hint reads */
+.lv-screen-empty { background: linear-gradient(180deg, rgba(12, 8, 24, .25), rgba(12, 8, 24, .78)), var(--lv-empty-art, none) center 20% / cover no-repeat; color: rgba(255, 255, 255, .92); font-weight: 600; justify-content: flex-end; padding-bottom: 28px; text-shadow: 0 1px 8px rgba(0, 0, 0, .5); }
 .lv-mute { position: absolute; right: 10px; bottom: 10px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: rgba(0, 0, 0, .55); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .lv-speaking { position: absolute; left: 10px; top: 10px; padding: 3px 9px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; }
 .lv-row { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }

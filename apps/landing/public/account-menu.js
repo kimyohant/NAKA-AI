@@ -408,5 +408,11 @@
     MOCK_CREDITS: MOCK_CREDITS,
   };
   if (typeof window !== "undefined") window.NakaAuth = api;
+  // the back office's announcement line (/announce.js, src/content/announcements.ts) on every page with this menu
+  if (typeof document !== "undefined" && document.head && !document.querySelector('script[src="/announce.js"]')) {
+    var announce = document.createElement("script");
+    announce.src = "/announce.js"; announce.defer = true;
+    document.head.appendChild(announce);
+  }
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })();

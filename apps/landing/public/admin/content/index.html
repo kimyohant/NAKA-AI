@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f7f9fd">
+  <title>เนื้อหาหน้าเว็บ · หลังร้าน naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css">
+  <link rel="stylesheet" href="/admin/content/content.css">
+  <script src="/admin/admin-shell.js" defer></script>
+  <script src="/admin/admin-app.js" defer></script>
+  <script src="/admin/content/content.js" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
+  <main id="main">
+    <section id="login" class="card login" aria-labelledby="login-title" hidden>
+      <div class="adm-login-brand"><img src="/logo.svg?v=4" alt="" width="34" height="34"><span>naka-ai · หลังร้าน</span></div>
+      <h1 id="login-title">เข้าสู่หลังร้าน</h1>
+      <p class="muted">ใช้บัญชี Google ของผู้ดูแลระบบ (อีเมลใน ADMIN_EMAILS) · ต้องเข้าใหม่ทุก 12 ชั่วโมง</p>
+      <a class="button primary" href="/api/auth/google/start?next=%2Fadmin%2Fcontent%2F">เข้าสู่ระบบด้วย Google</a>
+      <p id="login-status" role="status" aria-live="polite"></p>
+      <details class="break-glass">
+        <summary>เข้าด้วยโทเคนฉุกเฉิน</summary>
+        <form id="login-form">
+          <label for="token">ADMIN_TOKEN (เก็บเฉพาะแท็บนี้)</label>
+          <input id="token" type="password" autocomplete="off" required>
+          <button type="submit">เข้าด้วยโทเคน</button>
+        </form>
+      </details>
+    </section>
+
+    <div id="app" hidden>
+      <div class="adm-head">
+        <div><h1>เนื้อหาหน้าเว็บ</h1><p>คลิปตัวอย่างในหน้าแรก และประกาศที่ลูกค้าเห็นด้านบนของทุกหน้า มีผลทันทีโดยไม่ต้อง deploy</p></div>
+        <div class="adm-account"><span class="who" data-adm-who></span><button id="logout" type="button" class="btn-sm">ออกจากระบบ</button></div>
+      </div>
+      <p id="status" role="status" aria-live="polite"></p>
+
+      <section class="card" data-adm-tabs="content" aria-label="เนื้อหาหน้าเว็บ">
+        <div class="adm-tabs-wrap"><div role="tablist" aria-label="เนื้อหา">
+          <button type="button" role="tab" id="tab-clips" aria-controls="panel-clips" aria-selected="true">คลิปตัวอย่าง</button>
+          <button type="button" role="tab" id="tab-news" aria-controls="panel-news" aria-selected="false">ประกาศ</button>
+        </div></div>
+
+        <div role="tabpanel" id="panel-clips" aria-labelledby="tab-clips">
+          <p class="muted">คลังคลิปในหน้าแรก (<a href="/#reel" target="_blank" rel="noopener">ดูหน้าแรก ↗</a>) เรียงลำดับ ซ่อน หรือเพิ่มคลิปใหม่ ตัวเลขบนแท็บของหน้าแรกนับให้เอง</p>
+          <details class="upload" id="upload-box">
+            <summary class="button primary">เพิ่มคลิปใหม่</summary>
+            <form id="upload-form" class="upload-form">
+              <p id="media-off" class="notice card" hidden>ยังไม่ได้ตั้งที่เก็บไฟล์ (MEDIA_DIR ใน Docker หรือ R2) จึงอัปโหลดไม่ได้</p>
+              <div class="field-grid">
+                <div><label for="u-category">ประเภท</label><select id="u-category" required></select></div>
+                <div><label for="u-chip">ป้ายบนคลิป (ไม่บังคับ)</label><input id="u-chip" maxlength="30" placeholder="เช่น ความงาม"></div>
+                <div class="full"><label for="u-title">ชื่อคลิป</label><input id="u-title" maxlength="80" required placeholder="เช่น ครีมกันแดดเนื้อบางเบา"></div>
+                <div class="full"><label for="u-subtitle">คำอธิบายสั้น (ไม่บังคับ)</label><input id="u-subtitle" maxlength="120" placeholder="เช่น จากรูปสินค้า 1 รูป"></div>
+                <div><label for="u-video">คลิป MP4 แนวตั้ง (ไม่เกิน 40 MB)</label><input id="u-video" type="file" accept="video/mp4" required></div>
+                <div><label for="u-poster">รูปปก JPG/PNG/WebP (ไม่เกิน 3 MB)</label><input id="u-poster" type="file" accept="image/jpeg,image/png,image/webp" required></div>
+              </div>
+              <progress id="u-progress" max="1" value="0" hidden></progress>
+              <button type="submit" class="primary" id="u-submit">อัปโหลดและแสดงในหน้าแรก</button>
+            </form>
+          </details>
+          <div class="row clip-filter" role="group" aria-label="กรองตามประเภท" id="clip-filter"></div>
+          <ol class="clips" id="clips"></ol>
+        </div>
+
+        <div role="tabpanel" id="panel-news" aria-labelledby="tab-news" hidden>
+          <form id="news-form" class="news-form">
+            <label for="n-message">ข้อความประกาศ <span class="muted" id="n-count">0/200</span></label>
+            <textarea id="n-message" maxlength="200" required rows="2" placeholder="เช่น ปิดปรับปรุงระบบคืนวันเสาร์ 23:00 ถึง 01:00"></textarea>
+            <div class="field-grid">
+              <div><label for="n-tone">รูปแบบ</label><select id="n-tone"><option value="info">ข้อมูลทั่วไป (ฟ้า)</option><option value="promo">โปรโมชัน (เหลือง)</option><option value="warning">คำเตือน (แดง)</option></select></div>
+              <div><label for="n-label">ข้อความบนลิงก์ (ไม่บังคับ)</label><input id="n-label" maxlength="30" placeholder="ดูรายละเอียด"></div>
+              <div class="full"><label for="n-link">ลิงก์ (ไม่บังคับ)</label><input id="n-link" maxlength="500" placeholder="/pricing/ หรือ https://..."></div>
+              <div><label for="n-start">เริ่มแสดง (เว้นว่าง = ทันที)</label><input id="n-start" type="datetime-local"></div>
+              <div><label for="n-end">หยุดแสดง (เว้นว่าง = จนกว่าจะปิด)</label><input id="n-end" type="datetime-local"></div>
+            </div>
+            <p class="muted">ตัวอย่างที่ลูกค้าจะเห็น</p>
+            <div id="n-preview" class="preview" aria-hidden="true"></div>
+            <button type="submit" class="primary">ประกาศ</button>
+          </form>
+          <h2 class="list-title">ประกาศทั้งหมด</h2>
+          <p class="muted">แสดงทีละหนึ่งประกาศ: ประกาศที่เริ่มล่าสุดและยังอยู่ในเวลาจะแสดงแทนประกาศเก่า ลูกค้ากดปิดประกาศสำหรับตัวเองได้</p>
+          <ul class="records" id="news"></ul>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

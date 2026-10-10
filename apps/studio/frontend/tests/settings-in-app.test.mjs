@@ -39,7 +39,12 @@ test('the sidebar shows the settings sections to admins; no link leads to the ol
   const layout = read('app/layouts/default.vue')
   assert.match(layout, /<template v-if="session\?\.user\?\.admin">/)
   assert.match(layout, /:to="\{ path: '\/settings', query: \{ tab: item\.tab \} \}" :data-tab="item\.tab"/)
-  for (const tab of ['ai', 'styles', 'agents', 'general', 'storage', 'about']) assert.match(layout, new RegExp(`tab: '${tab}'`))
+  for (const tab of ['ai', 'styles', 'agents', 'general']) assert.match(layout, new RegExp(`tab: '${tab}'`))
+  // storage and about & update moved to the naka-ai back office (landing /admin/studio-system/)
+  for (const tab of ['storage', 'about']) {
+    assert.doesNotMatch(layout, new RegExp(`tab: '${tab}'`))
+    assert.doesNotMatch(read('app/pages/settings.vue'), new RegExp(`tab === '${tab}'`))
+  }
   // the settings tour points at the sidebar entry
   assert.match(read('app/pages/settings.vue'), /\.side-link\[data-tab="ai"\]/)
   assert.ok(!existsSync(new URL('app/composables/useAdminUrl.ts', root)))
@@ -73,7 +78,7 @@ test('every custom component tag on the settings page has a file', () => {
 test('nothing loads behind the token gate or the admins-only notice', () => {
   const page = read('app/pages/settings.vue')
   assert.match(page, /if \(e\?\.status === 401\) onAdminRequired\(\)/)
-  assert.match(page, /if \(!\(await adminAccess\(\)\)\) return\n\s*loadCfgs\(\)/)
+  assert.match(page, /if \(!\(await adminAccess\(\)\)\) return\r?\n\s*loadCfgs\(\)/)
   assert.match(page, /if \(await adminAccess\(\)\) setTimeout\(\(\) => autoTour\('settings'/)
   assert.match(page, /if \(await adminAccess\(\)\) loadContentLanguage\(\)/)
   assert.doesNotMatch(page, /onMounted\(\(\) => \{ loadCfgs\(\)/)

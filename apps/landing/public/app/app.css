@@ -127,3 +127,45 @@ img { max-width: 100%; display: block; }
 /* a menu entry the plan does not include: still visible, leads to the plans page */
 .feature-locked { opacity: .55; }
 .workflow-card.feature-locked .card-go::after { content: " · อัปเกรดแพ็กเกจ"; }
+
+/* package line under the balance + credit history (GET /api/me/credits) */
+.plan-panel { margin: 0 0 14px; padding: 12px 14px; border-radius: 14px; background: var(--m-surface-2); }
+.plan-panel[hidden] { display: none; }
+.plan-name { margin: 0; display: flex; align-items: baseline; gap: 8px; color: var(--m-ink); font-size: 14.5px; font-weight: 700; }
+.plan-period { color: var(--m-ink-3); font-size: 12px; font-weight: 600; }
+.plan-dates { margin: 4px 0 0; color: var(--m-ink-2); font-size: 12.5px; line-height: 1.6; }
+.plan-warn { margin: 10px 0 0; padding: 8px 10px; border-radius: 10px; background: var(--m-warn-bg); color: var(--m-warn); font-size: 12.5px; font-weight: 600; line-height: 1.6; }
+.plan-warn[hidden] { display: none; }
+
+.history-section { margin: 24px 0 0; padding: 22px 24px 18px; background: var(--m-surface); border: 1px solid var(--m-line); border-radius: 22px; box-shadow: var(--m-shadow-sm); }
+.history-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.history-heading .panel-label { margin-bottom: 6px; }
+.history-heading h2 { margin: 0; font-family: var(--m-display); font-size: 21px; letter-spacing: -.03em; color: var(--m-ink); }
+.history-link { color: var(--m-brand); font-size: 12.5px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.history-status { margin: 10px 0 4px; color: var(--m-ink-3); font-size: 13px; }
+.history-status[hidden], .history-list[hidden], .history-more[hidden] { display: none; }
+.history-list { list-style: none; margin: 0; padding: 0; }
+.history-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 10px 0; border-top: 1px solid var(--m-line); }
+.history-item:first-child { border-top: 0; }
+.history-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.history-main strong { color: var(--m-ink); font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.history-main small { color: var(--m-ink-3); font-size: 12px; }
+.history-delta { flex-shrink: 0; font-family: var(--m-display); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.history-item.is-in .history-delta { color: var(--m-ok); }
+.history-item.is-out .history-delta { color: var(--m-ink); }
+.history-more { margin-top: 8px; min-height: 44px; padding: 0 18px; background: #fff; border: 1px solid var(--m-line); border-radius: 999px; color: var(--m-ink-2); font-size: 13px; font-weight: 600; }
+.history-more:hover { background: var(--m-bg); border-color: var(--m-line-strong); color: var(--m-ink); }
+.history-more:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 560px) {
+  .history-section { padding: 18px 16px 14px; }
+  .history-heading { flex-direction: column; align-items: flex-start; }
+}
+
+/* latest works in Naka Studio (GET /api/me/works) */
+.works-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.works-list[hidden] { display: none; }
+.works-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; align-items: center; min-height: 56px; padding: 10px 14px; border-radius: 14px; background: var(--m-surface-2); transition: background .18s ease; }
+.works-item:hover { background: var(--m-blue-soft); }
+.works-kind { grid-row: span 2; align-self: center; padding: 2px 8px; border-radius: 999px; background: #fff; color: var(--m-brand); font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.works-item strong { color: var(--m-ink); font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.works-item small { color: var(--m-ink-3); font-size: 12px; }

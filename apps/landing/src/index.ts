@@ -3,9 +3,13 @@ import { runSalesAgent } from "./agent";
 import { handleBilling, handlePublicPlans, handleStripeWebhook, runBillingCron } from "./billing";
 import { backfillReceipts, handleReceipts } from "./receipts";
 import { handleOnboarding } from "./onboarding";
-import { checkAdmin } from "./admin/auth";
+import { checkAdmin, supportMay } from "./admin/auth";
+import { handleAdminStaff } from "./admin/staff";
+import { handleAdminCoupons } from "./billing/coupons";
 import { handleAdminCustomers } from "./admin/customers";
 import { handleWorks } from "./works";
+import { handleMemberCredits } from "./me/credits";
+import { handleMemberWorks } from "./me/works";
 import { handleAuth, requireUser } from "./auth";
 import { handleStudioSso } from "./auth/studio";
 import { handleStudioLinks } from "./studio-links";
@@ -21,6 +25,13 @@ import { handleMarketer, makeMarketerHandlers, refreshTrendingCovers, syncTrendi
 import { handleAdminMarketer } from "./marketer/admin";
 import { AI_VIDEO_JOB_KIND, makeAiVideoHandler } from "./video";
 import { handleAdminSystem } from "./system/admin";
+import { handleAdminStudioSystem } from "./admin/studio-system";
+import { handleAdminInsights } from "./admin/insights";
+import { handleAdminAlerts, handleAlertCommand, runAdminAlerts } from "./admin/alerts";
+import { handleAdminAudit } from "./admin/audit";
+import { handleAdminShowcase, serveShowcaseMedia } from "./content/showcase";
+import { handleAdminAnnouncements, handleAnnouncement } from "./content/announcements";
+import { serveAsset } from "./content/site";
 import { featureOn, withSettings } from "./system/store";
 import { featureRefusal, hasFeature } from "./entitlements";
 import type { Env } from "./types";
@@ -102,6 +113,16 @@ export default {
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
       return (await handleWorks(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
     }
+    if (url.pathname === "/api/me/credits") {
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleMemberCredits(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
+    if (url.pathname === "/api/me/works") {
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleMemberWorks(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
     if (url.pathname === "/api/onboarding") {
       const user = await requireUser(request, env);
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
@@ -114,6 +135,11 @@ export default {
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);
     if (url.pathname === "/api/health") return json({ ok: true });
     if (url.pathname === "/api/plans") return handlePublicPlans(request, env);
+    // site content from the back office: the announcement line and uploaded showcase clips (src/content)
+    const announcement = await handleAnnouncement(request, env, url);
+    if (announcement) return announcement;
+    const showcaseMedia = await serveShowcaseMedia(request, env, url);
+    if (showcaseMedia) return showcaseMedia;
     if (url.pathname === "/world/index.wasm" && (request.method === "GET" || request.method === "HEAD")) {
       const compressedUrl = new URL("/world/index.wasm.gz", url.origin);
       const compressed = await env.ASSETS.fetch(new Request(compressedUrl, request));
@@ -131,9 +157,32 @@ export default {
       if (!("actor" in check)) return adminJson({ error: check.error, reason: check.reason }, check.status);
       const { actor } = check;
       if (url.pathname === "/api/admin/me") {
-        return adminJson(request.method === "GET" ? { kind: actor.kind, label: actor.label } : { error: "not found" }, request.method === "GET" ? 200 : 405);
+        return adminJson(request.method === "GET" ? { kind: actor.kind, label: actor.label, role: actor.role } : { error: "not found" }, request.method === "GET" ? 200 : 405);
       }
+      // support staff (src/admin/staff.ts) do customer care; settings, prices, codes and staff stay with owners
+      if (actor.role !== "owner" && !supportMay(request.method, url.pathname)) {
+        return adminJson({ error: "บัญชีผู้ช่วยทำรายการนี้ไม่ได้ ติดต่อเจ้าของระบบ", reason: "role" }, 403);
+      }
+      const staffResponse = await handleAdminStaff(request, env, url, actor);
+      if (staffResponse) return staffResponse;
+      const couponResponse = await handleAdminCoupons(request, env, url, actor);
+      if (couponResponse) return couponResponse;
       if (url.pathname === "/api/admin/studio") return handleStudio(request, env);
+      // naka-studio's version, disk use and video queues, read server to server (src/admin/studio-system.ts)
+      const studioSystemResponse = await handleAdminStudioSystem(request, env, url, actor);
+      if (studioSystemResponse) return studioSystemResponse;
+      // overview, all payments (+ CSV) and failed jobs across customers (src/admin/insights.ts)
+      const insightResponse = await handleAdminInsights(request, env, url, actor);
+      if (insightResponse) return insightResponse;
+      // LINE alerts for admins and the history of every admin action (src/admin/alerts.ts, src/admin/audit.ts)
+      const alertResponse = await handleAdminAlerts(request, env, url, actor);
+      if (alertResponse) return alertResponse;
+      const auditResponse = await handleAdminAudit(request, env, url);
+      if (auditResponse) return auditResponse;
+      const showcaseResponse = await handleAdminShowcase(request, env, url, actor);
+      if (showcaseResponse) return showcaseResponse;
+      const announcementResponse = await handleAdminAnnouncements(request, env, url, actor);
+      if (announcementResponse) return announcementResponse;
       // The panel is given the Worker's own env so it can tell saved values from wrangler ones.
       const systemResponse = await handleAdminSystem(request, workerEnv, url, actor);
       if (systemResponse) return systemResponse;
@@ -148,7 +197,8 @@ export default {
         return json({ error: "internal error" }, 500);
       }
     }
-    return env.ASSETS.fetch(request);
+    // pages get the managed gallery and the announcement script (src/content/site.ts)
+    return serveAsset(request, env, url);
   },
 
   // Cron (wrangler.jsonc): drain the AI job queue once a minute, a few jobs at a time.
@@ -183,6 +233,8 @@ export default {
       }
       ctx.waitUntil(refreshTrendingCovers(env, 3).catch(() => console.error("trending cover refresh failed")));
     }
+    // LINE alerts for admins: every five minutes, one message with whatever is new (src/admin/alerts.ts)
+    if (new Date(controller.scheduledTime).getUTCMinutes() % 5 === 0) ctx.waitUntil(runAdminAlerts(env).catch(() => console.error("admin alerts failed")));
     // Pick up stored webhooks and queue inbox replies; the replies themselves run in runQueue.
     if (featureOn(env, "FEATURE_INBOX")) ctx.waitUntil(drainInbox(env, { maxReceipts: 5, maxMessages: 20 }).then(
       (result) => { if (result.receipts || result.enqueued) console.log("inbox", result.receipts, result.enqueued); },
@@ -201,7 +253,7 @@ function closedFeature(env: Env, url: URL, method: string): Response | null {
   const under = (base: string) => path === base || path.startsWith(base + "/");
   // Maintenance closes the customer API. The panel, Google sign-in (admins use it), health and webhooks keep working.
   if (featureOn(env, "FEATURE_MAINTENANCE") && path.startsWith("/api/") && !under("/api/admin") &&
-      path !== "/api/health" && path !== "/api/auth/config" && path !== "/api/auth/logout" && !under("/api/auth/google")) {
+      path !== "/api/health" && path !== "/api/announcement" && path !== "/api/auth/config" && path !== "/api/auth/logout" && !under("/api/auth/google")) {
     return json({ error: "ระบบปิดปรับปรุงชั่วคราว กรุณากลับมาใหม่ภายหลัง", maintenance: true }, 503);
   }
   if (!featureOn(env, "FEATURE_CLIPS") && method === "POST" && /^\/api\/affiliate\/reviews\/?$/.test(path)) return json({ error: CLOSED }, 503);
@@ -224,10 +276,16 @@ async function handleLineWebhook(request: Request, env: Env, ctx: ExecutionConte
   if (!(await verifySignature(body, request.headers.get("x-line-signature"), env.LINE_CHANNEL_SECRET))) {
     return new Response("invalid signature", { status: 401 });
   }
-  if (!featureOn(env, "FEATURE_LINE_BOT")) return new Response("ok"); // switched off: acknowledge, answer nothing
+  const botOn = featureOn(env, "FEATURE_LINE_BOT"); // switched off: acknowledge, the shop bot answers nothing
   const { events } = JSON.parse(body) as { events: LineEvent[] };
-  // Acknowledge LINE immediately; the agent runs in the background.
-  ctx.waitUntil(Promise.all(events.map((e) => handleLineEvent(env, e).catch((err) => console.error("event failed", errorSummary(err))))));
+  // Acknowledge LINE immediately; the agent runs in the background. Admins pair or stop LINE alerts through
+  // the same OA (src/admin/alerts.ts), also while the shop bot is off.
+  ctx.waitUntil(Promise.all(events.map(async (e) => {
+    try {
+      if (await handleAlertCommand(env, e, (id) => getDisplayName(env, id))) return;
+      if (botOn) await handleLineEvent(env, e);
+    } catch (err) { console.error("event failed", errorSummary(err)); }
+  })));
   return new Response("ok");
 }
 

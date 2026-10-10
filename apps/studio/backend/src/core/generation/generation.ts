@@ -3,7 +3,7 @@
  * 创建(processing) → 适配器构建请求 → 同步完成或异步轮询 → 下载落盘 → 回写业务表
  */
 import { db, insertedId, schema } from '../db/index.js'
-import { and, asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm'
 import { getActiveConfig, getConfigById, getConfigForRecovery } from '../ai/ai.js'
 import { now, AppError } from '../http/response.js'
 import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readImageAsCompressedDataUrl, saveBase64Image } from '../utils/storage.js'
@@ -14,6 +14,7 @@ import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuc
 import { taskMediaSlot } from '../production/storyboard-readiness.js'
 import { estimateCostThb } from './generation-cost.js'
 import { releaseFeatureUse, useVideoQuota } from '../auth/entitlements.js'
+import { holdTaskCredits, settleTaskCredits, taskCredits } from '../auth/credits.js'
 import { currentOwnerId } from '../auth/owner-context.js'
 import { sourceSnapshotForShot } from '../production/source-freshness.js'
 
@@ -248,6 +249,8 @@ async function createTask(
 ): Promise<number> {
   const ts = now()
   const snapshot = type === 'video' && fields.storyboardId ? await sourceSnapshotForShot(fields.storyboardId) : null
+  // naka-ai credits (docs/credit-pricing.md): priced here, held with the insert below, settled when the task ends
+  const credits = await taskCredits(await generationOwner(fields), type, Number(params.duration))
   const id = await db.transaction(async tx => {
     const one = async <T>(rows: Promise<T[]>): Promise<T | null> => (await rows)[0] ?? null
     const shot = fields.storyboardId
@@ -288,7 +291,13 @@ async function createTask(
       createdAt: ts,
       updatedAt: ts,
     }).returning({ id: schema.sysTask.id })
-    return insertedId(res)
+    const taskId = insertedId(res)
+    if (credits > 0) {
+      // the same member the task is stamped with; not enough credits throws and rolls the insert back
+      const holdId = await holdTaskCredits(tx, drama ? drama.ownerUserId : currentOwnerId(), credits, `studio:${type}:${taskId}`)
+      await tx.update(schema.sysTask).set({ creditHoldId: holdId, creditsCharged: credits }).where(eq(schema.sysTask.id, taskId))
+    }
+    return taskId
   })
   await startTask(id, config, false)
   return id
@@ -371,8 +380,27 @@ export async function recoverGenerationTasks(): Promise<{ resumed: number; queue
 let pumpRunning = false
 
 /**
+ * Last time the provider queue of a config moved: a task was handed to the provider (submitting, or
+ * accepted with a provider task id) or came back from it. Tasks that left the queue without reaching
+ * the provider (queue timeout, cancel) do not count.
+ */
+async function lastQueueActivityMs(configId: number): Promise<number> {
+  const [row] = await db.select({ at: sql<string | null>`max(${schema.sysTask.updatedAt})` })
+    .from(schema.sysTask)
+    .where(and(
+      eq(schema.sysTask.type, 'video'),
+      eq(schema.sysTask.configId, configId),
+      or(isNotNull(schema.sysTask.taskId), eq(schema.sysTask.status, 'submitting')),
+    ))
+  const at = Date.parse(row?.at || '')
+  return Number.isFinite(at) ? at : 0
+}
+
+/**
  * คิวต่อ config (provider ที่ประกาศ maxConcurrent): ส่งงาน queued เก่าสุดก่อนเมื่อมีสล็อตว่าง,
- * งานรอเกิน queue_timeout_minutes → failed (E_VIDEO_QUEUE_TIMEOUT)
+ * คิวไม่ขยับเกิน queue_timeout_minutes → งานที่รอ failed (E_VIDEO_QUEUE_TIMEOUT). The clock starts when
+ * the task was queued or when the queue last moved, whichever is later: a whole project queued behind a
+ * slow local GPU (H3: ~30 min a clip) keeps waiting while clips keep finishing.
  */
 export async function pumpVideoQueue(): Promise<void> {
   if (pumpRunning) return
@@ -381,6 +409,7 @@ export async function pumpVideoQueue(): Promise<void> {
     const queued = await db.select().from(schema.sysTask)
       .where(and(eq(schema.sysTask.type, 'video'), eq(schema.sysTask.status, 'queued')))
       .orderBy(asc(schema.sysTask.createdAt))
+    const activity = new Map<number, number>()
     for (const record of queued) {
       const config = await recoveryConfig(record)
       if (!config) {
@@ -388,12 +417,14 @@ export async function pumpVideoQueue(): Promise<void> {
         continue
       }
       if (!maxConcurrentFor(config)) continue
+      const configId = config.id ?? 0
+      if (!activity.has(configId)) activity.set(configId, await lastQueueActivityMs(configId))
       const createdAtMs = Date.parse(record.createdAt || '')
-      const waitedMs = Number.isFinite(createdAtMs) ? Date.now() - createdAtMs : 0
-      if (waitedMs > queueTimeoutMinutesFor(config) * 60_000) {
+      const since = Math.max(Number.isFinite(createdAtMs) ? createdAtMs : 0, activity.get(configId)!)
+      if (since && Date.now() - since > queueTimeoutMinutesFor(config) * 60_000) {
         await failTask(
           record.id,
-          `E_VIDEO_QUEUE_TIMEOUT: รอคิวของ provider ${config.provider} เกิน ${queueTimeoutMinutesFor(config)} นาที — งานยังไม่ได้ถูกส่งให้ provider (ตรวจงานค้างบนเซิร์ฟเวอร์ หรือเพิ่ม queue_timeout_minutes ใน settings)`,
+          `E_VIDEO_QUEUE_TIMEOUT: คิวของ provider ${config.provider} ไม่ขยับเกิน ${queueTimeoutMinutesFor(config)} นาที — งานยังไม่ได้ถูกส่งให้ provider (ตรวจงานค้างบนเซิร์ฟเวอร์ ยกเลิกงาน unknown ที่ค้าง หรือเพิ่ม queue_timeout_minutes ใน settings)`,
           'E_VIDEO_QUEUE_TIMEOUT',
         )
         continue
@@ -464,6 +495,29 @@ function parseSettingsJson(raw: string | null): Record<string, any> {
   } catch {
     return {}
   }
+}
+
+/**
+ * Cancel a task the provider is not working on for us: 'queued' (never submitted) or 'unknown' (polling
+ * stopped; for providers that run one job at a time it would otherwise hold the queue slot forever).
+ * A task this process is submitting or polling cannot be cancelled. Runs under the slot lock, so the
+ * queue cannot start the task while it is being cancelled.
+ */
+export async function cancelGenerationTask(id: number): Promise<'cancelled' | 'active' | 'not_cancellable'> {
+  const result = await withSlotLock(async () => {
+    if (activeTasks.has(id)) return 'active' as const
+    const rows = await db.update(schema.sysTask)
+      .set({ status: 'failed', errorCode: 'E_CANCELLED', errorMsg: 'Cancelled before the provider produced a result', updatedAt: now() })
+      .where(and(eq(schema.sysTask.id, id), inArray(schema.sysTask.status, ['queued', 'unknown'])))
+      .returning({ id: schema.sysTask.id })
+    return rows.length ? 'cancelled' as const : 'not_cancellable' as const
+  })
+  if (result === 'cancelled') {
+    await settleTaskCredits(id, 'refund')
+    logTaskWarn('SysTask', 'cancelled', { id })
+    void pumpVideoQueue()
+  }
+  return result
 }
 
 export async function resumeGenerationTask(id: number): Promise<'resumed' | 'active' | 'unavailable'> {
@@ -666,6 +720,7 @@ async function failTask(id: number, message: string, code?: string) {
   await db.update(schema.sysTask)
     .set({ status: 'failed', errorMsg: message, errorCode: code || null, updatedAt: now() })
     .where(eq(schema.sysTask.id, id))
+  await settleTaskCredits(id, 'refund')
   void pumpVideoQueue()
 }
 
@@ -718,7 +773,7 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
       // 图片/视频 PollResponse 结构不同，这里统一按 any 取值后按 type 分支
       const pollResp: any = type === 'image'
         ? adapter.parsePollResponse(result)
-        : adapter.parsePollResponse(result, { config, taskId })
+        : adapter.parsePollResponse(result, { config, taskId, attempt: i + 1 })
 
       if (pollResp.status === 'completed') {
         if (type === 'image') {
@@ -783,6 +838,7 @@ async function handleImageComplete(record: SysTaskRecord, imageUrl: string) {
   await db.update(schema.sysTask)
     .set({ resultUrl: imageUrl, localPath, status: 'completed', completedAt: now(), updatedAt: now() })
     .where(eq(schema.sysTask.id, record.id))
+  await settleTaskCredits(record.id, 'commit')
 
   logTaskSuccess('ImageTask', 'downloaded', { id: record.id, provider: record.provider, localPath })
 }
@@ -795,6 +851,7 @@ async function handleImageCompleteBase64(record: SysTaskRecord, base64Data: stri
   await db.update(schema.sysTask)
     .set({ localPath, status: 'completed', completedAt: now(), updatedAt: now() })
     .where(eq(schema.sysTask.id, record.id))
+  await settleTaskCredits(record.id, 'commit')
 
   logTaskSuccess('ImageTask', 'saved-base64', { id: record.id, provider: record.provider, mimeType, localPath })
 }
@@ -831,13 +888,15 @@ async function handleVideoComplete(record: SysTaskRecord, videoUrl: string, dura
       .where(and(eq(schema.storyboardMediaSelections.storyboardId, record.storyboardId), eq(schema.storyboardMediaSelections.slot, 'video')))
     if (!selected) {
       await db.update(schema.storyboards)
-        .set({ videoUrl: localPath, duration: duration || undefined, updatedAt: now() })
+        // storyboards.duration is a bigint; providers report fractional seconds (H3: 124/24 = 5.17 s)
+        .set({ videoUrl: localPath, duration: duration ? Math.round(duration) : undefined, updatedAt: now() })
         .where(eq(schema.storyboards.id, record.storyboardId))
     }
   }
   await db.update(schema.sysTask)
     .set({ resultUrl: videoUrl, localPath, status: 'completed', completedAt: now(), updatedAt: now() })
     .where(eq(schema.sysTask.id, record.id))
+  await settleTaskCredits(record.id, 'commit')
 
   logTaskSuccess('VideoTask', 'downloaded', { id: record.id, localPath, storyboardId: record.storyboardId, duration })
   // สล็อตของ provider แบบ maxConcurrent ว่าง → ดึงงาน queued ถัดไปเข้าทำงาน
