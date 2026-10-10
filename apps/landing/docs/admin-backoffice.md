@@ -52,7 +52,7 @@ A larger result is refused with 413 ("เลือกช่วงวันที
 - A cell that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading `'`, so a
   customer's display name cannot run as a spreadsheet formula (OWASP CSV injection).
 
-## LINE alerts (`src/admin/alerts.ts`, migration `0006_admin_alerts.sql`)
+## LINE alerts (`src/admin/alerts.ts`, migration `0007_admin_alerts.sql`)
 
 Admins receive alerts through the shop's own LINE OA (`LINE_CHANNEL_ACCESS_TOKEN`, webhook `/webhook/line`).
 

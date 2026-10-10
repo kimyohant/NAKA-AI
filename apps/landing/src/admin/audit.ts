@@ -6,7 +6,7 @@ import type { Env } from '../types';
 
 const BASE = '/api/admin/audit';
 const PAGE = 50;
-const SOURCES = ['customer', 'setting', 'plan', 'studio', 'alert'];
+const SOURCES = ['customer', 'setting', 'plan', 'price', 'studio', 'alert'];
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
 });

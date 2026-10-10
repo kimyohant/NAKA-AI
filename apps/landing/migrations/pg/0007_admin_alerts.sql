@@ -49,7 +49,7 @@ CREATE TABLE admin_alert_log (
 CREATE INDEX admin_alert_log_created ON admin_alert_log (created_at DESC);
 
 ALTER TABLE system_audit DROP CONSTRAINT system_audit_area_check;
-ALTER TABLE system_audit ADD CONSTRAINT system_audit_area_check CHECK (area IN ('setting', 'plan', 'studio', 'alert'));
+ALTER TABLE system_audit ADD CONSTRAINT system_audit_area_check CHECK (area IN ('setting', 'plan', 'studio', 'price', 'alert'));
 ALTER TABLE system_audit DROP CONSTRAINT system_audit_action_check;
 ALTER TABLE system_audit ADD CONSTRAINT system_audit_action_check
   CHECK (action IN ('set', 'clear', 'import', 'create', 'update', 'cancel', 'remove', 'test'));

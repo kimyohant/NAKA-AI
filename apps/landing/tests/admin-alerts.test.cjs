@@ -1,4 +1,4 @@
-// LINE alerts for admins (src/admin/alerts.ts, migrations/pg/0006_admin_alerts.sql) and the history of every
+// LINE alerts for admins (src/admin/alerts.ts, migrations/pg/0007_admin_alerts.sql) and the history of every
 // admin action (src/admin/audit.ts).
 const assert = require('node:assert/strict');
 const { test, beforeEach, afterEach, after, mock } = require('node:test');
