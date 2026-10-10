@@ -33,7 +33,9 @@
               <div class="chip chip-select">
                 <span class="chip-label">{{ t('index.studio.style') }}</span>
                 <select v-model="studioStyle" :aria-label="t('index.studio.style')">
-                  <option v-for="p in stylePresets" :key="p.value" :value="p.value">{{ styleLabel(p.value) }}</option>
+                  <optgroup v-for="g in styleSelectGroups" :key="g.value" :label="g.label">
+                    <option v-for="p in g.items" :key="p.value" :value="p.value">{{ styleLabel(p.value) }}</option>
+                  </optgroup>
                   <option :value="CUSTOM_STYLE">{{ styleLabel(CUSTOM_STYLE) }}</option>
                 </select>
                 <ChevronDown :size="14" :stroke-width="1.8" />
@@ -76,6 +78,21 @@
         <button type="button" class="style-current-link" @click="styleTab = tabOf(studioStyle)">{{ t('index.styleTabs.view') }}</button>
       </p>
       <p v-if="styleTab === 'live_action'" class="style-warn" role="note">{{ t('index.styleTabs.liveWarning') }}</p>
+      <div v-if="styleTab === LIBRARY && libraryCount" class="style-lib-bar">
+        <input v-model="librarySearch" type="search" class="input style-lib-search"
+          :placeholder="t('index.styleTabs.librarySearch')" :aria-label="t('index.styleTabs.librarySearch')">
+        <div class="style-lib-groups" role="group" :aria-label="t('index.styleTabs.libraryGroups')">
+          <button type="button" class="style-lib-chip" :class="{ on: libraryGroup === 'all' }" :aria-pressed="libraryGroup === 'all'"
+            @click="libraryGroup = 'all'">{{ t('index.styleTabs.libraryAll') }}<span>{{ libraryCount }}</span></button>
+          <button v-for="g in libraryGroups" :key="g.code" type="button" class="style-lib-chip" :class="{ on: libraryGroup === g.code }"
+            :aria-pressed="libraryGroup === g.code" @click="libraryGroup = g.code">{{ libraryGroupLabel(g.code) }}<span>{{ g.count }}</span></button>
+        </div>
+      </div>
+      <p v-if="styleTab === LIBRARY && !libraryCount" class="style-current">
+        {{ t('index.styleTabs.libraryEmpty') }}
+        <NuxtLink to="/settings?tab=styles" class="style-current-link">{{ t('index.styleTabs.libraryOpenSettings') }}</NuxtLink>
+      </p>
+      <p v-else-if="styleTab === LIBRARY && !tabStyles.length" class="style-current">{{ t('index.styleTabs.libraryNoMatch') }}</p>
       <div v-if="styleTab === CUSTOM_STYLE" class="style-custom">
         <label class="field-label" for="custom-style">{{ t('index.styleTabs.customLabel') }}</label>
         <textarea id="custom-style" v-model="customStyle" class="input style-custom-input" rows="3" :maxlength="CUSTOM_STYLE_MAX"
@@ -104,7 +121,7 @@
               <span v-if="studioStyle === p.value" class="style-badge">{{ t('index.studio.selected') }}</span>
             </span>
             <span class="style-name">{{ styleLabel(p.value) }}</span>
-            <span class="style-desc">{{ styleDesc(p) }}</span>
+            <span class="style-desc">{{ tabOf(p.value) === LIBRARY ? libraryGroupLabel(libraryGroupOf(p)) : styleDesc(p) }}</span>
           </button>
         </div>
       </div>
@@ -339,19 +356,46 @@ const CUSTOM_STYLE = 'custom'
 const CUSTOM_STYLE_MAX = 600
 const customStyle = ref('')
 const styleTab = ref('animation')
+// the 305-style hand-drawn library (Settings → Art styles → import): category FA..FH, values handraw-<code>
+const LIBRARY = 'library'
+const LIBRARY_GROUPS = ['FA', 'FB', 'FC', 'FD', 'FE', 'FF', 'FG', 'FH']
+const libraryGroup = ref('all')
+const librarySearch = ref('')
+function libraryGroupOf(p) {
+  if (LIBRARY_GROUPS.includes(p?.category)) return p.category
+  const code = String(p?.value || '').match(/^handraw-(f[a-h])-/)
+  return code ? code[1].toUpperCase() : ''
+}
+function libraryGroupLabel(code) { return code ? t(`settings.styles.gallery.cat_${code}`) : '' }
 function tabOf(value) {
   if (value === CUSTOM_STYLE) return CUSTOM_STYLE
-  return stylePresets.value.find(p => p.value === value)?.category === 'live_action' ? 'live_action' : 'animation'
+  const p = stylePresets.value.find(p => p.value === value)
+  if (libraryGroupOf(p)) return LIBRARY
+  return p?.category === 'live_action' ? 'live_action' : 'animation'
 }
-const tabStyles = computed(() => stylePresets.value.filter(p => tabOf(p.value) === styleTab.value))
+const libraryStyles = computed(() => stylePresets.value.filter(p => tabOf(p.value) === LIBRARY))
+const libraryCount = computed(() => libraryStyles.value.length)
+const libraryGroups = computed(() => LIBRARY_GROUPS
+  .map(code => ({ code, count: libraryStyles.value.filter(p => libraryGroupOf(p) === code).length }))
+  .filter(g => g.count))
+const tabStyles = computed(() => {
+  if (styleTab.value !== LIBRARY) return stylePresets.value.filter(p => tabOf(p.value) === styleTab.value)
+  const q = librarySearch.value.trim().toLowerCase()
+  return libraryStyles.value.filter(p => (libraryGroup.value === 'all' || libraryGroupOf(p) === libraryGroup.value)
+    && (!q || [p.name, p.value, p.description, libraryGroupLabel(libraryGroupOf(p))].filter(Boolean).join(' ').toLowerCase().includes(q)))
+})
 const styleTabs = computed(() => ([
   { value: 'live_action', label: t('index.styleTabs.liveAction'), count: stylePresets.value.filter(p => tabOf(p.value) === 'live_action').length },
   { value: 'animation', label: t('index.styleTabs.animation'), count: stylePresets.value.filter(p => tabOf(p.value) === 'animation').length },
+  { value: LIBRARY, label: t('index.styleTabs.library'), count: libraryCount.value },
   { value: CUSTOM_STYLE, label: t('index.styleTabs.custom'), count: 0 },
 ]))
+// composer / create-dialog pickers: catalog first, then the library (the API interleaves them by sort order)
+const styleSelectGroups = computed(() => styleTabs.value.filter(tab => tab.value !== CUSTOM_STYLE && tab.count)
+  .map(tab => ({ ...tab, items: stylePresets.value.filter(p => tabOf(p.value) === tab.value) })))
 function tabHasCurrent(tab) { return !!studioStyle.value && tabOf(studioStyle.value) === tab }
 const styleSelectOptions = computed(() => [
-  ...stylePresets.value.map(p => ({ label: styleLabel(p.value), value: p.value })),
+  ...styleSelectGroups.value.flatMap(g => g.items.map(p => ({ label: styleLabel(p.value), value: p.value }))),
   { label: styleLabel(CUSTOM_STYLE), value: CUSTOM_STYLE },
 ])
 const formCustomStyle = ref('')
@@ -762,7 +806,7 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
 .block-sub { margin: 2px 0 0; font-size: 13px; color: var(--text-3); }
 
 /* 风格卡片：网格换行，一次展示全部风格（无横向滚动条） */
-.style-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; margin-bottom: 14px; border-radius: 12px; background: var(--bg-2, rgba(127,127,127,.08)); border: 1px solid var(--border); }
+.style-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; margin-bottom: 14px; border-radius: 12px; background: var(--bg-2, rgba(127,127,127,.08)); border: 1px solid var(--border); }
 .style-tab { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; border: 0; border-radius: 9px; background: transparent; color: var(--text-2); font-weight: 600; font-size: 13px; cursor: pointer; }
 .style-tab.on { background: var(--surface-raised, #fff); color: var(--text-0); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 .style-tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success, #22c55e); }
@@ -770,6 +814,13 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
 .style-current { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; color: var(--text-1); background: var(--bg-2, rgba(127,127,127,.08)); }
 .style-current-link { margin-left: auto; border: 0; background: none; color: var(--accent-text, var(--accent)); font-weight: 600; cursor: pointer; }
 .style-warn { margin: 0 0 12px; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.5; color: var(--warn-text, #92400e); background: var(--warn-bg, #fff7ed); }
+@media (max-width: 560px) { .style-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.style-lib-bar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.style-lib-search { max-width: 360px; }
+.style-lib-groups { display: flex; flex-wrap: wrap; gap: 6px; }
+.style-lib-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--text-1); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.style-lib-chip span { font-size: 11px; color: var(--text-3); }
+.style-lib-chip.on { border-color: var(--accent); color: var(--text-0); box-shadow: 0 0 0 1px var(--accent); }
 .style-custom { display: flex; flex-direction: column; gap: 6px; }
 .style-custom-input { min-height: 88px; resize: vertical; }
 .style-rail-wrap { position: relative; }

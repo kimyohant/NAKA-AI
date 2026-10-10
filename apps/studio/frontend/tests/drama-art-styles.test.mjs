@@ -1,5 +1,5 @@
 /**
- * Drama studio Art Style picker like Topview Drama Studio: Live Action / Animation / Custom tabs on the home page,
+ * Drama studio Art Style picker like Topview Drama Studio: Live Action / Animation / Hand-drawn Library / Custom tabs on the home page,
  * the Custom description saved as dramas.metadata.customStyle (home composer, create dialog, project settings).
  */
 import { readFileSync } from 'node:fs'
@@ -45,5 +45,25 @@ test('both languages have the tab texts, the custom style name and the settings 
     assert.ok(m.index.styleNames.custom, `${lang}: styleNames.custom`)
     assert.ok(m.settings.styles.gallery.cat_live_action && m.settings.styles.gallery.cat_animation, `${lang}: category labels`)
     assert.ok(m.index.styleDescs['live-mind-bending'] && m.index.styleDescs['anim-pixar-3d'], `${lang}: catalog descriptions`)
+  }
+})
+
+test('Hand-drawn Library tab: the imported 305 styles (FA..FH) get their own tab with group chips and search, out of Animation', () => {
+  assert.match(home, /const LIBRARY_GROUPS = \['FA', 'FB', 'FC', 'FD', 'FE', 'FF', 'FG', 'FH'\]/)
+  assert.match(home, /\^handraw-\(f\[a-h\]\)-/)
+  assert.match(home, /if \(libraryGroupOf\(p\)\) return LIBRARY/)
+  assert.match(home, /value: LIBRARY, label: t\('index\.styleTabs\.library'\), count: libraryCount\.value/)
+  assert.match(home, /v-model="librarySearch"/)
+  assert.match(home, /v-for="g in libraryGroups"/)
+  assert.match(home, /t\(`settings\.styles\.gallery\.cat_\$\{code\}`\)/)
+  assert.match(home, /<NuxtLink to="\/settings\?tab=styles"/)
+  assert.match(home, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/)
+  assert.match(home, /<optgroup v-for="g in styleSelectGroups"/)
+  for (const lang of ['th', 'en']) {
+    const m = loadLocale(lang)
+    for (const k of ['library', 'librarySearch', 'libraryAll', 'libraryGroups', 'libraryEmpty', 'libraryOpenSettings', 'libraryNoMatch']) {
+      assert.ok(m.index.styleTabs[k], `${lang}: index.styleTabs.${k}`)
+    }
+    for (const g of ['FA', 'FB', 'FC', 'FD', 'FE', 'FF', 'FG', 'FH']) assert.ok(m.settings.styles.gallery[`cat_${g}`], `${lang}: cat_${g}`)
   }
 })
