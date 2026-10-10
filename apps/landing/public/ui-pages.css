@@ -107,7 +107,16 @@ body.member-ui { background: var(--m-bg); }
 @media (max-width: 560px) {
   /* app bar: brand + account on the first row, the menu on its own row */
   .member-ui .glass-nav.app-topbar { height: auto; padding: 8px 8px 8px 14px; row-gap: 8px; }
-  .member-ui .topbar-nav { justify-content: flex-start; }
+  /* four tabs fit 358px only with tighter pills; at 14px padding "Naka Studio ↗" was cut to "Naka St" */
+  .member-ui .topbar-nav { justify-content: space-between; }
+  .member-ui .topbar-nav a { padding: 0 8px; font-size: 12.5px; }
+  /* two columns left ~150px cards where titles and links broke every word; one column reads */
+  .member-ui .workflow-cards { grid-template-columns: 1fr; }
+}
+@media (max-width: 400px) {
+  /* even tight pills overflow below ~400px (common 360px Androids): a 2×2 grid keeps all four whole */
+  .member-ui .topbar-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; border-radius: 18px; }
+  .member-ui .topbar-nav a { justify-content: center; padding: 0 6px; font-size: 13px; }
   .member-ui .glass-nav.auth-topbar, .doc-topbar { height: 58px; padding: 0 8px 0 14px; }
   .member-ui .app-topbar [data-account-menu] { margin-left: auto; }
 }
