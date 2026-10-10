@@ -34,6 +34,7 @@
 | `studio.product_studio` | เมนู Product Studio | `/api/v1/studio` (seller และ viral clone ก็ใช้) | — |
 | `studio.viral_clone` | เมนู Viral Clone | `/api/v1/clone` | — |
 | `studio.live` | เมนู AI Live | `/api/v1/live` | — |
+| `studio.social` | เมนู Social Auto Reply (รวมตัวดึงคอมเมนต์เบื้องหลัง) | `/api/v1/social` | — |
 | `studio.video` | สร้างวิดีโอ AI ในสตูดิโอ (ทุกเมนู) | `generateVideo` | วิดีโอ/เดือน |
 
 route ที่ใช้ร่วมกันของสตูดิโอ (episodes, storyboards, tasks, upload, merge …) เปิดให้คนที่มีเมนูสตูดิโออย่างน้อย 1 เมนู

@@ -8,7 +8,7 @@ import { featureOn } from "./system/store";
 export type FeatureKey =
   | "landing.clips" | "landing.marketer" | "landing.ai_video" | "landing.social" | "landing.inbox"
   | "studio.drama" | "studio.marketer" | "studio.seller" | "studio.product_studio" | "studio.viral_clone"
-  | "studio.live" | "studio.video";
+  | "studio.live" | "studio.video" | "studio.social";
 
 /** The /admin/system/ switch that closes a landing feature for every member. */
 const SYSTEM_SWITCH: Partial<Record<FeatureKey, `FEATURE_${string}`>> = {

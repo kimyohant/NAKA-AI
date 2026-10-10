@@ -17,8 +17,8 @@ const th = loadLocale('th')
 const en = loadLocale('en')
 const get = (o, k) => k.split('.').reduce((a, p) => (a == null ? a : a[p]), o)
 
-test('sidebar links to /social with a nav label', () => {
-  assert.match(layout, /<NuxtLink to="\/social"/)
+test('sidebar links to /social with a nav label, only for plans that include it', () => {
+  assert.match(layout, /<NuxtLink v-if="menuAllowed\('studio\.social'\)" to="\/social"/)
   assert.equal(typeof th.layout.nav.social, 'string')
   assert.equal(typeof en.layout.nav.social, 'string')
 })

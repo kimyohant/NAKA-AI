@@ -37,7 +37,7 @@
           <Radio :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.live') }}</span>
         </NuxtLink>
-        <NuxtLink to="/social" class="side-link" :class="{ active: isSocialRoute }" :title="t('layout.nav.social')" @click="navOpen = false">
+        <NuxtLink v-if="menuAllowed('studio.social')" to="/social" class="side-link" :class="{ active: isSocialRoute }" :title="t('layout.nav.social')" @click="navOpen = false">
           <MessagesSquare :size="17" :stroke-width="1.8" />
           <span class="side-label">{{ t('layout.nav.social') }}</span>
         </NuxtLink>
@@ -141,7 +141,7 @@ onMounted(async () => {
   try { session.value = await authAPI.me() } catch { /* 401 → useApi พาไปล็อกอินเอง */ }
 })
 // menus the member's naka-ai plan includes (docs/entitlements.md); features null = all (admin, single-user)
-const MENU_HOME = [['studio.seller', '/seller'], ['studio.drama', '/drama'], ['studio.marketer', '/marketer'], ['studio.viral_clone', '/viral-clone'], ['studio.live', '/live']]
+const MENU_HOME = [['studio.seller', '/seller'], ['studio.drama', '/drama'], ['studio.marketer', '/marketer'], ['studio.viral_clone', '/viral-clone'], ['studio.live', '/live'], ['studio.social', '/social']]
 function menuAllowed(key) {
   const features = session.value?.features
   return !features || features.some(f => f.key === key && f.enabled)
