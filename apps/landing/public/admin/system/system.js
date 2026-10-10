@@ -247,6 +247,62 @@
     finally { button.disabled = false; }
   });
 
+  // ---------- credit prices (docs/credit-pricing.md) ----------
+
+  var priceCatalog = [];
+  function perText(p, perSecond) { return perSecond ? 'เครดิต/วินาที' : 'เครดิต/' + p.unitLabel; }
+  /** "คลิป 10 วินาที = 5 เครดิต": what one piece of work costs at the values in the form */
+  function priceExample(p, credits, perSecond) {
+    if (!(credits > 0)) return 'ฟรี';
+    if (!perSecond) return Math.ceil(credits) + ' เครดิตต่อ' + p.unitLabel;
+    return [5, 10].map(function (s) { return p.unitLabel + ' ' + s + ' วินาที = ' + Math.ceil(Math.round(credits * s * 100) / 100) + ' เครดิต'; }).join(' · ');
+  }
+  function priceRow(p) {
+    var form = el('form', null, 'price-row');
+    var name = el('div', null, 'price-name');
+    name.append(el('strong', p.label), el('small', p.updatedAt ? 'แก้ล่าสุด ' + date(p.updatedAt) + (p.actor ? ' · ' + p.actor : '') : 'ค่าเริ่มต้น', 'muted'));
+    var id = 'price-' + p.key.replace(/\./g, '-');
+    var creditsLabel = el('label', 'เครดิต'); creditsLabel.htmlFor = id;
+    var credits = el('input'); credits.id = id; credits.type = 'number'; credits.min = 0; credits.max = 1000; credits.required = true;
+    credits.step = p.perSecond ? '0.01' : '1'; credits.value = p.credits;
+    var unit;
+    if (p.allowPerSecond) {
+      unit = el('select'); unit.setAttribute('aria-label', 'คิดเครดิตแบบ');
+      [['item', 'ต่อ' + p.unitLabel], ['second', 'ต่อวินาที']].forEach(function (o) { var opt = el('option', o[1]); opt.value = o[0]; unit.append(opt); });
+      unit.value = p.perSecond ? 'second' : 'item';
+    } else {
+      unit = el('span', 'ต่อ' + p.unitLabel, 'price-unit');
+    }
+    var noteId = id + '-note', noteLabel = el('label', 'เหตุผล'); noteLabel.htmlFor = noteId;
+    var note = el('input'); note.id = noteId; note.maxLength = 200; note.placeholder = 'เช่น ต้นทุนผู้ให้บริการเปลี่ยน';
+    var example = el('p', null, 'price-example muted');
+    var perSecondNow = function () { return p.allowPerSecond ? unit.value === 'second' : false; };
+    var refresh = function () {
+      credits.step = perSecondNow() ? '0.01' : '1';
+      example.textContent = priceExample(p, Number(credits.value), perSecondNow());
+    };
+    credits.addEventListener('input', refresh);
+    if (p.allowPerSecond) unit.addEventListener('change', refresh);
+    var button = el('button', 'บันทึก', 'btn btn-primary btn-sm'); button.type = 'submit';
+    var status = el('p'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+    var fields = el('div', null, 'price-fields'), creditWrap = el('div'), noteWrap = el('div', null, 'price-note');
+    creditWrap.append(creditsLabel, credits);
+    noteWrap.append(noteLabel, note);
+    fields.append(creditWrap, unit, noteWrap, button);
+    form.append(name, fields, example, status);
+    refresh();
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      var data = { credits: Number(credits.value), perSecond: perSecondNow(), note: note.value.trim() };
+      if (!confirm('เปลี่ยนราคา ' + p.label + ' เป็น ' + data.credits + ' ' + perText(p, data.perSecond) + '?\nมีผลกับงานที่เริ่มหลังจากนี้')) return;
+      button.disabled = true; message(status, 'กำลังบันทึก…');
+      try { renderPrices(await api('/prices/' + p.key, 'PUT', data)); flash('บันทึกราคา ' + p.label + ' แล้ว'); }
+      catch (error) { if (!quiet(error)) message(status, error.message, true); button.disabled = false; }
+    });
+    return form;
+  }
+  function renderPrices(data) { priceCatalog = data.prices || []; $('prices').replaceChildren.apply($('prices'), priceCatalog.map(priceRow)); }
+
   // ---------- history ----------
 
   function describe(row) {
@@ -258,6 +314,11 @@
       Object.keys(a).forEach(function (k) { if (!(k in b)) changes.push('+ ' + name(k)); else if (b[k] !== a[k]) changes.push(name(k) + ' ' + lim(b[k]) + ' → ' + lim(a[k])); });
       Object.keys(b).forEach(function (k) { if (!(k in a)) changes.push('− ' + name(k)); });
       return 'ฟีเจอร์: ' + (changes.join(' · ') || 'ไม่มีการเปลี่ยนแปลง');
+    }
+    if (row.area === 'price') {
+      var priced = priceCatalog.find(function (x) { return x.key === row.target; }) || { label: row.target, unitLabel: 'ชิ้น' };
+      var cost = function (v) { return v.credits + ' ' + perText(priced, v.perSecond); };
+      return 'ราคา ' + priced.label + ': ' + cost(d.before) + ' → ' + cost(d.after);
     }
     if (row.area === 'studio') return 'งานวิดีโอ #' + d.taskId + ' (ปล่อยช่องคิวให้งานถัดไป)';
     if (row.area === 'plan') {
@@ -432,10 +493,10 @@
   });
 
   async function loadAll() {
-    var results = await Promise.all([api('!/me'), api('/settings'), api('/plans')]);
+    var results = await Promise.all([api('!/me'), api('/settings'), api('/plans'), api('/prices')]);
     $('who').textContent = results[0].kind === 'token' ? 'เข้าด้วยโทเคนฉุกเฉิน' : 'เข้าระบบเป็น ' + results[0].label;
     $('who').className = 'who' + (results[0].kind === 'token' ? ' token' : '');
-    render(results[1]); renderPlans(results[2]);
+    render(results[1]); renderPlans(results[2]); renderPrices(results[3]);
   }
   function show() {
     $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false; $('who').hidden = false; message($('login-status'), '');

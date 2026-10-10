@@ -14,6 +14,7 @@ import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuc
 import { taskMediaSlot } from '../production/storyboard-readiness.js'
 import { estimateCostThb } from './generation-cost.js'
 import { releaseFeatureUse, useVideoQuota } from '../auth/entitlements.js'
+import { holdTaskCredits, settleTaskCredits, taskCredits } from '../auth/credits.js'
 import { currentOwnerId } from '../auth/owner-context.js'
 import { sourceSnapshotForShot } from '../production/source-freshness.js'
 
@@ -248,6 +249,8 @@ async function createTask(
 ): Promise<number> {
   const ts = now()
   const snapshot = type === 'video' && fields.storyboardId ? await sourceSnapshotForShot(fields.storyboardId) : null
+  // naka-ai credits (docs/credit-pricing.md): priced here, held with the insert below, settled when the task ends
+  const credits = await taskCredits(await generationOwner(fields), type, Number(params.duration))
   const id = await db.transaction(async tx => {
     const one = async <T>(rows: Promise<T[]>): Promise<T | null> => (await rows)[0] ?? null
     const shot = fields.storyboardId
@@ -288,7 +291,13 @@ async function createTask(
       createdAt: ts,
       updatedAt: ts,
     }).returning({ id: schema.sysTask.id })
-    return insertedId(res)
+    const taskId = insertedId(res)
+    if (credits > 0) {
+      // the same member the task is stamped with; not enough credits throws and rolls the insert back
+      const holdId = await holdTaskCredits(tx, drama ? drama.ownerUserId : currentOwnerId(), credits, `studio:${type}:${taskId}`)
+      await tx.update(schema.sysTask).set({ creditHoldId: holdId, creditsCharged: credits }).where(eq(schema.sysTask.id, taskId))
+    }
+    return taskId
   })
   await startTask(id, config, false)
   return id
@@ -504,6 +513,7 @@ export async function cancelGenerationTask(id: number): Promise<'cancelled' | 'a
     return rows.length ? 'cancelled' as const : 'not_cancellable' as const
   })
   if (result === 'cancelled') {
+    await settleTaskCredits(id, 'refund')
     logTaskWarn('SysTask', 'cancelled', { id })
     void pumpVideoQueue()
   }
@@ -710,6 +720,7 @@ async function failTask(id: number, message: string, code?: string) {
   await db.update(schema.sysTask)
     .set({ status: 'failed', errorMsg: message, errorCode: code || null, updatedAt: now() })
     .where(eq(schema.sysTask.id, id))
+  await settleTaskCredits(id, 'refund')
   void pumpVideoQueue()
 }
 
@@ -827,6 +838,7 @@ async function handleImageComplete(record: SysTaskRecord, imageUrl: string) {
   await db.update(schema.sysTask)
     .set({ resultUrl: imageUrl, localPath, status: 'completed', completedAt: now(), updatedAt: now() })
     .where(eq(schema.sysTask.id, record.id))
+  await settleTaskCredits(record.id, 'commit')
 
   logTaskSuccess('ImageTask', 'downloaded', { id: record.id, provider: record.provider, localPath })
 }
@@ -839,6 +851,7 @@ async function handleImageCompleteBase64(record: SysTaskRecord, base64Data: stri
   await db.update(schema.sysTask)
     .set({ localPath, status: 'completed', completedAt: now(), updatedAt: now() })
     .where(eq(schema.sysTask.id, record.id))
+  await settleTaskCredits(record.id, 'commit')
 
   logTaskSuccess('ImageTask', 'saved-base64', { id: record.id, provider: record.provider, mimeType, localPath })
 }
@@ -883,6 +896,7 @@ async function handleVideoComplete(record: SysTaskRecord, videoUrl: string, dura
   await db.update(schema.sysTask)
     .set({ resultUrl: videoUrl, localPath, status: 'completed', completedAt: now(), updatedAt: now() })
     .where(eq(schema.sysTask.id, record.id))
+  await settleTaskCredits(record.id, 'commit')
 
   logTaskSuccess('VideoTask', 'downloaded', { id: record.id, localPath, storyboardId: record.storyboardId, duration })
   // สล็อตของ provider แบบ maxConcurrent ว่าง → ดึงงาน queued ถัดไปเข้าทำงาน

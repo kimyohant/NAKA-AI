@@ -32,7 +32,9 @@ for (const file of readdirSync(migrations).filter(f => /^\d{4}_[\w-]+\.sql$/.tes
 await rawExec(`SET search_path TO studio;
   INSERT INTO account.users (id, display_name, created_at) VALUES ('free1', 'ฟรี', 1), ('starter1', 'เริ่มต้น', 1), ('pro1', 'โปร', 1), ('boss', 'แอดมิน', 1);
   INSERT INTO account.subscriptions (user_id, plan_id, status, expires_at) VALUES
-    ('starter1', 'starter', 'active', 4102444800), ('pro1', 'pro', 'active', 4102444800);`)
+    ('starter1', 'starter', 'active', 4102444800), ('pro1', 'pro', 'active', 4102444800);
+  -- studio videos also cost credits (credits.test.ts); these tests are about the quota, so the members can pay
+  INSERT INTO account.credit_ledger (user_id, delta, reason, note) VALUES ('starter1', 1000, 'grant', 't'), ('pro1', 1000, 'grant', 't');`)
 
 const used = async (user: string) => Number((await rawQuery(
   "SELECT coalesce(sum(used), 0) AS n FROM account.feature_usage WHERE user_id = $1 AND feature_key = 'studio.video'", [user]))[0].n)

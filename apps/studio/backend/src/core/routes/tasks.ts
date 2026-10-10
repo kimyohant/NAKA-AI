@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { ownedBy } from '../auth/owner-context.js'
+import { settleTaskCredits } from '../auth/credits.js'
 import { db, schema } from '../db/index.js'
 import { success, created, badRequest } from '../http/response.js'
 import { cancelGenerationTask, generateImage, generateVideo, resumeGenerationTask, videoQueuePosition } from '../generation/generation.js'
@@ -160,6 +161,8 @@ app.delete('/:id', async (c) => {
   const selections = await db.select().from(schema.storyboardMediaSelections)
     .where(eq(schema.storyboardMediaSelections.taskId, id))
   if (selections.length) return badRequest(c, 'Cannot delete media selected for a shot')
+  // a deleted task that never produced its result gives its credits back (an unknown task still holds them)
+  if (task && task.status !== 'completed') await settleTaskCredits(id, 'refund')
   await db.delete(schema.sysTask).where(eq(schema.sysTask.id, id))
   return success(c)
 })

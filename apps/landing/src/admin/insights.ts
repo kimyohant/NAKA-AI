@@ -209,7 +209,7 @@ async function paymentsCsv(env: Env, url: URL): Promise<Response> {
 
 // ---------- งานที่ล้มเหลว ----------
 
-interface StudioFailed { days: number; total: number; tasks: { ownerUserId: string | null }[] }
+interface StudioFailed { days: number; total: number; tasks: { ownerUserId: string | null; creditHoldId?: number | null }[] }
 
 async function failedJobs(env: Env, url: URL): Promise<Response> {
   const days = Math.min(30, Math.max(1, Math.trunc(Number(url.searchParams.get('days'))) || 7));
@@ -242,9 +242,18 @@ async function failedJobs(env: Env, url: URL): Promise<Response> {
         .bind(...owners).all<{ id: string; name: string }>();
       for (const row of results) names.set(row.id, row.name);
     }
+    // credits the studio held for each task (account.hold_credits, 0002_shared.sql): held, committed or refunded
+    const holdIds = [...new Set(tasks.map(task => task.creditHoldId).filter((id): id is number => Number.isInteger(id) && (id as number) > 0))];
+    const holds = new Map<number, { status: string; credits: number }>();
+    if (holdIds.length) {
+      const { results } = await env.DB.prepare(`SELECT h.ledger_id AS id, h.status, -l.delta AS credits FROM credit_holds h JOIN credit_ledger l ON l.id = h.ledger_id
+        WHERE h.ledger_id IN (${holdIds.map(() => '?').join(', ')})`).bind(...holdIds).all<{ id: number; status: string; credits: number }>();
+      for (const row of results) holds.set(row.id, { status: row.status, credits: row.credits });
+    }
     studioPart = { ok: true, total: studioResult.data?.total ?? tasks.length,
       tasks: tasks.map(task => ({ ...task, customerName: task.ownerUserId ? names.get(task.ownerUserId) ?? null : null,
-        customerKnown: !!task.ownerUserId && names.has(task.ownerUserId) })) };
+        customerKnown: !!task.ownerUserId && names.has(task.ownerUserId),
+        credits: task.creditHoldId ? holds.get(task.creditHoldId) ?? null : null })) };
   } else studioPart = studioResult;
   return json({
     days,

@@ -123,7 +123,8 @@ test('a video is checked before credits are held: provider set up, own files, co
 
 test('submit once with signed links, wait without spending retries, then keep the result in R2', async () => {
   const shop = customer(10);
-  env.AI_VIDEO_CREDITS = '3';
+  // the AI video price set in /admin/system/ (ราคาเครดิต)
+  sqlite.prepare("UPDATE credit_prices SET credits = 3 WHERE key = 'landing.ai_video'").run();
   const clip = await key(await upload(shop, MP4, 'video/mp4'));
   const product = await key(await upload(shop, JPEG, 'image/jpeg'));
   const face = await key(await upload(shop, JPEG, 'image/jpeg', '?person=consented&consent=1'));
