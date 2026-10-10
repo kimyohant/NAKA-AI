@@ -2762,3 +2762,79 @@ body.is-video-col-dragging { cursor: col-resize; user-select: none; }
   }
 
 }
+
+/* ===== Phone (≤600px) =====
+ * The studio layout pins the page to 100vh, so the workbench itself becomes the vertical scroller:
+ * topbar → stage strip → panel, each at its natural height. The sidebar turns into a horizontal
+ * strip of sub-steps, the model pickers scroll sideways instead of running off the screen, and
+ * topbar controls get thumb-sized (44px) targets. Wider screens keep the rules above unchanged. */
+@media (max-width: 600px) {
+  .studio.ep-workbench {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ep-workbench .studio-topbar { padding: 8px; gap: 8px; }
+  .ep-workbench .studio-topbar-main { flex-wrap: wrap; }
+  .ep-workbench .studio-topbar .topbar-back { height: 40px; font-size: 13px; }
+  .ep-workbench .studio-title { font-size: 16px; line-height: 1.3; white-space: normal; }
+  .ep-workbench .studio-meta-row { flex-wrap: wrap; }
+
+  .ep-workbench .studio-topbar-side { flex-direction: column; align-items: stretch; gap: 8px; }
+  .ep-workbench .studio-model-picks,
+  .ep-workbench .studio-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .ep-workbench .studio-model-picks::-webkit-scrollbar,
+  .ep-workbench .studio-actions::-webkit-scrollbar { display: none; }
+  .ep-workbench .studio-model-picks > *,
+  .ep-workbench .studio-actions > * { flex: 0 0 auto; }
+  .ep-workbench .studio-topbar .btn { height: 40px; min-width: 40px; padding: 0 12px; font-size: 13px; }
+
+  .ep-workbench .studio-body { display: flex; flex-direction: column; flex: none; }
+
+  /* Sidebar → horizontal sub-step strip + the four-stage progress bar. A collapsed state saved on a
+   * desktop is ignored here: the strip already takes no width. */
+  .ep-workbench .sidebar,
+  .ep-workbench .sidebar.collapsed { width: auto; max-height: none; flex-shrink: 0; }
+  .ep-workbench .pipeline,
+  .ep-workbench .sidebar.collapsed .pipeline {
+    flex: none;
+    flex-direction: row;
+    gap: 14px;
+    padding: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .ep-workbench .pipeline::-webkit-scrollbar { display: none; }
+  .ep-workbench .pipe-section { flex: 0 0 auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .ep-workbench .pipe-section-label,
+  .ep-workbench .sidebar.collapsed .pipe-section-label { flex-basis: 100%; justify-content: flex-start; padding: 0 2px 2px; }
+  .ep-workbench .sidebar.collapsed .pipe-section-label > span:not(.pipe-section-state) { display: inline; }
+  .ep-workbench .pipe-item-sub,
+  .ep-workbench .sidebar.collapsed .pipe-item {
+    width: auto;
+    min-height: 44px;
+    padding: 6px 12px 6px 8px;
+    grid-template-columns: auto minmax(0, 1fr);
+    white-space: nowrap;
+  }
+  .ep-workbench .pipe-item-sub:not(:last-child)::after { display: none; }
+  .ep-workbench .sidebar.collapsed .pipe-item .pipe-copy { display: flex; }
+  .ep-workbench .pipe-item.active::before { top: auto; bottom: 0; left: 12px; right: 12px; width: auto; height: 3px; }
+
+  .ep-workbench .sidebar-bottom,
+  .ep-workbench .sidebar.collapsed .sidebar-bottom { padding: 8px 10px 10px; align-items: stretch; }
+  .ep-workbench .sidebar.collapsed .sidebar-progress { display: flex; }
+  .ep-workbench .sidebar-progress-seg { height: 8px; }
+  .ep-workbench .sidebar-toggle,
+  .ep-workbench .sidebar-bottom .refresh-btn { display: none; } /* collapsing means nothing here; the topbar has refresh */
+
+  .ep-workbench .main { min-height: 72dvh; }
+}
