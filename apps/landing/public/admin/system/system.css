@@ -105,3 +105,22 @@
   #new-plan .plan-grid, .plan-grid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .switch input, .switch input::after { transition: none; } }
+
+/* credit prices (docs/credit-pricing.md) */
+.prices { margin-bottom: 14px; }
+.price-rows { display: grid; gap: 4px; margin-top: 10px; }
+.price-row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr); gap: 4px 18px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line, #e3e8f1); }
+.price-row:first-child { border-top: 0; }
+.price-name { display: flex; flex-direction: column; gap: 2px; }
+.price-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 10px; }
+.price-fields input[type="number"] { width: 110px; }
+.price-fields select { width: auto; flex: 0 0 auto; }
+.price-fields select, .price-unit { min-height: 40px; }
+.price-unit { display: inline-flex; align-items: center; }
+.price-note { flex: 1 1 200px; }
+.price-note input { width: 100%; }
+.price-example, .price-row [role="status"] { grid-column: 2; margin: 0; font-size: .85em; }
+@media (max-width: 720px) {
+  .price-row { grid-template-columns: 1fr; }
+  .price-example, .price-row [role="status"] { grid-column: 1; }
+}

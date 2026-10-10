@@ -1,4 +1,4 @@
-// Site content from the back office (src/content/*, migrations/pg/0007_site_content.sql): the home page's clip
+// Site content from the back office (src/content/*, migrations/pg/0008_site_content.sql): the home page's clip
 // gallery (hide, order, upload) and announcements, and how pages are served with them.
 const assert = require('node:assert/strict');
 const { test, beforeEach, afterEach, after } = require('node:test');

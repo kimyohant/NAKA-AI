@@ -186,8 +186,11 @@ test('failed jobs: landing jobs with refund state, naka-studio tasks named by cu
   sqlite.prepare(`INSERT INTO ai_videos (id, user_id, job_id, kind, provider, prompt, input, status, cost_credits, created_at, updated_at)
     VALUES ('v1', 'a', 'jf1', 'product', 'seedance', 'p', '{}', 'failed', 5, ?, ?)`).run(now, now);
 
+  // the studio held 8 credits for task 11 and gave them back (credits.ts settleTaskCredits)
+  const hold = sqlite.prepare("INSERT INTO credit_ledger (user_id, delta, reason, job_id) VALUES ('a', -8, 'studio_hold', 'studio:11') RETURNING id").get().id;
+  sqlite.prepare("INSERT INTO credit_holds (ledger_id, status) VALUES (?, 'refunded')").run(hold);
   const calls = fakeStudio((url) => studioJson({ days: 7, total: 2, tasks: [
-    { id: 11, type: 'video', ownerUserId: 'a', error: 'provider said no' }, { id: 12, type: 'image', ownerUserId: 'ghost', error: null }] }));
+    { id: 11, type: 'video', ownerUserId: 'a', error: 'provider said no', creditHoldId: hold }, { id: 12, type: 'image', ownerUserId: 'ghost', error: null, creditHoldId: null }] }));
   const e = { ...env, STUDIO_INTERNAL_URL: 'http://studio:5679', STUDIO_ADMIN_TOKEN: STUDIO_TOKEN };
   const r = await (await site('/api/admin/jobs', {}, e)).json();
   assert.equal(r.days, 7);
@@ -199,6 +202,7 @@ test('failed jobs: landing jobs with refund state, naka-studio tasks named by cu
   assert.deepEqual(calls, ['http://studio:5679/api/v1/system/failed-tasks?days=7']);
   assert.equal(r.studio.ok, true);
   assert.deepEqual(r.studio.tasks.map(task => [task.id, task.customerName, task.customerKnown]), [[11, 'ร้านเอ', true], [12, null, false]]);
+  assert.deepEqual(r.studio.tasks.map(task => task.credits), [{ status: 'refunded', credits: 8 }, null]);
 
   assert.equal((await (await site('/api/admin/jobs?days=30', {}, e)).json()).landing.total, 3);
   assert.equal((await (await site('/api/admin/jobs?days=500', {}, e)).json()).days, 30);

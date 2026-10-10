@@ -279,6 +279,9 @@ export const sysTask = pgTable('sys_task', {
   errorMsg: text('error_msg'),
   errorCode: text('error_code'),
   estimatedCostThb: doublePrecision('estimated_cost_thb'),
+  // naka-ai credits held for this task (auth/credits.ts): the account.credit_ledger id of the hold, and how many
+  creditHoldId: bigint('credit_hold_id', { mode: 'number' }),
+  creditsCharged: bigint('credits_charged', { mode: 'number' }),
   sourceSnapshot: text('source_snapshot'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),

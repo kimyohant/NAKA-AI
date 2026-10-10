@@ -55,7 +55,6 @@ export const SETTINGS: readonly SettingDef[] = [
   { key: 'VIDEO_BASE_URL', group: 'video', kind: 'text', label: 'Base URL', help: 'ว่าง = ค่าเริ่มต้นของผู้ให้บริการ (ภูมิภาคสากล)', pattern: /^https:\/\/[^\s]+$/, max: 200 },
   { key: 'VIDEO_MODEL', group: 'video', kind: 'text', label: 'รุ่นโมเดล', help: 'ว่าง = รุ่นเริ่มต้นของผู้ให้บริการ', pattern: /^[\w.:-]{2,80}$/, max: 80 },
   { key: 'VIDEO_RESOLUTION', group: 'video', kind: 'select', label: 'ความละเอียด', help: '720p คมกว่า แต่ต้นทุนสูงกว่า 480p ราว 2 เท่า', options: ['720p', '480p'] },
-  { key: 'AI_VIDEO_CREDITS', group: 'general', kind: 'number', label: 'เครดิตต่อวิดีโอ AI', help: 'ว่าง = 5 · ตั้งตามต้นทุนจริงของผู้ให้บริการ', max: 100 },
   { key: 'EMAIL_PROVIDER', group: 'email', kind: 'select', label: 'ระบบส่งอีเมล (ลืมรหัสผ่าน)', help: 'resend = เปิดลืมรหัสผ่านทางอีเมล', options: ['off', 'resend'] },
   { key: 'RESEND_API_KEY', group: 'email', kind: 'secret', label: 'Resend API key', pattern: /^re_[A-Za-z0-9_]{10,}$/ },
   { key: 'EMAIL_FROM', group: 'email', kind: 'text', label: 'อีเมลผู้ส่ง', help: 'เช่น naka-ai <no-reply@naka-ai.com>', max: 120,

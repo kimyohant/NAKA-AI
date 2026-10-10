@@ -1,4 +1,4 @@
-// LINE alerts for admins (migrations/pg/0006_admin_alerts.sql, page /admin/alerts/, docs/admin-backoffice.md).
+// LINE alerts for admins (migrations/pg/0007_admin_alerts.sql, page /admin/alerts/, docs/admin-backoffice.md).
 //
 // - Pairing: the page makes a one-time six-digit code; the admin sends "แจ้งเตือน 123456" to the shop's
 //   LINE OA, and the webhook (handleAlertCommand) adds that LINE account as a recipient. "หยุดแจ้งเตือน"

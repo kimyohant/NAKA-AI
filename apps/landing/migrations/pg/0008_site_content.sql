@@ -39,4 +39,4 @@ CREATE TABLE announcements (
 CREATE INDEX announcements_live ON announcements (active, starts_at DESC);
 
 ALTER TABLE system_audit DROP CONSTRAINT system_audit_area_check;
-ALTER TABLE system_audit ADD CONSTRAINT system_audit_area_check CHECK (area IN ('setting', 'plan', 'studio', 'alert', 'content'));
+ALTER TABLE system_audit ADD CONSTRAINT system_audit_area_check CHECK (area IN ('setting', 'plan', 'studio', 'price', 'alert', 'content'));

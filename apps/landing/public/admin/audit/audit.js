@@ -4,7 +4,7 @@
   'use strict';
   var A = window.NakaAdmin, $ = A.$, el = A.el;
   var FIELDS = ['q', 'source', 'actor'];
-  var SOURCE = { customer: ['ลูกค้า', 'b-paid'], setting: ['ตั้งค่าระบบ', ''], plan: ['แพ็กเกจ', ''], studio: ['Studio', 'b-pending'], alert: ['แจ้งเตือน LINE', 'b-muted'], content: ['เนื้อหาหน้าเว็บ', 'b-ok'] };
+  var SOURCE = { customer: ['ลูกค้า', 'b-paid'], setting: ['ตั้งค่าระบบ', ''], plan: ['แพ็กเกจ', ''], price: ['ราคาเครดิต', ''], studio: ['Studio', 'b-pending'], alert: ['แจ้งเตือน LINE', 'b-muted'], content: ['เนื้อหาหน้าเว็บ', 'b-ok'] };
   var STATUS = { active: 'ใช้งาน', disabled: 'ระงับ' };
   var FIELD = { credits: 'เครดิต', status: 'สถานะบัญชี', planId: 'แพ็กเกจ', subscriptionStatus: 'สถานะแพ็กเกจ', expiresAt: 'วันหมดอายุ',
     nextCreditAt: 'เติมเครดิตถัดไป', period: 'รอบ', sessions: 'การเข้าสู่ระบบ', name: 'ชื่อ', price_thb: 'ราคา (บาท)', monthly_credits: 'เครดิตต่อเดือน',
@@ -31,6 +31,7 @@
     }
     if (e.source === 'setting') return { set: 'ตั้งค่า ', clear: 'ล้างค่า ', import: 'ย้ายค่าจาก Cloudflare: ' }[e.action] + e.target;
     if (e.source === 'plan') return (e.action === 'create' ? 'สร้างแพ็กเกจ ' : 'แก้แพ็กเกจ ') + e.target;
+    if (e.source === 'price') return 'แก้ราคาเครดิต ' + e.target;
     if (e.source === 'studio') return 'ยกเลิกงานใน Studio ' + e.target.replace('task:', '#');
     if (e.source === 'alert') {
       if (e.target === 'pairing') return 'สร้างรหัสเชื่อม LINE';

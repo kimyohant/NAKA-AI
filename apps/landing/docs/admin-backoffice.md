@@ -52,7 +52,7 @@ A larger result is refused with 413 ("เลือกช่วงวันที
 - A cell that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading `'`, so a
   customer's display name cannot run as a spreadsheet formula (OWASP CSV injection).
 
-## LINE alerts (`src/admin/alerts.ts`, migration `0006_admin_alerts.sql`)
+## LINE alerts (`src/admin/alerts.ts`, migration `0007_admin_alerts.sql`)
 
 Admins receive alerts through the shop's own LINE OA (`LINE_CHANNEL_ACCESS_TOKEN`, webhook `/webhook/line`).
 
@@ -79,7 +79,7 @@ Admins receive alerts through the shop's own LINE OA (`LINE_CHANNEL_ACCESS_TOKEN
 cancels, alerts), newest first, 50 per page. It filters by source, actor or a search. Neither table is ever
 updated or deleted. Secret settings appear only as their last four characters.
 
-## Site content (`src/content/*`, migration `0007_site_content.sql`, page `/admin/content/`)
+## Site content (`src/content/*`, migration `0008_site_content.sql`, page `/admin/content/`)
 
 **Showcase clips.** The cards written in `public/index.html` (`#reel`) stay there. A row in
 `showcase_clips` can:
