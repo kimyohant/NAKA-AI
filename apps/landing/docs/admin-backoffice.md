@@ -15,6 +15,8 @@ The shell gives every page a grouped sidebar on desktop and a tab bar on phones.
 | | งานที่ล้มเหลว | `/admin/jobs/` (`?days=1\|7\|30`) | `GET /api/admin/jobs` |
 | ระบบ | ระบบ Studio | `/admin/studio-system/` | `/api/admin/studio-system/*` |
 | | ตั้งค่าระบบ | `/admin/system/` | `/api/admin/system/*` |
+| | แจ้งเตือน LINE | `/admin/alerts/` | `/api/admin/alerts/*` |
+| | ประวัติการจัดการ | `/admin/audit/` | `GET /api/admin/audit` |
 | | บอทขายของ LINE | `/admin/bot/` (was `/admin/` until the overview took that path) | `/api/admin/products`, `orders`, … |
 
 On phones the tab bar shows the four daily pages. The rest open from "เพิ่มเติม", a bottom sheet
@@ -49,3 +51,30 @@ A larger result is refused with 413 ("เลือกช่วงวันที
 - Times are in Thailand time.
 - A cell that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading `'`, so a
   customer's display name cannot run as a spreadsheet formula (OWASP CSV injection).
+
+## LINE alerts (, migration )
+
+Admins receive alerts through the shop's own LINE OA (, webhook ).
+
+- **Pairing:** เพิ่มผู้รับ makes a six-digit code that is valid for ten minutes, and only its SHA-256 is stored.
+  - The admin sends  to the OA. The webhook adds that LINE account and replies.
+  - This works even while the shop bot () is off.
+  - Every wrong code counts against all open codes, and five wrong codes close them.
+  -  from a recipient removes them. From anyone else it is an ordinary chat message.
+- **The check** runs from the cron every five minutes and sends **one** message per run.
+  - **Rules:** failed jobs (naka-ai and studio, last 30 minutes), naka-studio unreachable or holding
+    unknown tasks, queued jobs waiting more than 15 minutes, failed payments (last 30 minutes), and
+    optionally every successful payment.
+  - **Repeats:** a problem that is still there is repeated after two hours.
+  - **Recovery:** the studio and the queue also announce when they are back to normal.
+  - **Payments:** successful payments are announced once each. Payments made before anyone paired are
+    never replayed.
+- **Cost:** every alert is a LINE push message and counts against the OA plan's monthly message quota.
+- **Audit:** changes are recorded in  under area : codes made, recipients added
+  or removed, rules changed, and test messages.
+
+## History of admin actions ()
+
+ merges  (one customer) and  (settings, plans, studio
+cancels, alerts), newest first, 50 per page. It filters by source, actor or a search. Neither table is ever
+updated or deleted. Secret settings appear only as their last four characters.
