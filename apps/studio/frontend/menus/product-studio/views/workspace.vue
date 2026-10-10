@@ -1313,4 +1313,13 @@ onBeforeUnmount(() => {
   .ps-shots-grid { grid-template-columns: 1fr; }
   .ps-pimages-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
+
+/* Phone: back button on its own line and the title under it at full width — side by side the title
+ * was squeezed beside "back"; the action buttons wrap below. */
+@media (max-width: 600px) {
+  .ps-topbar-main { flex-direction: column; align-items: flex-start; gap: 8px; width: 100%; }
+  .ps-topbar-main .back-btn { min-height: 40px; }
+  .ps-identity { width: 100%; }
+  .ps-topbar-side { flex-wrap: wrap; width: 100%; flex-shrink: 1; }
+}
 </style>

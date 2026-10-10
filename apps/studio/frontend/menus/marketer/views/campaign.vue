@@ -1367,4 +1367,13 @@ onBeforeUnmount(() => {
   .mk-vis-row { flex-direction: column; align-items: stretch; }
   .mk-vis-instruction { min-width: 0; }
 }
+
+/* Phone: back button on its own line and the title under it at full width — side by side the title
+ * was squeezed beside "back"; the action buttons wrap below. */
+@media (max-width: 600px) {
+  .mk-topbar-main { flex-direction: column; align-items: flex-start; gap: 8px; width: 100%; }
+  .mk-topbar-main .back-btn { min-height: 40px; }
+  .mk-identity { width: 100%; }
+  .mk-topbar-side { flex-wrap: wrap; width: 100%; flex-shrink: 1; }
+}
 </style>

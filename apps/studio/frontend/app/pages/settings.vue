@@ -1775,6 +1775,17 @@ watch(tab, (t) => {
   .skills-library-filter { min-height: 40px; }
 }
 
+/* Phone: a config row is badge + name/models + four controls, too many for one line. The name block
+ * takes the line beside the badge and the controls wrap under it, so tags stay on one line. */
+@media (max-width: 600px) {
+  .config-row { flex-wrap: wrap; padding: 12px 16px; row-gap: 8px; }
+  .config-main { flex: 1 1 calc(100% - 48px); }
+  .config-line { flex-wrap: wrap; row-gap: 4px; }
+  .config-line .tag { white-space: nowrap; }
+  .config-main + * { margin-left: 48px; } /* first control under the badge column */
+  .svc-group-head { flex-wrap: wrap; padding: 14px 16px; }
+}
+
 /* Shared */
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field-label { font-size: 12px; font-weight: 550; color: var(--text-1); }

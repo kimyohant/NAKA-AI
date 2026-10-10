@@ -130,7 +130,7 @@ onBeforeUnmount(stopCycle)
   position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 1;
   display: flex; align-items: center; justify-content: center; gap: 6px;
   height: 36px; border-radius: 999px;
-  background: var(--accent-gradient); color: #fff;
+  background: var(--accent-gradient); color: var(--action-primary-text);
   font-size: 13px; font-weight: 700;
   opacity: 0; transform: translateY(6px);
   transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out);

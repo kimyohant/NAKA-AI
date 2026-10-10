@@ -590,7 +590,7 @@ onBeforeUnmount(() => {
 .sw-section-title { display: flex; align-items: center; gap: 8px; margin: 0; font: 800 15px var(--font-display); color: var(--text-0); }
 .sw-num {
   width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: var(--accent-gradient); color: #fff; font-size: 12px;
+  border-radius: 50%; background: var(--accent-gradient); color: var(--action-primary-text); font-size: 12px;
 }
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .field-label { font-size: 11.5px; font-weight: 600; color: var(--text-1); }

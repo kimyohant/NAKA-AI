@@ -310,4 +310,9 @@ onMounted(load)
 @media (max-width: 760px) {
   .board-tabs { margin-left: 0; width: 100%; }
 }
+/* Phone: minmax(180px) leaves one card per row (each a full-screen square); two columns fit */
+@media (max-width: 600px) {
+  .board-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .board-btn { min-height: 36px; padding: 0 12px; }
+}
 </style>

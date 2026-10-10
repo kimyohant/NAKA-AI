@@ -1,4 +1,6 @@
-/* === HuoBao Studio — ChatFire 火焰橙 × 现代 SaaS (light / dark) === */
+/* === Naka Studio — one house with naka-ai.com (apps/landing/public/ui-land.css): neutral grey,
+   near-black ink, orange as the one action colour with dark text on it, Kanit + IBM Plex Sans Thai;
+   the logo and Naka keep their cobalt. Dark keeps the near-black surfaces with the same orange. === */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -36,11 +38,13 @@
   --accent-text: #ea580c;
   --accent-glow: rgba(249,115,22,0.20);
   --accent-gradient: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  /* gradient-painted text (background-clip: text) — darker orange so it still reads on the light ground */
+  --accent-text-gradient: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
 
   --action-primary: #f97316;
   --action-primary-hover: #ea580c;
   --action-primary-press: #c2410c;
-  --action-primary-text: #ffffff;
+  --action-primary-text: #17181a;
   --action-secondary: #e8eaee;
   --action-secondary-hover: #dcdfe5;
   --action-danger: #dc2626;
@@ -146,7 +150,7 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* 近黑中性色 + 紫色强调（参考 Topview Drama Studio 暗色风格） */
+  /* near-black neutrals + the same orange as light and naka-ai.com (was a purple accent) */
   --surface-base: #141414;
   --surface-raised: #1c1c1e;
   --surface-muted: #1c1c1e;
@@ -164,7 +168,7 @@
 
   --border: rgba(255,255,255,0.08);
   --border-strong: rgba(255,255,255,0.16);
-  --border-focus: #a78bfa;
+  --border-focus: #fb923c;
 
   --text-0: #f5f5f7;
   --text-1: #e4e4e7;
@@ -172,16 +176,17 @@
   --text-3: #9a9aa3;
 
   /* 蜜桃橙（dark 下品牌色提亮，platform 同款） */
-  --accent: #a78bfa;
-  --accent-dark: #8b5cf6;
-  --accent-bg: rgba(139,92,246,0.16);
-  --accent-text: #c4b5fd;
-  --accent-glow: rgba(139,92,246,0.35);
-  --accent-gradient: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  --accent: #fb923c;
+  --accent-dark: #f97316;
+  --accent-bg: rgba(249,115,22,0.16);
+  --accent-text: #fdba74;
+  --accent-glow: rgba(249,115,22,0.32);
+  --accent-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+  --accent-text-gradient: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
 
-  --action-primary: #7c3aed;
-  --action-primary-hover: #8b5cf6;
-  --action-primary-press: #6d28d9;
+  --action-primary: #f97316;
+  --action-primary-hover: #fb8a3c;
+  --action-primary-press: #ea580c;
   --action-secondary: #242427;
   --action-secondary-hover: #2c2c30;
   --action-danger: #f87171;
@@ -191,7 +196,7 @@
   --button-bg: #242427;
   --button-bg-hover: #2c2c30;
   --button-bg-active: #35353a;
-  --button-focus: rgba(167,139,250,0.35);
+  --button-focus: rgba(251,146,60,0.35);
   --button-shadow: 0 1px 2px rgba(0,0,0,0.3);
   --button-shadow-hover: 0 1px 2px rgba(0,0,0,0.3);
 
@@ -294,11 +299,11 @@ p { line-height: 1.7; }
 .btn-primary {
   /* ChatFire 签名主 CTA：品牌渐变 + 悬停发光 + 轻微放大 */
   background: var(--accent-gradient);
-  color: var(--on-accent);
+  color: var(--action-primary-text);
 }
 .btn-primary:hover {
   background: var(--accent-gradient);
-  color: var(--on-accent);
+  color: var(--action-primary-text);
   box-shadow: 0 2px 10px var(--accent-glow), 0 4px 18px var(--accent-glow);
   transform: scale(1.03);
 }

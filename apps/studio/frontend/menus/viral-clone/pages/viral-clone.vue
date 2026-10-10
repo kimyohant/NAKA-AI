@@ -498,7 +498,7 @@ onBeforeUnmount(() => {
 .vc-tpl-icon {
   display: flex; align-items: center; justify-content: center;
   width: 34px; height: 34px; border-radius: 10px;
-  background: var(--accent-gradient); color: var(--on-accent);
+  background: var(--accent-gradient); color: var(--action-primary-text);
 }
 .vc-tpl-dur { font-size: 11px; color: var(--text-3); }
 .vc-tpl-title { font-size: 14px; font-weight: 700; }

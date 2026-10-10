@@ -242,7 +242,7 @@ onMounted(async () => {
 .sv-pick-check {
   position: absolute; top: 8px; right: 8px; z-index: 2; width: 24px; height: 24px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: var(--accent-gradient); color: #fff; pointer-events: none;
+  border-radius: 50%; background: var(--accent-gradient); color: var(--action-primary-text); pointer-events: none;
 }
 .sv-pick.on :deep(.sk-duration) { display: none; }
 
@@ -277,7 +277,7 @@ onMounted(async () => {
   border: 2px solid var(--border-strong, var(--border));
 }
 .sv-steps li.on .sv-step-dot { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 3px var(--button-focus); }
-.sv-steps li.done .sv-step-dot { border-color: var(--accent); background: var(--accent); color: #fff; }
+.sv-steps li.done .sv-step-dot { border-color: var(--accent); background: var(--action-primary); color: var(--action-primary-text); }
 .sv-step-count { font-size: 11px; color: var(--text-2); }
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field-label { font-size: 11.5px; font-weight: 600; color: var(--text-1); }

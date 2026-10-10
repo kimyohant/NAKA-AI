@@ -410,7 +410,7 @@ onBeforeUnmount(stopPoll)
 .qs-template-hint { margin: 2px 6px 6px; font-size: 11px; color: var(--accent-text); }
 .qs-composer-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .qs-select { width: 210px; max-width: 100%; }
-.qs-send { margin-left: auto; width: 40px; height: 40px; border: 0; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; cursor: pointer; transition: transform .15s var(--ease-out), opacity .15s; }
+.qs-send { margin-left: auto; width: 40px; height: 40px; border: 0; border-radius: 50%; display: grid; place-items: center; background: var(--action-primary); color: var(--action-primary-text); cursor: pointer; transition: transform .15s var(--ease-out), opacity .15s; }
 .qs-send:hover:not(:disabled) { transform: translateY(-1px); }
 .qs-send:disabled { opacity: .45; cursor: not-allowed; }
 

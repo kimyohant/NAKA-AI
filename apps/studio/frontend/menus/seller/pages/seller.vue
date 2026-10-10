@@ -2,6 +2,7 @@
   <div class="page page-enter">
     <!-- ===== Hero (แนวเดียวกับคลังสกิล) ===== -->
     <section class="sh-hero">
+      <NakaMascot :size="96" class="sh-mascot" />
       <p class="sh-kicker">
         <Store :size="13" :stroke-width="2" />
         {{ t('seller.home.kicker') }}
@@ -171,6 +172,7 @@
 </template>
 
 <script setup lang="ts">
+import NakaMascot from '~/components/NakaMascot.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -353,6 +355,7 @@ onMounted(() => {
     radial-gradient(ellipse at 90% 100%, color-mix(in srgb, #ee4d2d 16%, transparent), transparent 55%),
     var(--surface-soft);
 }
+.sh-mascot { margin: -18px 0 -6px; }
 .sh-kicker {
   display: inline-flex; align-items: center; gap: 6px; margin: 0;
   padding: 4px 12px; border-radius: 999px;
@@ -363,7 +366,7 @@ onMounted(() => {
   margin: 0;
   font-family: var(--font-display); font-size: clamp(28px, 4.5vw, 44px); font-weight: 800;
   letter-spacing: -0.02em; line-height: 1.15;
-  background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; color: transparent;
+  background: var(--accent-text-gradient); -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .sh-sub { margin: 0; max-width: 600px; font-size: 14px; line-height: 1.6; color: var(--text-2); }
 .sh-hero-row { display: flex; align-items: center; gap: 10px; width: min(640px, 100%); margin-top: 8px; }

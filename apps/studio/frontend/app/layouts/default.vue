@@ -91,6 +91,7 @@
         <button class="menu-btn" type="button" :aria-label="t('layout.nav.openMenu')" @click="navOpen = true">
           <Menu :size="20" :stroke-width="1.8" />
         </button>
+        <img :src="brandLogo" alt="" class="mobile-logo" width="26" height="26" />
         <span class="brand-name">{{ t('app.title') }}</span>
       </header>
 
@@ -218,11 +219,12 @@ watch(locale, checkAiConfigs)
   border-radius: 9px; overflow: hidden;
 }
 .brand-logo { width: 28px; height: 28px; object-fit: contain; display: block; }
+.mobile-logo { width: 26px; height: 26px; display: block; flex-shrink: 0; }
 .brand-fallback { font-size: 15px; font-weight: 700; color: var(--text-0); line-height: 1; }
 .brand-name {
   font-family: var(--font-display);
   font-size: 16px; font-weight: 700;
-  background: var(--accent-gradient);
+  background: var(--accent-text-gradient);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   white-space: nowrap;
 }
@@ -263,7 +265,7 @@ watch(locale, checkAiConfigs)
 .side-avatar {
   width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: var(--accent-gradient); color: #fff; font: 700 13px var(--font-display);
+  background: var(--accent-gradient); color: var(--action-primary-text); font: 700 13px var(--font-display);
 }
 .side-user-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
 .side-user-name { font-size: 13px; font-weight: 600; color: var(--text-0); }

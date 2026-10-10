@@ -25,6 +25,8 @@ A new visitor understands the product and reaches `/create/`, where they can pre
 ## 6. Accepted direction
 2026-09-24: User approved the proposed concept and asked to begin. Use white/cobalt robotic naga identity from user reference, pearl white surfaces, blue actions, cyan confined to mascot detail. Existing green/gold landing is superseded by this explicit direction.
 
+2026-10-09/10: One house with Naka Studio supersedes the blue actions and pearl surfaces: neutral grey ground, near-black ink, orange as the one action colour with dark text on it, Kanit + IBM Plex Sans Thai, the same in the studio (light and dark). The white/cobalt naga keeps its colours in the logo and the mascot, which the studio now also shows. Values: `tokens.md`.
+
 ## 7. Learned constraints
 
 - **2026-09-28** — Replace the thin, static problems and three-steps blocks with one legible seller journey. Author its moving visual in Godot 4.5 using the currently selected plush Naka and product example, not the retired 3D mascot. Keep the three steps selectable, lazy-load the Godot web scene, pause it offscreen or on request, and show a usable static fallback for reduced motion and loading failures.
