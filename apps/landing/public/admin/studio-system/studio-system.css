@@ -1,4 +1,4 @@
-/* ระบบ Studio — on top of /admin/system/system.css (tokens, cards, nav, sign-in) */
+/* ระบบ Studio: only what this page adds to /admin/admin.css */
 .studio-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .studio-toolbar p { margin: 0; }
 .studio-card .muted { margin-top: 4px; }

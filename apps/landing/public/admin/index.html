@@ -1,89 +1,56 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f9fd">
 <meta name="robots" content="noindex">
-<title>หลังร้าน naka-ai</title>
+<title>บอทขายของ LINE · หลังร้าน naka-ai</title>
 <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
 <link rel="alternate icon" href="/favicon-32.png?v=4" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" sizes="180x180">
-<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root { --bg:#F7F9FD; --panel:#fff; --line:#DFE6F1; --text:#15264A; --muted:#586782; --brand:#235BE8; --gold:#8EE8FF; --ok:#138A4E; --warn:#B7791F; --bad:#B42318; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family:"Anuphan",system-ui,sans-serif; background:var(--bg); color:var(--text); font-size:15px; }
-  header { background:var(--brand); color:#fff; padding:0 20px; height:56px; display:flex; align-items:center; gap:10px; }
-  header img { width:28px; }
-  header b span { color:#F3D27A; }
-  header .sp { flex:1; }
-  header button { background:transparent; color:#fff; border:1px solid #7EA2F5; }
-  .tabs { display:flex; gap:4px; padding:12px 20px 0; border-bottom:1px solid var(--line); background:var(--panel); overflow-x:auto; }
-  .tabs button { background:none; border:0; border-bottom:3px solid transparent; border-radius:0; padding:10px 14px; color:var(--muted); white-space:nowrap; }
-  .tabs button.on { color:var(--brand); border-color:var(--gold); font-weight:600; }
-  main { max-width:1100px; margin:0 auto; padding:24px 20px 60px; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; }
-  h2 { margin:0 0 14px; font-size:20px; }
-  button { font:inherit; padding:8px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; cursor:pointer; }
-  button.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
-  button.danger { color:var(--bad); }
-  a.button { display:block; text-align:center; text-decoration:none; padding:10px 14px; border-radius:10px; margin:12px 0 4px; }
-  a.button.primary { background:var(--brand); color:#fff; }
-  details { margin-top:14px; } summary { cursor:pointer; }
-  input, textarea, select { font:inherit; padding:9px 11px; border:1px solid var(--line); border-radius:10px; width:100%; background:#fff; color:var(--text); }
-  textarea { min-height:120px; resize:vertical; }
-  label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
-  table { width:100%; border-collapse:collapse; }
-  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
-  th { font-size:13px; color:var(--muted); font-weight:500; }
-  td.num { text-align:right; font-variant-numeric:tabular-nums; }
-  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0 14px; }
-  .grid .full { grid-column:1/-1; }
-  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .badge { display:inline-block; padding:2px 9px; border-radius:99px; font-size:12px; font-weight:600; background:#EEF2EF; }
-  .b-pending { background:#FFF4DB; color:var(--warn); } .b-paid { background:#E3F5EA; color:var(--ok); }
-  .b-shipped { background:#E4EEFA; color:#1D5FB0; } .b-cancelled { background:#FBE7E5; color:var(--bad); }
-  .chat { height:420px; overflow-y:auto; background:#E9EFEB; border-radius:12px; padding:14px; }
-  .bubble { max-width:78%; padding:8px 12px; border-radius:14px; margin:6px 0; white-space:pre-wrap; line-height:1.55; }
-  .bubble.user { margin-left:auto; background:#06C755; color:#fff; }
-  .bubble.assistant { background:#fff; }
-  .muted { color:var(--muted); font-size:13px; }
-  .scroll { overflow-x:auto; }
-  #login { max-width:380px; margin:12vh auto; }
-  .hidden { display:none !important; }
-  @media (max-width:700px) { .grid { grid-template-columns:1fr; } main { padding:16px; } }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<link rel="stylesheet" href="/admin/bot.css">
+<script src="/admin/admin-shell.js" defer></script>
 </head>
 <body>
 
-<div id="login" class="card hidden">
-  <h2>เข้าสู่หลังร้าน naka-ai</h2>
-  <p class="muted">ใช้บัญชี Google ของผู้ดูแลระบบ</p>
+<a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
+<main id="main">
+<section id="login" class="card login hidden" aria-labelledby="login-title">
+  <div class="adm-login-brand"><img src="/logo.svg?v=4" alt="" width="34" height="34"><span>naka-ai · หลังร้าน</span></div>
+  <h1 id="login-title">เข้าสู่หลังร้าน</h1>
+  <p class="muted">ใช้บัญชี Google ของผู้ดูแลระบบ (อีเมลใน ADMIN_EMAILS) · ต้องเข้าใหม่ทุก 12 ชั่วโมง</p>
   <a class="button primary" id="googleBtn" href="/api/auth/google/start?next=%2Fadmin%2F">เข้าสู่ระบบด้วย Google</a>
-  <p id="loginErr" class="muted"></p>
-  <details>
-    <summary class="muted">เข้าด้วยโทเคนฉุกเฉิน</summary>
-    <label for="tok">ADMIN_TOKEN</label>
+  <p id="loginErr" class="muted" role="status" aria-live="polite"></p>
+  <details class="break-glass">
+    <summary>เข้าด้วยโทเคนฉุกเฉิน</summary>
+    <label for="tok">ADMIN_TOKEN (เก็บเฉพาะแท็บนี้)</label>
     <input id="tok" type="password" autocomplete="off">
-    <button id="loginBtn" style="margin-top:10px">เข้าด้วยโทเคน</button>
+    <button id="loginBtn" type="button" style="margin-top:12px">เข้าด้วยโทเคน</button>
   </details>
-</div>
+</section>
 
 <div id="app" class="hidden">
-  <header><img src="/logo.svg?v=4" alt=""><b>naka<span>-ai</span> · หลังร้าน</b><div class="sp"></div><a href="/admin/customers/" style="margin-right:12px">จัดการลูกค้า</a><a href="/admin/studio-system/" style="margin-right:12px">ระบบ Studio</a><a href="/admin/system/" style="margin-right:12px">ตั้งค่าระบบ</a><button id="logout">ออกจากระบบ</button></header>
-  <nav class="tabs" id="tabs">
+    <div class="adm-head">
+    <div><h1>บอทขายของ LINE</h1><p>ทดลองคุยกับบอท แล้วจัดการสินค้า ออเดอร์ แชทลูกค้า และข้อมูลร้านที่บอทใช้ตอบ</p></div>
+    <div class="adm-account"><span class="who" data-adm-who></span><button id="logout" type="button" class="btn-sm">ออกจากระบบ</button></div>
+  </div>
+  <div class="adm-tabs-wrap"><nav class="tabs" id="tabs" aria-label="เครื่องมือบอท">
     <button data-tab="chat" class="on">ทดลองแชท</button>
     <button data-tab="products">สินค้า</button>
     <button data-tab="orders">ออเดอร์</button>
     <button data-tab="convs">แชทลูกค้า</button>
     <button data-tab="settings">ตั้งค่าร้าน</button>
-  </nav>
-  <main>
+  </nav></div>
     <section data-panel="chat" class="card">
       <h2>ทดลองคุยกับ Sales Agent</h2>
       <p class="muted">ลองคุยแบบเดียวกับลูกค้าบน LINE ได้ที่นี่ ออเดอร์ที่สร้างระหว่างทดสอบจะตัดสต็อกจริง</p>
       <div class="chat" id="chatLog"></div>
-      <div class="row" style="margin-top:10px">
+      <div class="row chat-input">
         <input id="chatIn" placeholder="พิมพ์ข้อความ เช่น มีเสื้อสีดำไหมคะ" style="flex:1">
         <button class="primary" id="chatSend">ส่ง</button>
         <button id="chatReset">เริ่มใหม่</button>
@@ -119,7 +86,7 @@
       <div class="card hidden" id="cDetail">
         <h2 id="cName"></h2>
         <div class="chat" id="cLog" style="height:320px"></div>
-        <div class="row" style="margin-top:10px">
+        <div class="row chat-input">
           <input id="cIn" placeholder="ตอบลูกค้าในนามแอดมิน" style="flex:1">
           <button class="primary" id="cSend">ส่งทาง LINE</button>
         </div>
@@ -133,14 +100,14 @@
       <label>ข้อมูลร้าน / ค่าส่ง / ช่องทางชำระเงิน / นโยบายคืนสินค้า</label><textarea id="sInfo" style="min-height:200px"></textarea>
       <div class="row" style="margin-top:12px"><button class="primary" id="sSave">บันทึก</button><span id="sMsg" class="muted"></span></div>
     </section>
-  </main>
 </div>
+</main>
 
 <script>
 const $ = (s) => document.querySelector(s);
 const STATUS = { pending: "รอชำระ", paid: "ชำระแล้ว", shipped: "จัดส่งแล้ว", cancelled: "ยกเลิก" };
 let token = "";
-try { token = localStorage.getItem("naka_admin") || ""; } catch {}
+try { token = sessionStorage.getItem("naka_admin_customers") || ""; } catch {}
 
 // Build DOM safely — all customer-supplied text goes through textContent.
 function el(tag, props = {}, ...kids) {
@@ -164,7 +131,7 @@ async function api(path, opts = {}) {
   if (res.status === 401 || res.status === 403) {
     const data = await res.clone().json().catch(() => ({}));
     if (data.reason === "origin") { alertBox(data.error); throw new Error(data.error); } // a refused write, not a sign-out
-    if (token) { token = ""; try { localStorage.removeItem("naka_admin"); } catch {} }
+    if (token) { token = ""; try { sessionStorage.removeItem("naka_admin_customers"); } catch {} }
     showLogin(data.reason === "signin" ? "" : data.error || "เข้าสู่ระบบไม่สำเร็จ");
     throw new Error("unauthorized");
   }
@@ -182,12 +149,12 @@ async function showApp() {
 }
 $("#loginBtn").onclick = async () => {
   token = $("#tok").value.trim();
-  try { localStorage.setItem("naka_admin", token); } catch {}
+  try { sessionStorage.setItem("naka_admin_customers", token); } catch {}
   try { await api("settings"); showApp(); } catch {}
 };
 $("#tok").onkeydown = (e) => { if (e.key === "Enter") $("#loginBtn").click(); };
 $("#logout").onclick = async () => {
-  token = ""; try { localStorage.removeItem("naka_admin"); } catch {}
+  token = ""; try { sessionStorage.removeItem("naka_admin_customers"); } catch {}
   await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
   showLogin();
 };

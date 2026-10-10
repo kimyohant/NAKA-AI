@@ -1,114 +1,4 @@
-/* System control panel — same tokens and type as the landing page (public/landing.css). */
-:root {
-  --bg: #f7f8fb;
-  --surface: #ffffff;
-  --ink: #0d1b33;
-  --ink-2: #4a5872;
-  --ink-3: #7b879c;
-  --line: #e3e8f1;
-  --brand: #2459d6;
-  --brand-ink: #173f9e;
-  --cyan: #14b3d6;
-  --grad: linear-gradient(115deg, #2459d6 0%, #3d6cf0 45%, #14b3d6 100%);
-  --shadow-sm: 0 1px 2px rgba(13, 27, 51, .06), 0 4px 14px rgba(13, 27, 51, .05);
-  --radius: 20px;
-  --fx-steel: #eef2f7;
-  --fx-steel-2: #e2e8f1;
-  --fx-rail: #c9d3e1;
-  --fx-amber: #ffb800;
-  --fx-amber-ink: #8a5a00;
-  --fx-ok: #12b07a;
-  --fx-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas, monospace;
-  --bad: #c0352b;
-  font-family: "Anuphan", sans-serif;
-  color: var(--ink);
-  background: var(--bg);
-  color-scheme: light;
-  -webkit-font-smoothing: antialiased;
-}
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); line-height: 1.65; font-size: 16px; }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: 420px; z-index: -1; pointer-events: none; background:
-  radial-gradient(40% 60% at 85% 0%, rgba(20, 179, 214, .12), transparent 70%),
-  radial-gradient(45% 60% at 60% 10%, rgba(36, 89, 214, .10), transparent 70%); }
-a { color: inherit; text-decoration: none; }
-button, input, select { font: inherit; color: inherit; }
-button { cursor: pointer; }
-:focus-visible { outline: 3px solid #7fb2ff; outline-offset: 3px; border-radius: 6px; }
-h1, h2, h3 { font-family: "IBM Plex Sans Thai", sans-serif; margin: 0; letter-spacing: -.02em; }
-p { margin: 6px 0 14px; }
-code { font-family: var(--fx-mono); font-size: .9em; padding: 1px 6px; border-radius: 6px; background: var(--fx-steel); }
-.shell { width: min(100% - 64px, 1120px); margin-inline: auto; }
-.skip-link { position: absolute; top: -80px; left: 12px; z-index: 100; padding: 10px 16px; background: #fff; border-radius: 8px; }
-.skip-link:focus { top: 12px; }
-.muted { color: var(--ink-2); font-size: 14px; }
-.error { color: var(--bad); }
-[role="status"] { min-height: 1.6em; font-size: 14px; margin: 6px 0; }
-
-/* ---------- nav (landing .landing-nav) ---------- */
-.admin-nav.glass-nav { --glass-rgb: 247, 248, 251; --glass-line: 13, 27, 51; --glass-shadow: 0 8px 24px rgba(13, 27, 51, .08); }
-.nav-row { height: 68px; display: flex; align-items: center; gap: 28px; }
-.brand { display: inline-flex; align-items: center; gap: 9px; font-family: "IBM Plex Sans Thai", sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.05em; }
-.brand img { border-radius: 10px; }
-.brand span span { font-weight: 500; }
-.brand b { color: var(--cyan); }
-.brand-tag { align-self: center; margin-left: 2px; padding: 3px 7px; border: 1px solid var(--fx-rail); border-radius: 6px; background: var(--fx-steel); font-family: var(--fx-mono); font-size: 9.5px; font-weight: 700; letter-spacing: .14em; line-height: 1.2; color: var(--ink-2); }
-.nav-links { display: flex; align-items: center; gap: 24px; margin-left: auto; font-size: 14px; font-weight: 600; color: var(--ink-2); }
-.nav-links a { display: inline-flex; align-items: center; gap: 8px; }
-.nav-links a:hover { color: var(--ink); }
-.nav-links a[aria-current="page"] { padding: 6px 13px 6px 11px; border: 1px solid var(--fx-rail); border-radius: 999px; background: linear-gradient(180deg, #fff, var(--fx-steel)); color: var(--ink); }
-.fx-led { display: inline-block; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--fx-ok); box-shadow: 0 0 0 3px rgba(18, 176, 122, .18); animation: fx-led 2.2s ease-in-out infinite; }
-@keyframes fx-led { 50% { box-shadow: 0 0 0 5px rgba(18, 176, 122, .06); } }
-
-/* ---------- buttons (landing .btn) ---------- */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 22px; border-radius: 999px; border: 1px solid transparent; font-weight: 700; font-size: 15px; white-space: nowrap; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
-.btn span { font-weight: 400; font-size: 18px; line-height: 1; }
-.btn:hover:not(:disabled) { transform: translateY(-1px); }
-.btn:disabled { opacity: .5; cursor: wait; transform: none; }
-.btn-primary { color: #fff; background: var(--grad); box-shadow: 0 8px 22px rgba(36, 89, 214, .28); }
-.btn-primary:hover:not(:disabled) { box-shadow: 0 12px 28px rgba(36, 89, 214, .38); }
-.btn-ghost { color: var(--brand-ink); background: #fff; border-color: var(--line); }
-.btn-ghost:hover:not(:disabled) { border-color: #c9d5ea; }
-.btn-danger { color: var(--bad); background: #fff; border-color: #f1d3d0; }
-.btn-sm { min-height: 40px; padding: 0 18px; font-size: 14px; }
-
-/* ---------- layout ---------- */
-main { padding: 40px 0 80px; }
-.kicker { margin: 0 0 10px; font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--brand); }
-.page-heading { margin-bottom: 24px; }
-.page-heading h1 { font-size: clamp(30px, 3.2vw, 42px); line-height: 1.2; letter-spacing: -.04em; }
-.lead { max-width: 640px; color: var(--ink-2); font-size: 17px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 24px; margin-bottom: 14px; }
-.card h2 { font-size: 21px; }
-.login { max-width: 460px; margin: 8vh auto; padding: 32px; }
-.login h1 { font-size: 28px; margin-bottom: 4px; }
-.login .google { width: 100%; margin-top: 12px; }
-.break-glass { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
-.break-glass summary::after { content: "▾"; margin-left: 6px; }
-.break-glass[open] summary::after { content: "▴"; }
-.break-glass summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; font-size: 14px; font-weight: 600; color: var(--ink-3); }
-.break-glass form .btn { margin-top: 12px; }
-.who::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--fx-ok); }
-.who { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 999px; background: var(--fx-steel); font-size: 13px; font-weight: 600; color: var(--ink-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.who.token { background: #fff4db; color: var(--fx-amber-ink); }
-label { display: block; margin: 12px 0 6px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
-input:not([type="checkbox"]), select { width: 100%; min-height: 46px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; transition: border-color .15s, box-shadow .15s; }
-input:not([type="checkbox"]):focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(36, 89, 214, .12); outline: none; }
-input:disabled { background: var(--fx-steel); color: var(--ink-3); }
-
-.notice { border: 1px solid #f3d48a; background: linear-gradient(180deg, #fffaf0, #fff); position: relative; overflow: hidden; }
-.notice::before { content: ""; position: absolute; inset: 0 0 auto; height: 6px; background: repeating-linear-gradient(-45deg, var(--fx-amber) 0 10px, #1b2436 10px 20px); }
-.command { margin: 10px 0; background: #0d1b33; color: #e6f3ff; padding: 14px 18px; border-radius: 12px; overflow-x: auto; font-family: var(--fx-mono); font-size: 13px; white-space: pre; }
-
-/* ---------- tabs: a segmented rail like the landing's production lines ---------- */
-.tabs { display: flex; gap: 4px; padding: 5px; margin-bottom: 6px; border: 1px solid var(--fx-rail); border-radius: 999px; background: linear-gradient(180deg, #fff, var(--fx-steel)); overflow-x: auto; width: max-content; max-width: 100%; }
-.tabs { scrollbar-width: none; }
-.tabs::-webkit-scrollbar { display: none; }
-.tabs button { min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px; background: none; color: var(--ink-2); font-size: 14px; font-weight: 600; white-space: nowrap; }
-.tabs button:hover { color: var(--ink); }
-.tabs button[aria-selected="true"] { background: var(--ink); color: #fff; box-shadow: 0 4px 12px rgba(13, 27, 51, .18); }
-
+/* ตั้งค่าระบบ: only what this page adds to /admin/admin.css (tokens, shell, buttons, fields, tabs, cards there). */
 .panel-line { margin: 0 0 6px; font-family: var(--fx-mono); font-size: 11px; font-weight: 700; letter-spacing: .12em; color: var(--ink-3); }
 .import { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
 .import p { margin-bottom: 0; }
@@ -158,8 +48,8 @@ input:disabled { background: var(--fx-steel); color: var(--ink-3); }
 .plan-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
 .plan-head h2 { font-size: 22px; }
 .plan-head .tag { font-family: var(--fx-mono); font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--ink-3); }
-.plan-price { margin: 4px 0 0; font-family: "IBM Plex Sans Thai", sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -.03em; }
-.plan-price small { font-family: "Anuphan", sans-serif; font-size: 14px; font-weight: 500; color: var(--ink-3); }
+.plan-price { margin: 4px 0 0; font-family: var(--font); font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 700; letter-spacing: -.03em; }
+.plan-price small { font-family: var(--font); font-size: 14px; font-weight: 500; color: var(--ink-3); }
 .plan-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; margin-top: 6px; }
 .plan-grid .full { grid-column: 1 / -1; }
 #new-plan .plan-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -207,16 +97,11 @@ input:disabled { background: var(--fx-steel); color: var(--ink-3); }
 @media (max-width: 900px) {
   .setting { grid-template-columns: 1fr; } .setting [role="status"] { grid-column: 1; }
   #new-plan .plan-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .brand-tag { display: none; } .nav-row { gap: 16px; } .nav-links { gap: 14px; }
 }
 @media (max-width: 600px) {
-  .shell { width: calc(100% - 32px); }
-  main { padding-top: 24px; }
-  .nav-links a:not([aria-current]) { display: none; }
-  .card, .setting { padding: 18px; }
+  .setting { padding: 18px; }
   #plans { grid-template-columns: 1fr; }
   #features { grid-template-columns: 1fr; } #features .setting { grid-template-columns: 1fr; } #features .setting form { justify-content: flex-start; }
   #new-plan .plan-grid, .plan-grid { grid-template-columns: 1fr; }
-  .tabs { border-radius: 16px; }
 }
-@media (prefers-reduced-motion: reduce) { .fx-led { animation: none; } .btn, .switch input, .switch input::after { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .switch input, .switch input::after { transition: none; } }
