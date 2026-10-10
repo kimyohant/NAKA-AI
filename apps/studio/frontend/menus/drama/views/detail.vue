@@ -742,6 +742,7 @@ import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, Plus, MoreHorizontal, FileText, Clapperboard, Sparkles, LayoutDashboard, Loader2 } from 'lucide-vue-next'
 import { api, dramaAPI, episodeAPI, characterAPI, sceneAPI, propAPI, uploadAPI, stylePresetAPI } from '~/composables/useApi'
+import { styleDisplayName } from '~/utils/styleName'
 import { GENRE_TAGS, BACKGROUND_TAGS, TROPE_TAGS } from '~/composables/useCreativeTags'
 import BaseSelect from '~/components/BaseSelect.vue'
 
@@ -930,8 +931,8 @@ function openEpisode(ep, panel) {
 // 风格名称（内置风格按界面语言显示）
 const stylePresets = ref([])
 function styleName(key) {
-  if (key && te(`index.styleNames.${key}`)) return t(`index.styleNames.${key}`)
-  return stylePresets.value.find(p => p.value === key)?.name || key
+  if (!key) return ''
+  return styleDisplayName(stylePresets.value.find(p => p.value === key) || { value: key }, { t, te, locale: locale.value })
 }
 // 'custom' = the author's own style description, kept in metadata.customStyle (backend style-preset.ts)
 const styleOptions = computed(() => [

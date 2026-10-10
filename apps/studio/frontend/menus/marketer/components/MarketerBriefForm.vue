@@ -135,6 +135,7 @@ import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import BaseSelect from '~/components/BaseSelect.vue'
 import { marketerAPI, uploadAPI } from '~/composables/useApi'
+import { styleDisplayName } from '~/utils/styleName'
 import { toastError } from '~/composables/useToast'
 import { PLATFORMS, MARKETS, CAMPAIGN_RATIOS } from '../utils/marketerFlow'
 
@@ -149,13 +150,13 @@ const props = defineProps({
   ratioLocked: { type: Boolean, default: false }, // 已有 drama 后画面比例固定
 })
 
-const { t, te } = useI18n()
+const { t, te, locale } = useI18n()
 
 const RATIO_KEY = { '9:16': 'portrait', '1:1': 'square', '16:9': 'landscape' }
 
 const marketOptions = computed(() => MARKETS.map(m => ({ label: t(`marketer.markets.${m}`), value: m })))
 const styleOptions = computed(() => props.stylePresets.map(p => ({
-  label: te(`index.styleNames.${p.value}`) ? t(`index.styleNames.${p.value}`) : (p.name || p.value),
+  label: styleDisplayName(p, { t, te, locale: locale.value }),
   value: p.value,
 })))
 
