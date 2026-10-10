@@ -8,7 +8,7 @@
 import assert from 'node:assert/strict'
 
 import { db, insertedId, schema } from '../src/core/db/index.js'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { now } from '../src/core/http/response.js'
 import { generateVideo, pumpVideoQueue, recoverGenerationTasks, videoQueuePosition } from '../src/core/generation/generation.js'
 
@@ -99,9 +99,11 @@ async function main() {
   assert.equal((await getTask(t2))!.status, 'queued', 'หลังรีสตาร์ทงานคิวยังรอ (สล็อตเต็ม)')
   assert.equal((await getTask(t3))!.status, 'queued')
 
-  // ── Phase C: queue_timeout_minutes → failed + E_VIDEO_QUEUE_TIMEOUT ──
+  // ── Phase C: queue stalled for queue_timeout_minutes → failed + E_VIDEO_QUEUE_TIMEOUT ──
+  // (the clock runs from the last time the queue moved: make both the wait and the slot holders stale)
   const stale = new Date(Date.now() - 241 * 60_000).toISOString()
   await db.update(schema.sysTask).set({ createdAt: stale }).where(eq(schema.sysTask.id, t3))
+  await db.update(schema.sysTask).set({ updatedAt: stale }).where(inArray(schema.sysTask.id, [t1, fakeRunningId]))
   await pumpVideoQueue()
   const t3Row = (await getTask(t3))!
   assert.equal(t3Row.status, 'failed', 'งานรอเกิน timeout ต้อง failed')

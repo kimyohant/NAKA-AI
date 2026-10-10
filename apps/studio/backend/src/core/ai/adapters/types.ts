@@ -77,6 +77,8 @@ export interface VideoCapabilities {
 export interface VideoPollContext {
   config: AIConfig
   taskId?: string | null
+  /** 1-based attempt of the current polling run (generation.ts pollTask) */
+  attempt?: number
 }
 
 /** parseGenerateResponse 的可选上下文：需要 record（如以 seed 作为轮询标识）的适配器使用 */
