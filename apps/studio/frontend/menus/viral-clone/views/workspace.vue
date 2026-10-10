@@ -667,6 +667,6 @@ onBeforeUnmount(() => {
   .wc-topbar-actions { justify-content: space-between; }
   .wc-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .wc-ref { grid-template-columns: minmax(0, 1fr); }
-  .wc-ref-video-card { max-width: 300px; }
+  .wc-ref-video-card { width: 100%; max-width: 300px; justify-self: center; } /* 9:16 stays a phone-sized card, centred instead of hugging the left */
 }
 </style>

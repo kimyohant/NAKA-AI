@@ -2286,6 +2286,10 @@ onMounted(load)
   .ws-tab.on::after { bottom: -2px; }
   .ws-prep { margin-left: auto; }
   .ws-panel { padding: 14px 12px 48px; }
+  /* title on its own line, actions under it — side by side the title was squeezed to one word per line */
+  .ws-panel-head { flex-wrap: wrap; row-gap: 10px; }
+  .ws-panel-title { white-space: nowrap; }
+  .ws-actions { margin-left: 0; width: 100%; }
   .ws-ep-actions { flex-direction: column; }
   .ws-settings .field-row { grid-template-columns: 1fr; }
 }
