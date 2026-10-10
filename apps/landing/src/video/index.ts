@@ -3,6 +3,7 @@
 // waits for the result without blocking the queue (JobDeferredError) and stores the clip in R2.
 import type { Env } from "../types";
 import { appOrigin, constantTimeEqual, hmac } from "../auth/common";
+import { priceOf } from "../credit-prices";
 import { enqueueJob, JobDeferredError, PermanentJobError, type Job, type JobHandler } from "../jobs";
 import { featureRefusal, releaseFeature, useFeature } from "../entitlements";
 import { VIDEO_PROVIDERS, VideoProviderRejected, type VideoProvider, type VideoProviderConfig, type VideoRequest } from "./provider";
@@ -36,9 +37,9 @@ export function activeProvider(env: Env): { provider: VideoProvider; config: Vid
   return { provider, config: { apiKey, baseUrl: env.VIDEO_BASE_URL?.trim() || provider.defaultBaseUrl, model: env.VIDEO_MODEL?.trim() || provider.defaultModel } };
 }
 
-export function aiVideoCredits(env: Env): number {
-  const n = Number(env.AI_VIDEO_CREDITS);
-  return Number.isInteger(n) && n >= 1 && n <= 100 ? n : DEFAULT_AI_VIDEO_CREDITS;
+/** Credits per AI video: the 'landing.ai_video' price set in /admin/system/ (docs/credit-pricing.md). */
+export function aiVideoCredits(env: Env): Promise<number> {
+  return priceOf(env.DB, "landing.ai_video", DEFAULT_AI_VIDEO_CREDITS);
 }
 
 // ---------- uploads ----------
@@ -196,7 +197,7 @@ export async function createAiVideo(request: Request, env: Env, userId: string, 
   const ratio = RATIOS.find((r) => r === body.aspectRatio) ?? "9:16";
   const resolution = env.VIDEO_RESOLUTION === "480p" ? "480p" : "720p";
   const prompt = buildVideoPrompt(kind, { script, productName, hasPerson: !!personKey, productImages: productKeys.length });
-  const cost = aiVideoCredits(env);
+  const cost = await aiVideoCredits(env);
   const id = crypto.randomUUID();
   // the plan's monthly AI videos (docs/entitlements.md): counted first, given back if the job cannot start
   const use = await useFeature(env, userId, "landing.ai_video");

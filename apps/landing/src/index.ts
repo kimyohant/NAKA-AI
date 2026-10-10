@@ -6,6 +6,8 @@ import { handleOnboarding } from "./onboarding";
 import { checkAdmin } from "./admin/auth";
 import { handleAdminCustomers } from "./admin/customers";
 import { handleWorks } from "./works";
+import { handleMemberCredits } from "./me/credits";
+import { handleMemberWorks } from "./me/works";
 import { handleAuth, requireUser } from "./auth";
 import { handleStudioSso } from "./auth/studio";
 import { handleStudioLinks } from "./studio-links";
@@ -103,6 +105,16 @@ export default {
       const user = await requireUser(request, env);
       if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
       return (await handleWorks(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
+    if (url.pathname === "/api/me/credits") {
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleMemberCredits(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
+    }
+    if (url.pathname === "/api/me/works") {
+      const user = await requireUser(request, env);
+      if (!user) return json({ error: "กรุณาเข้าสู่ระบบ" }, 401);
+      return (await handleMemberWorks(request, env, url, user.id)) ?? json({ error: "not found" }, 404);
     }
     if (url.pathname === "/api/onboarding") {
       const user = await requireUser(request, env);

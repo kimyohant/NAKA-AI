@@ -44,7 +44,11 @@
     info.append(el('p', 'ล้มเหลว ' + A.when(task.updatedAt), 'record-meta'),
       el('p', 'งาน #' + task.id + (task.storyboardId ? ' · ช็อต ' + task.storyboardId : '') + (task.configName ? ' · ' + task.configName : task.provider ? ' · ' + task.provider : ''), 'record-meta'));
     var end = el('div', null, 'record-end');
-    if (task.errorCode) end.append(el('span', task.errorCode, 'badge b-muted'));
+    var c = task.credits;
+    if (!c) end.append(el('span', 'ไม่มีค่าใช้จ่าย', 'badge b-muted'));
+    else if (c.status === 'refunded') end.append(el('span', 'คืน ' + A.num(c.credits) + ' เครดิตแล้ว', 'badge b-ok'));
+    else end.append(el('span', (c.status === 'held' ? 'ยังกันไว้ ' : 'ตัดแล้ว ') + A.num(c.credits) + ' เครดิต', 'badge b-bad'));
+    if (task.errorCode) { end.append(el('br')); end.append(el('span', task.errorCode, 'badge b-muted')); }
     li.append(head, info, end);
     if (task.error) li.append(el('p', task.error, 'record-error'));
     return li;
