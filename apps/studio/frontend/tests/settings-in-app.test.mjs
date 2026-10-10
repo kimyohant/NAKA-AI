@@ -39,7 +39,12 @@ test('the sidebar shows the settings sections to admins; no link leads to the ol
   const layout = read('app/layouts/default.vue')
   assert.match(layout, /<template v-if="session\?\.user\?\.admin">/)
   assert.match(layout, /:to="\{ path: '\/settings', query: \{ tab: item\.tab \} \}" :data-tab="item\.tab"/)
-  for (const tab of ['ai', 'styles', 'agents', 'general', 'storage', 'about']) assert.match(layout, new RegExp(`tab: '${tab}'`))
+  for (const tab of ['ai', 'styles', 'agents', 'general']) assert.match(layout, new RegExp(`tab: '${tab}'`))
+  // storage and about & update moved to the naka-ai back office (landing /admin/studio-system/)
+  for (const tab of ['storage', 'about']) {
+    assert.doesNotMatch(layout, new RegExp(`tab: '${tab}'`))
+    assert.doesNotMatch(read('app/pages/settings.vue'), new RegExp(`tab === '${tab}'`))
+  }
   // the settings tour points at the sidebar entry
   assert.match(read('app/pages/settings.vue'), /\.side-link\[data-tab="ai"\]/)
   assert.ok(!existsSync(new URL('app/composables/useAdminUrl.ts', root)))

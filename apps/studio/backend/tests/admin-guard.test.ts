@@ -32,7 +32,7 @@ test('needsAdmin: settings API is admin-only, app reads and user prefs stay open
     ['POST', '/ai-configs'], ['PUT', '/ai-configs/3'], ['DELETE', '/ai-configs/3'], ['POST', '/ai-configs/test'], ['GET', '/ai-configs/3'],
     ['GET', '/ai-providers'], ['POST', '/style-presets'], ['PUT', '/style-presets/1'], ['DELETE', '/style-presets/1'],
     ['POST', '/style-presets/import-builtin'], ['GET', '/prompts'], ['PUT', '/prompts/extractor'], ['GET', '/skills'],
-    ['POST', '/skills/library/x'], ['GET', '/storage'], ['POST', '/server-update/apply'], ['GET', '/admin/session'],
+    ['POST', '/skills/library/x'], ['GET', '/system/overview'], ['GET', '/admin/session'],
   ] as const) assert.equal(needsAdmin(m, p), true, `${m} ${p}`)
   // prefix must be a whole segment
   assert.equal(needsAdmin('GET', '/skillsx'), false)

@@ -40,7 +40,7 @@ export function isAdminRequest(c: Context): boolean {
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
-const ADMIN_ONLY_PREFIXES = ['/ai-providers', '/prompts', '/skills', '/storage', '/server-update', '/admin']
+const ADMIN_ONLY_PREFIXES = ['/ai-providers', '/prompts', '/skills', '/system', '/admin']
 
 const under = (p: string, prefix: string) => p === prefix || p.startsWith(`${prefix}/`)
 

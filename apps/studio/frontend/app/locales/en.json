@@ -414,8 +414,6 @@
       "general": "General",
       "ai": "AI Services",
       "styles": "Style Presets",
-      "storage": "Storage",
-      "about": "About & Updates",
       "agents": "Agent Config"
     },
     "common": {
@@ -495,60 +493,6 @@
       "allTitle": "All Styles",
       "count": "{active} active · {total} total",
       "empty": "No style presets"
-    },
-    "storage": {
-      "title": "Storage Location",
-      "desc": "The directory holding the database and generated files (images/videos/merges/uploads). Changing it briefly stops background services and migrates data.",
-      "currentDir": "Current Data Directory",
-      "computedAt": "Computed at {time}",
-      "changeLocation": "Change Location",
-      "dataDir": "Data directory",
-      "desktopMode": "Desktop",
-      "serverMode": "Server",
-      "totalUsage": "Total usage {size}",
-      "counting": "Counting…",
-      "breakdown": {
-        "db": "Database",
-        "images": "Images",
-        "videos": "Videos",
-        "merged": "Merged",
-        "uploads": "Uploads",
-        "temp": "Temp",
-        "other": "Other"
-      },
-      "diskFree": "Disk free {size}",
-      "note": "The data directory holds all generated media (the database is PostgreSQL); Agent skills (workspace) are not included and do not migrate.",
-      "serverNote": "For server deployments, configure storage via STORAGE_PATH and the database via DATABASE_URL; restart to apply.",
-      "loadFailed": "Failed to load storage info"
-    },
-    "about": {
-      "title": "About & Updates",
-      "desc": "Pulls new versions from the release manifest, verifies sha256 locally, then swaps the package and restarts. User data and configs live in the system data directory and are unaffected by updates.",
-      "currentVersion": "Current version v{v}",
-      "latestVersion": "Latest version v{v}",
-      "check": "Check for Updates",
-      "webMode": "You are in browser/server mode; in-app updates are only available on desktop.",
-      "upToDate": "You're up to date",
-      "found": "New version v{v} available",
-      "downloading": "Downloading {p}%",
-      "download": "Download Update",
-      "ready": "Update package ready",
-      "readyDesc": "The app will quit, install automatically, and reopen.",
-      "restartInstall": "Restart & Install",
-      "checkFailed": "Check failed",
-      "retry": "Retry",
-      "empty": "Click “Check for Updates” to fetch the latest version.",
-      "note": "Note: on macOS the update is applied via directory swap (same approach as Tauri), no Apple signing required; on Windows the installer runs silently.",
-      "checkFailedToast": "Update check failed",
-      "downloadDone": "Update package downloaded, ready to install",
-      "downloadFailed": "Download failed",
-      "installFailed": "Install failed",
-      "serverApply": "Update now",
-      "serverApplyStarted": "Update triggered: Watchtower will pull the new image and recreate the container. Refresh in a few minutes.",
-      "serverApplyFailed": "Failed to trigger update",
-      "serverManualHint": "Server deployment: run this in the deploy directory:",
-      "serverNote": "Note: with Watchtower configured, Docker deployments can update in one click (pulls the new image and recreates the container); otherwise run the command shown above manually.",
-      "credit": "NAKA-AI is built on the open-source Huobao Drama project by chatfire-AI, licensed under CC BY-NC-SA 4.0 (no commercial use without permission from the original author)."
     },
     "agents": {
       "promptHint": "saved as {file}",
@@ -663,19 +607,6 @@
       "sort": "Sort order",
       "required": "Name, key and prompt fragment are required"
     },
-    "migrate": {
-      "title": "Change Storage Location",
-      "newDir": "New directory",
-      "dataToMove": "Data to migrate",
-      "sizeNote": "About {size}",
-      "freeNote": " · {size} free on target",
-      "moveFiles": "Migrate existing data (database and all generated files)",
-      "emptyWarn": "Warning: the app will start with a fresh empty database. Data in the old directory is kept but will no longer be used.",
-      "note": "Background services will briefly stop during migration; ongoing generation tasks will be interrupted. The page reloads when done.",
-      "start": "Start Migration",
-      "pickFailed": "Failed to pick a directory",
-      "failed": "Migration failed; the original storage location was restored"
-    },
     "styleDelete": {
       "title": "Delete Style Preset",
       "message": "Delete style “{name}”? Projects already using it are unaffected, but a deleted built-in style may be restored on restart — consider disabling instead."
@@ -767,7 +698,7 @@
     "settings": {
       "nav": {
         "title": "Everything lives here",
-        "desc": "Switch sections in the left sidebar: AI services, style presets, agents, general, storage, about."
+        "desc": "Switch sections in the left sidebar: AI services, style presets, agents, general."
       }
     },
     "episode": {

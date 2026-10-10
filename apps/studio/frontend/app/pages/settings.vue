@@ -235,129 +235,6 @@
           <input ref="previewUploadInput" type="file" accept="image/*" class="sg-file-input" @change="onPreviewUpload" />
         </div>
 
-        <!-- ===== 存储位置 ===== -->
-        <div v-else-if="tab === 'storage'" class="settings-scroll">
-          <div class="settings-head">
-            <h2 class="settings-title">{{ t('settings.storage.title') }}</h2>
-            <p class="settings-desc">{{ t('settings.storage.desc') }}</p>
-          </div>
-          <section class="card svc-group">
-            <div class="svc-group-head">
-              <div class="svc-group-heading">
-                <span class="svc-group-title">{{ t('settings.storage.currentDir') }}</span>
-                <div v-if="storageInfo?.computedAt" class="svc-group-sub">{{ t('settings.storage.computedAt', { time: new Date(storageInfo.computedAt).toLocaleString() }) }}</div>
-              </div>
-              <button v-if="isDesktopMode" class="btn btn-primary btn-sm ml-auto" :disabled="migrating" @click="pickTarget">
-                <HardDrive :size="13" /> {{ t('settings.storage.changeLocation') }}
-              </button>
-            </div>
-            <div class="config-row">
-              <div class="provider-badge style-badge"><HardDrive :size="15" /></div>
-              <div class="config-main">
-                <div class="config-line"><span class="config-name">{{ t('settings.storage.dataDir') }}</span><span class="tag mono">{{ storageInfo?.mode === 'desktop' ? t('settings.storage.desktopMode') : t('settings.storage.serverMode') }}</span></div>
-                <div class="config-sub mono truncate">{{ storageInfo?.dataDir || t('common.loading') }}</div>
-                <div class="config-sub mono truncate">{{ storageInfo?.sqlitePath || '' }}</div>
-              </div>
-            </div>
-            <div v-if="storageInfo?.usage" class="config-row">
-              <div class="provider-badge style-badge"><Database :size="15" /></div>
-              <div class="config-main">
-                <div class="config-line">
-                  <span class="config-name">{{ t('settings.storage.totalUsage', { size: formatBytes(storageInfo.usage.total) }) }}</span>
-                  <span v-if="storageInfo.usageStale" class="tag">{{ t('settings.storage.counting') }}</span>
-                </div>
-                <div class="storage-breakdown">
-                  <span class="tag mono">{{ t('settings.storage.breakdown.db') }} {{ formatBytes(storageInfo.usage.db) }}</span>
-                  <span class="tag mono">{{ t('settings.storage.breakdown.images') }} {{ formatBytes(storageInfo.usage.images) }}</span>
-                  <span class="tag mono">{{ t('settings.storage.breakdown.videos') }} {{ formatBytes(storageInfo.usage.videos) }}</span>
-                  <span class="tag mono">{{ t('settings.storage.breakdown.merged') }} {{ formatBytes(storageInfo.usage.merged) }}</span>
-                  <span class="tag mono">{{ t('settings.storage.breakdown.uploads') }} {{ formatBytes(storageInfo.usage.uploads) }}</span>
-                  <span v-if="storageInfo.usage.temp" class="tag mono">{{ t('settings.storage.breakdown.temp') }} {{ formatBytes(storageInfo.usage.temp) }}</span>
-                  <span v-if="storageInfo.usage.other" class="tag mono">{{ t('settings.storage.breakdown.other') }} {{ formatBytes(storageInfo.usage.other) }}</span>
-                </div>
-                <div v-if="storageInfo.freeBytes != null" class="config-sub">{{ t('settings.storage.diskFree', { size: formatBytes(storageInfo.freeBytes) }) }}</div>
-              </div>
-            </div>
-            <p class="config-empty">{{ t('settings.storage.note') }}</p>
-            <p v-if="!isDesktopMode" class="config-empty">{{ t('settings.storage.serverNote') }}</p>
-          </section>
-        </div>
-
-        <!-- ===== 关于更新 ===== -->
-        <div v-else-if="tab === 'about'" class="settings-scroll">
-          <div class="settings-head">
-            <h2 class="settings-title">{{ t('settings.about.title') }}</h2>
-            <p class="settings-desc">{{ t('settings.about.desc') }}</p>
-            <p class="settings-desc about-credit">{{ t('settings.about.credit') }}</p>
-          </div>
-          <section class="card svc-group">
-            <div class="svc-group-head">
-              <div class="svc-group-heading">
-                <span class="svc-group-title">{{ t('settings.about.currentVersion', { v: updateState?.currentVersion || '…' }) }}</span>
-                <div v-if="updateState?.latestVersion" class="svc-group-sub">{{ t('settings.about.latestVersion', { v: updateState.latestVersion }) }}</div>
-              </div>
-              <button class="btn btn-primary btn-sm ml-auto" :disabled="updateChecking" @click="checkUpdate">
-                <Loader2 v-if="updateChecking" :size="13" class="animate-spin" />
-                <RefreshCw v-else :size="13" />
-                {{ t('settings.about.check') }}
-              </button>
-            </div>
-
-            <div v-if="updateState?.status === 'up-to-date'" class="config-row">
-              <div class="provider-badge style-badge"><Check :size="15" /></div>
-              <div class="config-main"><div class="config-line"><span class="config-name">{{ t('settings.about.upToDate') }}</span></div></div>
-            </div>
-            <div v-else-if="updateState?.status === 'available' || updateState?.status === 'downloading'" class="config-row">
-              <div class="provider-badge style-badge"><Sparkles :size="15" /></div>
-              <div class="config-main">
-                <div class="config-line"><span class="config-name">{{ t('settings.about.found', { v: updateState.latestVersion }) }}</span></div>
-                <div v-if="updateState.notes" class="config-sub">{{ updateState.notes }}</div>
-                <div v-if="updateState.status === 'downloading' || updateDownloading" class="update-bar">
-                  <div class="update-bar-fill" :style="{ width: `${updateProgress}%` }"></div>
-                </div>
-                <!-- 服务器手动模式：无 Watchtower，给出更新命令 -->
-                <div v-if="!desktopBridge && serverUpdateMode === 'manual'" class="config-sub">
-                  {{ t('settings.about.serverManualHint') }} <span class="mono">docker compose pull && docker compose up -d</span>
-                </div>
-              </div>
-              <!-- 桌面版：下载更新包 -->
-              <button v-if="desktopBridge" class="btn btn-primary btn-sm" :disabled="updateDownloading" @click="downloadUpdate">
-                <Loader2 v-if="updateDownloading" :size="13" class="animate-spin" />
-                <Download v-else :size="13" />
-                {{ updateDownloading ? t('settings.about.downloading', { p: updateProgress }) : t('settings.about.download') }}
-              </button>
-              <!-- 服务器 + Watchtower：一键触发拉镜像重建 -->
-              <button v-else-if="serverUpdateMode === 'watchtower'" class="btn btn-primary btn-sm" :disabled="updateApplying" @click="applyUpdate">
-                <Loader2 v-if="updateApplying" :size="13" class="animate-spin" />
-                <Download v-else :size="13" />
-                {{ t('settings.about.serverApply') }}
-              </button>
-            </div>
-            <div v-else-if="updateState?.status === 'downloaded'" class="config-row">
-              <div class="provider-badge style-badge"><Download :size="15" /></div>
-              <div class="config-main">
-                <div class="config-line"><span class="config-name">{{ t('settings.about.ready') }}</span></div>
-                <div class="config-sub">{{ t('settings.about.readyDesc') }}</div>
-              </div>
-              <button class="btn btn-primary btn-sm" :disabled="updateApplying" @click="applyUpdate">
-                <Loader2 v-if="updateApplying" :size="13" class="animate-spin" />
-                {{ t('settings.about.restartInstall') }}
-              </button>
-            </div>
-            <div v-else-if="updateState?.status === 'error'" class="config-row">
-              <div class="provider-badge style-badge"><RefreshCw :size="15" /></div>
-              <div class="config-main">
-                <div class="config-line"><span class="config-name">{{ t('settings.about.checkFailed') }}</span></div>
-                <div class="config-sub">{{ updateState.error }}</div>
-              </div>
-              <button class="btn btn-ghost btn-sm" @click="checkUpdate">{{ t('settings.about.retry') }}</button>
-            </div>
-            <p v-else class="config-empty">{{ t('settings.about.empty') }}</p>
-          </section>
-          <p v-if="desktopBridge" class="config-empty">{{ t('settings.about.note') }}</p>
-          <p v-else class="config-empty">{{ t('settings.about.serverNote') }}</p>
-        </div>
-
         <!-- ===== Agent 配置（左侧 tab 切换，Prompt 与 Skills 整合在同一 Agent 下） ===== -->
         <div v-else-if="tab === 'agents'" class="skills-layout">
           <!-- Agent 左侧 tab 列表 -->
@@ -772,36 +649,6 @@
       </form>
     </div>
     <!-- 迁移确认（自建 dialog：ConfirmDialog 的删除语义/Enter 快捷键不合此处） -->
-    <div v-if="migrateDialog" class="overlay" @click.self="!migrating && (migrateDialog = false)">
-      <form class="dialog" @submit.prevent="startMigrate">
-        <div class="dialog-head"><span class="dialog-title">{{ t('settings.migrate.title') }}</span></div>
-        <div class="dialog-body">
-          <div class="field">
-            <span class="field-label">{{ t('settings.migrate.newDir') }}</span>
-            <div class="input mono" style="word-break: break-all">{{ migrateTarget }}</div>
-          </div>
-          <div class="field">
-            <span class="field-label">{{ t('settings.migrate.dataToMove') }}</span>
-            <div class="field-hint">
-              {{ t('settings.migrate.sizeNote', { size: formatBytes(storageInfo?.usage?.total || 0) }) }}<template v-if="migrateTargetFree != null">{{ t('settings.migrate.freeNote', { size: formatBytes(migrateTargetFree) }) }}</template>
-            </div>
-          </div>
-          <label class="field" style="display:flex; align-items:center; gap:8px; cursor:pointer">
-            <input v-model="migrateFiles" type="checkbox" :disabled="migrating" />
-            <span class="field-label" style="margin:0">{{ t('settings.migrate.moveFiles') }}</span>
-          </label>
-          <p v-if="!migrateFiles" class="field-hint migrate-warn">{{ t('settings.migrate.emptyWarn') }}</p>
-          <p class="field-hint">{{ t('settings.migrate.note') }}</p>
-        </div>
-        <div class="dialog-foot">
-          <button type="button" class="btn" :disabled="migrating" @click="migrateDialog = false">{{ t('common.cancel') }}</button>
-          <button type="submit" class="btn btn-primary" :disabled="migrating">
-            <Loader2 v-if="migrating" :size="12" class="animate-spin" />
-            {{ t('settings.migrate.start') }}
-          </button>
-        </div>
-      </form>
-    </div>
     <ConfirmDialog
       :open="!!styleToDelete"
       :title="t('settings.styleDelete.title')"
@@ -822,18 +669,17 @@
 </template>
 
 <script setup>
-import { Plus, Pencil, Trash2, FileText, ChevronDown, Check, Loader2, Bot, Cpu, Sparkles, Palette, ExternalLink, Star, HardDrive, Database, RefreshCw, Download, Languages, SunMoon, X, Search, ImagePlus } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, FileText, ChevronDown, Check, Loader2, Bot, Cpu, Sparkles, Palette, ExternalLink, Star, Download, Languages, SunMoon, X, Search, ImagePlus } from 'lucide-vue-next'
 import BaseSelect from '~/components/BaseSelect.vue'
 import { toast } from 'vue-sonner'
 import { UNSLOTH_PROVIDER, UNSLOTH_VIDEO_DEFAULTS, isLocalOrPrivateBaseUrl } from '~/utils/unslothFlow'
 import { coverArt, skillArt, styleExample } from '~/utils/studioArt'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
-import { aiConfigAPI, promptAPI, skillsAPI, storageAPI, stylePresetAPI, settingsAPI, serverUpdateAPI, taskAPI, uploadAPI, mediaUrl, adminSessionAPI, authAPI } from '~/composables/useApi'
+import { aiConfigAPI, promptAPI, skillsAPI, stylePresetAPI, settingsAPI, taskAPI, uploadAPI, mediaUrl, adminSessionAPI, authAPI } from '~/composables/useApi'
 import { adminTokenNeeded, adminTokenValue, onAdminRequired } from '~/composables/useAdminToken'
 import AdminTokenGate from '~/components/AdminTokenGate.vue'
 import { useDesktopBridge } from '~/composables/useDesktopBridge'
-import { useMigrateState } from '~/composables/useMigrateState'
 import { useTheme } from '~/composables/useTheme'
 import { providerIconUrl } from '~/composables/useProviderIcon'
 import { startTour, autoTour } from '~/composables/useTour'
@@ -868,7 +714,7 @@ function reloadSettings() {
 
 const showBrandImage = ref(true)
 // /settings?tab=styles opens a section directly (sidebar entries)
-const SETTINGS_TABS = ['general', 'ai', 'styles', 'storage', 'about', 'agents']
+const SETTINGS_TABS = ['general', 'ai', 'styles', 'agents']
 const settingsRoute = useRoute()
 const tabFromQuery = () => (SETTINGS_TABS.includes(String(settingsRoute.query.tab)) ? String(settingsRoute.query.tab) : 'ai')
 const tab = ref(tabFromQuery())
@@ -878,8 +724,6 @@ const baseTabs = computed(() => [
   { id: 'general', label: t('settings.tabs.general'), icon: Languages },
   { id: 'styles', label: t('settings.tabs.styles'), icon: Palette },
   { id: 'agents', label: t('settings.tabs.agents'), icon: Bot },
-  { id: 'storage', label: t('settings.tabs.storage'), icon: HardDrive },
-  { id: 'about', label: t('settings.tabs.about'), icon: RefreshCw },
 ])
 
 // ===== AI Service Configs =====
@@ -1596,157 +1440,7 @@ const SETTINGS_TOUR = [
 onMounted(async () => { if (await adminAccess()) setTimeout(() => autoTour('settings', SETTINGS_TOUR, t), 800) })
 function replaySettingsTour() { startTour('settings', SETTINGS_TOUR, t) }
 
-// ===== 存储位置 =====
-const desktopBridge = useDesktopBridge()
-const { begin: beginMigrate, update: updateMigrate, end: endMigrate } = useMigrateState()
-
-const storageInfo = ref(null)
-const migrateDialog = ref(false)
-const migrateTarget = ref('')
-const migrateTargetFree = ref(null)
-const migrateFiles = ref(true)
-const migrating = ref(false)
-
-const isDesktopMode = computed(() => storageInfo.value?.mode === 'desktop' && !!desktopBridge)
-
-let usagePollTimer = null
-
-function stopUsagePoll() {
-  if (usagePollTimer) { clearInterval(usagePollTimer); usagePollTimer = null }
-}
-
-async function loadStorage() {
-  try {
-    storageInfo.value = await storageAPI.info()
-    // 占用为空或统计已过期时 2s 轮询至新鲜（后端 stale-while-revalidate）
-    stopUsagePoll()
-    if (storageInfo.value?.usageStale || !storageInfo.value?.usage) {
-      usagePollTimer = setInterval(async () => {
-        try {
-          storageInfo.value = await storageAPI.info()
-          if (storageInfo.value?.usage && !storageInfo.value?.usageStale) stopUsagePoll()
-        } catch { /* 轮询错误静默 */ }
-      }, 2000)
-    }
-  } catch (e) { toastError(e, { fallback: 'settings.storage.loadFailed' }) }
-}
-
-watch(tab, (active) => {
-  if (active === 'storage') loadStorage()
-  else stopUsagePoll()
-})
-
-async function pickTarget() {
-  if (!desktopBridge) return
-  const res = await desktopBridge.pickDirectory()
-  if (res.canceled) return
-  if (!res.ok || !res.path) { toastError(res.error, { fallback: 'settings.migrate.pickFailed' }); return }
-  migrateTarget.value = res.path
-  migrateTargetFree.value = res.freeBytes ?? null
-  migrateFiles.value = true
-  migrateDialog.value = true
-}
-
-async function startMigrate() {
-  if (!desktopBridge || !migrateTarget.value) return
-  migrating.value = true
-  beginMigrate()
-  try {
-    await desktopBridge.startMigration({ targetDir: migrateTarget.value, migrateFiles: migrateFiles.value })
-    // 成功的完成提示与页面刷新由全局进度订阅（app.vue）处理
-  } catch (e) {
-    endMigrate()
-    toastError(e, { fallback: 'settings.migrate.failed' })
-  } finally {
-    migrating.value = false
-    migrateDialog.value = false
-    stopUsagePoll()
-  }
-}
-
-function formatBytes(n) {
-  if (!Number.isFinite(n)) return '—'
-  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1)} GB`
-  if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(0)} MB`
-  if (n >= 1024) return `${(n / 1024).toFixed(0)} KB`
-  return `${n} B`
-}
-
-// ===== 应用内更新（桌面版走 Electron 桥；服务器/Docker 走后端 server-update 路由） =====
-const updateState = ref(null)
-const updateChecking = ref(false)
-const updateDownloading = ref(false)
-const updateProgress = ref(0)
-const updateApplying = ref(false)
-const serverUpdateMode = ref('manual') // 'watchtower' | 'manual'，仅服务器模式有意义
-
-async function refreshUpdateState() {
-  try {
-    if (desktopBridge) {
-      updateState.value = await desktopBridge.getUpdateState()
-    } else {
-      const s = await serverUpdateAPI.state()
-      serverUpdateMode.value = s.updateMode || 'manual'
-      updateState.value = s
-    }
-  } catch { /* 静默 */ }
-}
-
-async function checkUpdate() {
-  updateChecking.value = true
-  try {
-    if (desktopBridge) {
-      updateState.value = await desktopBridge.checkUpdate()
-    } else {
-      const s = await serverUpdateAPI.check()
-      serverUpdateMode.value = s.updateMode || 'manual'
-      updateState.value = s
-    }
-    if (updateState.value?.status === 'up-to-date') toast.success(t('settings.about.upToDate'))
-  } catch (e) {
-    toastError(e, { fallback: 'settings.about.checkFailedToast' })
-    refreshUpdateState()
-  } finally { updateChecking.value = false }
-}
-
-async function downloadUpdate() {
-  if (!desktopBridge) return
-  updateDownloading.value = true
-  updateProgress.value = 0
-  const unProgress = desktopBridge.onUpdateProgress((p) => { updateProgress.value = p })
-  try {
-    updateState.value = await desktopBridge.downloadUpdate()
-    toast.success(t('settings.about.downloadDone'))
-  } catch (e) {
-    toastError(e, { fallback: 'settings.about.downloadFailed' })
-    refreshUpdateState()
-  } finally {
-    unProgress()
-    updateDownloading.value = false
-  }
-}
-
-async function applyUpdate() {
-  updateApplying.value = true
-  try {
-    if (desktopBridge) {
-      await desktopBridge.applyUpdate()
-      // 成功路径：应用退出并由更新后的版本接管，不会走到这里
-    } else {
-      await serverUpdateAPI.apply()
-      // Watchtower 异步拉镜像重建容器，本进程随后被替换
-      toast.success(t('settings.about.serverApplyStarted'), { duration: 8000 })
-      updateApplying.value = false
-    }
-  } catch (e) {
-    updateApplying.value = false
-    toastError(e, { fallback: desktopBridge ? 'settings.about.installFailed' : 'settings.about.serverApplyFailed' })
-    refreshUpdateState()  // 桌面端 apply 失败会把具体原因写进 updateState.error，刷新显示在错误行
-  }
-}
-
 watch(tab, (t) => {
-  if (t === 'about') refreshUpdateState()
   // 进入 Agent 页总是按当前内容语言重载（幂等）：兜住「先切语言、后进 Agent」的时序
   if (t === 'agents') {
     loadAgentPrompt(selectedAgent.value)
@@ -1754,7 +1448,6 @@ watch(tab, (t) => {
   }
 })
 
-onBeforeUnmount(stopUsagePoll)
 </script>
 
 <style scoped>
@@ -2136,31 +1829,6 @@ onBeforeUnmount(stopUsagePoll)
   font-size: 11px;
   color: var(--text-2);
   word-break: break-all;
-}
-
-/* 存储位置 */
-.storage-breakdown {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
-}
-.migrate-warn {
-  color: var(--error);
-}
-.update-bar {
-  width: 220px;
-  height: 5px;
-  border-radius: 3px;
-  background: var(--overlay-track);
-  overflow: hidden;
-  margin-top: 6px;
-}
-.update-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: var(--accent);
-  transition: width 0.2s ease;
 }
 
 /* ===== Style Gallery ===== */
