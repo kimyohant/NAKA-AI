@@ -70,3 +70,34 @@ test('overview: version, disk use and one queue summary per video provider', asy
   assert.match(q.waiting[0].error, /Polling attempts exhausted/)
   assert.deepEqual((byId.get(other) as any).waiting, [], 'a provider with nothing waiting is still listed')
 })
+
+test('member-works: one member\'s latest works, newest first, each thing once, with the studio page that opens it', async () => {
+  const at = (minutes: number) => new Date(Date.UTC(2026, 9, 10, 10, minutes)).toISOString()
+  const add = async (table: any, values: Record<string, unknown>) => insertedId(await db.insert(table).values(values).returning({ id: table.id }))
+  const drama = await add(schema.dramas, { title: 'ละครรักในออฟฟิศ', status: 'draft', ownerUserId: 'm1', createdAt: at(1), updatedAt: at(10) })
+  // the drama behind a product video is not a work of its own
+  const inner = await add(schema.dramas, { title: 'inner', status: 'draft', ownerUserId: 'm1', createdAt: at(1), updatedAt: at(50) })
+  const project = await add(schema.studioProjects, { title: 'รีวิวสบู่', templateId: 't', ownerUserId: 'm1', dramaId: inner, status: 'completed', createdAt: at(1), updatedAt: at(20) })
+  // the product-video project behind a seller post is not either
+  const behindPost = await add(schema.studioProjects, { title: 'behind', templateId: 't', ownerUserId: 'm1', createdAt: at(1), updatedAt: at(55) })
+  const post = await add(schema.sellerPosts, { title: '', productName: 'ครีมกันแดด', studioProjectId: behindPost, ownerUserId: 'm1', createdAt: at(1), updatedAt: at(30) })
+  const clone = await add(schema.cloneProjects, { name: 'โคลนคลิปไวรัล', ownerUserId: 'm1', createdAt: at(1), updatedAt: at(40) })
+  await add(schema.dramas, { title: 'ของคนอื่น', status: 'draft', ownerUserId: 'm2', createdAt: at(1), updatedAt: at(59) })
+  await add(schema.dramas, { title: 'ลบแล้ว', status: 'draft', ownerUserId: 'm1', createdAt: at(1), updatedAt: at(58), deletedAt: at(58) })
+
+  const res = await app.request('/api/v1/system/member-works?owner=m1&limit=10')
+  assert.equal(res.status, 200)
+  const { data } = await res.json() as any
+  assert.deepEqual(data.works.map((w: any) => [w.kind, w.title, w.path]), [
+    ['viral_clone', 'โคลนคลิปไวรัล', `/viral-clone/${clone}`],
+    ['seller', 'ครีมกันแดด', `/seller/${post}`],
+    ['product_video', 'รีวิวสบู่', `/studio/${project}`],
+    ['drama', 'ละครรักในออฟฟิศ', `/drama/${drama}`],
+  ])
+  assert.equal(data.works[2].status, 'completed')
+
+  assert.equal((await (await app.request('/api/v1/system/member-works?owner=m1&limit=2')).json() as any).data.works.length, 2)
+  for (const bad of ['', 'local', 'a b', "x'y"]) {
+    assert.equal((await app.request('/api/v1/system/member-works?owner=' + encodeURIComponent(bad))).status, 400, bad)
+  }
+})

@@ -160,3 +160,12 @@ img { max-width: 100%; display: block; }
   .history-section { padding: 18px 16px 14px; }
   .history-heading { flex-direction: column; align-items: flex-start; }
 }
+
+/* latest works in Naka Studio (GET /api/me/works) */
+.works-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.works-list[hidden] { display: none; }
+.works-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; align-items: center; min-height: 56px; padding: 10px 14px; border-radius: 14px; background: var(--m-surface-2); transition: background .18s ease; }
+.works-item:hover { background: var(--m-blue-soft); }
+.works-kind { grid-row: span 2; align-self: center; padding: 2px 8px; border-radius: 999px; background: #fff; color: var(--m-brand); font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.works-item strong { color: var(--m-ink); font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.works-item small { color: var(--m-ink-3); font-size: 12px; }

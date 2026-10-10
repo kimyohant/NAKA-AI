@@ -14,7 +14,7 @@ import { Hono } from 'hono'
 import { DATA_ROOT } from '../utils/paths.js'
 import { rawQuery } from '../db/index.js'
 import { dirUsage, volumeFreeBytes } from '../utils/dirsize.js'
-import { success } from '../http/response.js'
+import { badRequest, success } from '../http/response.js'
 
 const app = new Hono()
 
@@ -119,6 +119,57 @@ app.get('/overview', async (c) => {
     database: 'PostgreSQL (schema studio)',
     storage,
     videoQueues: queues,
+  })
+})
+
+// ---------- a member's latest works, for their naka-ai dashboard (/app/, the landing's /api/me/works) ----------
+
+/** kind → the studio page that opens it (frontend/menus/<menu>/routes.ts) */
+const WORK_PATHS: Record<string, string> = {
+  drama: '/drama/', product_video: '/studio/', seller: '/seller/', viral_clone: '/viral-clone/', campaign: '/marketer/',
+}
+
+/**
+ * What the member made, newest first. A piece of work that is only the inside of another is left out, so each thing
+ * the member started shows once: the drama behind a product video, a campaign or a viral-clone variant, and the
+ * product-video project behind a seller post.
+ */
+const MEMBER_WORKS_SQL = `
+  SELECT kind, id, title, status, updated_at FROM (
+    SELECT 'drama' AS kind, d.id, d.title, d.status, d.updated_at FROM dramas d
+     WHERE d.owner_user_id = $1 AND d.deleted_at IS NULL
+       AND NOT EXISTS (SELECT 1 FROM studio_projects p WHERE p.drama_id = d.id)
+       AND NOT EXISTS (SELECT 1 FROM campaigns c WHERE c.drama_id = d.id)
+       AND NOT EXISTS (SELECT 1 FROM clone_variants v JOIN episodes e ON e.id = v.episode_id WHERE e.drama_id = d.id)
+    UNION ALL
+    SELECT 'product_video', p.id, p.title, p.status, p.updated_at FROM studio_projects p
+     WHERE p.owner_user_id = $1 AND p.deleted_at IS NULL
+       AND NOT EXISTS (SELECT 1 FROM seller_posts s WHERE s.studio_project_id = p.id)
+    UNION ALL
+    SELECT 'seller', s.id, coalesce(nullif(s.title, ''), nullif(s.product_name, ''), 'โพสต์ขาย'), s.status, s.updated_at FROM seller_posts s
+     WHERE s.owner_user_id = $1 AND s.deleted_at IS NULL
+    UNION ALL
+    SELECT 'viral_clone', c.id, c.name, c.status, c.updated_at FROM clone_projects c WHERE c.owner_user_id = $1
+    UNION ALL
+    SELECT 'campaign', c.id, c.title, c.status, c.updated_at FROM campaigns c WHERE c.owner_user_id = $1 AND c.deleted_at IS NULL
+  ) w ORDER BY updated_at DESC, kind, id DESC LIMIT $2`
+
+// GET /system/member-works?owner=<naka-ai user id>&limit=5 — admin only like the rest of /system (auth/admin.ts):
+// the landing asks server to server with ADMIN_TOKEN for the signed-in member, never for whoever the browser names.
+app.get('/member-works', async (c) => {
+  const owner = c.req.query('owner') ?? ''
+  if (!/^[^\s'"\\]{1,128}$/.test(owner) || owner === 'local') return badRequest(c, 'owner is required')
+  const limit = Math.min(20, Math.max(1, Number(c.req.query('limit')) || 5))
+  const rows = await rawQuery(MEMBER_WORKS_SQL, [owner, limit])
+  return success(c, {
+    works: rows.map(r => ({
+      kind: String(r.kind),
+      id: Number(r.id),
+      title: String(r.title ?? '').slice(0, 120),
+      status: String(r.status ?? ''),
+      updatedAt: String(r.updated_at ?? ''),
+      path: WORK_PATHS[String(r.kind)] + Number(r.id),
+    })),
   })
 })
 

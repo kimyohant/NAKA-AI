@@ -61,3 +61,12 @@ test('functions run with a fixed search_path: a caller\'s own objects cannot sha
   assert.equal(rows.length, 4)
   for (const r of rows) assert.deepEqual(r.proconfig, ['search_path=account, pg_temp'], r.proname)
 })
+
+test('credit prices (0006_credit_prices.sql, docs/credit-pricing.md): studio_app and reporting_ro read them, only account_app changes them', async () => {
+  const prices = await query('studio_app', `SELECT key, credits, per_second FROM account.credit_prices WHERE app = 'studio' ORDER BY key`)
+  assert.deepEqual(prices.map(p => [p.key, Number(p.credits), p.per_second]), [['studio.image', 0, false], ['studio.video', 5, false]])
+  assert.equal((await query('reporting_ro', 'SELECT count(*) AS n FROM account.credit_prices'))[0].n * 1, 5)
+  await denied('studio_app', `UPDATE account.credit_prices SET credits = 0`)
+  await denied('studio_app', `INSERT INTO account.credit_prices (key, app, label, unit_label, credits) VALUES ('x', 'studio', 'x', 'x', 0)`)
+  await denied('reporting_ro', `UPDATE account.credit_prices SET credits = 0`)
+})

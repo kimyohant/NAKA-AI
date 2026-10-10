@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { priceOf } from "./credit-prices";
 import { featureRefusal, releaseFeature, useFeature } from "./entitlements";
 import { enqueueJob, getJobForUser, PermanentJobError, type Job, type JobHandler } from "./jobs";
 import type { Env } from "./types";
@@ -279,14 +280,15 @@ export async function handleAffiliateApi(request: Request, env: Env, url: URL, u
     // the plan's monthly clips (docs/entitlements.md): counted first, given back if the job cannot start
     const use = await useFeature(env, userId, "landing.clips");
     if (!use.ok) return featureRefusal(use, "คลิปรีวิวสินค้า");
-    const result = await enqueueJob(env.DB, { userId, kind: AFFILIATE_JOB_KIND, input, costCredits: REVIEW_COST_CREDITS });
+    const cost = await priceOf(env.DB, "landing.clips", REVIEW_COST_CREDITS);
+    const result = await enqueueJob(env.DB, { userId, kind: AFFILIATE_JOB_KIND, input, costCredits: cost });
     if (!result.ok) {
       await releaseFeature(env, userId, "landing.clips", 1, use.period);
       return result.reason === "insufficient_credits"
         ? json({ error: "เครดิตไม่พอ กรุณาเติมเครดิตก่อนสร้างคลิป" }, 402)
         : json({ error: "มีงานที่กำลังทำอยู่ครบตามแพ็กเกจแล้ว รอให้เสร็จก่อนนะ" }, 429);
     }
-    return json({ jobId: result.jobId, cost: REVIEW_COST_CREDITS }, 202);
+    return json({ jobId: result.jobId, cost }, 202);
   }
 
   if (parts && !parts.includes("/") && request.method === "GET") {

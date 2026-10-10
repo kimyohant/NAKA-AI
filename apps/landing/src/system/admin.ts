@@ -5,6 +5,7 @@ import type { AdminActor } from '../admin/auth';
 import { constantTimeEqual, readBodyBytes } from '../auth/common';
 import { LOCKED, normalizeSetting, secretHint, SETTING_BY_KEY, SETTINGS, type SettingDef } from './registry';
 import { FeatureAdminError, featureCatalog, planFeatureMap, setPlanFeatures } from '../admin/features';
+import { listPrices, PriceAdminError, setPrice } from '../credit-prices';
 import { decryptSetting, encryptSetting, invalidateSettings, settingsKeyReady, type StoredRow } from './store';
 
 const BASE = '/api/admin/system';
@@ -258,10 +259,18 @@ export async function handleAdminSystem(request: Request, env: Env, url: URL, ac
       await setPlanFeatures(env, planFeatures[1], input, note(input), who);
       return await plansResponse(env);
     }
+    // credit prices (docs/credit-pricing.md): what each piece of work costs, landing and Naka Studio
+    if (path === '/prices' && method === 'GET') return json({ prices: await listPrices(env.DB) });
+    const price = path.match(/^\/prices\/([a-z][a-z0-9_.]{1,40})$/);
+    if (price && method === 'PUT') {
+      const input = await body(request);
+      await setPrice(env.DB, price[1], input, note(input), who);
+      return json({ prices: await listPrices(env.DB) });
+    }
     if (path === '/audit' && method === 'GET') return await auditResponse(env);
     return json({ error: 'not found' }, 404);
   } catch (error) {
-    if (error instanceof SystemError || error instanceof FeatureAdminError) return json({ error: error.message }, error.status);
+    if (error instanceof SystemError || error instanceof FeatureAdminError || error instanceof PriceAdminError) return json({ error: error.message }, error.status);
     console.error('system admin error'); // no detail: requests here carry secrets
     return json({ error: 'internal error' }, 500);
   }

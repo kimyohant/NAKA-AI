@@ -42,6 +42,7 @@
       creditsValue.textContent = String(state.credits);
       renderQuotas(state.features);
       loadCredits(null);
+      loadWorks();
       if (state.source === "server") {
         modeText.textContent = "เชื่อมต่อระบบแล้ว · ข้อมูลจากเซิร์ฟเวอร์";
       } else {
@@ -106,7 +107,9 @@
 
   // unix seconds (packages) or "YYYY-MM-DD HH:MM:SS" in UTC (ledger), shown in Bangkok time
   function toDate(value) {
-    var d = typeof value === "number" ? new Date(value * 1000) : new Date(String(value).replace(" ", "T") + "Z");
+    var text = String(value);
+    // the studio sends ISO strings ("…T…Z"); the ledger sends "YYYY-MM-DD HH:MM:SS" in UTC
+    var d = typeof value === "number" ? new Date(value * 1000) : /T/.test(text) ? new Date(text) : new Date(text.replace(" ", "T") + "Z");
     return isNaN(d.getTime()) ? null : d;
   }
   function thaiDate(value, withTime) {
@@ -194,6 +197,57 @@
       historyMore.hidden = false;
     }
     historyMore.disabled = false;
+  }
+
+  // ---- latest works in Naka Studio (GET /api/me/works, src/me/works.ts) ----
+  var worksList = document.getElementById("works-list");
+  var worksNote = document.getElementById("works-note");
+
+  function mockWorks() {
+    return { available: true, works: [
+      { kind: "drama", kindLabel: "ละครสั้น", title: "รักในออฟฟิศ ตอนที่ 1", status: "กำลังทำ", updatedAt: "2026-10-09T08:10:00Z", href: "/go/studio/drama" },
+      { kind: "product_video", kindLabel: "วิดีโอรีวิวสินค้า", title: "รีวิวสบู่มะลิ", status: "เสร็จแล้ว", updatedAt: "2026-10-08T03:00:00Z", href: "/go/studio/skills" },
+    ] };
+  }
+
+  async function loadWorks() {
+    var data;
+    try {
+      if (mockMode) data = mockWorks();
+      else {
+        var res = await fetch("/api/me/works", { headers: { accept: "application/json" } });
+        if (!res.ok) return;
+        data = await res.json();
+      }
+    } catch (err) {
+      return; // the section keeps its "open Naka Studio" button
+    }
+    if (!data || !data.available) return;
+    var works = data.works || [];
+    worksList.textContent = "";
+    if (!works.length) {
+      worksNote.textContent = "ยังไม่มีผลงาน เริ่มงานแรกได้จากเมนูด้านบน งานที่ทำแล้วจะแสดงที่นี่";
+      worksList.hidden = true;
+      return;
+    }
+    worksNote.textContent = "งานที่แก้ล่าสุด " + works.length + " รายการ กดเพื่อเปิดทำต่อในสตูดิโอ";
+    works.forEach(function (work) {
+      var item = document.createElement("li");
+      var link = document.createElement("a");
+      link.className = "works-item";
+      link.href = work.href;
+      var kind = document.createElement("span");
+      kind.className = "works-kind";
+      kind.textContent = work.kindLabel;
+      var title = document.createElement("strong");
+      title.textContent = work.title;
+      var meta = document.createElement("small");
+      meta.textContent = work.status + (work.updatedAt ? " · แก้ล่าสุด " + thaiDate(work.updatedAt, true) : "");
+      link.append(kind, title, meta);
+      item.appendChild(link);
+      worksList.appendChild(item);
+    });
+    worksList.hidden = false;
   }
 
   historyMore.addEventListener("click", function () {
