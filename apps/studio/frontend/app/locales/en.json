@@ -262,7 +262,14 @@
       "customLabel": "Style description",
       "customPlaceholder": "e.g. Cyberpunk style with warm tones and East Asian elements, orange-pink neon, cinematic",
       "customHint": "This description goes in front of every image and video prompt in the project (up to {n} characters). English works best.",
-      "customRequired": "Describe the art style in the Custom tab"
+      "customRequired": "Describe the art style in the Custom tab",
+      "library": "Hand-drawn Library",
+      "librarySearch": "Search styles, e.g. watercolor, doodle, FB-012",
+      "libraryAll": "All",
+      "libraryGroups": "Library groups",
+      "libraryEmpty": "The 305-style hand-drawn library has not been imported yet. An admin can import it in Settings → Art styles.",
+      "libraryOpenSettings": "Open settings",
+      "libraryNoMatch": "No styles match this search or group."
     }
   },
   "detail": {

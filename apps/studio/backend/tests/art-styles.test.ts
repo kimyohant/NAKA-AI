@@ -1,6 +1,7 @@
 /**
  * Drama studio art styles like Topview Drama Studio (core/db/style-seeds.ts): Live Action / Animation catalog seeded
  * at startup, and the Custom style (dramas.style = 'custom', text in metadata.customStyle) used as the style prompt.
+ * The 305-style hand-drawn library (imported from Settings) has its own tab and a cover image per style.
  */
 import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'
@@ -12,6 +13,7 @@ const { stylePresetSeeds, seedStylePresets } = await import('../src/core/db/seed
 const { artStyleSeeds } = await import('../src/core/db/style-seeds.js')
 const { getDramaStylePrompt, customStyleOf, CUSTOM_STYLE_MAX } = await import('../src/core/generation/style-preset.js')
 const { eq } = await import('drizzle-orm')
+const { loadBuiltinStyles, BUILTIN_VALUE_PREFIX } = await import('../src/core/generation/style-gallery.js')
 
 const TOPVIEW_LIVE = ['Theatrical Cinematic', 'Modern Micro-drama', 'French Arthouse', 'Monumental Epic', 'Bollywood', 'Nordic Noir',
   'Golden Western', 'Pop Dystopia', 'Prestige HBO Drama', 'Gritty Desert Crime', 'Wes Anderson Style', 'David Lynch Style',
@@ -44,6 +46,11 @@ test('every catalog style has its example image (the earlier catalog’s 14 reus
   for (const s of artStyleSeeds) {
     assert.ok(existsSync(exampleImage(s.value)), `${s.value} has no public/studio-art/styles/${s.value}.webp`)
   }
+})
+
+test('every style of the 305 hand-drawn library has its cover (one scene per group, generated with Qwen-Image)', () => {
+  const missing = loadBuiltinStyles().map(s => BUILTIN_VALUE_PREFIX + s.number.toLowerCase()).filter(v => !existsSync(exampleImage(v)))
+  assert.deepEqual(missing, [], `no public/studio-art/styles/<value>.webp for ${missing.length} library styles`)
 })
 
 test('startup seeds every style with its category; built-in rows move to Animation; an edited preset is left alone', async () => {
