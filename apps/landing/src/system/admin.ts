@@ -233,7 +233,7 @@ export async function handleAdminSystem(request: Request, env: Env, url: URL, ac
   if (url.pathname !== BASE && !url.pathname.startsWith(BASE + '/')) return null;
   if (!actor) {
     if (!env.ADMIN_TOKEN || !constantTimeEqual(request.headers.get('Authorization') ?? '', `Bearer ${env.ADMIN_TOKEN}`)) return json({ error: 'unauthorized' }, 401);
-    actor = { kind: 'token', label: 'โทเคนฉุกเฉิน', userId: null };
+    actor = { kind: 'token', label: 'โทเคนฉุกเฉิน', userId: null, role: 'owner' };
   }
   const who = actor.label;
   const path = url.pathname.slice(BASE.length);

@@ -4,7 +4,7 @@
   'use strict';
   var A = window.NakaAdmin, $ = A.$, el = A.el;
   var FIELDS = ['q', 'source', 'actor'];
-  var SOURCE = { customer: ['ลูกค้า', 'b-paid'], setting: ['ตั้งค่าระบบ', ''], plan: ['แพ็กเกจ', ''], studio: ['Studio', 'b-pending'], alert: ['แจ้งเตือน LINE', 'b-muted'], content: ['เนื้อหาหน้าเว็บ', 'b-ok'] };
+  var SOURCE = { customer: ['ลูกค้า', 'b-paid'], setting: ['ตั้งค่าระบบ', ''], plan: ['แพ็กเกจ', ''], studio: ['Studio', 'b-pending'], alert: ['แจ้งเตือน LINE', 'b-muted'], content: ['เนื้อหาหน้าเว็บ', 'b-ok'], coupon: ['โค้ดส่วนลด', 'b-pending'], staff: ['ผู้ดูแล', 'b-bad'] };
   var STATUS = { active: 'ใช้งาน', disabled: 'ระงับ' };
   var FIELD = { credits: 'เครดิต', status: 'สถานะบัญชี', planId: 'แพ็กเกจ', subscriptionStatus: 'สถานะแพ็กเกจ', expiresAt: 'วันหมดอายุ',
     nextCreditAt: 'เติมเครดิตถัดไป', period: 'รอบ', sessions: 'การเข้าสู่ระบบ', name: 'ชื่อ', price_thb: 'ราคา (บาท)', monthly_credits: 'เครดิตต่อเดือน',
@@ -45,6 +45,8 @@
       if (e.action === 'remove') return 'ลบคลิปตัวอย่าง ' + (d.title || '');
       return (d.after && d.after.hidden ? 'ซ่อนคลิปตัวอย่าง ' : 'แสดงคลิปตัวอย่าง ') + (d.title || '');
     }
+    if (e.source === 'coupon') return (e.action === 'create' ? 'สร้างโค้ดส่วนลด ' : (d.after && d.after.active ? 'เปิดโค้ด ' : 'ปิดโค้ด ')) + e.target;
+    if (e.source === 'staff') return (e.action === 'create' ? 'เพิ่มผู้ช่วย ' : 'เอาผู้ช่วยออก ') + e.target;
     return e.action + ' ' + e.target;
   }
 

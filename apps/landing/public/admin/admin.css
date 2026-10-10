@@ -136,6 +136,7 @@ body.adm-in .adm-main { margin-left: var(--side-w); }
 /* ---------- surfaces ---------- */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); box-shadow: var(--lift); padding: var(--s5); margin-bottom: var(--s4); min-width: 0; }
 .card > h2:first-child, .card > h3:first-child { margin-top: 0; }
+.card > h2 + form { margin-top: var(--s3); }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; margin-bottom: var(--s3); }
 .card-head h2, .card-head h3 { margin: 0; }
 .notice { border-color: #f1d79a; background: #fffaf0; }
@@ -228,10 +229,13 @@ a.stat:hover { border-color: var(--accent); }
 /* filters above a list: wraps to two columns on phones */
 .filters { display: grid; grid-template-columns: 2fr repeat(4, minmax(0, 1fr)); gap: 0 var(--s3); align-items: end; }
 .filters label { margin-top: 0; }
+.filters.code-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.filters.code-grid .wide { grid-column: 1 / -1; }
+.filters.code-grid fieldset .row label { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 0 var(--s3) 0 0; }
 .filters.three { grid-template-columns: 2fr 1fr 1.4fr; }
 .filters .filter-actions { grid-column: 1 / -1; display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s3); }
 .filters .filter-actions button { margin: 0; }
-@media (max-width: 900px) { .filters, .filters.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filters .wide { grid-column: 1 / -1; } }
+@media (max-width: 900px) { .filters, .filters.three, .filters.code-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filters .wide { grid-column: 1 / -1; } }
 @media (max-width: 900px) { .filters > div { margin-top: var(--s2); } }
 
 /* a list of records: rows on desktop, cards on phones */
@@ -241,6 +245,7 @@ a.stat:hover { border-color: var(--accent); }
 .record-title { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
 .record-meta { margin: 0; font-size: var(--t-small); color: var(--ink-3); overflow-wrap: anywhere; }
 .record-end { text-align: right; font-variant-numeric: tabular-nums; }
+.record-end > button { margin-top: var(--s2); }
 .record-error { grid-column: 1 / -1; margin: var(--s1) 0 0; padding: var(--s2) var(--s3); border-radius: 8px; background: var(--fx-steel); font: 13px/1.5 var(--mono); color: var(--ink-2); overflow-wrap: anywhere; white-space: pre-wrap; }
 .record a { font-weight: 600; }
 .record > details { grid-column: 1 / -1; }

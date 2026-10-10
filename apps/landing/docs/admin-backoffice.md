@@ -103,3 +103,38 @@ updated or deleted. Secret settings appear only as their last four characters.
 - **Links:** must start with `https://` or be a page on this site.
 
 All changes are recorded in `system_audit` under area `content`.
+
+## Discount codes (`src/billing/coupons.ts`, migration `0008_coupons_staff.sql`)
+
+Owners create codes on การเงิน → โค้ดส่วนลด.
+
+- **What a code does:** takes 1 to 90 percent, or a fixed number of baht, off one checkout.
+- **Optional limits:** some packages only, monthly or yearly only, a time window, a total number of uses,
+  and a number of uses per customer.
+- **Where customers use it:** they enter the code on `/app/billing/`. `POST /api/billing/coupon` shows the
+  price after the discount.
+- **The price:** fixed when the payment row is created, and Stripe is asked for exactly that amount. The
+  payment stores `coupon_code` and `discount_satang`. The price never goes below 10 baht (Stripe's minimum
+  for THB).
+- **Counting uses:** a use counts while its payment is paid, or pending and not yet expired. A checkout
+  left unpaid gives the use back by itself.
+- **Race safety:** the code is checked again inside the `INSERT` of the payment, so two checkouts cannot
+  both take the last use.
+- **Where codes show:** in the payments list and the CSV. Codes only matter while online payment
+  (`FEATURE_PAYMENTS` plus the Stripe keys) is switched on.
+
+## Roles (`src/admin/auth.ts`, `src/admin/staff.ts`)
+
+- **Owners** are the Google accounts in `ADMIN_EMAILS`, plus the `ADMIN_TOKEN` break-glass. They can do
+  everything.
+- **Support staff:** owners add them on `/admin/staff/`. Staff sign in with Google the same way. The
+  server allows them, through `supportMay()`:
+  - reading the back office, except the secret settings, the staff list and the LINE alerts;
+  - customer care: credits, account status, password reset and per-customer features (not giving a
+    package);
+  - the LINE bot's products, orders and chats;
+  - cancelling a stuck studio task.
+- **Everything else** is refused with 403 (`reason: "role"`). That covers settings, prices, discount codes,
+  site content, alerts, staff, and the bot's legacy unaudited credit route.
+- **The menu** hides owner-only pages for support staff.
+- **Removing staff** takes effect at their next request.
