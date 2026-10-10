@@ -1,12 +1,12 @@
 // GET /api/admin/audit: every admin action in one list, newest first (page /admin/audit/, docs/admin-backoffice.md).
 // Two tables feed it, neither ever updated or deleted: admin_audit (one customer: credits, package, status,
-// password, feature) and system_audit (settings, plans, studio cancels, LINE alerts). Filters: source, actor
+// password, feature) and system_audit (settings, plans, studio cancels, LINE alerts, site content). Filters: source, actor
 // and a search over the target, the customer's name and the note. 50 per page, keyset paged.
 import type { Env } from '../types';
 
 const BASE = '/api/admin/audit';
 const PAGE = 50;
-const SOURCES = ['customer', 'setting', 'plan', 'price', 'studio', 'alert'];
+const SOURCES = ['customer', 'setting', 'plan', 'price', 'studio', 'alert', 'content'];
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
 });

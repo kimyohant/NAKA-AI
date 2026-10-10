@@ -78,3 +78,28 @@ Admins receive alerts through the shop's own LINE OA (`LINE_CHANNEL_ACCESS_TOKEN
 `GET /api/admin/audit` merges `admin_audit` (one customer) and `system_audit` (settings, plans, studio
 cancels, alerts), newest first, 50 per page. It filters by source, actor or a search. Neither table is ever
 updated or deleted. Secret settings appear only as their last four characters.
+
+## Site content (`src/content/*`, migration `0008_site_content.sql`, page `/admin/content/`)
+
+**Showcase clips.** The cards written in `public/index.html` (`#reel`) stay there. A row in
+`showcase_clips` can:
+- hide a card;
+- give it a place in the order;
+- add an uploaded clip (MP4 up to 40 MB plus a JPG/PNG/WebP poster up to 3 MB). File types are checked
+  from the file's bytes. Uploads are stored in `MEDIA` and served from `/showcase-media/showcase/<uuid>.*`
+  with byte ranges.
+
+`/` therefore goes to the Worker first (`run_worker_first` in wrangler.jsonc, the same rule in
+`server/node.ts`). The server rewrites the gallery and the counts on its tabs.
+- With no rows, or if the table cannot be read, the page is served exactly as written.
+- The home page has no ETag, so a browser never keeps an old gallery after a 304.
+
+**Announcements.** One line at the top of the pages that load `/account-menu.js` (home, `/app/`, login).
+- **Which one shows:** the newest active announcement within its time window.
+- **Public read:** `GET /api/announcement` is public, cached for 60 s, and still answers in maintenance
+  mode.
+- **Closing:** a customer can close an announcement for themselves (localStorage). A new announcement
+  shows again.
+- **Links:** must start with `https://` or be a page on this site.
+
+All changes are recorded in `system_audit` under area `content`.

@@ -27,6 +27,9 @@ import { handleAdminStudioSystem } from "./admin/studio-system";
 import { handleAdminInsights } from "./admin/insights";
 import { handleAdminAlerts, handleAlertCommand, runAdminAlerts } from "./admin/alerts";
 import { handleAdminAudit } from "./admin/audit";
+import { handleAdminShowcase, serveShowcaseMedia } from "./content/showcase";
+import { handleAdminAnnouncements, handleAnnouncement } from "./content/announcements";
+import { serveAsset } from "./content/site";
 import { featureOn, withSettings } from "./system/store";
 import { featureRefusal, hasFeature } from "./entitlements";
 import type { Env } from "./types";
@@ -130,6 +133,11 @@ export default {
     if (url.pathname === "/webhook/line" && request.method === "POST") return handleLineWebhook(request, env, ctx);
     if (url.pathname === "/api/health") return json({ ok: true });
     if (url.pathname === "/api/plans") return handlePublicPlans(request, env);
+    // site content from the back office: the announcement line and uploaded showcase clips (src/content)
+    const announcement = await handleAnnouncement(request, env, url);
+    if (announcement) return announcement;
+    const showcaseMedia = await serveShowcaseMedia(request, env, url);
+    if (showcaseMedia) return showcaseMedia;
     if (url.pathname === "/world/index.wasm" && (request.method === "GET" || request.method === "HEAD")) {
       const compressedUrl = new URL("/world/index.wasm.gz", url.origin);
       const compressed = await env.ASSETS.fetch(new Request(compressedUrl, request));
@@ -161,6 +169,10 @@ export default {
       if (alertResponse) return alertResponse;
       const auditResponse = await handleAdminAudit(request, env, url);
       if (auditResponse) return auditResponse;
+      const showcaseResponse = await handleAdminShowcase(request, env, url, actor);
+      if (showcaseResponse) return showcaseResponse;
+      const announcementResponse = await handleAdminAnnouncements(request, env, url, actor);
+      if (announcementResponse) return announcementResponse;
       // The panel is given the Worker's own env so it can tell saved values from wrangler ones.
       const systemResponse = await handleAdminSystem(request, workerEnv, url, actor);
       if (systemResponse) return systemResponse;
@@ -175,7 +187,8 @@ export default {
         return json({ error: "internal error" }, 500);
       }
     }
-    return env.ASSETS.fetch(request);
+    // pages get the managed gallery and the announcement script (src/content/site.ts)
+    return serveAsset(request, env, url);
   },
 
   // Cron (wrangler.jsonc): drain the AI job queue once a minute, a few jobs at a time.
@@ -230,7 +243,7 @@ function closedFeature(env: Env, url: URL, method: string): Response | null {
   const under = (base: string) => path === base || path.startsWith(base + "/");
   // Maintenance closes the customer API. The panel, Google sign-in (admins use it), health and webhooks keep working.
   if (featureOn(env, "FEATURE_MAINTENANCE") && path.startsWith("/api/") && !under("/api/admin") &&
-      path !== "/api/health" && path !== "/api/auth/config" && path !== "/api/auth/logout" && !under("/api/auth/google")) {
+      path !== "/api/health" && path !== "/api/announcement" && path !== "/api/auth/config" && path !== "/api/auth/logout" && !under("/api/auth/google")) {
     return json({ error: "ระบบปิดปรับปรุงชั่วคราว กรุณากลับมาใหม่ภายหลัง", maintenance: true }, 503);
   }
   if (!featureOn(env, "FEATURE_CLIPS") && method === "POST" && /^\/api\/affiliate\/reviews\/?$/.test(path)) return json({ error: CLOSED }, 503);
