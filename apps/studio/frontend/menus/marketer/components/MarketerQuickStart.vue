@@ -2,7 +2,7 @@
   <section class="qs">
     <!-- ===== Hero + composer (TopView "Your AI marketer, ready to work" ฉบับ NAKA-AI) ===== -->
     <div class="qs-hero">
-      <MarketerMedia class="qs-hero-media" id="hero-2" play="visible" aria-hidden="true" />
+      <MenuHeroArt :src="menuArt('hero-marketer')" fade="center" />
       <p class="qs-eyebrow"><span class="qs-led" aria-hidden="true"></span>{{ t('marketer.quick.eyebrow') }}</p>
       <h2 class="qs-title">{{ t('marketer.quick.title') }}</h2>
       <p class="qs-sub">{{ t('marketer.quick.subtitle') }}</p>
@@ -223,6 +223,8 @@ import {
   RefreshCw, Repeat2, Search, Sparkles, Trash2, X,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
+import MenuHeroArt from '~/components/MenuHeroArt.vue'
+import { menuArt } from '~/utils/studioArt'
 import { marketerQuickAPI, type MarketerInsight, type QuickCatalog, type QuickTemplate } from '~/composables/useApi'
 import { toastError } from '~/composables/useToast'
 import { renderMarkdown } from '../utils/marketerMarkdown'
@@ -391,11 +393,13 @@ onBeforeUnmount(stopPoll)
 
 <style scoped>
 .qs { margin-bottom: 36px; }
-.qs-hero { position: relative; isolation: isolate; text-align: center; padding: 8px 0 4px; }
-.qs-hero-media {
-  position: absolute; z-index: -1; inset: -24px -16px auto; height: 300px; border-radius: 24px; opacity: .3;
-  -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 72%); mask-image: radial-gradient(ellipse at center, #000 20%, transparent 72%);
+.qs-hero {
+  position: relative; isolation: isolate; overflow: hidden; text-align: center;
+  padding: 36px 24px 22px; border: 1px solid var(--border); border-radius: var(--radius-xl, 24px); background: var(--surface-soft);
 }
+/* the photo fills the title area and fades out before the composer and the template chips */
+.qs-hero :deep(.mha) { bottom: auto; height: 440px; }
+.qs-hero :deep(.mha img) { object-position: 50% 22%; }
 /* ภาพประกอบวางทับไอคอนเดิม — ถ้ายังไม่มีไฟล์ ไอคอนจะโชว์แทน */
 .qs-thumb { position: absolute; inset: 0; border-radius: inherit; }
 .qs-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 5px 12px 5px 10px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--text-2); background: var(--surface-soft); }
