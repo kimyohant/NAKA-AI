@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { ownedBy } from '../auth/owner-context.js'
 import { db, schema } from '../db/index.js'
 import { success, created, badRequest } from '../http/response.js'
-import { generateImage, generateVideo, resumeGenerationTask, videoQueuePosition } from '../generation/generation.js'
+import { cancelGenerationTask, generateImage, generateVideo, resumeGenerationTask, videoQueuePosition } from '../generation/generation.js'
 import { logTaskError, logTaskPayload, logTaskStart, logTaskSuccess } from '../tasks/task-logger.js'
 import { quoteGeneration } from '../generation/generation-cost.js'
 import { resolveTaskContext, prepareVideoTask, type TaskType } from '../generation/task-prep.js'
@@ -122,6 +122,17 @@ app.post('/:id/recover', async (c) => {
   const result = await resumeGenerationTask(id)
   if (result === 'unavailable') return badRequest(c, 'Provider task ID or original configuration is unavailable')
   return success(c, { status: result })
+})
+
+// Cancel a task the provider is not working on: queued (never submitted) or unknown (polling stopped).
+// Frees its queue slot; a task this server is submitting or polling cannot be cancelled.
+app.post('/:id/cancel', async (c) => {
+  const id = Number(c.req.param('id'))
+  if (!Number.isInteger(id) || id < 1) return badRequest(c, 'Invalid task ID')
+  const result = await cancelGenerationTask(id)
+  if (result === 'active') return badRequest(c, 'The task is being submitted or polled; wait for it to finish')
+  if (result === 'not_cancellable') return badRequest(c, 'Only queued or unknown tasks can be cancelled')
+  return success(c, { status: 'cancelled' })
 })
 
 // GET /tasks — 按 type / storyboard_id / drama_id 过滤
