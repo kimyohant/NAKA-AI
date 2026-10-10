@@ -63,6 +63,11 @@
         <section class="credits-card" aria-labelledby="credits-title">
           <p class="panel-label" id="credits-title">เครดิตคงเหลือ</p>
           <p class="credits-number"><span id="credits-value">0</span><small> เครดิต</small></p>
+          <div id="plan-panel" class="plan-panel" hidden>
+            <p class="plan-name"><span id="plan-name"></span><span id="plan-period" class="plan-period"></span></p>
+            <p id="plan-dates" class="plan-dates"></p>
+            <p id="plan-warn" class="plan-warn" role="status" hidden></p>
+          </div>
           <p class="credits-help">เครดิตใช้สำหรับสร้างคลิปและภาพ · ซื้อหรือต่ออายุแพ็กเกจได้ที่ <a href="/app/billing/">หน้าแพ็กเกจ</a> · สอบถาม <a href="tel:+66892788587">0892788587</a></p>
           <div id="quota-panel" class="quota-panel" hidden>
             <p class="panel-label">โควตาเดือนนี้</p>
@@ -85,6 +90,16 @@
           </div>
         </section>
       </div>
+
+      <section class="history-section" aria-labelledby="history-title">
+        <div class="history-heading">
+          <div><p class="panel-label">เครดิตเข้าออก</p><h2 id="history-title">ประวัติการใช้เครดิต</h2></div>
+          <a class="history-link" href="/app/billing/">ซื้อหรือต่ออายุแพ็กเกจ</a>
+        </div>
+        <p id="history-status" class="history-status" role="status">กำลังโหลดประวัติเครดิต…</p>
+        <ol id="history-list" class="history-list" hidden></ol>
+        <button id="history-more" class="history-more" type="button" hidden>ดูรายการก่อนหน้า</button>
+      </section>
 
       <section class="works-section" aria-labelledby="works-title">
         <div class="works-heading">

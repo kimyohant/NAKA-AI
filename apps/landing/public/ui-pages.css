@@ -51,12 +51,12 @@ body.member-ui { background: var(--m-bg); }
 .member-ui .acct-login:hover { border-color: transparent; background: var(--u-gray-2); }
 
 /* ---------- member pages: flat cards, black main action ---------- */
-.member-ui :is(.m-card, .auth-card, .credits-card, .workflow-card, .app-error, .onboarding-inner, .works-section, .account-card,
+.member-ui :is(.m-card, .auth-card, .credits-card, .workflow-card, .app-error, .onboarding-inner, .works-section, .history-section, .account-card,
   .current, .plan-option, .pay, .receipts, .thread-pane, .thread-view, .card-form, .kb-item) { border-color: transparent; box-shadow: none; }
-.member-ui :is(.auth-card, .works-section, .account-card, .current, .pay, .receipts, .thread-pane, .thread-view, .card-form) { border-radius: 24px; }
+.member-ui :is(.auth-card, .works-section, .history-section, .account-card, .current, .pay, .receipts, .thread-pane, .thread-view, .card-form) { border-radius: 24px; }
 .member-ui .auth-card { border-radius: 28px; }
 .member-ui .onboarding-inner { background: #fff; }
-.member-ui :is(.works-button, .works-open, .secondary-button, .bot-state, .filter button) { border-color: transparent; background: var(--m-surface-2); }
+.member-ui :is(.works-button, .works-open, .history-more, .secondary-button, .bot-state, .filter button) { border-color: transparent; background: var(--m-surface-2); }
 .member-ui .plan-option:hover { border-color: var(--m-line-strong); }
 .member-ui .plan-option[aria-checked="true"] { border-color: var(--m-brand); background: #fff; box-shadow: none; }
 .member-ui .workflow-card:hover { border-color: transparent; }
