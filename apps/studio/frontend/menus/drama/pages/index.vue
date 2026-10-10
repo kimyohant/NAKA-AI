@@ -34,6 +34,7 @@
                 <span class="chip-label">{{ t('index.studio.style') }}</span>
                 <select v-model="studioStyle" :aria-label="t('index.studio.style')">
                   <option v-for="p in stylePresets" :key="p.value" :value="p.value">{{ styleLabel(p.value) }}</option>
+                  <option :value="CUSTOM_STYLE">{{ styleLabel(CUSTOM_STYLE) }}</option>
                 </select>
                 <ChevronDown :size="14" :stroke-width="1.8" />
               </div>
@@ -63,10 +64,28 @@
           <p class="block-sub">{{ t('index.studio.stylesSub') }}</p>
         </div>
       </div>
-      <div class="style-rail-wrap">
+      <div class="style-tabs" role="tablist" :aria-label="t('index.styleTabs.label')">
+        <button v-for="tab in styleTabs" :key="tab.value" type="button" role="tab" class="style-tab"
+          :class="{ on: styleTab === tab.value }" :aria-selected="styleTab === tab.value" @click="styleTab = tab.value">
+          <span v-if="tabHasCurrent(tab.value)" class="style-tab-dot" aria-hidden="true"></span>
+          {{ tab.label }}<span v-if="tab.count" class="style-tab-count">{{ tab.count }}</span>
+        </button>
+      </div>
+      <p v-if="studioStyle && !tabHasCurrent(styleTab)" class="style-current">
+        {{ t('index.styleTabs.current', { name: styleLabel(studioStyle) }) }}
+        <button type="button" class="style-current-link" @click="styleTab = tabOf(studioStyle)">{{ t('index.styleTabs.view') }}</button>
+      </p>
+      <p v-if="styleTab === 'live_action'" class="style-warn" role="note">{{ t('index.styleTabs.liveWarning') }}</p>
+      <div v-if="styleTab === CUSTOM_STYLE" class="style-custom">
+        <label class="field-label" for="custom-style">{{ t('index.styleTabs.customLabel') }}</label>
+        <textarea id="custom-style" v-model="customStyle" class="input style-custom-input" rows="3" :maxlength="CUSTOM_STYLE_MAX"
+          :placeholder="t('index.styleTabs.customPlaceholder')" @input="studioStyle = CUSTOM_STYLE"></textarea>
+        <p class="block-sub">{{ t('index.styleTabs.customHint', { n: CUSTOM_STYLE_MAX }) }}</p>
+      </div>
+      <div v-else class="style-rail-wrap">
         <div class="style-rail">
           <button
-            v-for="p in stylePresets"
+            v-for="p in tabStyles"
             :key="p.value"
             type="button"
             class="style-card"
@@ -249,6 +268,8 @@
             <label class="field">
               <span class="field-label">{{ t('index.createDialog.style') }}</span>
               <BaseSelect v-model="form.style" :options="styleSelectOptions" :placeholder="t('index.createDialog.stylePlaceholder')" searchable />
+              <textarea v-if="form.style === CUSTOM_STYLE" v-model="formCustomStyle" class="input" rows="3" :maxlength="CUSTOM_STYLE_MAX"
+                :placeholder="t('index.styleTabs.customPlaceholder')" :aria-label="t('index.styleTabs.customLabel')"></textarea>
               <span v-if="selectedStyleDesc" class="field-hint">{{ selectedStyleDesc }}</span>
             </label>
             <label class="field">
@@ -313,7 +334,27 @@ function toggleGenre(tag) {
   else formGenres.value.push(tag)
 }
 const stylePresets = ref([])
-const styleSelectOptions = computed(() => stylePresets.value.map(p => ({ label: styleLabel(p.value), value: p.value })))
+// Art Style tabs like Topview Drama Studio: Live Action / Animation / Custom (backend core/db/style-seeds.ts)
+const CUSTOM_STYLE = 'custom'
+const CUSTOM_STYLE_MAX = 600
+const customStyle = ref('')
+const styleTab = ref('animation')
+function tabOf(value) {
+  if (value === CUSTOM_STYLE) return CUSTOM_STYLE
+  return stylePresets.value.find(p => p.value === value)?.category === 'live_action' ? 'live_action' : 'animation'
+}
+const tabStyles = computed(() => stylePresets.value.filter(p => tabOf(p.value) === styleTab.value))
+const styleTabs = computed(() => ([
+  { value: 'live_action', label: t('index.styleTabs.liveAction'), count: stylePresets.value.filter(p => tabOf(p.value) === 'live_action').length },
+  { value: 'animation', label: t('index.styleTabs.animation'), count: stylePresets.value.filter(p => tabOf(p.value) === 'animation').length },
+  { value: CUSTOM_STYLE, label: t('index.styleTabs.custom'), count: 0 },
+]))
+function tabHasCurrent(tab) { return !!studioStyle.value && tabOf(studioStyle.value) === tab }
+const styleSelectOptions = computed(() => [
+  ...stylePresets.value.map(p => ({ label: styleLabel(p.value), value: p.value })),
+  { label: styleLabel(CUSTOM_STYLE), value: CUSTOM_STYLE },
+])
+const formCustomStyle = ref('')
 const selectedStyleDesc = computed(() => {
   const p = stylePresets.value.find(p => p.value === form.value.style)
   return p ? styleDesc(p) : ''
@@ -392,7 +433,11 @@ function styleArt(key) {
 
 const STYLE_GLYPH = { '3d': '3D', anime: 'AN', ghibli: 'GH', watercolor: 'WC', comic: 'CM', guofeng: 'GF', webtoon: 'WT', noir: 'NR' }
 function styleGlyph(key) {
-  return STYLE_GLYPH[key] || String(key || '?').slice(0, 2).toUpperCase()
+  if (STYLE_GLYPH[key]) return STYLE_GLYPH[key]
+  // catalog styles: initials of the card name ("French Arthouse" → FA), not of the value ("live-…" → LI)
+  const words = String(stylePresets.value.find(p => p.value === key)?.name || '').match(/[A-Za-z0-9]+/g) || []
+  if (words.length) return words.slice(0, 2).map(w => w[0]).join('').toUpperCase()
+  return String(key || '?').slice(0, 2).toUpperCase()
 }
 
 function coverInitial(d) {
@@ -422,6 +467,7 @@ async function load() {
     stylePresets.value = presets || []
     if (!form.value.style && stylePresets.value.length) form.value.style = stylePresets.value[0].value
     if (!studioStyle.value && stylePresets.value.length) studioStyle.value = stylePresets.value[0].value
+    styleTab.value = tabOf(studioStyle.value)
   } catch (e) {
     toastError(e)
   } finally {
@@ -431,9 +477,13 @@ async function load() {
 
 async function create() {
   if (!form.value.title?.trim()) return
+  if (form.value.style === CUSTOM_STYLE && !formCustomStyle.value.trim()) { toast.error(t('index.styleTabs.customRequired')); return }
   try {
     const payload = { ...form.value }
-    if (formGenres.value.length) payload.metadata = { genres: [...formGenres.value] }
+    const metadata = {}
+    if (formGenres.value.length) metadata.genres = [...formGenres.value]
+    if (form.value.style === CUSTOM_STYLE) metadata.customStyle = formCustomStyle.value.trim()
+    if (Object.keys(metadata).length) payload.metadata = metadata
     const d = await dramaAPI.create(payload)
     formGenres.value = []
     showCreate.value = false
@@ -480,6 +530,8 @@ function fmtDate(s) {
 const story = ref('')
 const studioStyle = ref('')
 const studioRatio = ref('9:16')
+watch(studioStyle, (v) => { if (v === CUSTOM_STYLE) styleTab.value = CUSTOM_STYLE })
+watch(() => form.value.style, (v) => { if (v === CUSTOM_STYLE && !formCustomStyle.value) formCustomStyle.value = customStyle.value })
 const creatingStory = ref(false)
 const uploadedName = ref('')
 const dragging = ref(false)
@@ -515,6 +567,11 @@ function deriveTitle(text) {
 async function startFromStory() {
   const text = story.value.trim()
   if (!text) { toast.error(t('index.studio.storyRequired')); return }
+  if (studioStyle.value === CUSTOM_STYLE && !customStyle.value.trim()) {
+    styleTab.value = CUSTOM_STYLE
+    toast.error(t('index.styleTabs.customRequired'))
+    return
+  }
   if (creatingStory.value) return
   creatingStory.value = true
   try {
@@ -527,7 +584,10 @@ async function startFromStory() {
       })
       return
     }
-    const d = await dramaAPI.create({ title: deriveTitle(text), style: studioStyle.value, aspect_ratio: studioRatio.value })
+    const d = await dramaAPI.create({
+      title: deriveTitle(text), style: studioStyle.value, aspect_ratio: studioRatio.value,
+      ...(studioStyle.value === CUSTOM_STYLE ? { metadata: { customStyle: customStyle.value.trim() } } : {}),
+    })
     const ep = await episodeAPI.create({ drama_id: d.id, resolution: '720p' })
     await episodeAPI.update(ep.id, { content: text })
     toast.success(t('index.studio.created'))
@@ -702,6 +762,16 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
 .block-sub { margin: 2px 0 0; font-size: 13px; color: var(--text-3); }
 
 /* 风格卡片：网格换行，一次展示全部风格（无横向滚动条） */
+.style-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; margin-bottom: 14px; border-radius: 12px; background: var(--bg-2, rgba(127,127,127,.08)); border: 1px solid var(--border); }
+.style-tab { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; border: 0; border-radius: 9px; background: transparent; color: var(--text-2); font-weight: 600; font-size: 13px; cursor: pointer; }
+.style-tab.on { background: var(--surface-raised, #fff); color: var(--text-0); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.style-tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success, #22c55e); }
+.style-tab-count { font-size: 11px; font-weight: 600; color: var(--text-3); }
+.style-current { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; color: var(--text-1); background: var(--bg-2, rgba(127,127,127,.08)); }
+.style-current-link { margin-left: auto; border: 0; background: none; color: var(--accent-text, var(--accent)); font-weight: 600; cursor: pointer; }
+.style-warn { margin: 0 0 12px; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.5; color: var(--warn-text, #92400e); background: var(--warn-bg, #fff7ed); }
+.style-custom { display: flex; flex-direction: column; gap: 6px; }
+.style-custom-input { min-height: 88px; resize: vertical; }
 .style-rail-wrap { position: relative; }
 .style-rail {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

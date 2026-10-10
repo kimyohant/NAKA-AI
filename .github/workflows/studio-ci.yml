@@ -26,6 +26,8 @@ jobs:
       - run: npm run typecheck
       # docs/adr/0004 step 9: the old SQLite → PostgreSQL import (node:sqlite builds the old file; Node 24)
       - run: npx tsx --test tests/import-sqlite.test.ts
+      # drama art styles (Live Action / Animation catalog + Custom style)
+      - run: npx tsx --test tests/art-styles.test.ts
       # tests run on PGlite (in-process PostgreSQL, DATABASE_URL=pglite://…): no database service needed
       # naka-sso.test.ts also checks the contract against apps/landing/src/auth/studio.ts (same checkout)
       - run: npx tsx --test tests/campaigns-migration.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts tests/entitlements.test.ts tests/concurrency.test.ts tests/query-budget.test.ts tests/module-boundaries.test.mjs
@@ -51,5 +53,7 @@ jobs:
       - run: npm run build
       # AI Marketer quick start: media files on disk + page/dialog structure + i18n
       - run: node --test tests/marketer-media.test.mjs tests/marketer-quick-structure.test.mjs
+      # drama art style tabs (Live Action / Animation / Custom)
+      - run: node --test tests/drama-art-styles.test.mjs
       # Social Auto Reply: board, accounts and brand pages + i18n
       - run: node --test tests/social-structure.test.mjs tests/social-actions.test.mjs tests/social-accounts.test.mjs tests/social-limits.test.mjs

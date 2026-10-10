@@ -61,6 +61,8 @@
             <label class="field">
               <span class="field-label">{{ t('index.createDialog.style') }}</span>
               <BaseSelect v-model="settingsForm.style" :options="styleOptions" searchable />
+              <textarea v-if="settingsForm.style === 'custom'" v-model="positioningForm.customStyle" class="input" rows="3" maxlength="600"
+                :placeholder="t('index.styleTabs.customPlaceholder')" :aria-label="t('index.styleTabs.customLabel')"></textarea>
             </label>
             <label class="field">
               <span class="field-label">{{ t('index.createDialog.aspectRatio') }}</span>
@@ -931,7 +933,11 @@ function styleName(key) {
   if (key && te(`index.styleNames.${key}`)) return t(`index.styleNames.${key}`)
   return stylePresets.value.find(p => p.value === key)?.name || key
 }
-const styleOptions = computed(() => stylePresets.value.map(p => ({ label: styleName(p.value), value: p.value })))
+// 'custom' = the author's own style description, kept in metadata.customStyle (backend style-preset.ts)
+const styleOptions = computed(() => [
+  ...stylePresets.value.map(p => ({ label: styleName(p.value), value: p.value })),
+  { label: styleName('custom'), value: 'custom' },
+])
 
 // 项目设置表单（aspect_ratio 现可编辑，随表单保存）
 const settingsForm = reactive({ title: '', description: '', genre: '', style: '', aspect_ratio: '16:9', budget_thb: '' })
@@ -953,8 +959,9 @@ const positioningForm = reactive({
   genres: [],
   backgrounds: [],
   tropes: [],
+  customStyle: '',
 })
-const METADATA_KEYS = ['episode_mode', 'first_episode_duration', 'episode_duration', 'suggestiveness', 'auto_review', 'auto_pipeline', 'genres', 'backgrounds', 'tropes']
+const METADATA_KEYS = ['episode_mode', 'first_episode_duration', 'episode_duration', 'suggestiveness', 'auto_review', 'auto_pipeline', 'genres', 'backgrounds', 'tropes', 'customStyle']
 function metadataFromForm() {
   return Object.fromEntries(METADATA_KEYS.map(k => [k, positioningForm[k]]))
 }
@@ -1015,6 +1022,7 @@ function fillPositioning() {
   positioningForm.genres = [...(Array.isArray(m.genres) ? m.genres : [])]
   positioningForm.backgrounds = [...(Array.isArray(m.backgrounds) ? m.backgrounds : [])]
   positioningForm.tropes = [...(Array.isArray(m.tropes) ? m.tropes : [])]
+  positioningForm.customStyle = typeof m.customStyle === 'string' ? m.customStyle : ''
   positioningSnapshot.value = JSON.stringify(metadataFromForm())
 }
 
@@ -1032,6 +1040,7 @@ const settingsDirty = computed(() =>
 )
 async function saveSettings() {
   if (!settingsForm.title.trim()) { toast.error(t('episode.create.nameRequired')); return }
+  if (settingsForm.style === 'custom' && !positioningForm.customStyle.trim()) { toast.error(t('index.styleTabs.customRequired')); return }
   const budget = settingsForm.budget_thb === '' ? null : Number(settingsForm.budget_thb)
   if (budget !== null && (!Number.isFinite(budget) || budget < 0 || budget > 100000000)) {
     toast.warning(t('productionGuard.budgetInvalid')); return

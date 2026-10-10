@@ -73,7 +73,7 @@ test('every custom component tag on the settings page has a file', () => {
 test('nothing loads behind the token gate or the admins-only notice', () => {
   const page = read('app/pages/settings.vue')
   assert.match(page, /if \(e\?\.status === 401\) onAdminRequired\(\)/)
-  assert.match(page, /if \(!\(await adminAccess\(\)\)\) return\n\s*loadCfgs\(\)/)
+  assert.match(page, /if \(!\(await adminAccess\(\)\)\) return\r?\n\s*loadCfgs\(\)/)
   assert.match(page, /if \(await adminAccess\(\)\) setTimeout\(\(\) => autoTour\('settings'/)
   assert.match(page, /if \(await adminAccess\(\)\) loadContentLanguage\(\)/)
   assert.doesNotMatch(page, /onMounted\(\(\) => \{ loadCfgs\(\)/)
