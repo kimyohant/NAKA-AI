@@ -74,7 +74,6 @@ export interface Env {
   VIDEO_BASE_URL?: string;
   VIDEO_MODEL?: string;
   VIDEO_RESOLUTION?: string;
-  AI_VIDEO_CREDITS?: string;
 }
 
 /** A signed-in customer, as returned by /api/auth/otp/verify and /api/auth/me. */

@@ -114,7 +114,7 @@ export async function entitlementGuard(c: Context, next: Next) {
   }, 403)
 }
 
-async function isStudioAdmin(userId: string): Promise<boolean> {
+export async function isStudioAdmin(userId: string): Promise<boolean> {
   const [row] = await db.select({ isAdmin: schema.users.isAdmin }).from(schema.users).where(eq(schema.users.id, userId))
   return row?.isAdmin === true
 }

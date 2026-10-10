@@ -115,4 +115,8 @@ test('describeEntry covers every ledger reason', () => {
   assert.equal(describeEntry({ reason: 'job_hold', note: '', delta: -2, job_kind: 'marketer_brief' }).title, 'นักการตลาด AI');
   assert.equal(describeEntry({ reason: 'job_hold', note: '', delta: -2, job_kind: null }).title, 'งาน AI');
   assert.deepEqual(describeEntry({ reason: 'studio_refund', note: '', delta: 3, job_kind: null }).kind, 'studio_refund');
+  // studio holds name their work in the ref 'studio:<image|video>:<task id>' (studio core/auth/credits.ts)
+  assert.equal(describeEntry({ reason: 'studio_hold', note: '', delta: -5, job_kind: null, job_id: 'studio:video:12' }).title, 'สร้างวิดีโอใน Naka Studio');
+  assert.equal(describeEntry({ reason: 'studio_hold', note: '', delta: -1, job_kind: null, job_id: 'studio:image:3' }).title, 'สร้างภาพใน Naka Studio');
+  assert.equal(describeEntry({ reason: 'studio_refund', note: '', delta: 5, job_kind: null, job_id: 'studio:video:12' }).title, 'คืนเครดิต: สร้างวิดีโอใน Naka Studio ไม่สำเร็จ');
 });

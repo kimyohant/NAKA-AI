@@ -24,6 +24,14 @@ interface LedgerRow {
   note: string | null;
   created_at: string;
   job_kind: string | null;
+  job_id: string | null;
+}
+
+/** What a studio hold paid for, from its ref 'studio:<image|video>:<task id>' (core/auth/credits.ts in the studio). */
+function studioWork(ref: string | null | undefined): string {
+  if (ref?.startsWith("studio:video:")) return "สร้างวิดีโอใน Naka Studio";
+  if (ref?.startsWith("studio:image:")) return "สร้างภาพใน Naka Studio";
+  return "ใช้งานใน Naka Studio";
 }
 
 /** What the work was, from the job's kind (marketer kinds all start with "marketer"). */
@@ -36,7 +44,7 @@ function jobTitle(kind: string | null): string {
 }
 
 /** A ledger row in member words. Exported for tests. */
-export function describeEntry(row: Pick<LedgerRow, "reason" | "note" | "delta" | "job_kind">): { kind: EntryKind; title: string } {
+export function describeEntry(row: Pick<LedgerRow, "reason" | "note" | "delta" | "job_kind"> & { job_id?: string | null }): { kind: EntryKind; title: string } {
   switch (row.reason) {
     case "grant":
       if (row.note === "signup_bonus") return { kind: "welcome", title: "เครดิตต้อนรับสมาชิกใหม่" };
@@ -49,9 +57,9 @@ export function describeEntry(row: Pick<LedgerRow, "reason" | "note" | "delta" |
     case "job_refund":
       return { kind: "refund", title: "คืนเครดิต: " + jobTitle(row.job_kind) + " ไม่สำเร็จ" };
     case "studio_hold":
-      return { kind: "studio", title: "ใช้งานใน Naka Studio" };
+      return { kind: "studio", title: studioWork(row.job_id) };
     case "studio_refund":
-      return { kind: "studio_refund", title: "คืนเครดิต: งานใน Naka Studio ไม่สำเร็จ" };
+      return { kind: "studio_refund", title: "คืนเครดิต: " + studioWork(row.job_id).replace("ใช้งานใน", "งานใน") + " ไม่สำเร็จ" };
     default:
       return { kind: "team", title: row.delta < 0 ? "หักเครดิต" : "เพิ่มเครดิต" };
   }
@@ -72,7 +80,7 @@ export async function handleMemberCredits(request: Request, env: Env, url: URL, 
 
   try {
     const { results } = await env.DB.prepare(
-      `SELECT l.id, l.delta, l.reason, l.note, l.created_at, j.kind AS job_kind
+      `SELECT l.id, l.delta, l.reason, l.note, l.created_at, l.job_id, j.kind AS job_kind
        FROM credit_ledger l
        LEFT JOIN jobs j ON j.id = l.job_id AND j.user_id = l.user_id AND l.reason IN ('job_hold', 'job_refund')
        WHERE l.user_id = ?1${before === null ? "" : " AND l.id < ?3"}
