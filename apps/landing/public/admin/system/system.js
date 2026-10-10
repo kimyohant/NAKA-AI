@@ -3,10 +3,10 @@
   var $ = function (id) { return document.getElementById(id); };
   var KEY = 'naka_admin_customers'; // shared with /admin/customers/, so one sign-in covers both pages
   var token = '', authVersion = 0, signingIn = false;
-  var GROUPS = { payments: 'ชำระเงิน (Stripe)', ai: 'AI และเสียงพากย์', email: 'อีเมล', login: 'การเข้าสู่ระบบ', studio: 'naka-studio (ล็อกอินร่วม)',
+  var GROUPS = { payments: 'ชำระเงิน (Stripe)', ai: 'AI และเสียงพากย์', email: 'อีเมล', login: 'การเข้าสู่ระบบ', studio: 'naka-studio (ล็อกอินร่วม และหน้าระบบ Studio)',
     sms: 'SMS OTP', video: 'วิดีโอ AI', line_bot: 'LINE OA (บอทขายของ)', meta: 'Facebook / Instagram (Meta)' };
   var SOURCES = { panel: 'ตั้งจากหน้านี้', cloudflare: 'ใช้ค่าจาก Cloudflare', default: 'ค่าเริ่มต้น', unset: 'ยังไม่ได้ตั้ง' };
-  var ACTIONS = { set: 'ตั้งค่า', clear: 'ล้างค่า', import: 'ย้ายจาก Cloudflare', create: 'เพิ่มแพ็กเกจ', update: 'แก้แพ็กเกจ' };
+  var ACTIONS = { set: 'ตั้งค่า', clear: 'ล้างค่า', import: 'ย้ายจาก Cloudflare', create: 'เพิ่มแพ็กเกจ', update: 'แก้แพ็กเกจ', cancel: 'ยกเลิกงาน naka-studio' };
   var PLAN_FIELDS = { name: 'ชื่อ', price_thb: 'ราคา', monthly_credits: 'เครดิต/เดือน', max_parallel_jobs: 'งานพร้อมกัน', on_sale: 'เปิดขาย' };
   var labels = {};
 
@@ -259,6 +259,7 @@
       Object.keys(b).forEach(function (k) { if (!(k in a)) changes.push('− ' + name(k)); });
       return 'ฟีเจอร์: ' + (changes.join(' · ') || 'ไม่มีการเปลี่ยนแปลง');
     }
+    if (row.area === 'studio') return 'งานวิดีโอ #' + d.taskId + ' (ปล่อยช่องคิวให้งานถัดไป)';
     if (row.area === 'plan') {
       if (!d.before) return 'ราคา ' + d.after.price_thb + ' บาท · ' + d.after.monthly_credits + ' เครดิต';
       return Object.keys(PLAN_FIELDS).filter(function (k) { return d.before[k] !== d.after[k]; })

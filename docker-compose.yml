@@ -42,6 +42,9 @@ services:
     environment:
       DATABASE_URL: postgres://account_app:${ACCOUNT_DB_PASSWORD}@postgres:5432/naka
       MEDIA_DIR: /data/media
+      # the back office's "ระบบ Studio" page reads the studio over this network; STUDIO_ADMIN_TOKEN (= the
+      # studio's ADMIN_TOKEN) goes in apps/landing/.env.production or /admin/system/
+      STUDIO_INTERNAL_URL: http://studio:5679
       TZ: Asia/Bangkok
     # the Worker's vars and secrets (APP_ORIGIN, SESSION_SECRET, ADMIN_TOKEN, …) — see apps/landing/.env.example
     env_file:
