@@ -325,6 +325,7 @@ import { dramaAPI, episodeAPI, stylePresetAPI, aiConfigAPI } from '~/composables
 import { GENRE_TAGS } from '~/composables/useCreativeTags'
 import BaseSelect from '~/components/BaseSelect.vue'
 import { styleExample } from '~/utils/studioArt'
+import { styleDisplayName } from '~/utils/styleName'
 import { startTour, autoTour } from '~/composables/useTour'
 
 const { t, te, locale } = useI18n()
@@ -442,8 +443,8 @@ async function setDramaStatus(d, status) {
 
 // 内置风格的名称/描述按界面语言显示；用户自建风格直接用数据库里的名字
 function styleLabel(key) {
-  if (key && te(`index.styleNames.${key}`)) return t(`index.styleNames.${key}`)
-  return stylePresets.value.find(p => p.value === key)?.name || key || ''
+  if (!key) return ''
+  return styleDisplayName(stylePresets.value.find(p => p.value === key) || { value: key }, { t, te, locale: locale.value })
 }
 function styleDesc(p) {
   return te(`index.styleDescs.${p.value}`) ? t(`index.styleDescs.${p.value}`) : (p.description || '')

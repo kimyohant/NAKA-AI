@@ -198,10 +198,11 @@
                 <div class="sg-body">
                   <div class="sg-name-row">
                     <span v-if="p.source === 'builtin'" class="sg-num mono">{{ styleNumber(p) }}</span>
-                    <h4 class="sg-name truncate">{{ p.name }}</h4>
+                    <h4 class="sg-name truncate">{{ styleName(p) }}</h4>
                   </div>
                   <span v-if="p.category" class="tag sg-cat-tag">{{ p.category }} · {{ t(`settings.styles.gallery.cat_${p.category}`) }}</span>
-                  <p class="sg-prompt mono">{{ p.prompt }}</p>
+                  <p v-if="p.source === 'builtin'" class="sg-prompt">{{ p.description ? t('settings.styles.gallery.reference', { name: p.description }) : '' }}</p>
+                  <p v-else class="sg-prompt mono">{{ p.prompt }}</p>
                 </div>
                 <div class="sg-actions">
                   <button
@@ -674,6 +675,7 @@ import BaseSelect from '~/components/BaseSelect.vue'
 import { toast } from 'vue-sonner'
 import { UNSLOTH_PROVIDER, UNSLOTH_VIDEO_DEFAULTS, isLocalOrPrivateBaseUrl } from '~/utils/unslothFlow'
 import { coverArt, skillArt, styleExample } from '~/utils/studioArt'
+import { galleryNumber, styleDisplayName } from '~/utils/styleName'
 import { toastError } from '~/composables/useToast'
 import { useI18n } from 'vue-i18n'
 import { aiConfigAPI, promptAPI, skillsAPI, stylePresetAPI, settingsAPI, taskAPI, uploadAPI, mediaUrl, adminSessionAPI, authAPI } from '~/composables/useApi'
@@ -685,7 +687,7 @@ import { providerIconUrl } from '~/composables/useProviderIcon'
 import { startTour, autoTour } from '~/composables/useTour'
 import { confirmUnifiedLanguage } from '~/composables/useUnifiedLanguage'
 
-const { t } = useI18n()
+const { t, te, locale } = useI18n()
 
 // System settings were the separate back-office app (/admin/); they live here now, for admins only.
 // naka-ai SSO members who are not admins see a notice; single-user mode with ADMIN_TOKEN asks for the token.
@@ -1339,13 +1341,18 @@ const filteredStylePresets = computed(() => {
     if (styleCategory.value !== 'all' && styleCategory.value !== 'custom' && p.category !== styleCategory.value) return false
     if (!q) return true
     return (p.name || '').toLowerCase().includes(q)
+      || styleName(p).toLowerCase().includes(q)
       || (p.value || '').includes(q)
       || (p.description || '').toLowerCase().includes(q)
   })
 })
 
 function styleNumber(p) {
-  return String(p.value || '').replace(/^handraw-/, '').toUpperCase()
+  return galleryNumber(p.value) || ''
+}
+// the preset's name in the UI language (utils/styleName.ts)
+function styleName(p) {
+  return styleDisplayName(p, { t, te, locale: locale.value })
 }
 
 async function importBuiltinStyles() {
