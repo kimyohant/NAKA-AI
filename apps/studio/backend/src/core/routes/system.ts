@@ -110,6 +110,48 @@ async function videoQueues() {
   }))
 }
 
+// ---------- failed tasks: what the back office's "งานที่ล้มเหลว" page lists for support ----------
+const FAILED_LIMIT = 100
+
+/** Image and video tasks that failed in the last `days` days, newest first, with their owner (a naka-ai
+ * user id) so support can find the customer. The prompt and provider keys are never included. */
+async function failedTasks(days: number) {
+  const since = new Date(Date.now() - days * 86_400_000).toISOString()
+  const [rows, [total]] = await Promise.all([
+    rawQuery(`SELECT t.id, t.type, t.owner_user_id, t.provider, c.name AS config_name, t.drama_id, d.title AS drama_title,
+        t.storyboard_id, t.error_msg, t.error_code, t.created_at, t.updated_at
+      FROM sys_task t
+      LEFT JOIN ai_service_configs c ON c.id = t.config_id
+      LEFT JOIN dramas d ON d.id = t.drama_id
+      WHERE t.status = 'failed' AND t.updated_at >= $1
+      ORDER BY t.updated_at DESC, t.id DESC LIMIT ${FAILED_LIMIT}`, [since]),
+    rawQuery(`SELECT COUNT(*)::int AS n FROM sys_task WHERE status = 'failed' AND updated_at >= $1`, [since]),
+  ])
+  return {
+    days,
+    total: Number(total?.n ?? 0),
+    tasks: rows.map(t => ({
+      id: Number(t.id),
+      type: t.type,
+      ownerUserId: t.owner_user_id ?? null,
+      provider: t.provider ?? null,
+      configName: t.config_name ?? null,
+      dramaId: t.drama_id == null ? null : Number(t.drama_id),
+      dramaTitle: t.drama_title ?? null,
+      storyboardId: t.storyboard_id == null ? null : Number(t.storyboard_id),
+      error: t.error_msg ? String(t.error_msg).slice(0, 300) : null,
+      errorCode: t.error_code ?? null,
+      createdAt: t.created_at,
+      updatedAt: t.updated_at,
+    })),
+  }
+}
+
+app.get('/failed-tasks', async (c) => {
+  const days = Math.min(30, Math.max(1, Math.trunc(Number(c.req.query('days'))) || 7))
+  return success(c, await failedTasks(days))
+})
+
 app.get('/overview', async (c) => {
   const [storage, queues] = await Promise.all([storageInfo(), videoQueues()])
   return success(c, {

@@ -30,7 +30,7 @@ jobs:
       - run: npx tsx --test tests/art-styles.test.ts
       # tests run on PGlite (in-process PostgreSQL, DATABASE_URL=pglite://…): no database service needed
       # naka-sso.test.ts also checks the contract against apps/landing/src/auth/studio.ts (same checkout)
-      - run: npx tsx --test tests/campaigns-migration.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts tests/entitlements.test.ts tests/concurrency.test.ts tests/query-budget.test.ts tests/module-boundaries.test.mjs
+      - run: npx tsx --test tests/campaigns-migration.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts tests/entitlements.test.ts tests/concurrency.test.ts tests/query-budget.test.ts tests/system-overview.test.ts tests/module-boundaries.test.mjs
       # AI Marketer quick start: analyses (marketer_insights), autopilot, per-member scope
       - run: npx tsx --test tests/marketer-quick.test.ts
       # Social Auto Reply: poller, plain rules, verdicts, person actions, auto mode, limits, Facebook adapter, connect, per-member scope

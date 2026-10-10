@@ -14,12 +14,20 @@
     system: '<path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/>',
     studio: '<rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01"/><path d="M6 17h.01"/>',
     bot: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/>',
+    home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/>',
+    money: '<rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="3"/><path d="M6 10v5"/><path d="M18 10v5"/>',
+    alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
   };
+  // daily work first; the phone tab bar shows these four and puts the rest under "เพิ่มเติม"
   var NAV = [
+    { href: '/admin/', label: 'ภาพรวม', long: 'ภาพรวม', icon: 'home' },
     { href: '/admin/customers/', label: 'ลูกค้า', long: 'จัดการลูกค้า', icon: 'customers' },
-    { href: '/admin/system/', label: 'ตั้งค่าระบบ', long: 'ตั้งค่าระบบ', icon: 'system' },
-    { href: '/admin/studio-system/', label: 'ระบบ Studio', long: 'ระบบ Studio', icon: 'studio' },
-    { href: '/admin/', label: 'บอท LINE', long: 'บอทขายของ LINE', icon: 'bot' },
+    { href: '/admin/payments/', label: 'การเงิน', long: 'การเงิน', icon: 'money' },
+    { href: '/admin/jobs/', label: 'งานล้มเหลว', long: 'งานที่ล้มเหลว', icon: 'alert', badge: 'jobs' },
+    { href: '/admin/studio-system/', label: 'ระบบ Studio', long: 'ระบบ Studio', icon: 'studio', more: true },
+    { href: '/admin/system/', label: 'ตั้งค่าระบบ', long: 'ตั้งค่าระบบ', icon: 'system', more: true },
+    { href: '/admin/bot/', label: 'บอท LINE', long: 'บอทขายของ LINE', icon: 'bot', more: true },
   ];
 
   function svg(name) {
@@ -36,29 +44,60 @@
   function link(item, long) {
     var a = el('a', { href: item.href }, svg(item.icon) + '<span>' + (long ? item.long : item.label) + '</span>');
     if (item === current) a.setAttribute('aria-current', 'page');
+    if (item.badge) a.setAttribute('data-adm-badge', item.badge);
     return a;
   }
 
   function buildShell() {
     var side = el('aside', { class: 'adm-side', 'aria-label': 'หลังร้าน naka-ai' });
-    side.append(el('a', { class: 'adm-brand', href: '/admin/customers/' },
+    side.append(el('a', { class: 'adm-brand', href: '/admin/' },
       '<img src="/logo.svg?v=4" alt="" width="30" height="30"><span>naka-ai<small>หลังร้าน</small></span>'));
     var nav = el('nav', { class: 'adm-nav', 'aria-label': 'เมนูหลังร้าน' });
-    NAV.forEach(function (item) { nav.append(link(item, true)); });
+    nav.append(el('p', { class: 'adm-nav-label' }, 'งานประจำวัน'));
+    NAV.forEach(function (item, i) {
+      if (item.more && !NAV[i - 1].more) nav.append(el('p', { class: 'adm-nav-label' }, 'ระบบ'));
+      nav.append(link(item, true));
+    });
     side.append(nav, el('div', { class: 'adm-side-foot' }, '<a href="/" target="_blank" rel="noopener">ดูหน้าเว็บ naka-ai ↗</a>'));
 
     var top = el('header', { class: 'adm-topbar' },
       '<img src="/logo.svg?v=4" alt="" width="28" height="28"><b>naka-ai</b><span>หลังร้าน</span>');
     var bar = el('nav', { class: 'adm-tabbar', 'aria-label': 'เมนูหลังร้าน' });
-    NAV.forEach(function (item) { bar.append(link(item, false)); });
+    NAV.forEach(function (item) { if (!item.more) bar.append(link(item, false)); });
+
+    // "เพิ่มเติม": a bottom sheet with the rest; Escape and a tap outside close it (native <dialog>)
+    var sheet = el('dialog', { class: 'adm-sheet', 'aria-labelledby': 'adm-sheet-title' });
+    sheet.innerHTML = '<div class="adm-sheet-head"><span id="adm-sheet-title">เมนูอื่น</span><button type="button" class="btn-sm" data-close>ปิด</button></div>';
+    var sheetNav = el('nav', { 'aria-label': 'เมนูอื่น' });
+    NAV.forEach(function (item) { if (item.more) sheetNav.append(link(item, true)); });
+    sheet.append(sheetNav);
+    var more = el('button', { type: 'button', 'aria-haspopup': 'dialog' }, svg('more') + '<span>เพิ่มเติม</span>');
+    if (current && current.more) more.classList.add('is-current');
+    more.addEventListener('click', function () { if (sheet.showModal) sheet.showModal(); else sheet.setAttribute('open', ''); });
+    sheet.addEventListener('click', function (event) {
+      if (event.target === sheet || event.target.closest('[data-close]')) sheet.close ? sheet.close() : sheet.removeAttribute('open');
+    });
+    bar.append(more);
 
     // after the skip link, so it stays the first thing a keyboard reaches
     var skip = document.querySelector('.skip-link');
     if (skip) skip.after(side, top); else document.body.prepend(side, top);
-    document.body.append(bar);
+    document.body.append(bar, sheet);
     var main = document.querySelector('main');
     if (main) main.classList.add('adm-main');
   }
+
+  /** A red count on a menu item ("งานล้มเหลว" = failed in the last 24 hours); 0 hides it. Pages call it too. */
+  function setBadge(name, count) {
+    document.querySelectorAll('[data-adm-badge="' + name + '"]').forEach(function (a) {
+      var badge = a.querySelector('.count');
+      if (!count) { if (badge) badge.remove(); return; }
+      if (!badge) { badge = el('span', { class: 'count' }); a.append(badge); }
+      badge.textContent = count > 99 ? '99+' : String(count);
+      badge.setAttribute('aria-label', count + ' รายการใน 24 ชั่วโมง');
+    });
+  }
+  window.NakaAdminShell = { setBadge: setBadge };
 
   // the menus appear once the page is signed in: its #app shows (hidden attribute or .hidden class)
   function watchSignIn() {

@@ -1,4 +1,4 @@
-/* บอทขายของ LINE (/admin/): only what this page adds to /admin/admin.css */
+/* บอทขายของ LINE (/admin/bot/): only what this page adds to /admin/admin.css */
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 var(--s4); }
 .grid .full { grid-column: 1 / -1; }
 .b-shipped { background: var(--surface-soft); color: var(--accent-hover); }
