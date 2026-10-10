@@ -17,7 +17,7 @@ import { ssoEnabled, userOf } from './naka-sso.js'
 
 export type StudioFeature =
   | 'studio.drama' | 'studio.marketer' | 'studio.seller' | 'studio.product_studio' | 'studio.viral_clone'
-  | 'studio.live' | 'studio.video'
+  | 'studio.live' | 'studio.video' | 'studio.social'
 
 export interface MemberFeature {
   key: StudioFeature
@@ -62,7 +62,7 @@ export async function memberFeatures(userId: string): Promise<MemberFeature[]> {
 // ---------- menus ----------
 
 /** Shared timeline routes (episodes, storyboards, tasks…) serve several menus: any studio menu opens them. */
-const ANY_MENU: StudioFeature[] = ['studio.drama', 'studio.marketer', 'studio.seller', 'studio.product_studio', 'studio.viral_clone', 'studio.live']
+const ANY_MENU: StudioFeature[] = ['studio.drama', 'studio.marketer', 'studio.seller', 'studio.product_studio', 'studio.viral_clone', 'studio.live', 'studio.social']
 
 /**
  * API prefix → the menus that use it. A member needs one of them. Drama's list/create also serves the marketer
@@ -79,6 +79,7 @@ export const ROUTE_FEATURES: Array<[string, StudioFeature[]]> = [
   ['/api/v1/seller', ['studio.seller']],
   ['/api/v1/clone', ['studio.viral_clone']],
   ['/api/v1/live', ['studio.live']],
+  ['/api/v1/social', ['studio.social']],
   ...['episodes', 'storyboards', 'scenes', 'characters', 'props', 'merge', 'tasks', 'upload', 'agent']
     .map(p => [`/api/v1/${p}`, ANY_MENU] as [string, StudioFeature[]]),
 ]
@@ -113,14 +114,30 @@ export async function entitlementGuard(c: Context, next: Next) {
   }, 403)
 }
 
-// ---------- AI video quota ----------
-
-export interface FeatureUse { owner: string; feature: StudioFeature; period: string }
-
 async function isStudioAdmin(userId: string): Promise<boolean> {
   const [row] = await db.select({ isAdmin: schema.users.isAdmin }).from(schema.users).where(eq(schema.users.id, userId))
   return row?.isAdmin === true
 }
+
+/**
+ * Background work done for a member (the Social Auto Reply poller): whether the owner's plan still includes
+ * `key`. True when entitlements are off, for single-user rows and admins. A failed check answers false, so
+ * nothing is sent on a member's behalf while the account side cannot say yes.
+ */
+export async function ownerHasFeature(owner: string | null | undefined, key: StudioFeature): Promise<boolean> {
+  if (!entitlementsOn() || !owner || owner === LOCAL_OWNER) return true
+  try {
+    if (await isStudioAdmin(owner)) return true
+    return (await memberFeatures(owner)).some(f => f.key === key && f.enabled)
+  } catch (err: any) {
+    if (!unavailableLogged) { console.error('entitlements: account.member_features unavailable:', err?.message); unavailableLogged = true }
+    return false
+  }
+}
+
+// ---------- AI video quota ----------
+
+export interface FeatureUse { owner: string; feature: StudioFeature; period: string }
 
 /**
  * Count one AI video against the owner's monthly quota before the task is created; null when nothing is

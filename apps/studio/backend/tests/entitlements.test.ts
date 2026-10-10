@@ -49,7 +49,7 @@ test('routes map to the menus that use them; settings and auth are not menus', (
   assert.deepEqual(ent.featuresForPath('/api/v1/seller/posts/3'), ['studio.seller'])
   assert.deepEqual(ent.featuresForPath('/api/v1/clone'), ['studio.viral_clone'])
   assert.deepEqual(ent.featuresForPath('/api/v1/studio/avatars'), ['studio.product_studio', 'studio.seller', 'studio.viral_clone'])
-  assert.equal(ent.featuresForPath('/api/v1/episodes/1/storyboards')!.length, 6, 'shared timeline: any menu')
+  assert.equal(ent.featuresForPath('/api/v1/episodes/1/storyboards')!.length, 7, 'shared timeline: any menu')
   for (const p of ['/api/v1/settings/x', '/api/v1/ai-configs', '/api/v1/auth/naka/me', '/api/v1/studios', '/api/v1/livestream']) {
     assert.equal(ent.featuresForPath(p), null, p)
   }
@@ -75,6 +75,16 @@ test('the guard follows the plan: free has no studio menu, starter has seller bu
   await rawExec("INSERT INTO account.user_features (user_id, feature_key, enabled, note, updated_at) VALUES ('starter1', 'studio.live', true, 'ทดลอง', 1)")
   ent.clearEntitlementCache()
   assert.equal((await starter('/api/v1/live')).status, 200)
+})
+
+test('Social Auto Reply follows the plan: the menu routes and the background poller (paid plans, not free)', async () => {
+  assert.deepEqual(ent.featuresForPath('/api/v1/social/accounts'), ['studio.social'])
+  ent.clearEntitlementCache()
+  assert.equal((await guarded({ id: 'free1', admin: false })('/api/v1/social/accounts')).status, 403)
+  assert.equal((await guarded({ id: 'starter1', admin: false })('/api/v1/social/accounts')).status, 200)
+  assert.equal(await ent.ownerHasFeature('free1', 'studio.social'), false, 'the poller leaves a free member alone')
+  assert.equal(await ent.ownerHasFeature('starter1', 'studio.social'), true)
+  assert.equal(await ent.ownerHasFeature('local', 'studio.social'), true, 'single-user rows are never checked')
 })
 
 test('single-user mode and NAKA_ENTITLEMENTS=off check nothing', async () => {

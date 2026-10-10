@@ -35,7 +35,7 @@ test('the landing migrations (with 0003) run as account_app', async () => {
 
 test('studio_app reads a member\'s features and counts a use through the functions', async () => {
   const features = await query('studio_app', `SELECT feature_key, enabled, monthly_limit FROM account.member_features('m1') WHERE app = 'studio' AND enabled`)
-  assert.deepEqual(features.map(f => f.feature_key), ['studio.drama', 'studio.seller', 'studio.product_studio', 'studio.video'])
+  assert.deepEqual(features.map(f => f.feature_key), ['studio.drama', 'studio.seller', 'studio.product_studio', 'studio.social', 'studio.video'])
   const [use] = await query('studio_app', `SELECT * FROM account.use_feature('m1', 'studio.video', 1)`)
   assert.deepEqual({ ok: use.ok, used: Number(use.used), limit: Number(use.monthly_limit) }, { ok: true, used: 1, limit: 10 })
   const [{ used }] = await query('studio_app', `SELECT account.release_feature('m1', 'studio.video', 1, $1) AS used`, [use.period])

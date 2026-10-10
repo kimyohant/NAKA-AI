@@ -9,6 +9,7 @@
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '../../../core/db/index.js'
 import { now } from '../../../core/http/response.js'
+import { ownerHasFeature } from '../../../core/auth/entitlements.js'
 import { reclaimStuckSending, expireQueuedComments, sendQueuedReplies } from './actions.js'
 import { SKIP_ALREADY_REPLIED, SKIP_OWN, collectPlainRuleContext, judgePlainRule } from './filter.js'
 import { judgeNewComments } from './responder.js'
@@ -287,6 +288,8 @@ export async function runSocialPollRound(
     let handled = 0
     for (const account of accounts) {
       if (account.status !== 'connected' || !account.watching || isPaused(account)) continue
+      // a member whose plan no longer includes Social Auto Reply: leave the account alone (nothing read or sent)
+      if (!(await ownerHasFeature(account.ownerUserId, 'studio.social'))) continue
       handled++
       try {
         newComments += await pollAccount(account, opts)
