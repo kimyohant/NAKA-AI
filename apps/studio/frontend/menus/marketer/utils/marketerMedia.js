@@ -151,11 +151,7 @@ const VIDEOS = new Set([
   "trend-th-other-football-story",
   "trend-th-other-newsjack-flood",
   "trend-th-pet-gummy-frog",
-  "trend-th-pet-ling-toy",
-  "way-bulk",
-  "way-insight",
-  "way-recreate",
-  "way-url"
+  "trend-th-pet-ling-toy"
 ])
 
 function path(id, ext) {

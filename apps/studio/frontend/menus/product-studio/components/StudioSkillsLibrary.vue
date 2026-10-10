@@ -2,6 +2,7 @@
   <div class="sl">
     <!-- ===== Hero ===== -->
     <section class="sl-hero">
+      <MenuHeroArt :src="menuArt('hero-skills')" />
       <p class="sl-kicker">
         <Sparkles :size="13" :stroke-width="2" />
         {{ t('productStudio.library.kicker') }}
@@ -82,7 +83,8 @@
 <script setup>
 import { Clapperboard, Copy, Eye, Heart, LayoutGrid, Lightbulb, Megaphone, Radio, Search, SearchX, Shirt, ShoppingBag, Sparkles, Store, UserRound, Workflow, X, Zap } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
-import { coverArt, templateArt } from '~/utils/studioArt'
+import { menuArt, templateArt } from '~/utils/studioArt'
+import MenuHeroArt from '~/components/MenuHeroArt.vue'
 import { beatBars } from '../utils/studioFlow'
 
 /**
@@ -104,13 +106,13 @@ const CATEGORY_ICONS = { review: Heart, demo: Lightbulb, fashion_beauty: Shirt, 
 
 // workflow ของแต่ละโมดูลใน NAKA — route = ไปหน้าอื่น, tab = สลับแท็บในหน้านี้
 const workflows = computed(() => [
-  { id: 'seller', route: '/seller', icon: Store, tint: '#ee4d2d', art: coverArt('template-category', 'demo') },
-  { id: 'drama', route: '/drama', icon: Clapperboard, tint: '#8b5cf6', art: coverArt('agent', 'storyboard_breaker') },
-  { id: 'marketer', route: '/marketer', icon: Megaphone, tint: '#f97316', art: coverArt('template-category', 'promo') },
-  { id: 'viralClone', route: '/viral-clone', icon: Copy, tint: '#ec4899', art: coverArt('skill-category', 'cinematography') },
-  { id: 'live', route: '/live', icon: Radio, tint: '#ef4444', art: coverArt('template-category', 'showcase') },
-  { id: 'avatar', tab: 'avatars', icon: UserRound, tint: '#0ea5e9', art: coverArt('template-category', 'fashion_beauty') },
-  { id: 'influencer', tab: 'influencers', icon: Sparkles, tint: '#22c55e', art: coverArt('template-category', 'review') },
+  { id: 'seller', route: '/seller', icon: Store, tint: '#ee4d2d', art: menuArt('wf-seller') },
+  { id: 'drama', route: '/drama', icon: Clapperboard, tint: '#8b5cf6', art: menuArt('wf-drama') },
+  { id: 'marketer', route: '/marketer', icon: Megaphone, tint: '#f97316', art: menuArt('wf-marketer') },
+  { id: 'viralClone', route: '/viral-clone', icon: Copy, tint: '#ec4899', art: menuArt('wf-viral-clone') },
+  { id: 'live', route: '/live', icon: Radio, tint: '#ef4444', art: menuArt('wf-live') },
+  { id: 'avatar', tab: 'avatars', icon: UserRound, tint: '#0ea5e9', art: menuArt('wf-avatar') },
+  { id: 'influencer', tab: 'influencers', icon: Sparkles, tint: '#22c55e', art: menuArt('wf-influencer') },
 ].map(w => ({
   ...w,
   art: w.art ? [w.art] : [],
@@ -170,9 +172,10 @@ function useWorkflow(w) {
 
 /* === Hero === */
 .sl-hero {
-  position: relative; overflow: hidden;
-  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
-  padding: 44px 24px 36px;
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 10px;
+  min-height: 300px; justify-content: center;
+  padding: 44px 40px 36px;
   border-radius: var(--radius-xl); border: 1px solid var(--border);
   background:
     radial-gradient(ellipse at 15% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
