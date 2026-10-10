@@ -18,10 +18,11 @@ import { productStudio } from './modules/product-studio/index.js'
 import { sellerModule } from './modules/seller/index.js'
 import { viralClone } from './modules/viral-clone/index.js'
 import { liveModule } from './modules/live/index.js'
+import { socialModule } from './modules/social/index.js'
 
 export type { StudioModule, StudioModuleName } from './core/module.js'
 
-export const studioModules: StudioModule[] = [drama, marketer, productStudio, sellerModule, viralClone, liveModule]
+export const studioModules: StudioModule[] = [drama, marketer, productStudio, sellerModule, viralClone, liveModule, socialModule]
 
 /** Run one recovery pass over the modules in order; one module failing never blocks the next. */
 export async function recoverModules(pass: 'failStale' | 'resume'): Promise<void> {

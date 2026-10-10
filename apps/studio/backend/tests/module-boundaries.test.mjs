@@ -21,6 +21,7 @@ const ALLOWED = {
   'seller': ['marketer', 'product-studio'],
   'viral-clone': ['product-studio'],
   'live': [],
+  'social': [],
 }
 
 function walk(dir) {

@@ -111,7 +111,7 @@ api.route('/skills', skills)
 api.route('/storage', storage)
 api.route('/settings', settings)
 api.route('/server-update', serverUpdate)
-// product menus (drama, marketer, product-studio, seller, viral-clone, live) — src/modules.ts
+// product menus (drama, marketer, product-studio, seller, viral-clone, live, social) — src/modules.ts
 for (const m of studioModules) m.mount(api)
 
 app.route('/api/v1', api)
@@ -165,5 +165,7 @@ try {
 // module order (product-studio auto-render → seller videos → viral-clone renders).
 await recoverModules('failStale')
 await recoverModules('resume')
+// background work a menu keeps running (the Social Auto Reply poller)
+for (const m of studioModules) m.start?.()
 
 serve({ fetch: app.fetch, port, hostname })
