@@ -21,6 +21,7 @@ import { handleMarketer, makeMarketerHandlers, refreshTrendingCovers, syncTrendi
 import { handleAdminMarketer } from "./marketer/admin";
 import { AI_VIDEO_JOB_KIND, makeAiVideoHandler } from "./video";
 import { handleAdminSystem } from "./system/admin";
+import { handleAdminStudioSystem } from "./admin/studio-system";
 import { featureOn, withSettings } from "./system/store";
 import { featureRefusal, hasFeature } from "./entitlements";
 import type { Env } from "./types";
@@ -134,6 +135,9 @@ export default {
         return adminJson(request.method === "GET" ? { kind: actor.kind, label: actor.label } : { error: "not found" }, request.method === "GET" ? 200 : 405);
       }
       if (url.pathname === "/api/admin/studio") return handleStudio(request, env);
+      // naka-studio's version, disk use and video queues, read server to server (src/admin/studio-system.ts)
+      const studioSystemResponse = await handleAdminStudioSystem(request, env, url, actor);
+      if (studioSystemResponse) return studioSystemResponse;
       // The panel is given the Worker's own env so it can tell saved values from wrangler ones.
       const systemResponse = await handleAdminSystem(request, workerEnv, url, actor);
       if (systemResponse) return systemResponse;

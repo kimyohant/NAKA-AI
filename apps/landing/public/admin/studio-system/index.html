@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f7f8fb">
+  <title>ระบบ Studio — หลังร้าน naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/glass-nav.css">
+  <link rel="stylesheet" href="/admin/system/system.css">
+  <link rel="stylesheet" href="/admin/studio-system/studio-system.css">
+  <script src="/glass-nav.js" defer></script>
+  <script src="/admin/studio-system/studio-system.js" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
+  <header class="admin-nav glass-nav">
+    <div class="shell nav-row">
+      <a class="brand" href="/admin/" aria-label="หลังร้าน naka-ai"><img src="/logo.svg?v=4" alt="" width="34" height="34"><span>naka<span>-ai</span><b>.</b></span><small class="brand-tag" aria-hidden="true">CONTROL ROOM</small></a>
+      <nav class="nav-links" aria-label="หน้าหลังร้าน"><a href="/admin/customers/">จัดการลูกค้า</a><a href="/admin/system/">ตั้งค่าระบบ</a><a href="/admin/studio-system/" aria-current="page"><i class="fx-led" aria-hidden="true"></i>ระบบ Studio</a><a href="/" target="_blank" rel="noopener">ดูหน้าเว็บ ↗</a></nav>
+      <button id="logout" class="btn btn-ghost btn-sm" type="button" hidden>ออกจากระบบ</button>
+    </div>
+  </header>
+  <main id="main" class="shell">
+    <section id="login" class="card login" aria-labelledby="login-title" hidden>
+      <p class="kicker">ADMIN · STUDIO</p>
+      <h1 id="login-title">เข้าสู่หน้าระบบ Studio</h1>
+      <p class="muted">เข้าด้วยบัญชี Google ของผู้ดูแลระบบ (อีเมลที่อยู่ใน ADMIN_EMAILS) · ต้องเข้าใหม่ทุก 12 ชั่วโมง</p>
+      <a class="btn btn-primary google" href="/api/auth/google/start?next=%2Fadmin%2Fstudio-system%2F">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#fff" d="M21.35 11.1H12v2.98h5.35c-.23 1.4-1.66 4.1-5.35 4.1-3.22 0-5.85-2.67-5.85-5.96S8.78 6.26 12 6.26c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.68 3.7 14.55 2.8 12 2.8 6.92 2.8 2.8 6.92 2.8 12s4.12 9.2 9.2 9.2c5.31 0 8.83-3.73 8.83-8.99 0-.6-.07-1.06-.15-1.51z"/></svg>
+        เข้าสู่ระบบด้วย Google
+      </a>
+      <p id="login-status" role="status" aria-live="polite"></p>
+      <details class="break-glass">
+        <summary>เข้าด้วยโทเคนฉุกเฉิน</summary>
+        <p class="muted">ใช้เมื่อเข้าด้วย Google ไม่ได้เท่านั้น โทเคนเก็บเฉพาะแท็บนี้</p>
+        <form id="login-form">
+          <label for="token">ADMIN_TOKEN</label>
+          <input id="token" type="password" autocomplete="off" required>
+          <button class="btn btn-ghost btn-sm" type="submit">เข้าด้วยโทเคน</button>
+        </form>
+      </details>
+    </section>
+
+    <div id="app" hidden>
+      <div class="page-heading">
+        <p class="kicker">CONTROL ROOM</p>
+        <h1>ระบบ naka-studio</h1>
+        <p class="lead">เวอร์ชัน พื้นที่จัดเก็บ และคิววิดีโอของ studio ดูและยกเลิกงานที่ค้างได้จากที่นี่</p>
+        <span id="who" class="who" hidden></span>
+      </div>
+      <div class="studio-toolbar"><button id="refresh" class="btn btn-ghost btn-sm" type="button">โหลดใหม่</button><p id="page-status" role="status" aria-live="polite"></p></div>
+
+      <section id="not-connected" class="card notice" hidden aria-labelledby="not-connected-title">
+        <h2 id="not-connected-title">ยังดึงข้อมูลจาก naka-studio ไม่ได้</h2>
+        <p id="not-connected-reason"></p>
+        <p class="muted">ตั้ง "ที่อยู่ภายในของ naka-studio" (เช่น <code>http://studio:5679</code> ใน Docker) และ "โทเคนแอดมินของ naka-studio" (ค่าเดียวกับ <code>ADMIN_TOKEN</code> ของ studio) ได้ที่ <a href="/admin/system/">ตั้งค่าระบบ → API และการเชื่อมต่อ</a></p>
+      </section>
+
+      <div id="overview" hidden>
+        <section class="card studio-card" aria-labelledby="queues-title">
+          <h2 id="queues-title">คิววิดีโอ</h2>
+          <p class="muted">แต่ละ provider ทำได้ตามจำนวนงานพร้อมกันที่ตั้งไว้ งานสถานะ "ไม่ทราบผล" ยึดช่องคิวไว้จนกว่าจะยกเลิก (เช่น เมื่อเซิร์ฟเวอร์ AI รีสตาร์ตกลางงาน)</p>
+          <div id="queues"></div>
+        </section>
+
+        <section class="card studio-card" aria-labelledby="storage-title">
+          <h2 id="storage-title">พื้นที่จัดเก็บ</h2>
+          <p id="storage-total" class="studio-big"></p>
+          <dl id="storage-breakdown" class="studio-breakdown"></dl>
+          <p id="storage-note" class="muted"></p>
+        </section>
+
+        <section class="card studio-card" aria-labelledby="version-title">
+          <h2 id="version-title">เวอร์ชันและการอัปเดต</h2>
+          <dl id="version" class="studio-breakdown"></dl>
+          <p>อัปเดต studio บนเซิร์ฟเวอร์ (โฟลเดอร์ที่ deploy ไว้):</p>
+          <pre class="command">git pull
+docker compose up -d --build studio</pre>
+          <p class="muted">ข้อมูลและไฟล์อยู่ใน PostgreSQL และ Docker volume จึงไม่หายตอนอัปเดต ควร <code>pg_dump</code> ก่อนอัปเดตที่มี migration</p>
+        </section>
+
+        <section class="card studio-card" aria-labelledby="license-title">
+          <h2 id="license-title">สัญญาอนุญาต</h2>
+          <p>NAKA-AI Studio พัฒนาต่อยอดจากโปรเจกต์โอเพนซอร์ส Huobao Drama โดย chatfire-AI ภายใต้สัญญาอนุญาต CC BY-NC-SA 4.0 (ห้ามใช้เชิงพาณิชย์โดยไม่ได้รับอนุญาตจากเจ้าของเดิม)</p>
+        </section>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

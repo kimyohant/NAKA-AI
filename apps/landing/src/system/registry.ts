@@ -75,6 +75,12 @@ export const SETTINGS: readonly SettingDef[] = [
     help: 'admins = เฉพาะอีเมลผู้ดูแล (แนะนำจนกว่า studio จะแยกข้อมูลรายบัญชี) · members = สมาชิกทุกคน · off = ปิด', options: ['admins', 'members', 'off'] },
   { key: 'STUDIO_SSO_SECRET', group: 'studio', kind: 'secret', label: 'รหัสลับเชื่อม naka-studio',
     help: 'ค่าเดียวกับ NAKA_SSO_SECRET ของ naka-studio · อย่างน้อย 32 ตัวอักษร', pattern: /^[A-Za-z0-9_-]{32,128}$/ },
+  // the back office's "ระบบ Studio" page reads naka-studio server to server (src/admin/studio-system.ts)
+  { key: 'STUDIO_INTERNAL_URL', group: 'studio', kind: 'text', label: 'ที่อยู่ภายในของ naka-studio',
+    help: 'ที่อยู่ที่เซิร์ฟเวอร์ naka-ai เรียก studio ได้ตรง ๆ เช่น http://studio:5679 ใน Docker · ว่าง = ปิดหน้า ระบบ Studio', max: 200,
+    pattern: /^https?:\/\/[a-z0-9.-]+(?::\d{2,5})?\/?$/i },
+  { key: 'STUDIO_ADMIN_TOKEN', group: 'studio', kind: 'secret', label: 'โทเคนแอดมินของ naka-studio',
+    help: 'ค่าเดียวกับ ADMIN_TOKEN ของ naka-studio · อย่างน้อย 16 ตัวอักษร', pattern: /^[\x21-\x7e]{16,256}$/ },
 
   { key: 'SMS_PROVIDER', group: 'sms', kind: 'select', label: 'ล็อกอินด้วยเบอร์โทร (OTP)', help: 'off = ซ่อนฟอร์มเบอร์โทร', options: ['off', 'thaibulksms', 'android_gateway'] },
   { key: 'SMS_API_KEY', group: 'sms', kind: 'secret', label: 'ThaiBulkSMS API key' },

@@ -1,0 +1,125 @@
+/**
+ * GET /api/v1/system/overview — what the naka-ai back office (/admin/studio-system/ on the landing app)
+ * shows about this studio: version, disk use, and the per-provider video queues. Admin only
+ * (core/auth/admin.ts); the landing app calls it server to server with ADMIN_TOKEN.
+ *
+ * Replaces the in-app "storage" and "about & update" settings tabs, which belonged to the retired desktop
+ * app (moving the data folder, a self-updater, Watchtower). Updating a Docker deploy is `git pull` +
+ * `docker compose up -d --build`, so there is nothing to trigger from here.
+ */
+import { readFileSync } from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { Hono } from 'hono'
+import { DATA_ROOT } from '../utils/paths.js'
+import { rawQuery } from '../db/index.js'
+import { dirUsage, volumeFreeBytes } from '../utils/dirsize.js'
+import { success } from '../http/response.js'
+
+const app = new Hono()
+
+function currentVersion(): string {
+  if (process.env.NAKA_VERSION) return process.env.NAKA_VERSION.replace(/^v/, '')
+  try {
+    const pkg = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../package.json')
+    return JSON.parse(readFileSync(pkg, 'utf-8')).version || '0.0.0'
+  } catch {
+    return '0.0.0'
+  }
+}
+
+// ---------- disk use: walking the data folder is slow, so cache it for a minute ----------
+const USAGE_TTL_MS = 60_000
+interface UsageCache {
+  usage: Awaited<ReturnType<typeof dirUsage>> | null
+  computedAt: string | null
+  computing: boolean
+}
+const cache: UsageCache = { usage: null, computedAt: null, computing: false }
+
+async function computeUsage() {
+  if (cache.computing) return
+  cache.computing = true
+  try {
+    const usage = await dirUsage(DATA_ROOT)
+    // the database is PostgreSQL: count this app's schema (tables + indexes + TOAST)
+    const [size] = await rawQuery(`SELECT COALESCE(SUM(pg_total_relation_size(c.oid)), 0)::bigint AS bytes
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = current_schema() AND c.relkind = 'r'`)
+    usage.db = Number(size?.bytes ?? 0)
+    usage.total += usage.db
+    cache.usage = usage
+    cache.computedAt = new Date().toISOString()
+  } finally {
+    cache.computing = false
+  }
+}
+
+const warmup = setTimeout(() => { void computeUsage() }, 10_000)
+warmup.unref?.()
+
+/** Usage, never older than a minute when it is answered from a fresh computation; a stale value is
+ * answered at once while it is recomputed in the background. */
+async function storageInfo() {
+  const fresh = cache.computedAt && (Date.now() - new Date(cache.computedAt).getTime()) < USAGE_TTL_MS
+  let stale = false
+  if (!fresh) {
+    if (cache.usage) { stale = true; void computeUsage() } else await computeUsage()
+  }
+  return { usage: cache.usage, stale: stale || cache.computing, computedAt: cache.computedAt, freeBytes: await volumeFreeBytes(DATA_ROOT) }
+}
+
+// ---------- video queues: one row per configured video provider ----------
+const STUCK_LIST_LIMIT = 20
+
+async function videoQueues() {
+  const [counts, stuck] = await Promise.all([
+    rawQuery(`SELECT c.id AS config_id, c.name, c.provider,
+        COUNT(t.id) FILTER (WHERE t.status = 'queued')::int AS queued,
+        COUNT(t.id) FILTER (WHERE t.status IN ('submitting', 'processing'))::int AS running,
+        COUNT(t.id) FILTER (WHERE t.status = 'unknown')::int AS unknown,
+        COUNT(t.id) FILTER (WHERE t.status = 'completed' AND t.completed_at >= $1)::int AS completed_24h,
+        COUNT(t.id) FILTER (WHERE t.status = 'failed' AND t.updated_at >= $1)::int AS failed_24h
+      FROM ai_service_configs c
+      LEFT JOIN sys_task t ON t.config_id = c.id AND t.type = 'video'
+      WHERE c.service_type = 'video'
+      GROUP BY c.id, c.name, c.provider
+      ORDER BY c.id`, [new Date(Date.now() - 86_400_000).toISOString()]),
+    // tasks an admin may need to act on: unknown ones hold their provider's slot until cancelled
+    rawQuery(`SELECT id, config_id, status, storyboard_id, drama_id, error_msg, created_at, updated_at
+      FROM sys_task WHERE type = 'video' AND status IN ('unknown', 'queued')
+      ORDER BY (status = 'unknown') DESC, created_at ASC LIMIT ${STUCK_LIST_LIMIT}`),
+  ])
+  return counts.map(row => ({
+    configId: Number(row.config_id),
+    name: row.name,
+    provider: row.provider,
+    queued: Number(row.queued),
+    running: Number(row.running),
+    unknown: Number(row.unknown),
+    completed24h: Number(row.completed_24h),
+    failed24h: Number(row.failed_24h),
+    waiting: stuck.filter(t => Number(t.config_id) === Number(row.config_id)).map(t => ({
+      id: Number(t.id),
+      status: t.status,
+      storyboardId: t.storyboard_id == null ? null : Number(t.storyboard_id),
+      dramaId: t.drama_id == null ? null : Number(t.drama_id),
+      error: t.error_msg ? String(t.error_msg).slice(0, 300) : null,
+      createdAt: t.created_at,
+      updatedAt: t.updated_at,
+    })),
+  }))
+}
+
+app.get('/overview', async (c) => {
+  const [storage, queues] = await Promise.all([storageInfo(), videoQueues()])
+  return success(c, {
+    version: currentVersion(),
+    node: process.version,
+    uptimeSeconds: Math.round(process.uptime()),
+    database: 'PostgreSQL (schema studio)',
+    storage,
+    videoQueues: queues,
+  })
+})
+
+export default app
