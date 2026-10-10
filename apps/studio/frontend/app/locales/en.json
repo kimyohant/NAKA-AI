@@ -43,7 +43,8 @@
       "marketer": "AI Marketer",
       "viralClone": "Viral Clone Studio",
       "live": "AI Live",
-      "seller": "AI Seller"
+      "seller": "AI Seller",
+      "social": "Social"
     },
     "banner": {
       "missing": "{types} model not configured yet, so AI features are unavailable. Ask an admin to set it up in System settings.",

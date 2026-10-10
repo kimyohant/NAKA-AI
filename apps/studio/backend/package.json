@@ -8,6 +8,8 @@
     "start": "tsx src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test:social": "tsx --test tests/social-*.test.ts",
+    "eval:verdict": "tsx eval/verdict.ts",
     "backfill-artwork": "tsx scripts/backfill-artwork.ts"
   },
   "keywords": [],

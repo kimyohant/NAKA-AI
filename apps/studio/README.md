@@ -127,6 +127,7 @@ No config files — everything is set via environment variables (all have defaul
 | `FRONTEND_DIST` | `frontend/dist` | Frontend static build directory |
 | `FFMPEG_BIN` / `FFPROBE_BIN` | bundled npm binaries | Custom ffmpeg/ffprobe executable paths |
 | `PUBLIC_BASE_URL` | — | Public URL Seedance needs to reference local assets (server deployments) |
+| `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET` | — | Meta app credentials for Social Auto Reply Facebook connect (server deployments) |
 | `HYPIT_ROOT` | `<repo>/study/hypit` | Hypit installation used by the Viral Clone "Hypit" render engine (run `pnpm install` there) |
 | `HYPIT_CHROME_PATH` | Hypit-managed browser | Chromium / chrome-headless-shell executable for Hypit rendering |
 | `HYPIT_NODE` | `node` | Node.js ≥ 22.15 executable that runs the Hypit CLI |

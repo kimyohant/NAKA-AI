@@ -31,6 +31,8 @@ jobs:
       - run: npx tsx --test tests/campaigns-migration.test.ts tests/server-security-recovery.test.ts tests/hypit-render.test.ts tests/admin-guard.test.ts tests/seller.test.ts tests/naka-sso.test.ts tests/ownership.test.ts tests/entitlements.test.ts tests/concurrency.test.ts tests/query-budget.test.ts tests/module-boundaries.test.mjs
       # AI Marketer quick start: analyses (marketer_insights), autopilot, per-member scope
       - run: npx tsx --test tests/marketer-quick.test.ts
+      # Social Auto Reply: poller, plain rules, verdicts, person actions, auto mode, limits, Facebook adapter, connect, per-member scope
+      - run: npm run test:social
 
   frontend:
     runs-on: ubuntu-latest
@@ -49,3 +51,5 @@ jobs:
       - run: npm run build
       # AI Marketer quick start: media files on disk + page/dialog structure + i18n
       - run: node --test tests/marketer-media.test.mjs tests/marketer-quick-structure.test.mjs
+      # Social Auto Reply: board, accounts and brand pages + i18n
+      - run: node --test tests/social-structure.test.mjs tests/social-actions.test.mjs tests/social-accounts.test.mjs tests/social-limits.test.mjs

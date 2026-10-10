@@ -630,6 +630,72 @@ export const studioInfluencerContents = pgTable('studio_influencer_contents', {
   updatedAt: text('updated_at').notNull(),
 })
 
+// Social Auto Reply (migrations/pg/0004_social.sql; spec in .scratch/social-auto-reply/): Social Accounts,
+// Posts, Comments. Tokens are plain text, like the stored AI service API keys. An account belongs to one
+// member (owner_user_id); posts and comments resolve through their account.
+export const socialAccounts = pgTable('social_accounts', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  ownerUserId: ownerUserId(),
+  platform: text('platform').notNull(),
+  platformAccountId: text('platform_account_id').notNull(),
+  name: text('name'),
+  avatarUrl: text('avatar_url'),
+  status: text('status').notNull().default('disconnected'),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  tokenExpiresAt: text('token_expires_at'),
+  replyMode: text('reply_mode').notNull().default('draft'),
+  watching: boolean('watching').notNull().default(true),
+  watchDays: bigint('watch_days', { mode: 'number' }).notNull().default(7),
+  replyToPraise: boolean('reply_to_praise').notNull().default(true),
+  brandAbout: text('brand_about'),
+  brandTone: text('brand_tone'),
+  brandFaq: text('brand_faq'),
+  brandForbidden: text('brand_forbidden'),
+  defaultLanguage: text('default_language').notNull().default('th'),
+  pausedUntil: text('paused_until'),
+  backoffStep: bigint('backoff_step', { mode: 'number' }).notNull().default(0),
+  lastPolledAt: text('last_polled_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+export const socialPosts = pgTable('social_posts', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  accountId: bigint('account_id', { mode: 'number' }).notNull(),
+  platformPostId: text('platform_post_id').notNull(),
+  text: text('text'),
+  url: text('url'),
+  postedAt: text('posted_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+export const socialComments = pgTable('social_comments', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
+  accountId: bigint('account_id', { mode: 'number' }).notNull(),
+  postId: bigint('post_id', { mode: 'number' }),
+  platformCommentId: text('platform_comment_id').notNull(),
+  parentPlatformCommentId: text('parent_platform_comment_id'),
+  text: text('text'),
+  authorId: text('author_id'),
+  authorName: text('author_name'),
+  commentedAt: text('commented_at'),
+  status: text('status').notNull().default('new'),
+  verdict: text('verdict'),
+  reason: text('reason'),
+  fallback: boolean('fallback').notNull().default(false),
+  judgeAttempts: bigint('judge_attempts', { mode: 'number' }).notNull().default(0),
+  sendAttempts: bigint('send_attempts', { mode: 'number' }).notNull().default(0),
+  statusNote: text('status_note'),
+  replyText: text('reply_text'),
+  replySource: text('reply_source'),
+  replyPlatformId: text('reply_platform_id'),
+  repliedAt: text('replied_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
 // v18: AI นักขาย — โพสต์ขายสินค้า + แคปชั่น/แฮชแท็ก/คอมเมนต์ต่อช่องทาง (content = JSON ตาม channel)
 export const sellerPosts = pgTable('seller_posts', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
