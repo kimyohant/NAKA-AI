@@ -1,0 +1,17 @@
+/* บอทขายของ LINE (/admin/): only what this page adds to /admin/admin.css */
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 var(--s4); }
+.grid .full { grid-column: 1 / -1; }
+.b-shipped { background: var(--surface-soft); color: var(--accent-hover); }
+
+/* the test chat and a customer's thread: the LINE look the bot answers in */
+.chat { height: 420px; overflow-y: auto; overscroll-behavior: contain; padding: var(--s3); border-radius: 12px; background: #e9eef6; }
+.bubble { max-width: 78%; margin: 6px 0; padding: var(--s2) var(--s3); border-radius: 14px; background: var(--surface); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble.user { margin-left: auto; background: #06c755; color: #fff; }
+.chat-input { margin-top: var(--s3); }
+.chat-input input { flex: 1 1 220px; }
+
+@media (max-width: 700px) {
+  .grid { grid-template-columns: 1fr; }
+  .chat { height: 55vh; }
+  .bubble { max-width: 88%; }
+}
