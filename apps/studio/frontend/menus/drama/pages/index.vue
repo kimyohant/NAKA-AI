@@ -5,6 +5,7 @@
       <div class="hero-glow" aria-hidden="true"></div>
       <div class="hero-rings" aria-hidden="true"></div>
       <div class="hero-inner">
+        <NakaMascot :size="104" class="hero-mascot" />
         <h1 id="studio-title" class="hero-title">
           <span>{{ t('index.studio.titleLine1') }}</span>
           <span>{{ t('index.studio.titleLine2') }}</span>
@@ -307,6 +308,7 @@ import { Clock, CircleHelp, Paperclip, ArrowUp, ChevronDown, Plus, Search, MoreH
 import { dramaAPI, episodeAPI, stylePresetAPI, aiConfigAPI } from '~/composables/useApi'
 import { GENRE_TAGS } from '~/composables/useCreativeTags'
 import BaseSelect from '~/components/BaseSelect.vue'
+import NakaMascot from '~/components/NakaMascot.vue'
 import { styleExample } from '~/utils/studioArt'
 import { startTour, autoTour } from '~/composables/useTour'
 
@@ -639,9 +641,9 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
 .hero-glow {
   position: absolute; inset: 0; z-index: -2;
   background:
-    radial-gradient(60% 70% at 50% 18%, rgba(190, 40, 60, 0.42) 0%, rgba(120, 20, 60, 0.18) 38%, transparent 70%),
-    radial-gradient(40% 50% at 78% 70%, rgba(124, 58, 237, 0.22) 0%, transparent 70%),
-    linear-gradient(180deg, #0b0b0d 0%, var(--surface-base) 100%);
+    radial-gradient(60% 70% at 50% 18%, rgba(35, 91, 232, 0.42) 0%, rgba(24, 73, 199, 0.18) 38%, transparent 70%),
+    radial-gradient(40% 50% at 78% 70%, rgba(127, 164, 255, 0.18) 0%, transparent 70%),
+    linear-gradient(180deg, #070b18 0%, var(--surface-base) 100%);
 }
 /* 同心圆纹理：呼应「法阵」氛围，但不用任何外部素材 */
 .hero-rings {
@@ -649,7 +651,7 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
   left: 50%; top: -10%;
   width: 900px; height: 900px; transform: translateX(-50%);
   border-radius: 50%;
-  background: repeating-radial-gradient(circle, rgba(255, 90, 90, 0.10) 0 1px, transparent 1px 46px);
+  background: repeating-radial-gradient(circle, rgba(127, 164, 255, 0.10) 0 1px, transparent 1px 46px);
   mask-image: radial-gradient(circle, #000 0%, transparent 62%);
   -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 62%);
   animation: ring-spin 120s linear infinite;
@@ -657,10 +659,11 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
 @keyframes ring-spin { to { transform: translateX(-50%) rotate(360deg); } }
 :root[data-theme="light"] .hero-glow {
   background:
-    radial-gradient(60% 70% at 50% 18%, rgba(190, 40, 60, 0.16) 0%, transparent 70%),
-    radial-gradient(40% 50% at 78% 70%, rgba(124, 58, 237, 0.12) 0%, transparent 70%);
+    radial-gradient(60% 70% at 50% 18%, rgba(35, 91, 232, 0.16) 0%, transparent 70%),
+    radial-gradient(40% 50% at 78% 70%, rgba(127, 164, 255, 0.14) 0%, transparent 70%);
 }
 .hero-inner { max-width: 960px; margin: 0 auto; }
+.hero-mascot { margin: 0 auto 4px; }
 .hero-title {
   display: flex; flex-direction: column; align-items: center;
   margin: 0 0 36px;

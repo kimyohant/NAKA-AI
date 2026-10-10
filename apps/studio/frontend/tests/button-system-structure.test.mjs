@@ -17,7 +17,7 @@ test('global button system exposes complete button tokens and states', () => {
   assert.match(studioCss, /--button-height-sm:\s*30px/)
   assert.match(studioCss, /--button-height-icon:\s*36px/)
   assert.match(studioCss, /--button-border:\s*transparent/)
-  assert.match(studioCss, /--button-focus:\s*rgba\(249,115,22,0\.20\)/)
+  assert.match(studioCss, /--button-focus:\s*rgba\(35,91,232,0\.22\)/)
   assert.match(studioCss, /--radius-pill:\s*980px/)
   assert.match(studioCss, /\.btn\s*\{[\s\S]*?border-radius:\s*var\(--button-radius\)/)
   assert.match(studioCss, /\.btn:focus-visible\s*\{/)

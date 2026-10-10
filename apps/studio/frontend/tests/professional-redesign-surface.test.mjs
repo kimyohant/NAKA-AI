@@ -28,11 +28,11 @@ function cssBlock(source, selector) {
 }
 
 test('theme exposes the shipped light material tokens', () => {
-  assert.match(studioCss, /--surface-base:\s*#f7f8fa/)
+  assert.match(studioCss, /--surface-base:\s*#f7f9fd/)
   assert.match(studioCss, /--surface-raised:\s*#ffffff/)
-  assert.match(studioCss, /--surface-muted:\s*#f7f8fa/)
-  assert.match(studioCss, /--surface-outline:\s*#e7e9ee/)
-  assert.match(studioCss, /--accent:\s*#f97316/)
+  assert.match(studioCss, /--surface-muted:\s*#f7f9fd/)
+  assert.match(studioCss, /--surface-outline:\s*#dfe6f1/)
+  assert.match(studioCss, /--accent:\s*#235be8/)
 })
 
 test('project entry is a poster card grid', () => {
@@ -45,7 +45,7 @@ test('project entry is a poster card grid', () => {
 
 test('global header uses the translucent header token', () => {
   // token กึ่งโปร่งกลางอยู่ที่ studio.css แล้ว layout อ้างผ่าน var(--header-bg)
-  assert.match(studioCss, /--header-bg:\s*rgba\(247,248,250,0\.75\)/)
+  assert.match(studioCss, /--header-bg:\s*rgba\(247,249,253,0\.8\)/)
   assert.match(defaultLayout, /background:\s*var\(--header-bg\)/)
   assert.match(defaultLayout, /border-bottom:\s*1px solid var\(--border\)/)
 })

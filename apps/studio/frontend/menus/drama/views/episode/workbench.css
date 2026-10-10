@@ -801,7 +801,7 @@
   color: var(--accent-text);
   box-shadow: none;
 }
-.ep-workbench .asset-btn-batch:hover { background: var(--accent); color: var(--on-accent); }
+.ep-workbench .asset-btn-batch:hover { background: var(--action-primary); color: var(--action-primary-text); }
 
 /* 资产分区标题：新增入口 + 卡片删除按钮 */
 .ep-workbench .asset-section-title { display: flex; align-items: center; gap: 8px; }
@@ -1344,8 +1344,8 @@ body.is-video-col-dragging { cursor: col-resize; user-select: none; }
   top: 4px;
   padding: 1px 5px;
   border-radius: 999px;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--action-primary);
+  color: var(--action-primary-text);
   font-size: 9px;
   font-weight: 700;
 }
@@ -2564,7 +2564,7 @@ body.is-video-col-dragging { cursor: col-resize; user-select: none; }
   height: 16px;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--action-primary);
   color: var(--action-primary-text);
   font-size: 10px;
   font-weight: 700;

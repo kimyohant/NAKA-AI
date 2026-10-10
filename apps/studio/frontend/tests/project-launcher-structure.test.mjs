@@ -51,8 +51,8 @@ test('create dialog fixes aspect ratio at project creation', () => {
 })
 
 test('global buttons use the shipped action palette', () => {
-  assert.match(studioCss, /--action-primary:\s*#f97316/)
-  assert.match(studioCss, /--action-secondary:\s*#e8eaee/)
+  assert.match(studioCss, /--action-primary:\s*#235be8/)
+  assert.match(studioCss, /--action-secondary:\s*#e8edf5/)
   assert.match(studioCss, /--action-danger:\s*#dc2626/)
   assert.match(studioCss, /\.btn-primary\s*\{/)
 })

@@ -716,7 +716,7 @@ async function saveSettings() {
 .lv-screen video { width: 100%; height: 100%; object-fit: contain; display: block; }
 .lv-screen-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-3); font-size: 12.5px; text-align: center; padding: 16px; }
 .lv-mute { position: absolute; right: 10px; bottom: 10px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: rgba(0, 0, 0, .55); color: #fff; display: grid; place-items: center; cursor: pointer; }
-.lv-speaking { position: absolute; left: 10px; top: 10px; padding: 3px 9px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; }
+.lv-speaking { position: absolute; left: 10px; top: 10px; padding: 3px 9px; border-radius: 999px; background: var(--action-primary); color: var(--action-primary-text); font-size: 11px; font-weight: 700; }
 .lv-row { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
 .lv-flex { flex: 1; min-width: 0; }
 .lv-hint { margin: 0; font-size: 11.5px; color: var(--text-3); }
@@ -759,7 +759,7 @@ async function saveSettings() {
 .lv-job-err { flex-basis: 100%; color: var(--danger, #ef4444); }
 .lv-seg { display: inline-flex; padding: 3px; gap: 3px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-soft); align-self: flex-start; }
 .lv-seg button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 999px; background: transparent; color: var(--text-2); font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.lv-seg button.on { background: var(--accent); color: #fff; }
+.lv-seg button.on { background: var(--action-primary); color: var(--action-primary-text); }
 .lv-avatar-preview { max-height: 220px; max-width: 100%; align-self: center; border-radius: var(--radius); border: 1px solid var(--border); object-fit: contain; background: #000; }
 .lv-tips { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.6; color: var(--text-2); }
 .lv-dialog { width: min(520px, 94vw); }

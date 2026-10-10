@@ -277,7 +277,7 @@ onMounted(async () => {
   border: 2px solid var(--border-strong, var(--border));
 }
 .sv-steps li.on .sv-step-dot { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 3px var(--button-focus); }
-.sv-steps li.done .sv-step-dot { border-color: var(--accent); background: var(--accent); color: #fff; }
+.sv-steps li.done .sv-step-dot { border-color: var(--accent); background: var(--action-primary); color: var(--action-primary-text); }
 .sv-step-count { font-size: 11px; color: var(--text-2); }
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field-label { font-size: 11.5px; font-weight: 600; color: var(--text-1); }
