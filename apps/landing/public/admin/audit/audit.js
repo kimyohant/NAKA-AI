@@ -4,7 +4,7 @@
   'use strict';
   var A = window.NakaAdmin, $ = A.$, el = A.el;
   var FIELDS = ['q', 'source', 'actor'];
-  var SOURCE = { customer: ['ลูกค้า', 'b-paid'], setting: ['ตั้งค่าระบบ', ''], plan: ['แพ็กเกจ', ''], studio: ['Studio', 'b-pending'], alert: ['แจ้งเตือน LINE', 'b-muted'] };
+  var SOURCE = { customer: ['ลูกค้า', 'b-paid'], setting: ['ตั้งค่าระบบ', ''], plan: ['แพ็กเกจ', ''], studio: ['Studio', 'b-pending'], alert: ['แจ้งเตือน LINE', 'b-muted'], content: ['เนื้อหาหน้าเว็บ', 'b-ok'] };
   var STATUS = { active: 'ใช้งาน', disabled: 'ระงับ' };
   var FIELD = { credits: 'เครดิต', status: 'สถานะบัญชี', planId: 'แพ็กเกจ', subscriptionStatus: 'สถานะแพ็กเกจ', expiresAt: 'วันหมดอายุ',
     nextCreditAt: 'เติมเครดิตถัดไป', period: 'รอบ', sessions: 'การเข้าสู่ระบบ', name: 'ชื่อ', price_thb: 'ราคา (บาท)', monthly_credits: 'เครดิตต่อเดือน',
@@ -37,6 +37,13 @@
       if (e.target === 'rules') return 'เปลี่ยนเรื่องที่แจ้งเตือน';
       if (e.action === 'test') return 'ส่งข้อความทดสอบ';
       return (e.action === 'remove' ? 'เลิกส่งแจ้งเตือนให้ ' : 'เพิ่มผู้รับแจ้งเตือน ') + (d.name || 'บัญชี LINE');
+    }
+    if (e.source === 'content') {
+      if (e.target.indexOf('announcement:') === 0) return { create: 'ประกาศ: ', update: (d.after && d.after.active ? 'เปิดประกาศ: ' : 'ปิดประกาศ: '), remove: 'ลบประกาศ: ' }[e.action] + (d.message || (d.after && d.after.message) || '');
+      if (e.target === 'order') return 'เรียงคลิปตัวอย่างใหม่ ' + A.num(d.count) + ' คลิป';
+      if (e.action === 'create') return 'เพิ่มคลิปตัวอย่าง ' + (d.title || '');
+      if (e.action === 'remove') return 'ลบคลิปตัวอย่าง ' + (d.title || '');
+      return (d.after && d.after.hidden ? 'ซ่อนคลิปตัวอย่าง ' : 'แสดงคลิปตัวอย่าง ') + (d.title || '');
     }
     return e.action + ' ' + e.target;
   }

@@ -83,11 +83,11 @@ async function send(res: http.ServerResponse, response: Response, method: string
   Readable.fromWeb(response.body as never).pipe(res);
 }
 
-/** Like run_worker_first ["/api/*", "/webhook/*"]: those go to the Worker, everything else to the
- * static files first and to the Worker only when no file matches. */
+/** Like run_worker_first ["/api/*", "/webhook/*", "/", "/showcase-media/*"]: those go to the Worker ("/" for the
+ * gallery managed in the back office), everything else to the static files first and to the Worker only when no file matches. */
 async function handle(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url);
-  if (!pathname.startsWith('/api/') && !pathname.startsWith('/webhook/')) {
+  if (!pathname.startsWith('/api/') && !pathname.startsWith('/webhook/') && pathname !== '/' && !pathname.startsWith('/showcase-media/')) {
     const asset = await env.ASSETS.fetch(request as never);
     if (asset.status !== 404) return asset as unknown as Response;
   }

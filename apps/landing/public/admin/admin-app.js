@@ -78,6 +78,26 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
   }
 
+  /** POST a FormData with upload progress (fetch has none). Resolves the JSON answer; errors as api(). */
+  function upload(route, form, onProgress) {
+    var version = authVersion;
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/admin' + route);
+      if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.upload.onprogress = function (e) { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
+      xhr.onerror = function () { reject(new Error('อัปโหลดไม่สำเร็จ ตรวจการเชื่อมต่อแล้วลองใหม่')); };
+      xhr.onload = function () {
+        if (version !== authVersion) return reject(new Error('stale'));
+        var body = {}; try { body = JSON.parse(xhr.responseText); } catch (e) { /* not JSON */ }
+        if (xhr.status === 401 || (xhr.status === 403 && body.reason !== 'origin')) { login(body.reason === 'signin' ? '' : body.error || 'กรุณาเข้าสู่ระบบใหม่'); return reject(new Error('signed-out')); }
+        if (xhr.status < 200 || xhr.status >= 300) return reject(new Error(typeof body.error === 'string' ? body.error : 'อัปโหลดไม่สำเร็จ (HTTP ' + xhr.status + ')'));
+        resolve(body);
+      };
+      xhr.send(form);
+    });
+  }
+
   /** Wire the sign-in card and logout, then run load() once signed in. load() shows its own errors. */
   function start(load) {
     $('logout').addEventListener('click', function () {
@@ -99,5 +119,5 @@
       .catch(function (error) { if (!quiet(error)) login('เชื่อมต่อไม่ได้ กรุณาลองโหลดหน้าใหม่'); });
   }
 
-  window.NakaAdmin = { $: $, el: el, message: message, num: num, baht: baht, when: when, api: api, download: download, quiet: quiet, start: start };
+  window.NakaAdmin = { $: $, el: el, message: message, num: num, baht: baht, when: when, api: api, download: download, upload: upload, quiet: quiet, start: start };
 })();
