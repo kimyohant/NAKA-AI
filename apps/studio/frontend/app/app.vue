@@ -97,7 +97,7 @@ onMounted(() => {
 .naka-tour-popover .driver-popover-navigation-btns button.driver-popover-next-btn,
 .naka-tour-popover .driver-popover-navigation-btns button.driver-popover-done-btn {
   background: var(--accent-gradient) !important;
-  color: var(--on-accent) !important;
+  color: var(--action-primary-text) !important;
 }
 .driver-overlay {
   background: var(--scrim) !important;

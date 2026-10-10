@@ -265,7 +265,7 @@ watch(locale, checkAiConfigs)
 .side-avatar {
   width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: var(--accent-gradient); color: #fff; font: 700 13px var(--font-display);
+  background: var(--accent-gradient); color: var(--action-primary-text); font: 700 13px var(--font-display);
 }
 .side-user-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
 .side-user-name { font-size: 13px; font-weight: 600; color: var(--text-0); }

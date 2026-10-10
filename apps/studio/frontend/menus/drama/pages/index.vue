@@ -641,9 +641,9 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
 .hero-glow {
   position: absolute; inset: 0; z-index: -2;
   background:
-    radial-gradient(60% 70% at 50% 18%, rgba(35, 91, 232, 0.42) 0%, rgba(24, 73, 199, 0.18) 38%, transparent 70%),
-    radial-gradient(40% 50% at 78% 70%, rgba(127, 164, 255, 0.18) 0%, transparent 70%),
-    linear-gradient(180deg, #070b18 0%, var(--surface-base) 100%);
+    radial-gradient(60% 70% at 50% 18%, rgba(249, 115, 22, 0.34) 0%, rgba(194, 65, 12, 0.16) 38%, transparent 70%),
+    radial-gradient(40% 50% at 78% 70%, rgba(251, 146, 60, 0.14) 0%, transparent 70%),
+    linear-gradient(180deg, #0b0b0d 0%, var(--surface-base) 100%);
 }
 /* 同心圆纹理：呼应「法阵」氛围，但不用任何外部素材 */
 .hero-rings {
@@ -651,7 +651,7 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
   left: 50%; top: -10%;
   width: 900px; height: 900px; transform: translateX(-50%);
   border-radius: 50%;
-  background: repeating-radial-gradient(circle, rgba(127, 164, 255, 0.10) 0 1px, transparent 1px 46px);
+  background: repeating-radial-gradient(circle, rgba(251, 146, 60, 0.10) 0 1px, transparent 1px 46px);
   mask-image: radial-gradient(circle, #000 0%, transparent 62%);
   -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 62%);
   animation: ring-spin 120s linear infinite;
@@ -659,8 +659,8 @@ onMounted(() => setTimeout(() => autoTour('index', INDEX_TOUR, t), 600))
 @keyframes ring-spin { to { transform: translateX(-50%) rotate(360deg); } }
 :root[data-theme="light"] .hero-glow {
   background:
-    radial-gradient(60% 70% at 50% 18%, rgba(35, 91, 232, 0.16) 0%, transparent 70%),
-    radial-gradient(40% 50% at 78% 70%, rgba(127, 164, 255, 0.14) 0%, transparent 70%);
+    radial-gradient(60% 70% at 50% 18%, rgba(249, 115, 22, 0.14) 0%, transparent 70%),
+    radial-gradient(40% 50% at 78% 70%, rgba(251, 146, 60, 0.10) 0%, transparent 70%);
 }
 .hero-inner { max-width: 960px; margin: 0 auto; }
 .hero-mascot { margin: 0 auto 4px; }

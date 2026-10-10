@@ -1,50 +1,52 @@
-/* === Naka Studio — naka-ai white/cobalt identity (light) and night blue (dark) === */
+/* === Naka Studio — one house with naka-ai.com (apps/landing/public/ui-land.css): neutral grey,
+   near-black ink, orange as the one action colour with dark text on it, Kanit + IBM Plex Sans Thai;
+   the logo and Naka keep their cobalt. Dark keeps the near-black surfaces with the same orange. === */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --surface-base: #f7f9fd;
+  --surface-base: #f7f8fa;
   --surface-raised: #ffffff;
-  --surface-muted: #f7f9fd;
-  --surface-soft: #fafbfe;
+  --surface-muted: #f7f8fa;
+  --surface-soft: #fafbfc;
   --surface-input: #ffffff;
-  --surface-outline: #dfe6f1;
-  --surface-outline-strong: #c9d3e1;
+  --surface-outline: #e7e9ee;
+  --surface-outline-strong: #d6dae1;
 
   --bg-base: var(--surface-base);
-  --bg-0: #fafbfe;
+  --bg-0: #fafbfc;
   --bg-1: #ffffff;
-  --bg-2: #eef2f8;
-  --bg-3: #dfe6f1;
-  --bg-hover: rgba(21,38,74,0.045);
-  --bg-active: rgba(21,38,74,0.075);
+  --bg-2: #f1f3f6;
+  --bg-3: #e7e9ee;
+  --bg-hover: rgba(23,24,26,0.045);
+  --bg-active: rgba(23,24,26,0.07);
   --bg-input: var(--surface-input);
   --bg-surface: var(--surface-raised);
 
-  --border: #dfe6f1;
-  --border-strong: #c9d3e1;
-  --border-focus: #235be8;
+  --border: #e7e9ee;
+  --border-strong: #d6dae1;
+  --border-focus: #f97316;
 
-  --text-0: #15264a;
-  --text-1: #2c3b5c;
-  --text-2: #586782;
-  --text-3: #8390a8;
+  --text-0: #17181a;
+  --text-1: #3a3f47;
+  --text-2: #5c6370;
+  --text-3: #9aa1ad;
 
-  /* naka-ai cobalt (apps/landing/.ui-craft/tokens.md) */
-  --accent: #235be8;
-  --accent-dark: #1849c7;
-  --accent-bg: rgba(35,91,232,0.10);
-  --accent-text: #1849c7;
-  --accent-glow: rgba(35,91,232,0.20);
-  --accent-gradient: linear-gradient(135deg, #2f67ee 0%, #1849c7 100%);
-  /* text painted with a gradient (background-clip: text) — must read on the page background */
-  --accent-text-gradient: linear-gradient(135deg, #235be8 0%, #15264a 100%);
+  /* ChatFire 火焰橙（platform 品牌色） */
+  --accent: #f97316;
+  --accent-dark: #c2410c;
+  --accent-bg: rgba(249,115,22,0.10);
+  --accent-text: #ea580c;
+  --accent-glow: rgba(249,115,22,0.20);
+  --accent-gradient: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  /* gradient-painted text (background-clip: text) — darker orange so it still reads on the light ground */
+  --accent-text-gradient: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
 
-  --action-primary: #235be8;
-  --action-primary-hover: #1849c7;
-  --action-primary-press: #143ba3;
-  --action-primary-text: #ffffff;
-  --action-secondary: #e8edf5;
-  --action-secondary-hover: #dce3ee;
+  --action-primary: #f97316;
+  --action-primary-hover: #ea580c;
+  --action-primary-press: #c2410c;
+  --action-primary-text: #17181a;
+  --action-secondary: #e8eaee;
+  --action-secondary-hover: #dcdfe5;
   --action-danger: #dc2626;
   --action-danger-bg: rgba(220,38,38,0.10);
   --action-danger-solid-hover: #b91c1c;
@@ -54,14 +56,14 @@
   --button-height-icon: 36px;
   --button-padding-x: 18px;
   --button-radius: var(--radius-pill);
-  --button-bg: #e8edf5;
-  --button-bg-hover: #dce3ee;
-  --button-bg-active: #cfd8e6;
+  --button-bg: #e8eaee;
+  --button-bg-hover: #dcdfe5;
+  --button-bg-active: #d0d4db;
   --button-border: transparent;
   --button-border-hover: transparent;
   --button-text: var(--text-0);
   --button-text-hover: var(--text-0);
-  --button-focus: rgba(35,91,232,0.22);
+  --button-focus: rgba(249,115,22,0.20);
   --button-shadow: 0 1px 2px rgba(16,24,40,0.05);
   --button-shadow-hover: 0 1px 2px rgba(16,24,40,0.05);
 
@@ -94,8 +96,8 @@
   --radius-xl: 20px;
   --radius-pill: 980px;
 
-  --font-display: 'Anuphan', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-  --font-body: 'Anuphan', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  --font-display: 'Kanit', 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, 'Fira Code', Consolas, monospace;
 
   --sp-1: 4px;
@@ -113,20 +115,20 @@
   --ease-spring: var(--ease-out);
 
   /* semantic tokens (overridden per theme) */
-  --overlay-track: rgba(21,38,74,0.06);
+  --overlay-track: rgba(23,24,26,0.06);
   --seg-active-bg: #ffffff;
   --on-accent: #ffffff;
   --on-media: rgba(255,255,255,0.85);
   --scrim: rgba(15,23,42,0.45);
-  --header-bg: rgba(247,249,253,0.8);
-  --inverse-surface: #15264a;
+  --header-bg: rgba(247,248,250,0.75);
+  --inverse-surface: #17181a;
   --on-inverse: #ffffff;
   /* 视频播放/预览区固定深底（两主题一致，深色块不覆写） */
   --media-surface: #0b0d10;
-  --scrollbar-thumb: rgba(88,103,130,0.28);
-  --scrollbar-thumb-hover: rgba(88,103,130,0.42);
-  --border-hover: #b7c3d6;
-  --switch-bg: #e8edf5;
+  --scrollbar-thumb: rgba(92,99,112,0.28);
+  --scrollbar-thumb-hover: rgba(92,99,112,0.42);
+  --border-hover: #c3c9d2;
+  --switch-bg: #e8eaee;
   --action-danger-bg-hover: rgba(220,38,38,0.16);
   --warn-text: #92400e;
   --warn-bg: #fffbeb;
@@ -148,53 +150,53 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* naka-ai night blue: navy surfaces + cobalt accent (apps/landing/.ui-craft/tokens.md) */
-  --surface-base: #0b1020;
-  --surface-raised: #131a2e;
-  --surface-muted: #131a2e;
-  --surface-soft: #0f1527;
-  --surface-input: #161e34;
-  --surface-outline: rgba(157,184,255,0.10);
-  --surface-outline-strong: rgba(157,184,255,0.18);
+  /* near-black neutrals + the same orange as light and naka-ai.com (was a purple accent) */
+  --surface-base: #141414;
+  --surface-raised: #1c1c1e;
+  --surface-muted: #1c1c1e;
+  --surface-soft: #181818;
+  --surface-input: #1f1f22;
+  --surface-outline: rgba(255,255,255,0.08);
+  --surface-outline-strong: rgba(255,255,255,0.16);
 
-  --bg-0: #0f1527;
-  --bg-1: #131a2e;
-  --bg-2: #1a2340;
-  --bg-3: #222c4c;
-  --bg-hover: rgba(157,184,255,0.07);
-  --bg-active: rgba(157,184,255,0.12);
+  --bg-0: #181818;
+  --bg-1: #1c1c1e;
+  --bg-2: #242427;
+  --bg-3: #2c2c30;
+  --bg-hover: rgba(255,255,255,0.06);
+  --bg-active: rgba(255,255,255,0.10);
 
-  --border: rgba(157,184,255,0.10);
-  --border-strong: rgba(157,184,255,0.18);
-  --border-focus: #7fa4ff;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.16);
+  --border-focus: #fb923c;
 
-  --text-0: #f2f4f8;
-  --text-1: #e3e8f1;
-  --text-2: rgba(242,244,248,0.70);
-  --text-3: #96a2bb;
+  --text-0: #f5f5f7;
+  --text-1: #e4e4e7;
+  --text-2: rgba(245,245,247,0.68);
+  --text-3: #9a9aa3;
 
-  /* cobalt lifted for dark surfaces; filled buttons stay #235be8 for white-text contrast */
-  --accent: #7fa4ff;
-  --accent-dark: #5b86f5;
-  --accent-bg: rgba(35,91,232,0.22);
-  --accent-text: #9db8ff;
-  --accent-glow: rgba(35,91,232,0.40);
-  --accent-gradient: linear-gradient(135deg, #3a6cf0 0%, #1d50be 100%);
-  --accent-text-gradient: linear-gradient(135deg, #dbe6ff 0%, #7fa4ff 100%);
+  /* 蜜桃橙（dark 下品牌色提亮，platform 同款） */
+  --accent: #fb923c;
+  --accent-dark: #f97316;
+  --accent-bg: rgba(249,115,22,0.16);
+  --accent-text: #fdba74;
+  --accent-glow: rgba(249,115,22,0.32);
+  --accent-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+  --accent-text-gradient: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
 
-  --action-primary: #235be8;
-  --action-primary-hover: #3a6cf0;
-  --action-primary-press: #1849c7;
-  --action-secondary: #1a2340;
-  --action-secondary-hover: #222c4c;
+  --action-primary: #f97316;
+  --action-primary-hover: #fb8a3c;
+  --action-primary-press: #ea580c;
+  --action-secondary: #242427;
+  --action-secondary-hover: #2c2c30;
   --action-danger: #f87171;
   --action-danger-bg: rgba(248,113,113,0.14);
   --action-danger-solid-hover: #fca5a5;
 
-  --button-bg: #1a2340;
-  --button-bg-hover: #222c4c;
-  --button-bg-active: #2a3558;
-  --button-focus: rgba(127,164,255,0.38);
+  --button-bg: #242427;
+  --button-bg-hover: #2c2c30;
+  --button-bg-active: #35353a;
+  --button-focus: rgba(251,146,60,0.35);
   --button-shadow: 0 1px 2px rgba(0,0,0,0.3);
   --button-shadow-hover: 0 1px 2px rgba(0,0,0,0.3);
 
@@ -218,17 +220,17 @@
   --shadow-lift: 0 4px 14px rgba(0,0,0,0.35), 0 16px 40px rgba(0,0,0,0.5);
   --shadow-elevated: 0 8px 20px rgba(0,0,0,0.45), 0 24px 56px rgba(0,0,0,0.55);
 
-  --overlay-track: rgba(157,184,255,0.08);
-  --seg-active-bg: #2a3558;
+  --overlay-track: rgba(255,255,255,0.06);
+  --seg-active-bg: #35353a;
   --on-accent: #ffffff;
   --scrim: rgba(0,0,0,0.60);
-  --header-bg: rgba(11,16,32,0.82);
-  --inverse-surface: #f2f4f8;
-  --on-inverse: #0b1020;
-  --scrollbar-thumb: rgba(157,184,255,0.18);
-  --scrollbar-thumb-hover: rgba(157,184,255,0.30);
-  --border-hover: rgba(157,184,255,0.26);
-  --switch-bg: #222c4c;
+  --header-bg: rgba(20,20,20,0.8);
+  --inverse-surface: #f5f5f7;
+  --on-inverse: #141414;
+  --scrollbar-thumb: rgba(255,255,255,0.16);
+  --scrollbar-thumb-hover: rgba(255,255,255,0.28);
+  --border-hover: rgba(255,255,255,0.24);
+  --switch-bg: #2c2c30;
   --action-danger-bg-hover: rgba(248,113,113,0.22);
   --warn-text: #fbbf24;
   --warn-bg: rgba(251,191,36,0.12);
@@ -297,11 +299,11 @@ p { line-height: 1.7; }
 .btn-primary {
   /* ChatFire 签名主 CTA：品牌渐变 + 悬停发光 + 轻微放大 */
   background: var(--accent-gradient);
-  color: var(--on-accent);
+  color: var(--action-primary-text);
 }
 .btn-primary:hover {
   background: var(--accent-gradient);
-  color: var(--on-accent);
+  color: var(--action-primary-text);
   box-shadow: 0 2px 10px var(--accent-glow), 0 4px 18px var(--accent-glow);
   transform: scale(1.03);
 }

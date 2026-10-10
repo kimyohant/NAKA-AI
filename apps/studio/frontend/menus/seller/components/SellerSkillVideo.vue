@@ -242,7 +242,7 @@ onMounted(async () => {
 .sv-pick-check {
   position: absolute; top: 8px; right: 8px; z-index: 2; width: 24px; height: 24px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: var(--accent-gradient); color: #fff; pointer-events: none;
+  border-radius: 50%; background: var(--accent-gradient); color: var(--action-primary-text); pointer-events: none;
 }
 .sv-pick.on :deep(.sk-duration) { display: none; }
 

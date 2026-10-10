@@ -14,14 +14,13 @@ const surfaces = [
   readEpisodeWorkbench(),
 ].join('\n')
 
-// rebrand เป็นอัตลักษณ์ naka-ai: ขาว/โคบอลต์ + Anuphan (apps/landing/.ui-craft/tokens.md)
-test('light theme exposes the naka-ai pearl and cobalt tokens', () => {
-  assert.match(studioCss, /--surface-base:\s*#f7f9fd/i)
+// rebrand หลังชุด Apple-light: ChatFire 火焰橙 + IBM Plex Sans Thai (ดู commit 82877d0)
+test('light theme exposes the shipped neutral and brand-orange tokens', () => {
+  assert.match(studioCss, /--surface-base:\s*#f7f8fa/i)
   assert.match(studioCss, /--surface-raised:\s*#ffffff/i)
-  assert.match(studioCss, /--accent:\s*#235be8/i)
-  assert.match(studioCss, /--text-0:\s*#15264a/i)
+  assert.match(studioCss, /--accent:\s*#f97316/i)
   assert.match(studioCss, /--success:\s*#16a34a/i)
-  assert.match(studioCss, /--font-body:\s*'Anuphan',\s*-apple-system,\s*BlinkMacSystemFont,\s*'SF Pro Text'/)
+  assert.match(studioCss, /--font-body:\s*'IBM Plex Sans Thai',\s*-apple-system,\s*BlinkMacSystemFont,\s*'SF Pro Text'/)
 })
 
 test('core surfaces remove the old film-console and graphite decoration', () => {

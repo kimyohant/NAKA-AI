@@ -569,7 +569,7 @@ onBeforeUnmount(() => {
   font-size: 12px; font-weight: 800; color: var(--text-2);
 }
 .wc-step.done .wc-step-num { background: var(--success-bg); color: var(--success); }
-.wc-step.active .wc-step-num { background: var(--accent-gradient); color: var(--on-accent); }
+.wc-step.active .wc-step-num { background: var(--accent-gradient); color: var(--action-primary-text); }
 .wc-step-copy { display: flex; flex-direction: column; min-width: 0; }
 .wc-step-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
 .wc-step-sub { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

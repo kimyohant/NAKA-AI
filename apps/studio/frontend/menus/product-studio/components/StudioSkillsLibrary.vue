@@ -178,7 +178,7 @@ function useWorkflow(w) {
   border-radius: var(--radius-xl); border: 1px solid var(--border);
   background:
     radial-gradient(ellipse at 15% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
-    radial-gradient(ellipse at 90% 100%, color-mix(in srgb, #1849c7 18%, transparent), transparent 55%),
+    radial-gradient(ellipse at 90% 100%, color-mix(in srgb, #ea580c 16%, transparent), transparent 55%),
     var(--surface-soft);
 }
 .sl-mascot { margin: -18px 0 -6px; }

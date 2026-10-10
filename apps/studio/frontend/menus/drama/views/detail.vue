@@ -1577,7 +1577,7 @@ onMounted(load)
   white-space: nowrap;
 }
 .ep-enter:hover {
-  background: var(--accent-gradient); color: var(--on-accent, #fff);
+  background: var(--accent-gradient); color: var(--action-primary-text);
   box-shadow: 0 2px 8px var(--accent-glow);
 }
 .ep-enter svg { transition: transform 0.18s var(--ease-out); }
