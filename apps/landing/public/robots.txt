@@ -1,0 +1,11 @@
+# naka-ai.com — public pages are open to search engines; member, admin and redirect paths are not worth crawling.
+# (Cloudflare may add its content-signal lines above these when its managed robots.txt is on.)
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login/
+Disallow: /go/
+
+Sitemap: https://naka-ai.com/sitemap.xml
