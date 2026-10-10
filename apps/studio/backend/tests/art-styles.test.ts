@@ -40,15 +40,10 @@ test('prompts describe the look instead of naming people or studios, and keep th
   }
 })
 
-// generated example images still to come (the Unsloth image server stopped during the run)
-const PENDING_EXAMPLES = ['anim-felt', 'anim-retro90s', 'anim-pixar-3d']
-
-test('every catalog style has its example image (the earlier catalog’s 14 reused, the rest generated with Qwen-Image)', () => {
+test('every catalog style has its example image (the earlier catalog’s 14 reused, the other 24 generated with Qwen-Image)', () => {
   for (const s of artStyleSeeds) {
-    if (PENDING_EXAMPLES.includes(s.value)) continue
     assert.ok(existsSync(exampleImage(s.value)), `${s.value} has no public/studio-art/styles/${s.value}.webp`)
   }
-  for (const v of PENDING_EXAMPLES) assert.ok(artStyleSeeds.some(s => s.value === v), `${v} is still a catalog style`)
 })
 
 test('startup seeds every style with its category; built-in rows move to Animation; an edited preset is left alone', async () => {
