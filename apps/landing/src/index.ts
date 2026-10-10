@@ -25,6 +25,8 @@ import { AI_VIDEO_JOB_KIND, makeAiVideoHandler } from "./video";
 import { handleAdminSystem } from "./system/admin";
 import { handleAdminStudioSystem } from "./admin/studio-system";
 import { handleAdminInsights } from "./admin/insights";
+import { handleAdminAlerts, handleAlertCommand, runAdminAlerts } from "./admin/alerts";
+import { handleAdminAudit } from "./admin/audit";
 import { featureOn, withSettings } from "./system/store";
 import { featureRefusal, hasFeature } from "./entitlements";
 import type { Env } from "./types";
@@ -154,6 +156,11 @@ export default {
       // overview, all payments (+ CSV) and failed jobs across customers (src/admin/insights.ts)
       const insightResponse = await handleAdminInsights(request, env, url, actor);
       if (insightResponse) return insightResponse;
+      // LINE alerts for admins and the history of every admin action (src/admin/alerts.ts, src/admin/audit.ts)
+      const alertResponse = await handleAdminAlerts(request, env, url, actor);
+      if (alertResponse) return alertResponse;
+      const auditResponse = await handleAdminAudit(request, env, url);
+      if (auditResponse) return auditResponse;
       // The panel is given the Worker's own env so it can tell saved values from wrangler ones.
       const systemResponse = await handleAdminSystem(request, workerEnv, url, actor);
       if (systemResponse) return systemResponse;
@@ -203,6 +210,8 @@ export default {
       }
       ctx.waitUntil(refreshTrendingCovers(env, 3).catch(() => console.error("trending cover refresh failed")));
     }
+    // LINE alerts for admins: every five minutes, one message with whatever is new (src/admin/alerts.ts)
+    if (new Date(controller.scheduledTime).getUTCMinutes() % 5 === 0) ctx.waitUntil(runAdminAlerts(env).catch(() => console.error("admin alerts failed")));
     // Pick up stored webhooks and queue inbox replies; the replies themselves run in runQueue.
     if (featureOn(env, "FEATURE_INBOX")) ctx.waitUntil(drainInbox(env, { maxReceipts: 5, maxMessages: 20 }).then(
       (result) => { if (result.receipts || result.enqueued) console.log("inbox", result.receipts, result.enqueued); },
@@ -244,10 +253,16 @@ async function handleLineWebhook(request: Request, env: Env, ctx: ExecutionConte
   if (!(await verifySignature(body, request.headers.get("x-line-signature"), env.LINE_CHANNEL_SECRET))) {
     return new Response("invalid signature", { status: 401 });
   }
-  if (!featureOn(env, "FEATURE_LINE_BOT")) return new Response("ok"); // switched off: acknowledge, answer nothing
+  const botOn = featureOn(env, "FEATURE_LINE_BOT"); // switched off: acknowledge, the shop bot answers nothing
   const { events } = JSON.parse(body) as { events: LineEvent[] };
-  // Acknowledge LINE immediately; the agent runs in the background.
-  ctx.waitUntil(Promise.all(events.map((e) => handleLineEvent(env, e).catch((err) => console.error("event failed", errorSummary(err))))));
+  // Acknowledge LINE immediately; the agent runs in the background. Admins pair or stop LINE alerts through
+  // the same OA (src/admin/alerts.ts), also while the shop bot is off.
+  ctx.waitUntil(Promise.all(events.map(async (e) => {
+    try {
+      if (await handleAlertCommand(env, e, (id) => getDisplayName(env, id))) return;
+      if (botOn) await handleLineEvent(env, e);
+    } catch (err) { console.error("event failed", errorSummary(err)); }
+  })));
   return new Response("ok");
 }
 

@@ -18,6 +18,8 @@
     money: '<rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="3"/><path d="M6 10v5"/><path d="M18 10v5"/>',
     alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
     more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+    bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
   };
   // daily work first; the phone tab bar shows these four and puts the rest under "เพิ่มเติม"
   var NAV = [
@@ -27,6 +29,8 @@
     { href: '/admin/jobs/', label: 'งานล้มเหลว', long: 'งานที่ล้มเหลว', icon: 'alert', badge: 'jobs' },
     { href: '/admin/studio-system/', label: 'ระบบ Studio', long: 'ระบบ Studio', icon: 'studio', more: true },
     { href: '/admin/system/', label: 'ตั้งค่าระบบ', long: 'ตั้งค่าระบบ', icon: 'system', more: true },
+    { href: '/admin/alerts/', label: 'แจ้งเตือน LINE', long: 'แจ้งเตือน LINE', icon: 'bell', more: true },
+    { href: '/admin/audit/', label: 'ประวัติการจัดการ', long: 'ประวัติการจัดการ', icon: 'history', more: true },
     { href: '/admin/bot/', label: 'บอท LINE', long: 'บอทขายของ LINE', icon: 'bot', more: true },
   ];
 

@@ -1,0 +1,10 @@
+/* แจ้งเตือน LINE (/admin/alerts/): only what this page adds to /admin/admin.css */
+.pairing { margin-bottom: var(--s4); padding: var(--s4); border: 2px dashed var(--accent); border-radius: var(--r-panel); background: var(--surface-soft); }
+.pair-code { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; margin: var(--s2) 0; }
+.pair-code span { font: 700 26px/1.3 var(--mono); letter-spacing: .04em; color: var(--ink); }
+.rules { display: grid; gap: var(--s2); }
+.rule { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px var(--s3); align-items: start; margin: 0; padding: var(--s3); border: 1px solid var(--line); border-radius: var(--r-control); cursor: pointer; }
+.rule input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--accent); grid-row: span 2; }
+.rule b { color: var(--ink); }
+.rule span { font-size: var(--t-small); font-weight: 400; color: var(--ink-3); }
+.log-text { margin: var(--s1) 0 0; white-space: pre-wrap; font-size: 14px; color: var(--ink-2); }

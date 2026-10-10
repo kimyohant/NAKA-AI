@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f7f9fd">
+  <title>แจ้งเตือน LINE · หลังร้าน naka-ai</title>
+  <link rel="icon" href="/logo.svg?v=4" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css">
+  <link rel="stylesheet" href="/admin/alerts/alerts.css">
+  <script src="/admin/admin-shell.js" defer></script>
+  <script src="/admin/admin-app.js" defer></script>
+  <script src="/admin/alerts/alerts.js" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
+  <main id="main">
+    <section id="login" class="card login" aria-labelledby="login-title" hidden>
+      <div class="adm-login-brand"><img src="/logo.svg?v=4" alt="" width="34" height="34"><span>naka-ai · หลังร้าน</span></div>
+      <h1 id="login-title">เข้าสู่หลังร้าน</h1>
+      <p class="muted">ใช้บัญชี Google ของผู้ดูแลระบบ (อีเมลใน ADMIN_EMAILS) · ต้องเข้าใหม่ทุก 12 ชั่วโมง</p>
+      <a class="button primary" href="/api/auth/google/start?next=%2Fadmin%2Falerts%2F">เข้าสู่ระบบด้วย Google</a>
+      <p id="login-status" role="status" aria-live="polite"></p>
+      <details class="break-glass">
+        <summary>เข้าด้วยโทเคนฉุกเฉิน</summary>
+        <form id="login-form">
+          <label for="token">ADMIN_TOKEN (เก็บเฉพาะแท็บนี้)</label>
+          <input id="token" type="password" autocomplete="off" required>
+          <button type="submit">เข้าด้วยโทเคน</button>
+        </form>
+      </details>
+    </section>
+
+    <div id="app" hidden>
+      <div class="adm-head">
+        <div><h1>แจ้งเตือน LINE</h1><p>ส่งข้อความเข้า LINE ของแอดมินเมื่อมีเรื่องต้องดู ระบบตรวจทุก 5 นาที และรวมทุกเรื่องไว้ในข้อความเดียว</p></div>
+        <div class="adm-account"><span class="who" data-adm-who></span><button id="logout" type="button" class="btn-sm">ออกจากระบบ</button></div>
+      </div>
+      <p id="status" role="status" aria-live="polite"></p>
+
+      <section id="not-ready" class="card notice" hidden aria-labelledby="not-ready-title">
+        <h2 id="not-ready-title">ยังส่งข้อความ LINE ไม่ได้</h2>
+        <p>ตั้ง "LINE OA Channel Secret" และ "LINE OA Channel Access Token" ที่ <a href="/admin/system/">ตั้งค่าระบบ</a> แล้วตั้ง Webhook URL ของ LINE OA (LINE Developers → Messaging API) เป็น <code id="webhook-url"></code></p>
+      </section>
+
+      <section class="card" aria-labelledby="who-title">
+        <div class="card-head"><h2 id="who-title">ผู้รับแจ้งเตือน</h2><button type="button" id="pair" class="primary">เพิ่มผู้รับ</button></div>
+        <div id="pairing" class="pairing" hidden>
+          <p>เปิด LINE แล้วส่งข้อความนี้ไปที่ LINE OA ของร้าน ภายใน <b id="pair-left">10 นาที</b></p>
+          <p class="pair-code"><span id="pair-text"></span><button type="button" id="copy" class="btn-sm">คัดลอก</button></p>
+          <p class="muted">รหัสใช้ได้ครั้งเดียว หน้านี้จะแสดงชื่อผู้รับเองเมื่อเชื่อมสำเร็จ</p>
+        </div>
+        <ul class="records" id="recipients"></ul>
+        <p class="muted">ข้อความแจ้งเตือนส่งจาก LINE OA ของร้านและนับในโควตาข้อความของแพ็กเกจ LINE OA ผู้รับพิมพ์ "หยุดแจ้งเตือน" เพื่อเลิกรับเองได้</p>
+      </section>
+
+      <section class="card" aria-labelledby="rules-title">
+        <h2 id="rules-title">เรื่องที่แจ้ง</h2>
+        <p class="muted">เรื่องเดิมที่ยังไม่หายจะแจ้งซ้ำทุก 2 ชั่วโมง ไม่ส่งทุก 5 นาที</p>
+        <div id="rules" class="rules"></div>
+      </section>
+
+      <section class="card" aria-labelledby="log-title">
+        <div class="card-head"><h2 id="log-title">ข้อความที่ส่งแล้ว</h2><button type="button" id="test">ส่งข้อความทดสอบ</button></div>
+        <ul class="records" id="log"></ul>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
