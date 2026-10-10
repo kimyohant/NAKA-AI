@@ -7,7 +7,9 @@ import { SESSION_COOKIE } from '../auth/session';
 /** An admin session must come from a Google sign-in this recent; older ones sign in again. */
 export const ADMIN_SESSION_SECONDS = 12 * 60 * 60;
 
-export interface AdminActor { kind: 'google' | 'token'; label: string; userId: string | null }
+/** owner: everything (ADMIN_EMAILS, or the ADMIN_TOKEN break-glass). support: staff added on /admin/staff/, limited by supportMay(). */
+export type AdminRole = 'owner' | 'support';
+export interface AdminActor { kind: 'google' | 'token'; label: string; userId: string | null; role: AdminRole }
 export type AdminCheck = { actor: AdminActor } | { status: 401 | 403; error: string; reason: string };
 
 /** Lower-cased addresses from ADMIN_EMAILS (comma or whitespace separated). */
@@ -20,7 +22,7 @@ export async function checkAdmin(request: Request, env: Env): Promise<AdminCheck
   // An empty "Bearer " (a page with no stored token) falls through to the session.
   if (header.trim() && header.trim() !== 'Bearer') {
     return env.ADMIN_TOKEN && constantTimeEqual(header, `Bearer ${env.ADMIN_TOKEN}`)
-      ? { actor: { kind: 'token', label: 'โทเคนฉุกเฉิน', userId: null } }
+      ? { actor: { kind: 'token', label: 'โทเคนฉุกเฉิน', userId: null, role: 'owner' } }
       : { status: 401, error: 'โทเคนไม่ถูกต้อง', reason: 'token' };
   }
   const token = cookie(request, SESSION_COOKIE);
@@ -42,10 +44,28 @@ export async function checkAdmin(request: Request, env: Env): Promise<AdminCheck
   // Only addresses Google verified at sign-in count; a password account with the same email does not.
   const { results } = await env.DB.prepare(`SELECT email FROM auth_identities
     WHERE user_id = ? AND provider = 'google' AND verified_at IS NOT NULL AND email IS NOT NULL`).bind(session.userId).all<{ email: string }>();
-  const email = results.map(r => r.email.toLowerCase()).find(e => allowed.has(e));
+  const emails = results.map(r => r.email.toLowerCase());
+  let email = emails.find(e => allowed.has(e));
+  let role: AdminRole = 'owner';
+  if (!email && emails.length) {
+    // staff added by an owner on /admin/staff/ (migrations/pg/0009_coupons_staff.sql)
+    const staff = await env.DB.prepare(`SELECT email FROM admin_staff WHERE email IN (${emails.map(() => '?').join(', ')}) ORDER BY email LIMIT 1`)
+      .bind(...emails).first<{ email: string }>();
+    if (staff) { email = staff.email; role = 'support'; }
+  }
   if (!email) return { status: 403, error: 'บัญชีนี้ไม่ได้เป็นผู้ดูแลระบบ', reason: 'not_admin' };
   if (session.createdAt < t - ADMIN_SESSION_SECONDS) {
     return { status: 401, error: 'เข้าสู่ระบบนานเกิน 12 ชั่วโมง กรุณาเข้าสู่ระบบด้วย Google อีกครั้ง', reason: 'reauth' };
   }
-  return { actor: { kind: 'google', label: email, userId: session.userId } };
+  return { actor: { kind: 'google', label: email, userId: session.userId, role } };
+}
+
+/** What support staff may do: read the back office (not the secret settings or the staff list), and the day-to-day
+ * writes of customer care. Everything else is for owners. `path` is the URL path, `method` the HTTP method. */
+export function supportMay(method: string, path: string): boolean {
+  if (path.startsWith('/api/admin/system/settings') || path.startsWith('/api/admin/staff') || path.startsWith('/api/admin/alerts')) return false;
+  if (method === 'GET' || method === 'HEAD') return true;
+  return /^\/api\/admin\/customers\/[^/]+\/(credits|status|password|feature)$/.test(path)
+    || /^\/api\/admin\/studio-system\/tasks\/\d+\/cancel$/.test(path)
+    || /^\/api\/admin\/(products|orders|conversations|chat|settings)(\/|$)/.test(path);
 }

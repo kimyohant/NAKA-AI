@@ -202,7 +202,7 @@ export async function handleAdminCustomers(request: Request, env: Env, url: URL,
     if (!env.ADMIN_TOKEN || !constantTimeEqual(request.headers.get('Authorization') ?? '', `Bearer ${env.ADMIN_TOKEN}`)) {
       return json({ error: 'กรุณาเข้าสู่ระบบหลังร้านอีกครั้ง' }, 401);
     }
-    actor = { kind: 'token', label: 'โทเคนฉุกเฉิน', userId: null };
+    actor = { kind: 'token', label: 'โทเคนฉุกเฉิน', userId: null, role: 'owner' };
   }
   const who = actor.label;
   try {

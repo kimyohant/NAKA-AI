@@ -3,7 +3,9 @@ import { runSalesAgent } from "./agent";
 import { handleBilling, handlePublicPlans, handleStripeWebhook, runBillingCron } from "./billing";
 import { backfillReceipts, handleReceipts } from "./receipts";
 import { handleOnboarding } from "./onboarding";
-import { checkAdmin } from "./admin/auth";
+import { checkAdmin, supportMay } from "./admin/auth";
+import { handleAdminStaff } from "./admin/staff";
+import { handleAdminCoupons } from "./billing/coupons";
 import { handleAdminCustomers } from "./admin/customers";
 import { handleWorks } from "./works";
 import { handleMemberCredits } from "./me/credits";
@@ -155,8 +157,16 @@ export default {
       if (!("actor" in check)) return adminJson({ error: check.error, reason: check.reason }, check.status);
       const { actor } = check;
       if (url.pathname === "/api/admin/me") {
-        return adminJson(request.method === "GET" ? { kind: actor.kind, label: actor.label } : { error: "not found" }, request.method === "GET" ? 200 : 405);
+        return adminJson(request.method === "GET" ? { kind: actor.kind, label: actor.label, role: actor.role } : { error: "not found" }, request.method === "GET" ? 200 : 405);
       }
+      // support staff (src/admin/staff.ts) do customer care; settings, prices, codes and staff stay with owners
+      if (actor.role !== "owner" && !supportMay(request.method, url.pathname)) {
+        return adminJson({ error: "บัญชีผู้ช่วยทำรายการนี้ไม่ได้ ติดต่อเจ้าของระบบ", reason: "role" }, 403);
+      }
+      const staffResponse = await handleAdminStaff(request, env, url, actor);
+      if (staffResponse) return staffResponse;
+      const couponResponse = await handleAdminCoupons(request, env, url, actor);
+      if (couponResponse) return couponResponse;
       if (url.pathname === "/api/admin/studio") return handleStudio(request, env);
       // naka-studio's version, disk use and video queues, read server to server (src/admin/studio-system.ts)
       const studioSystemResponse = await handleAdminStudioSystem(request, env, url, actor);

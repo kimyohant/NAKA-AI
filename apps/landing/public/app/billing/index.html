@@ -61,6 +61,14 @@
       <section class="pay" id="pay" aria-labelledby="pay-title">
         <h2 id="pay-title">ชำระเงิน</h2>
         <p class="pay-summary" id="pay-summary">เลือกแพ็กเกจด้านบนก่อน</p>
+        <details class="coupon" id="coupon-box">
+          <summary>มีโค้ดส่วนลด?</summary>
+          <form class="coupon-form" id="coupon-form">
+            <input id="coupon-code" aria-label="โค้ดส่วนลด" maxlength="30" autocomplete="off" autocapitalize="characters" placeholder="ใส่โค้ด">
+            <button type="submit" class="secondary-button" id="coupon-apply">ใช้โค้ด</button>
+          </form>
+          <p class="form-status" id="coupon-status" role="status" aria-live="polite"></p>
+        </details>
         <div class="pay-buttons">
           <button class="primary-button" type="button" id="pay-now" disabled>ไปหน้าชำระเงิน (PromptPay หรือบัตร)</button>
         </div>

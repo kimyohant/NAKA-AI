@@ -30,7 +30,7 @@
     var what = el('div');
     what.append(el('p', (p.planName || p.planId) + ' · ' + (PERIOD[p.period] || p.period) + ' · ' + (METHOD[p.method] || p.method), 'record-meta'),
       el('p', 'สร้าง ' + A.when(p.createdAt) + (p.paidAt ? ' · ชำระ ' + A.when(p.paidAt) : ''), 'record-meta'),
-      el('p', 'รหัส ' + p.id + (p.receipt ? ' · ใบเสร็จ ' + p.receipt : ''), 'record-meta'));
+      el('p', 'รหัส ' + p.id + (p.receipt ? ' · ใบเสร็จ ' + p.receipt : '') + (p.coupon ? ' · โค้ด ' + p.coupon + ' ลด ' + A.baht(p.discount) : ''), 'record-meta'));
     var end = el('div', null, 'record-end');
     // a pending payment past its expiry was never paid; the status catches up later
     var late = p.status === 'pending' && p.expiresAt && p.expiresAt * 1000 < Date.now();

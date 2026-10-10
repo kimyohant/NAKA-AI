@@ -29,10 +29,11 @@
     { href: '/admin/payments/', label: 'การเงิน', long: 'การเงิน', icon: 'money' },
     { href: '/admin/jobs/', label: 'งานล้มเหลว', long: 'งานที่ล้มเหลว', icon: 'alert', badge: 'jobs' },
     { href: '/admin/studio-system/', label: 'ระบบ Studio', long: 'ระบบ Studio', icon: 'studio', more: true },
-    { href: '/admin/system/', label: 'ตั้งค่าระบบ', long: 'ตั้งค่าระบบ', icon: 'system', more: true },
-    { href: '/admin/content/', label: 'เนื้อหาเว็บ', long: 'เนื้อหาหน้าเว็บ', icon: 'content', more: true },
-    { href: '/admin/alerts/', label: 'แจ้งเตือน LINE', long: 'แจ้งเตือน LINE', icon: 'bell', more: true },
+    { href: '/admin/system/', label: 'ตั้งค่าระบบ', long: 'ตั้งค่าระบบ', icon: 'system', more: true, owner: true },
+    { href: '/admin/content/', label: 'เนื้อหาเว็บ', long: 'เนื้อหาหน้าเว็บ', icon: 'content', more: true, owner: true },
+    { href: '/admin/alerts/', label: 'แจ้งเตือน LINE', long: 'แจ้งเตือน LINE', icon: 'bell', more: true, owner: true },
     { href: '/admin/audit/', label: 'ประวัติการจัดการ', long: 'ประวัติการจัดการ', icon: 'history', more: true },
+    { href: '/admin/staff/', label: 'ผู้ดูแล', long: 'ผู้ดูแลและสิทธิ์', icon: 'customers', more: true, owner: true },
     { href: '/admin/bot/', label: 'บอท LINE', long: 'บอทขายของ LINE', icon: 'bot', more: true },
   ];
 
@@ -51,6 +52,7 @@
     var a = el('a', { href: item.href }, svg(item.icon) + '<span>' + (long ? item.long : item.label) + '</span>');
     if (item === current) a.setAttribute('aria-current', 'page');
     if (item.badge) a.setAttribute('data-adm-badge', item.badge);
+    if (item.owner) a.setAttribute('data-adm-owner', '');
     return a;
   }
 
@@ -121,7 +123,7 @@
   var whoLoaded = false;
   function fillWho() {
     var chip = document.querySelector('[data-adm-who]');
-    if (!chip || whoLoaded) return;
+    if (whoLoaded) return;
     whoLoaded = true;
     var token = '';
     try { token = sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { /* storage unavailable */ }
@@ -129,8 +131,10 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (me) {
         if (!me) { whoLoaded = false; return; }
-        chip.textContent = me.kind === 'token' ? 'เข้าด้วยโทเคนฉุกเฉิน' : 'เข้าระบบเป็น ' + me.label;
-        chip.className = 'who' + (me.kind === 'token' ? ' token' : '');
+        if (chip) chip.textContent = me.kind === 'token' ? 'เข้าด้วยโทเคนฉุกเฉิน' : (me.role === 'support' ? 'ผู้ช่วย · ' : 'เข้าระบบเป็น ') + me.label;
+        // support staff: menus for owners only are hidden (the server refuses them anyway, src/admin/auth.ts supportMay)
+        if (me.role === 'support') document.querySelectorAll('[data-adm-owner]').forEach(function (a) { a.hidden = true; });
+        if (chip) chip.className = 'who' + (me.kind === 'token' ? ' token' : '');
       })
       .catch(function () { whoLoaded = false; });
   }

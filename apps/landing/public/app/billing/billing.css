@@ -33,3 +33,9 @@
 
 @media (max-width: 900px) { .plan-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .plan-list { grid-template-columns: 1fr; } }
+
+/* discount code: tucked away until needed */
+.coupon summary { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--m-brand); font-weight: 700; font-size: 14px; }
+.coupon-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.coupon-form input { flex: 1 1 180px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--m-line); border-radius: 12px; font: inherit; text-transform: uppercase; }
+.coupon-form button { min-height: 44px; }

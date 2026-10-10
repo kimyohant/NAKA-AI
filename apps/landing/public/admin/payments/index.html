@@ -14,6 +14,7 @@
   <script src="/admin/admin-shell.js" defer></script>
   <script src="/admin/admin-app.js" defer></script>
   <script src="/admin/payments/payments.js" defer></script>
+  <script src="/admin/payments/coupons.js" defer></script>
 </head>
 <body>
   <a href="#main" class="skip-link">ข้ามไปที่เนื้อหา</a>
@@ -40,6 +41,12 @@
         <div class="adm-account"><span class="who" data-adm-who></span><button id="logout" type="button" class="btn-sm">ออกจากระบบ</button></div>
       </div>
 
+      <div data-adm-tabs="money">
+      <div class="adm-tabs-wrap"><div role="tablist" aria-label="การเงิน">
+        <button type="button" role="tab" id="tab-pay" aria-controls="panel-pay" aria-selected="true">รายการชำระเงิน</button>
+        <button type="button" role="tab" id="tab-codes" aria-controls="panel-codes" aria-selected="false">โค้ดส่วนลด</button>
+      </div></div>
+      <div role="tabpanel" id="panel-pay" aria-labelledby="tab-pay">
       <section class="card" aria-label="ตัวกรอง">
         <form id="filters" class="filters">
           <div class="wide"><label for="q">ค้นหา</label><input id="q" type="search" maxlength="200" placeholder="ชื่อ อีเมล เบอร์โทร หรือรหัสรายการ"></div>
@@ -64,6 +71,35 @@
         <ul class="records" id="list"></ul>
         <div class="more-row"><button type="button" id="more" hidden>โหลดเพิ่ม</button></div>
       </section>
+      </div>
+
+      <div role="tabpanel" id="panel-codes" aria-labelledby="tab-codes" hidden>
+        <section class="card" id="code-create" aria-labelledby="code-title">
+          <h2 id="code-title">สร้างโค้ดส่วนลด</h2>
+          <p class="muted">ลูกค้าใส่โค้ดในหน้าชำระเงิน ราคาหลังลดไม่ต่ำกว่า 10 บาท (ขั้นต่ำของ Stripe) โค้ดที่เดายากปลอดภัยกว่า</p>
+          <form id="code-form">
+            <div class="filters code-grid">
+              <div><label for="c-code">โค้ด</label><input id="c-code" maxlength="30" required placeholder="เช่น OPEN20" autocapitalize="characters"></div>
+              <div><label for="c-kind">ลดเป็น</label><select id="c-kind"><option value="percent">เปอร์เซ็นต์</option><option value="amount">บาท</option></select></div>
+              <div><label for="c-value">ส่วนลด</label><input id="c-value" type="number" min="1" required inputmode="numeric"></div>
+              <div><label for="c-period">รอบ</label><select id="c-period"><option value="">ทั้งรายเดือนและรายปี</option><option value="monthly">รายเดือนเท่านั้น</option><option value="yearly">รายปีเท่านั้น</option></select></div>
+              <div><label for="c-max">ใช้ได้ทั้งหมด (ครั้ง)</label><input id="c-max" type="number" min="1" inputmode="numeric" placeholder="ไม่จำกัด"></div>
+              <div><label for="c-per">ต่อลูกค้า (ครั้ง)</label><input id="c-per" type="number" min="1" max="100" value="1" inputmode="numeric"></div>
+              <div><label for="c-start">เริ่มใช้ (ว่าง = ทันที)</label><input id="c-start" type="datetime-local"></div>
+              <div><label for="c-end">หมดอายุ (ว่าง = ไม่มี)</label><input id="c-end" type="datetime-local"></div>
+              <fieldset class="wide"><legend class="muted">ใช้กับแพ็กเกจ (ไม่เลือก = ทุกแพ็กเกจ)</legend><div class="row" id="c-plans"></div></fieldset>
+              <div class="wide"><label for="c-note">หมายเหตุ (ไม่บังคับ)</label><input id="c-note" maxlength="200" placeholder="เช่น โปรเปิดร้าน"></div>
+              <div class="filter-actions"><button type="submit" class="primary">สร้างโค้ด</button></div>
+            </div>
+          </form>
+        </section>
+        <section class="card" aria-labelledby="codes-title">
+          <h2 id="codes-title">โค้ดทั้งหมด</h2>
+          <p id="code-status" role="status" aria-live="polite"></p>
+          <ul class="records" id="codes"></ul>
+        </section>
+      </div>
+      </div>
     </div>
   </main>
 </body>

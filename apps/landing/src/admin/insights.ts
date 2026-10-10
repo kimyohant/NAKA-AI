@@ -119,7 +119,7 @@ const CSV_MAX = 10_000;
 interface PaymentRow {
   id: string; userId: string; name: string | null; email: string | null; phone: string | null; planId: string; planName: string | null;
   period: string; amountSatang: number; method: string; status: string; failure: string | null; expiresAt: number | null;
-  createdAt: number; paidAt: number | null; receipt: string | null;
+  createdAt: number; paidAt: number | null; receipt: string | null; coupon: string | null; discountSatang: number;
 }
 
 /** The WHERE clause and its bindings (?1 to ?5) for a payments filter from the query string. */
@@ -149,7 +149,8 @@ const PAYMENT_SELECT = `SELECT p.id, p.user_id AS "userId", u.display_name AS na
     (SELECT email FROM auth_identities WHERE user_id = p.user_id AND email IS NOT NULL ORDER BY provider, id LIMIT 1) AS email,
     (SELECT provider_uid FROM auth_identities WHERE user_id = p.user_id AND provider = 'phone' ORDER BY id LIMIT 1) AS phone,
     p.plan_id AS "planId", pl.name AS "planName", p.period, p.amount_satang AS "amountSatang", p.method, p.status, p.failure,
-    p.expires_at AS "expiresAt", p.created_at AS "createdAt", p.paid_at AS "paidAt", r.number AS receipt
+    p.expires_at AS "expiresAt", p.created_at AS "createdAt", p.paid_at AS "paidAt", r.number AS receipt,
+    p.coupon_code AS coupon, p.discount_satang AS "discountSatang"
   FROM payments p LEFT JOIN users u ON u.id = p.user_id LEFT JOIN plans pl ON pl.id = p.plan_id LEFT JOIN receipts r ON r.payment_id = p.id`;
 
 async function payments(env: Env, url: URL): Promise<Response> {
@@ -171,7 +172,7 @@ async function payments(env: Env, url: URL): Promise<Response> {
   const list = rows.results.slice(0, PAGE);
   const last = list[list.length - 1];
   return json({
-    payments: list.map(row => ({ ...row, amount: row.amountSatang / 100 })),
+    payments: list.map(row => ({ ...row, amount: row.amountSatang / 100, discount: row.discountSatang / 100 })),
     totals: { count: totals?.count ?? 0, successful: totals?.successful ?? 0, successfulAmount: (totals?.successfulSatang ?? 0) / 100 },
     nextCursor: more && last ? `${last.createdAt}.${last.id}` : null,
   });
@@ -194,12 +195,12 @@ async function paymentsCsv(env: Env, url: URL): Promise<Response> {
     .bind(...binds, CSV_MAX + 1).all<PaymentRow>();
   if (results.length > CSV_MAX) throw new InsightError(413, `มีมากกว่า ${CSV_MAX.toLocaleString('en-US')} รายการ กรุณาเลือกช่วงวันที่ให้สั้นลง`);
   const header = ['วันที่สร้าง (เวลาไทย)', 'วันที่ชำระ (เวลาไทย)', 'รหัสรายการ', 'ลูกค้า', 'รหัสลูกค้า', 'อีเมล', 'เบอร์โทร', 'แพ็กเกจ', 'รอบ',
-    'ช่องทาง', 'สถานะ', 'จำนวนเงิน (บาท)', 'เลขใบเสร็จ', 'สาเหตุที่ไม่สำเร็จ'];
+    'ช่องทาง', 'สถานะ', 'จำนวนเงิน (บาท)', 'โค้ดส่วนลด', 'ส่วนลด (บาท)', 'เลขใบเสร็จ', 'สาเหตุที่ไม่สำเร็จ'];
   const lines = [header.map(csvCell).join(',')];
   for (const p of results) {
     lines.push([bangkokTime(p.createdAt), bangkokTime(p.paidAt), p.id, p.name ?? '', p.userId, p.email ?? '', p.phone ?? '', p.planName ?? p.planId,
       PERIOD_TH[p.period] ?? p.period, METHOD_TH[p.method] ?? p.method, STATUS_TH[p.status] ?? p.status, (p.amountSatang / 100).toFixed(2),
-      p.receipt ?? '', p.failure ?? ''].map(csvCell).join(','));
+      p.coupon ?? '', p.discountSatang ? (p.discountSatang / 100).toFixed(2) : '', p.receipt ?? '', p.failure ?? ''].map(csvCell).join(','));
   }
   const name = `naka-ai-payments-${dayKey(now())}.csv`;
   // the BOM makes Excel read the Thai text as UTF-8
