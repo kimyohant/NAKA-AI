@@ -1,6 +1,7 @@
 // /api/marketer/* — the AI marketer (studio workflow 05, public/studio/marketer/).
 import type { Env, User } from "../types";
 import { readBodyBytes } from "../auth/common";
+import { priceOf } from "../credit-prices";
 import { enqueueJob, getJobForUser } from "../jobs";
 import { featureRefusal, hasFeature, releaseFeature, useFeature } from "../entitlements";
 import { CATEGORIES, EXPERTS, GROUPS, TEMPLATES } from "./catalog";
@@ -30,11 +31,11 @@ async function readJson(request: Request, max: number): Promise<unknown> {
 }
 
 /** Whether AI video is ready, and what it costs — the page hides or explains the video buttons. */
-function videoConfig(env: Env) {
+async function videoConfig(env: Env) {
   try {
     const { provider } = activeProvider(env);
     if (!env.MEDIA) return { enabled: false, reason: "ยังไม่ได้เปิดที่เก็บไฟล์ (R2)" };
-    return { enabled: true, credits: aiVideoCredits(env), provider: provider.label, limits: provider.limits };
+    return { enabled: true, credits: await aiVideoCredits(env), provider: provider.label, limits: provider.limits };
   } catch (error) { return { enabled: false, reason: error instanceof VideoError ? error.message : "ยังไม่พร้อม" }; }
 }
 
@@ -87,9 +88,9 @@ export async function handleMarketer(request: Request, env: Env, url: URL, user:
   try {
     if (env.FEATURE_MARKETER === "off") throw new MarketerError(503, "นักการตลาด AI ปิดให้บริการชั่วคราว");
     if (path === "/config" && method === "GET") {
-      return json({ ai: !!env.ANTHROPIC_API_KEY?.trim(), cost: MARKETER_COST_CREDITS, categories: CATEGORIES, groups: GROUPS,
+      return json({ ai: !!env.ANTHROPIC_API_KEY?.trim(), cost: await priceOf(env.DB, "landing.marketer", MARKETER_COST_CREDITS), categories: CATEGORIES, groups: GROUPS,
         experts: Object.fromEntries(Object.entries(EXPERTS).map(([k, v]) => [k, v.label])), templates: TEMPLATES,
-        viewBands: Object.keys(VIEW_BANDS), signedIn: !!user, video: videoConfig(env) });
+        viewBands: Object.keys(VIEW_BANDS), signedIn: !!user, video: await videoConfig(env) });
     }
     if (path === "/trending" && method === "GET") {
       const q = url.searchParams;
@@ -121,14 +122,15 @@ export async function handleMarketer(request: Request, env: Env, url: URL, user:
       const input = parseMarketerInput(kind, await readJson(request, kind === "recreate" ? MAX_RECREATE_BODY : MAX_SMALL_BODY));
       const use = await useFeature(env, user.id, "landing.marketer");
       if (!use.ok) return featureRefusal(use, "นักการตลาด AI");
-      const result = await enqueueJob(env.DB, { userId: user.id, kind: MARKETER_JOB_KINDS[kind], input, costCredits: MARKETER_COST_CREDITS, maxAttempts: 2 });
+      const cost = await priceOf(env.DB, "landing.marketer", MARKETER_COST_CREDITS);
+      const result = await enqueueJob(env.DB, { userId: user.id, kind: MARKETER_JOB_KINDS[kind], input, costCredits: cost, maxAttempts: 2 });
       if (!result.ok) {
         await releaseFeature(env, user.id, "landing.marketer", 1, use.period);
         return result.reason === "insufficient_credits" ? json({ error: "เครดิตไม่พอ กรุณาเติมเครดิตก่อน", reason: "credits" }, 402)
           : json({ error: "มีงานที่กำลังทำอยู่ครบตามแพ็กเกจแล้ว รอให้เสร็จก่อนนะ", reason: "busy" }, 429);
       }
       kick();
-      return json({ jobId: result.jobId, cost: MARKETER_COST_CREDITS }, 202);
+      return json({ jobId: result.jobId, cost }, 202);
     }
     if (path === "/tasks" && method === "GET") return await tasks(env, user.id);
     if (path === "/media" && method === "POST") return await uploadMedia(request, env, url, user.id);

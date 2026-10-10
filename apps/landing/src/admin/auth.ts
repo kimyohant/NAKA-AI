@@ -48,7 +48,7 @@ export async function checkAdmin(request: Request, env: Env): Promise<AdminCheck
   let email = emails.find(e => allowed.has(e));
   let role: AdminRole = 'owner';
   if (!email && emails.length) {
-    // staff added by an owner on /admin/staff/ (migrations/pg/0008_coupons_staff.sql)
+    // staff added by an owner on /admin/staff/ (migrations/pg/0009_coupons_staff.sql)
     const staff = await env.DB.prepare(`SELECT email FROM admin_staff WHERE email IN (${emails.map(() => '?').join(', ')}) ORDER BY email LIMIT 1`)
       .bind(...emails).first<{ email: string }>();
     if (staff) { email = staff.email; role = 'support'; }

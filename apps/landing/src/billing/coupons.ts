@@ -1,4 +1,4 @@
-// Discount codes (migrations/pg/0008_coupons_staff.sql). A code takes a percentage (1 to 90) or a fixed amount in baht
+// Discount codes (migrations/pg/0009_coupons_staff.sql). A code takes a percentage (1 to 90) or a fixed amount in baht
 // off one checkout. It can be limited to some packages, to monthly or yearly, to a time window, to a number of uses,
 // and to a number of uses per customer. A use counts while its payment is paid, or pending and not yet expired, so a
 // checkout left unpaid gives the use back by itself. The price after the discount is fixed when the payment is
